@@ -87,6 +87,19 @@
   h2 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin: 0; }
   #placeholder { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--muted); }
   #status { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .param {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; margin: 6px 0; gap: 8px; color: var(--text);
+  }
+  .param input {
+    width: 84px; background: #1f2634; border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); padding: 5px 8px; font-size: 12px;
+  }
+  button.ghost {
+    width: 100%; margin-top: 8px; background: transparent;
+    border: 1px dashed var(--border); color: var(--muted); font-size: 12px; padding: 6px;
+  }
+  #equity { height: 150px; }
 </style>
 </head>
 <body>
@@ -121,8 +134,16 @@
     </div>
     <div class="rail">
       <div>
-        <h2>Metrics</h2>
+        <h2>Params</h2>
+        <div id="params"></div>
+      </div>
+      <div>
+        <h2 id="metrics-title">Metrics</h2>
         <div class="metrics" id="metrics"></div>
+      </div>
+      <div>
+        <h2>Equity curve</h2>
+        <div id="equity"></div>
       </div>
       <div>
         <h2>Trades</h2>
@@ -146,6 +167,8 @@ async function api(path) {
 
 /* ---------- chart ---------- */
 let chart, candleSeries, volumeSeries, smaFast, smaSlow;
+let upperLine, lowerLine, atrFloorLine;
+let equityChart, equitySeries;
 
 function initChart() {
   chart = LightweightCharts.createChart($('#chart'), {
@@ -164,9 +187,25 @@ function initChart() {
     color: '#3b4a63',
   });
   chart.priceScale('').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
-  smaFast = chart.addLineSeries({ color: '#f59e0b', lineWidth: 1, title: 'SMA 20' });
-  smaSlow = chart.addLineSeries({ color: '#8b5cf6', lineWidth: 1, title: 'SMA 50' });
+  smaFast = chart.addLineSeries({ color: '#f59e0b', lineWidth: 1, title: 'SMA fast' });
+  smaSlow = chart.addLineSeries({ color: '#8b5cf6', lineWidth: 1, title: 'SMA slow' });
+  upperLine = chart.addLineSeries({ color: '#38bdf8', lineWidth: 1, lineStyle: 2, title: 'Donchian entry' });
+  lowerLine = chart.addLineSeries({ color: '#f472b6', lineWidth: 1, lineStyle: 2, title: 'Donchian exit' });
+  atrFloorLine = chart.addLineSeries({ color: '#ef4444', lineWidth: 1, title: 'ATR stop' });
   window.__chart = chart; // exposed for in-app testing
+
+  equityChart = LightweightCharts.createChart($('#equity'), {
+    height: 150,
+    layout: { background: { type: 'solid', color: '#161a23' }, textColor: '#9ca3af' },
+    grid: { vertLines: { visible: false }, horzLines: { color: '#1a1f2b' } },
+    timeScale: { borderColor: '#242a37' },
+    rightPriceScale: { borderColor: '#242a37' },
+  });
+  equitySeries = equityChart.addAreaSeries({
+    lineColor: '#f59e0b', lineWidth: 1,
+    topColor: 'rgba(245,158,11,.28)', bottomColor: 'rgba(245,158,11,.02)',
+  });
+  window.__series = { candleSeries, smaFast, smaSlow, upperLine, lowerLine, atrFloorLine, equitySeries };
 }
 
 function smaData(bars, n) {
@@ -189,17 +228,59 @@ function markersFromTrades(trades) {
   ]);
 }
 
+function rollingExtreme(bars, n, field, mode) {
+  const out = [];
+  for (let i = n; i < bars.length; i++) {
+    let m = mode === 'max' ? -Infinity : Infinity;
+    for (let j = i - n; j < i; j++) {
+      m = mode === 'max' ? Math.max(m, bars[j][field]) : Math.min(m, bars[j][field]);
+    }
+    out.push({ time: bars[i].date, value: +m.toFixed(2) });
+  }
+  return out;
+}
+
+function atrFloorData(bars, period, mult) {
+  const out = [];
+  let atr = 0;
+  for (let i = 0; i < bars.length; i++) {
+    const h = bars[i].high, l = bars[i].low;
+    const pc = i > 0 ? bars[i - 1].close : bars[i].open;
+    const tr = Math.max(h - l, Math.abs(h - pc), Math.abs(l - pc));
+    atr = i === 0 ? tr : (atr * (period - 1) + tr) / period;
+    if (i >= period - 1) {
+      out.push({ time: bars[i].date, value: +(bars[i].close - mult * atr).toFixed(2) });
+    }
+  }
+  return out;
+}
+
+function setOverlays(strategy, bars) {
+  const p = currentParams;
+  const none = () => { upperLine.setData([]); lowerLine.setData([]); atrFloorLine.setData([]); };
+  if (strategy === 'SMA Cross') {
+    smaFast.setData(smaData(bars, p.n_fast || 20));
+    smaSlow.setData(smaData(bars, p.n_slow || 50));
+    none();
+  } else if (strategy === 'Donchian Trend') {
+    smaFast.setData([]); smaSlow.setData([]);
+    upperLine.setData(rollingExtreme(bars, p.n_entry || 55, 'high', 'max'));
+    lowerLine.setData(rollingExtreme(bars, p.n_exit || 20, 'low', 'min'));
+    atrFloorLine.setData(atrFloorData(bars, p.atr_period || 14, p.atr_mult || 3));
+  } else {
+    smaFast.setData([]); smaSlow.setData([]);
+    none();
+  }
+}
+
 function renderChart(bars) {
   allBars = bars;
-  const candles = bars.map((b) => ({
+  candleSeries.setData(bars.map((b) => ({
     time: b.date, open: b.open, high: b.high, low: b.low, close: b.close,
-  }));
-  candleSeries.setData(candles);
+  })));
   volumeSeries.setData(bars.map((b) => ({
     time: b.date, value: b.volume, color: b.close >= b.open ? '#1f3a37' : '#3a2222',
   })));
-  smaFast.setData(smaData(bars, 20));
-  smaSlow.setData(smaData(bars, 50));
   applyRange(currentRange());
 }
 
@@ -210,6 +291,7 @@ function metricCard(label, value, color = '') {
 }
 
 function renderMetrics(m) {
+  $('#metrics-title').textContent = `Metrics — ${currentRange()}`;
   const fmt = (v) => (typeof v === 'number' ? v.toFixed(2) : v);
   const ret = m['Return [%]'], bh = m['Buy & Hold Return [%]'];
   $('#metrics').innerHTML =
@@ -233,16 +315,65 @@ function renderTrades(trades) {
     rows || '<tr><td colspan="4">no trades</td></tr>';
 }
 
+function renderEquity(equity) {
+  equitySeries.setData(equity.map((d) => ({ time: d.date, value: d.equity })));
+  equityChart.timeScale().fitContent();
+}
+
 /* ---------- flow ---------- */
 let symbolList = [];
 let selectedSymbol = 'SPY';
 let highlightIndex = -1;
+let strategiesMeta = [];
+let currentParams = {};
+const barsCache = {};
+const btCache = new Map();
 
 async function loadSymbols() {
   const { symbols } = await api('/api/symbols');
   symbolList = symbols;
   $('#symbol-input').value = selectedSymbol;
   renderMenu('');
+  closeMenu();
+}
+
+async function loadStrategies() {
+  const { strategies } = await api('/api/strategies');
+  strategiesMeta = strategies;
+  $('#strategy').innerHTML = strategies.map((s) =>
+    `<option ${s.name === 'SMA Cross' ? 'selected' : ''}>${s.name}</option>`).join('');
+  resetParams();
+  renderParams();
+}
+
+function currentMeta() {
+  return strategiesMeta.find((s) => s.name === $('#strategy').value);
+}
+
+function resetParams() {
+  currentParams = Object.fromEntries(
+    Object.entries(currentMeta().params).map(([key, p]) => [key, p.default])
+  );
+}
+
+function renderParams() {
+  const meta = currentMeta();
+  $('#params').innerHTML =
+    Object.entries(meta.params).map(([key, p]) =>
+      `<label class="param"><span>${key}</span>` +
+      `<input type="number" data-key="${key}" value="${currentParams[key]}" ` +
+      `min="${p.min}" max="${p.max}" step="${p.step || 1}"></label>`
+    ).join('') +
+    '<button id="reset-params" class="ghost">Reset defaults</button>';
+  $('#params').querySelectorAll('input').forEach((inp) =>
+    inp.addEventListener('change', () => {
+      const p = meta.params[inp.dataset.key];
+      currentParams[inp.dataset.key] =
+        p.type === 'float' ? parseFloat(inp.value) : parseInt(inp.value, 10);
+      run();
+    })
+  );
+  $('#reset-params').addEventListener('click', () => { resetParams(); renderParams(); run(); });
 }
 
 function renderMenu(query) {
@@ -299,21 +430,45 @@ document.addEventListener('click', (e) => {
 async function run() {
   const symbol = $('#symbol-input').value || selectedSymbol;
   const strategy = $('#strategy').value;
-  $('#status').textContent = 'running backtest…';
+  const label = currentRange();
+  $('#status').textContent = `running ${strategy} on ${symbol} (${label})…`;
   try {
-    const [barsData, backtest] = await Promise.all([
-      api(`/api/bars/${symbol}`),
-      api(`/api/backtest/${symbol}?strategy=${encodeURIComponent(strategy)}`),
-    ]);
-    renderChart(barsData.bars);
+    let bars = barsCache[symbol];
+    if (!bars) {
+      bars = (await api(`/api/bars/${symbol}`)).bars;
+      barsCache[symbol] = bars;
+    }
+    const window = windowForRange(bars, label);
+    const key = [symbol, strategy, JSON.stringify(currentParams), label].join('|');
+    let backtest = btCache.get(key);
+    if (!backtest) {
+      const query = new URLSearchParams({ strategy });
+      if (window.start) query.set('start', window.start);
+      if (window.end) query.set('end', window.end);
+      Object.entries(currentParams).forEach(([k, v]) => query.append(k, v));
+      backtest = await api(`/api/backtest/${symbol}?${query.toString()}`);
+      btCache.set(key, backtest);
+    }
+    renderChart(bars);
+    setOverlays(strategy, bars);
     candleSeries.setMarkers(markersFromTrades(backtest.trades));
     renderMetrics(backtest.metrics);
     renderTrades(backtest.trades);
+    renderEquity(backtest.equity);
     $('#status').textContent =
-      `${backtest.trades.length} trades · ${symbol} · ${strategy}`;
+      `${backtest.trades.length} trades · ${symbol} · ${strategy} · ${label}`;
   } catch (err) {
     $('#status').textContent = `error: ${err.message}`;
   }
+}
+
+function windowForRange(bars, label) {
+  if (label === 'ALL') return {};
+  const n = RANGES.find(([l]) => l === label)[1];
+  return {
+    start: bars[Math.max(0, bars.length - n)]?.date,
+    end: bars[bars.length - 1]?.date,
+  };
 }
 
 document.querySelectorAll('.nav-item').forEach((item) => {
@@ -344,6 +499,7 @@ function buildRanges() {
       document.querySelectorAll('.range').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       applyRange(btn.dataset.label);
+      run();
     })
   );
 }
@@ -375,9 +531,10 @@ $('#fit').addEventListener('click', () => chart.timeScale().fitContent());
 buildRanges();
 
 $('#run').addEventListener('click', run);
+$('#strategy').addEventListener('change', () => { resetParams(); renderParams(); run(); });
 
 initChart();
-loadSymbols().then(run);
+loadStrategies().then(loadSymbols).then(run);
 </script>
 </body>
 </html>

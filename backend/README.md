@@ -30,7 +30,7 @@ Python FastAPI app — the only server component of trade-helper-v1.
         ├── fetch.py         # daily yfinance fetch, idempotent upsert ✅
         ├── store.py         # SQLite bars, PK (symbol, date), adjusted closes ✅
         ├── universe.py      # SP500 ∪ NDX ∪ XL ETFs from Wikipedia ✅
-        ├── strategies.py    # signal rules: SMA Cross ✅ (Turtle, RSI planned)
+        ├── strategies.py    # SMA Cross + Donchian Trend + RSI Reversion ✅
         └── engine.py        # backtest runner on backtesting.py ✅
 
 ## Commands

@@ -116,7 +116,7 @@ uvicorn app.main:app --reload
 4. First strategy (SMA cross) + minimal backtest → metrics ✅
 5. Chart viewer: candles + entry/exit markers + algorithm lines ✅
 6. Today view: pick cards + confidence + reasons
-7. Strategy Lab: params, symbols, batch runs
+7. Strategy Lab: params ✅, symbols ✅, batch runs (later)
 8. AWS deployment (phase 2)
 
 ## 7. Product spec — the three views
@@ -173,6 +173,13 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.6.0 — 2026-08-17
+
+- Metrics are now **range-aware**: selecting 3M…ALL re-runs the backtest on that window, so per-regime performance is visible instead of one constant full-history number.
+- Strategy Lab first slice: editable params per strategy (with defaults + reset) and an equity curve chart.
+- Added two strategies: **Donchian Trend** (Turtle-style breakout, Donchian exit + ATR trailing stop) and **RSI Reversion**.
+- Chart overlays now switch per strategy: SMA lines / Donchian bands + ATR stop floor.
 
 ### v0.5.2 — 2026-08-17
 

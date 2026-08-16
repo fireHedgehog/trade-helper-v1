@@ -52,11 +52,26 @@ def _plain(value):
     return str(value)
 
 
-def backtest_payload(symbol: str, strategy_name: str) -> dict:
-    """Full result: metrics + trades — the JSON the chart viewer renders."""
+def backtest_payload(
+    symbol: str,
+    strategy_name: str,
+    params: dict | None = None,
+    start: str | None = None,
+    end: str | None = None,
+) -> dict:
+    """Full result: metrics + trades + equity curve — what the chart viewer renders.
+
+    start/end slice the bars window (YYYY-MM-DD) so metrics reflect the selected regime.
+    """
     bars = load_bars(symbol)
     if bars.empty:
         raise RuntimeError(f"no bars for {symbol} — run fetch first")
+    if start:
+        bars = bars[bars["date"] >= start]
+    if end:
+        bars = bars[bars["date"] <= end]
+    if len(bars) < 60:
+        raise RuntimeError(f"window has only {len(bars)} bars — need at least 60")
     strategy = STRATEGIES[strategy_name]
     bt = Backtest(
         to_ohlc(bars),
@@ -65,7 +80,7 @@ def backtest_payload(symbol: str, strategy_name: str) -> dict:
         commission=COMMISSION,
         finalize_trades=True,  # close the last open trade so stats are complete
     )
-    stats = bt.run()
+    stats = bt.run(**(params or {}))
     metrics = {
         metric: _plain(stats[metric]) for metric in METRICS if metric in stats
     }
@@ -81,26 +96,41 @@ def backtest_payload(symbol: str, strategy_name: str) -> dict:
         }
         for row in stats._trades.itertuples(index=False)
     ]
+    equity_frame = stats._equity_curve
+    step = max(1, len(equity_frame) // 500)
+    equity = [
+        {"date": str(index)[:10], "equity": round(float(row.Equity), 2)}
+        for index, row in equity_frame.iloc[::step].iterrows()
+    ]
     return {
         "symbol": symbol,
         "strategy": strategy_name,
         "metrics": metrics,
         "trades": trades,
+        "equity": equity,
     }
 
 
-def run_backtest(symbol: str, strategy_name: str) -> dict:
-    return backtest_payload(symbol, strategy_name)["metrics"]
+def run_backtest(
+    symbol: str,
+    strategy_name: str,
+    params: dict | None = None,
+    start: str | None = None,
+    end: str | None = None,
+) -> dict:
+    return backtest_payload(symbol, strategy_name, params, start, end)["metrics"]
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run a backtest from local bars")
     parser.add_argument("symbol", nargs="?", default="SPY")
     parser.add_argument("--strategy", default="SMA Cross", choices=list(STRATEGIES))
+    parser.add_argument("--start", default=None, help="window start (YYYY-MM-DD)")
+    parser.add_argument("--end", default=None, help="window end (YYYY-MM-DD)")
     args = parser.parse_args()
 
     try:
-        result = run_backtest(args.symbol, args.strategy)
+        result = run_backtest(args.symbol, args.strategy, start=args.start, end=args.end)
     except Exception as exc:
         print(f"[ERROR] {exc}", file=sys.stderr)
         return 1

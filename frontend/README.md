@@ -7,7 +7,7 @@ Static web UI for trade-helper-v1. Served by the backend — **no build step, no
 Three views behind a sidebar nav:
 
 - **Today** — strategy tabs → pick cards (planned).
-- **Symbol Explorer** ✅ — searchable symbol picker (typeahead), Lightweight Charts: candles, volume, SMA 20/50 overlays, entry/exit markers, metrics rail, trades table, 3M–10Y/ALL range buttons + zoom controls.
+- **Symbol Explorer** ✅ — searchable symbol picker (typeahead), Lightweight Charts: candles, volume, per-strategy overlays (SMA / Donchian + ATR stop), entry/exit markers, 3M–10Y/ALL range buttons + zoom controls, range-aware metrics, equity curve, trades table, editable strategy params with reset.
 - **Strategy Lab** — pick strategy, edit params, run (planned).
 - **Macro** — event calendar + macro cards + regime filter (planned).
 
