@@ -1,3 +1,24 @@
+# Project-specific
+#
+# Rule of thumb: we commit the CODE that handles data (fetch/store/backtest .py),
+# never the DATA itself (market history, datasets, model artifacts).
+
+/data/                    # local market-data store
+
+# Data file formats, wherever they appear
+*.sqlite
+*.sqlite3
+*.db
+*.csv
+*.parquet
+*.pkl
+*.pickle
+*.feather
+# To commit a small CSV fixture on purpose, force-add it: git add -f path/to/file.csv
+
+# macOS
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
