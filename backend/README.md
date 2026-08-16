@@ -19,22 +19,28 @@ Python FastAPI app — the only server component of trade-helper-v1.
 | Data frames | `pandas` | For bars and backtests |
 | ML (later) | `scikit-learn` | Add **only when actually used** |
 
-## Layout (planned)
+## Layout
 
     backend/
     ├── README.md
     ├── requirements.txt
     └── app/
-        ├── main.py        # FastAPI entrypoint
-        ├── fetch.py       # daily yfinance fetch job
-        ├── store.py       # SQLite read/write
-        └── backtest.py    # backtest logic (later)
+        ├── __init__.py
+        ├── main.py          # FastAPI entrypoint (planned)
+        ├── fetch.py         # daily yfinance fetch, idempotent upsert ✅
+        ├── store.py         # SQLite bars, PK (symbol, date), adjusted closes ✅
+        ├── universe.py      # SP500 ∪ NDX ∪ XL ETFs from Wikipedia ✅
+        ├── strategies.py    # signal rules: SMA cross, Turtle, RSI... (planned)
+        └── engine.py        # backtest on backtesting.py -> trades + metrics (planned)
 
-## Commands (planned)
+## Commands
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r backend/requirements.txt
-uvicorn app.main:app --reload
+python -m app.fetch SPY              # daily fetch (idempotent), full history
+python -m app.fetch SPY GC=F CL=F    # more symbols
+python -m app.universe               # build/refresh the watch universe
+python -m app.fetch --universe       # batched fetch, 1s delay, retry on 429
+uvicorn app.main:app --reload        # planned — main.py comes with the API step
 ```
