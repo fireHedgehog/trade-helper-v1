@@ -2,14 +2,14 @@
 
 Static web UI for trade-helper-v1. Served by the backend — **no build step, no framework yet**.
 
-## What it does (planned)
+## What it does
 
 Three views behind a sidebar nav:
 
-- **Today** — strategy tabs → pick cards (entry, exit, confidence bar, "why" one-liner).
-- **Symbol Explorer** — symbol dropdown, chart with technicals + algorithm-drawn S/R levels, backtest results rail (win rate, profit factor, max drawdown, trades, equity curve).
-- **Strategy Lab** — pick strategy, edit params (defaults + reset), pick symbol + range, run backtest.
-- **"Fetch now"** button that triggers the backend's daily fetch.
+- **Today** — strategy tabs → pick cards (planned).
+- **Symbol Explorer** ✅ — searchable symbol picker (typeahead), Lightweight Charts: candles, volume, SMA 20/50 overlays, entry/exit markers, metrics rail, trades table, 3M–10Y/ALL range buttons + zoom controls.
+- **Strategy Lab** — pick strategy, edit params, run (planned).
+- **Macro** — event calendar + macro cards + regime filter (planned).
 
 ## Tech choices (keep it lean)
 
@@ -27,11 +27,11 @@ The backend computes everything; the frontend only draws. A backtest returns JSO
 - ATR exit / support / resistance levels → `createPriceLine()` (algorithm-drawn, never user-drawn)
 - custom shapes (if ever needed) → v5 custom primitives
 
-## Layout (planned)
+## Layout
 
     frontend/
     ├── README.md
-    └── index.html     # single page, calls the backend API
+    └── index.html     # single page: nav + Explorer view (chart, metrics, trades) ✅
 
 ## How it's served
 

@@ -43,8 +43,12 @@ def upsert_bars(df: pd.DataFrame) -> None:
     """Insert-or-replace bars keyed by (symbol, date).
 
     Expects columns: symbol, date (YYYY-MM-DD), open, high, low, close, volume.
+    Rows with missing OHLC values are dropped (Yahoo can return NaN rows).
     """
-    df = df[["symbol", "date", "open", "high", "low", "close", "volume"]].copy()
+    df = df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].copy()
+    df = df.dropna(subset=['open', 'high', 'low', 'close'])
+    if df.empty:
+        raise RuntimeError('no valid bars to store (all rows had missing values)')
     # Convert to plain Python types so sqlite3 binds them without errors.
     df["date"] = df["date"].astype(str)
     df = df.astype(

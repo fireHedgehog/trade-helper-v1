@@ -43,7 +43,17 @@ def to_ohlc(bars: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def run_backtest(symbol: str, strategy_name: str) -> dict:
+def _plain(value):
+    """Convert numpy/timestamp values into plain JSON-friendly types."""
+    if value is None or isinstance(value, (int, float, str, bool)):
+        return value
+    if hasattr(value, "item"):  # numpy scalars
+        return value.item()
+    return str(value)
+
+
+def backtest_payload(symbol: str, strategy_name: str) -> dict:
+    """Full result: metrics + trades — the JSON the chart viewer renders."""
     bars = load_bars(symbol)
     if bars.empty:
         raise RuntimeError(f"no bars for {symbol} — run fetch first")
@@ -56,7 +66,31 @@ def run_backtest(symbol: str, strategy_name: str) -> dict:
         finalize_trades=True,  # close the last open trade so stats are complete
     )
     stats = bt.run()
-    return {metric: stats[metric] for metric in METRICS if metric in stats}
+    metrics = {
+        metric: _plain(stats[metric]) for metric in METRICS if metric in stats
+    }
+    trades = [
+        {
+            "entry_date": str(row.EntryTime)[:10],
+            "entry_price": round(float(row.EntryPrice), 2),
+            "exit_date": str(row.ExitTime)[:10],
+            "exit_price": round(float(row.ExitPrice), 2),
+            "size": int(row.Size),
+            "pnl": round(float(row.PnL), 2),
+            "return_pct": round(float(row.ReturnPct) * 100, 2),
+        }
+        for row in stats._trades.itertuples(index=False)
+    ]
+    return {
+        "symbol": symbol,
+        "strategy": strategy_name,
+        "metrics": metrics,
+        "trades": trades,
+    }
+
+
+def run_backtest(symbol: str, strategy_name: str) -> dict:
+    return backtest_payload(symbol, strategy_name)["metrics"]
 
 
 def main() -> int:

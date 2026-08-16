@@ -60,8 +60,8 @@ trade-helper-v1/
 ├── .gitignore
 ├── backend/             # Python FastAPI app
 │   ├── README.md
-│   └── app/             # (planned: main.py, fetch.py, store.py, strategies.py, engine.py)
-├── frontend/            # static UI, no build step (planned: index.html)
+│   └── app/             # main.py, fetch.py, store.py, universe.py, strategies.py, engine.py
+├── frontend/            # static UI, no build step (index.html)
 │   └── README.md
 ├── scripts/             # cron wrapper (planned, not created yet)
 └── data/                # local market data (gitignored)
@@ -101,7 +101,7 @@ python -m app.fetch --universe       # polite batched fetch (~530 symbols, 1s de
 python -m app.fetch --universe --delay 2   # slower = safer vs Yahoo rate limits
 ```
 
-Run backend + UI (planned — once `main.py` exists):
+Run backend + UI, then open http://127.0.0.1:8000 in a browser:
 
 ```bash
 cd backend
@@ -114,7 +114,7 @@ uvicorn app.main:app --reload
 2. Folder structure ✅
 3. Data pipeline: fetch SPY → SQLite (idempotent daily job) ✅
 4. First strategy (SMA cross) + minimal backtest → metrics ✅
-5. Chart viewer: candles + entry/exit markers + algorithm lines
+5. Chart viewer: candles + entry/exit markers + algorithm lines ✅
 6. Today view: pick cards + confidence + reasons
 7. Strategy Lab: params, symbols, batch runs
 8. AWS deployment (phase 2)
@@ -173,6 +173,25 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.5.2 — 2026-08-17
+
+- Replaced the symbol dropdown with a searchable typeahead combobox (type to filter, arrows + Enter, click to pick).
+- Hardened the pipeline: Yahoo NaN rows dropped before storing; a bad symbol no longer kills a fetch run.
+- Added `--missing-only` flag to resume interrupted backfills without re-downloading.
+
+### v0.5.1 — 2026-08-17
+
+- Explorer now loads full history (was truncated to ~3 years) and adds TradingView-style controls: 3M/6M/1Y/2Y/3Y/5Y/10Y/ALL range buttons + zoom in/out/fit.
+- Daily resolution only by design — NDO strategies only need daily closes.
+- Fixed via in-browser testing: controls overflowed under the results rail at narrow widths; time-scale ranges were clamped by `minBarSpacing` (lowered to 0.1).
+
+### v0.5.0 — 2026-08-17
+
+- Added `main.py`: FastAPI server — `/api/symbols`, `/api/bars/{symbol}`, `/api/backtest/{symbol}`, serves the static frontend.
+- Built the first real UI (`frontend/index.html`): sidebar with Today/Lab/Macro stubs, Symbol Explorer with Lightweight Charts — candles, volume, SMA 20/50 overlays, entry/exit markers, metrics rail, trades table.
+- Verified in the built-in browser: page load, chart pixels, SPY → AAPL switching, API payloads.
+- Fixed: `backtesting.py` 0.6.6 exposes trades as a DataFrame (`stats._trades`), not Trade objects.
 
 ### v0.4.0 — 2026-08-17
 

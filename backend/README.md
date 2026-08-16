@@ -26,7 +26,7 @@ Python FastAPI app — the only server component of trade-helper-v1.
     ├── requirements.txt
     └── app/
         ├── __init__.py
-        ├── main.py          # FastAPI entrypoint (planned)
+        ├── main.py          # FastAPI entrypoint + REST API ✅
         ├── fetch.py         # daily yfinance fetch, idempotent upsert ✅
         ├── store.py         # SQLite bars, PK (symbol, date), adjusted closes ✅
         ├── universe.py      # SP500 ∪ NDX ∪ XL ETFs from Wikipedia ✅
@@ -43,5 +43,5 @@ python -m app.fetch SPY GC=F CL=F    # more symbols
 python -m app.universe               # build/refresh the watch universe
 python -m app.fetch --universe       # batched fetch, 1s delay, retry on 429
 python -m app.engine SPY             # backtest SMA Cross on local bars
-uvicorn app.main:app --reload        # planned — main.py comes with the API step
+uvicorn app.main:app --reload        # serve API + UI at http://127.0.0.1:8000
 ```

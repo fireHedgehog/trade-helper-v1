@@ -15,7 +15,7 @@ import time
 import pandas as pd
 import yfinance as yf
 
-from .store import upsert_bars, row_count
+from .store import list_symbols, upsert_bars, row_count
 from .universe import load_universe
 
 DEFAULT_SYMBOLS = ["SPY"]
@@ -32,7 +32,11 @@ def fetch_symbol(symbol: str, period: str) -> pd.DataFrame:
     df = raw.reset_index().rename(columns=str.lower)
     df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
     df["symbol"] = symbol
-    return df[["symbol", "date", "open", "high", "low", "close", "volume"]]
+    df = df[["symbol", "date", "open", "high", "low", "close", "volume"]]
+    df = df.dropna(subset=["open", "high", "low", "close"])  # Yahoo can return NaN rows
+    if df.empty:
+        raise RuntimeError(f"Yahoo returned no valid bars for {symbol}")
+    return df
 
 
 def fetch_with_retry(symbol: str, period: str) -> pd.DataFrame:
@@ -74,6 +78,11 @@ def main() -> int:
         default=0.0,
         help="seconds between symbols (be polite: 1.0+ for large runs)",
     )
+    parser.add_argument(
+        "--missing-only",
+        action="store_true",
+        help="skip symbols already in the DB (resume an interrupted backfill)",
+    )
     args = parser.parse_args()
 
     if args.universe:
@@ -83,10 +92,21 @@ def main() -> int:
     else:
         symbols = args.symbols
 
+    if args.missing_only:
+        existing = set(list_symbols())
+        skipped = [s for s in symbols if s in existing]
+        symbols = [s for s in symbols if s not in existing]
+        print(f"missing-only: skipping {len(skipped)} already-fetched, fetching {len(symbols)}")
+
     failures = 0
     for index, symbol in enumerate(symbols, start=1):
         try:
             df = fetch_with_retry(symbol, args.period)
+            upsert_bars(df)
+            print(
+                f"[{index}/{len(symbols)}] {symbol}: {len(df)} rows upserted "
+                f"(total: {row_count(symbol)})"
+            )
         except Exception as exc:  # keep going on one bad symbol
             print(
                 f"[{index}/{len(symbols)}] [ERROR] {symbol}: {exc}",
@@ -94,11 +114,6 @@ def main() -> int:
             )
             failures += 1
             continue
-        upsert_bars(df)
-        print(
-            f"[{index}/{len(symbols)}] {symbol}: {len(df)} rows upserted "
-            f"(total: {row_count(symbol)})"
-        )
         if args.delay and index < len(symbols):
             time.sleep(args.delay)
     print(f"done: {len(symbols) - failures}/{len(symbols)} symbols OK")
