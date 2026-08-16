@@ -4,3 +4,4 @@ yfinance
 pandas
 lxml
 requests
+backtesting

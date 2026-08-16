@@ -84,6 +84,14 @@ python -m app.fetch SPY              # default symbol, full history
 python -m app.fetch SPY GC=F CL=F    # more symbols
 ```
 
+Backtest a strategy on local data (no network needed):
+
+```bash
+cd backend
+python -m app.engine SPY                    # SMA Cross on SPY
+python -m app.engine SPY --strategy "SMA Cross"
+```
+
 Build the watch universe (S&P 500 ∪ Nasdaq-100 ∪ XL sector ETFs, deduped, cached in `data/universe.csv`):
 
 ```bash
@@ -105,7 +113,7 @@ uvicorn app.main:app --reload
 1. Docs + decisions ✅
 2. Folder structure ✅
 3. Data pipeline: fetch SPY → SQLite (idempotent daily job) ✅
-4. First strategy (SMA cross) + minimal backtest → metrics
+4. First strategy (SMA cross) + minimal backtest → metrics ✅
 5. Chart viewer: candles + entry/exit markers + algorithm lines
 6. Today view: pick cards + confidence + reasons
 7. Strategy Lab: params, symbols, batch runs
@@ -165,6 +173,13 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.4.0 — 2026-08-17
+
+- Added `strategies.py`: SMA Cross (20/50) on `backtesting.py` — signal at close, execution at next open, explicit exit on cross-back.
+- Added `engine.py`: backtest CLI with honest assumptions — $100k cash, 0.1% commission per side, `finalize_trades=True`.
+- Metrics reported: return, buy & hold, max drawdown, win rate, profit factor, Sharpe, # trades, exposure.
+- First honest result (SPY, 1993→2026): +550% vs +3,035% buy & hold, PF 2.40, MaxDD −36.6%, 87 trades — the hello-world strategy whipsaws and underperforms buy & hold, as expected.
 
 ### v0.3.2 — 2026-08-17
 

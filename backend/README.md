@@ -30,8 +30,8 @@ Python FastAPI app — the only server component of trade-helper-v1.
         ├── fetch.py         # daily yfinance fetch, idempotent upsert ✅
         ├── store.py         # SQLite bars, PK (symbol, date), adjusted closes ✅
         ├── universe.py      # SP500 ∪ NDX ∪ XL ETFs from Wikipedia ✅
-        ├── strategies.py    # signal rules: SMA cross, Turtle, RSI... (planned)
-        └── engine.py        # backtest on backtesting.py -> trades + metrics (planned)
+        ├── strategies.py    # signal rules: SMA Cross ✅ (Turtle, RSI planned)
+        └── engine.py        # backtest runner on backtesting.py ✅
 
 ## Commands
 
@@ -42,5 +42,6 @@ python -m app.fetch SPY              # daily fetch (idempotent), full history
 python -m app.fetch SPY GC=F CL=F    # more symbols
 python -m app.universe               # build/refresh the watch universe
 python -m app.fetch --universe       # batched fetch, 1s delay, retry on 429
+python -m app.engine SPY             # backtest SMA Cross on local bars
 uvicorn app.main:app --reload        # planned — main.py comes with the API step
 ```
