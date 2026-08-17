@@ -261,7 +261,8 @@ assumptions, and uncertainty or limitation.
       from information available at that time.
 - [ ] Reserve an untouched holdout universe and period.
 - [ ] Plot parameter stability and reject isolated "best" combinations.
-- [ ] Record every attempted strategy/configuration to expose multiple testing.
+- [x] Start an append-only attempt ledger, including the contaminated legacy
+      14-configuration CTA tuning run and the preregistered 54-candidate run.
 - [ ] Apply a suitable multiple-comparison or false-discovery adjustment.
 - [ ] Prefer point-in-time membership data; until available, limit claims and use
       long-lived broad ETFs to reduce survivorship bias.
@@ -479,6 +480,19 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.18.2 — 2026-08-17
+
+- Preregistered the exact 12-ETF universe, 54-candidate CTA grid, costs,
+  partitions, and prospective-confirmation requirement in a machine-validated
+  experiment specification.
+- Started the attempt ledger with both the contaminated legacy 14-configuration
+  run and the new no-results preregistration; failed work now counts too.
+- Locked a dependence-aware testing plan before ranking: one-sided circular
+  20-bar block bootstrap with 5,000 resamples, followed by Holm family-wise error
+  control across all 54 candidates.
+- Added deterministic grid expansion, specification validation, Holm adjustment,
+  and tests. **79 tests pass. No new performance result was calculated.**
 
 ### v0.18.1 — 2026-08-17
 

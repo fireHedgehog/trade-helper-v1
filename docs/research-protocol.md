@@ -52,17 +52,24 @@ after seeing results.
 
 ## Parameter search and multiple testing
 
-The complete finite grid and its size must be written into the experiment record
-before evaluation. Every candidate and every later revision increments the
-attempt ledger, including failed and abandoned ideas. Parameter-stability tables
-must be shown; an isolated optimum is rejected. A multiple-comparison adjustment
-will be selected before performance evaluation is implemented. Until that choice
-is recorded, the notebook may inspect partitions but must not rank parameters.
+The locked experiment record contains 54 candidates and 12 long-lived ETFs.
+Every candidate and every later revision increments the attempt ledger, including
+failed and abandoned ideas; the earlier 14-configuration tuning run is recorded
+as contaminated exploratory work. Parameter-stability tables must be shown; an
+isolated optimum is rejected.
+
+Each candidate's validation excess daily returns will use a one-sided circular
+moving-block bootstrap (20-bar blocks, 5,000 deterministic resamples). The 54
+raw p-values will receive a Holm family-wise-error correction at alpha 0.05.
+This controls the declared family but not the unrecorded human choices that led
+to it, which is why prospective confirmation remains necessary.
 
 ## Current boundary
 
 The checked-in notebook creates a candidate-tail partition and walk-forward
 manifest only. It intentionally does not evaluate returns or select a winner.
-The next implementation slice must define the attempt ledger, finite grid,
-selection score, and multiple-testing treatment first. Even after that work, the
-historical SPY tail remains exploratory because prior inspection cannot be undone.
+The finite grid, attempt ledger, and multiple-testing treatment are now locked.
+The next implementation slice must implement and test the block bootstrap,
+fold-local selection, stability report, and immutable result record. Even after
+that work, the historical SPY tail remains exploratory because prior inspection
+cannot be undone.

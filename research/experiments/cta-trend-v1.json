@@ -1,0 +1,42 @@
+{
+  "experiment_id": "cta-trend-wf-v1",
+  "status": "preregistered_no_results",
+  "strategy": "CTA Trend",
+  "hypothesis_document": "docs/research-protocol.md",
+  "universe": [
+    "SPY", "QQQ", "IWM", "EFA", "EEM", "TLT",
+    "IEF", "GLD", "DBC", "XLK", "XLF", "XLE"
+  ],
+  "missing_symbol_policy": "report and exclude before evaluation; never replace after results",
+  "parameter_grid": {
+    "n_entry": [55, 100, 150],
+    "n_exit": [20, 40, 60],
+    "trend_ma": [100, 200],
+    "atr_period": [14],
+    "atr_mult": [3.0, 5.0, 7.0],
+    "atr_tp_mult": [0.0]
+  },
+  "candidate_count": 54,
+  "costs": {
+    "commission_per_side": 0.001,
+    "quoted_spread": 0.0002,
+    "slippage_per_fill": 0.0005,
+    "annual_cash_yield": 0.0
+  },
+  "partitions": {
+    "train_bars": 756,
+    "validation_bars": 252,
+    "test_bars": 252,
+    "step_bars": 252,
+    "candidate_tail_bars": 504
+  },
+  "multiple_testing": {
+    "raw_test": "one-sided circular moving-block bootstrap of validation excess daily returns",
+    "block_bars": 20,
+    "resamples": 5000,
+    "adjustment": "Holm family-wise error rate",
+    "alpha": 0.05,
+    "family_size": 54
+  },
+  "confirmation": "prospective post-lock data required; historical candidate tail is contaminated"
+}

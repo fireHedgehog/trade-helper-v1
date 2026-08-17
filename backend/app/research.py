@@ -8,7 +8,10 @@ than a statistically untouched confirmatory sample.
 
 from __future__ import annotations
 
+import itertools
+import json
 from dataclasses import asdict, dataclass
+from pathlib import Path
 
 import pandas as pd
 
@@ -110,3 +113,53 @@ def walk_forward_folds(
 def fold_manifest(folds: list[WalkForwardFold]) -> pd.DataFrame:
     """Small reviewable table; contains boundaries, never performance results."""
     return pd.DataFrame([fold.to_dict() for fold in folds])
+
+
+def load_experiment_spec(path: str | Path) -> dict:
+    """Load and validate a preregistration without evaluating any returns."""
+    spec = json.loads(Path(path).read_text())
+    required = {
+        "experiment_id", "status", "strategy", "universe", "parameter_grid",
+        "candidate_count", "costs", "partitions", "multiple_testing",
+    }
+    missing = required - set(spec)
+    if missing:
+        raise ValueError(f"experiment spec missing: {', '.join(sorted(missing))}")
+    if spec["status"] != "preregistered_no_results":
+        raise ValueError("new evaluation requires preregistered_no_results status")
+    universe = spec["universe"]
+    if not universe or len(universe) != len(set(universe)):
+        raise ValueError("universe must be non-empty and unique")
+    grid = spec["parameter_grid"]
+    if not grid or any(not isinstance(values, list) or not values for values in grid.values()):
+        raise ValueError("every parameter grid dimension must be a non-empty list")
+    combinations = list(itertools.product(*grid.values()))
+    if len(combinations) != spec["candidate_count"]:
+        raise ValueError("candidate_count does not match parameter grid")
+    correction = spec["multiple_testing"]
+    if correction.get("family_size") != len(combinations):
+        raise ValueError("multiple-testing family must cover every candidate")
+    if correction.get("adjustment") != "Holm family-wise error rate":
+        raise ValueError("unsupported multiple-testing adjustment")
+    return spec
+
+
+def parameter_candidates(spec: dict) -> list[dict]:
+    """Expand the locked grid in deterministic manifest order."""
+    grid = spec["parameter_grid"]
+    keys = list(grid)
+    return [dict(zip(keys, values)) for values in itertools.product(*(grid[key] for key in keys))]
+
+
+def holm_adjust(p_values: list[float]) -> list[float]:
+    """Holm step-down adjusted p-values, preserving the caller's order."""
+    if any(not 0 <= value <= 1 for value in p_values):
+        raise ValueError("p-values must be between 0 and 1")
+    count = len(p_values)
+    ranked = sorted(enumerate(p_values), key=lambda item: item[1])
+    adjusted = [0.0] * count
+    running = 0.0
+    for rank, (original, value) in enumerate(ranked):
+        running = max(running, min(1.0, (count - rank) * value))
+        adjusted[original] = running
+    return adjusted

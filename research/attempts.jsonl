@@ -1,0 +1,2 @@
+{"attempt_id":"legacy-cta-v012","strategy":"CTA Trend","status":"contaminated_exploratory","candidate_count":14,"scope":"15 selected symbols, all available history","result_used_for_defaults":true,"note":"Predates protocol; full-history inspection contaminates later historical SPY tail."}
+{"attempt_id":"cta-trend-wf-v1","strategy":"CTA Trend","status":"preregistered_no_results","candidate_count":54,"scope":"12 locked long-lived ETFs; missing names reported, never replaced","result_used_for_defaults":false,"note":"Grid and correction method locked before new evaluation."}
