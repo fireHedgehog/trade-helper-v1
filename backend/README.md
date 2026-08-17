@@ -48,5 +48,10 @@ python -m app.fetch SPY GC=F CL=F    # more symbols
 python -m app.universe               # build/refresh the watch universe
 python -m app.fetch --universe       # batched fetch, 1s delay, retry on 429
 python -m app.engine SPY             # backtest SMA Cross on local bars
+python -m app.run_experiment         # resumable preregistered CTA experiment
 uvicorn app.main:app --reload        # serve API + UI at http://127.0.0.1:8000
 ```
+
+Experiment candidate caches are fingerprinted and written under ignored
+`../data/`; the reviewable evidence record is written under `../output/research/`.
+It remains exploratory development research, not prospective confirmation.

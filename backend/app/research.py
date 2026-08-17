@@ -76,17 +76,23 @@ class CandidateWindowEvaluation:
     params: dict
     eligible_symbols: tuple[str, ...]
     excluded_symbols: tuple[tuple[str, str], ...]
+    median_strategy_return: float
+    median_benchmark_return: float
     median_excess_return: float
     median_calmar: float | None
     median_max_drawdown: float
+    median_exposure: float
+    total_closed_trades: int
     dates: tuple[str, ...]
+    strategy_daily_returns: tuple[float, ...]
+    benchmark_daily_returns: tuple[float, ...]
     excess_daily_returns: tuple[float, ...]
 
     def summary(self) -> dict:
         return {
             key: value
             for key, value in asdict(self).items()
-            if key not in {"dates", "excess_daily_returns"}
+            if key != "dates" and not key.endswith("_daily_returns")
         }
 
 
@@ -295,14 +301,25 @@ def evaluate_candidate_window(
             f"excluded={dict(excluded)}"
         )
 
-    series = {
+    excess_series = {
         symbol: pd.Series(result.excess_daily_returns, index=result.dates, dtype=float)
         for symbol, result in evaluations.items()
     }
-    aligned = pd.concat(series, axis=1, join="inner").sort_index()
-    if len(aligned) < 2:
+    strategy_series = {
+        symbol: pd.Series(result.strategy_daily_returns, index=result.dates, dtype=float)
+        for symbol, result in evaluations.items()
+    }
+    benchmark_series = {
+        symbol: pd.Series(result.benchmark_daily_returns, index=result.dates, dtype=float)
+        for symbol, result in evaluations.items()
+    }
+    aligned_excess = pd.concat(excess_series, axis=1, join="inner").sort_index()
+    common_dates = aligned_excess.index
+    if len(common_dates) < 2:
         raise ValueError("eligible symbols have fewer than two common return dates")
-    equal_weight_excess = aligned.mean(axis=1)
+    equal_weight_excess = aligned_excess.mean(axis=1)
+    equal_weight_strategy = pd.concat(strategy_series, axis=1).loc[common_dates].mean(axis=1)
+    equal_weight_benchmark = pd.concat(benchmark_series, axis=1).loc[common_dates].mean(axis=1)
     symbol_excess = [
         result.strategy_return - result.benchmark_return
         for result in evaluations.values()
@@ -318,12 +335,24 @@ def evaluate_candidate_window(
         params=dict(params),
         eligible_symbols=tuple(evaluations),
         excluded_symbols=tuple(excluded),
+        median_strategy_return=float(
+            np.median([result.strategy_return for result in evaluations.values()])
+        ),
+        median_benchmark_return=float(
+            np.median([result.benchmark_return for result in evaluations.values()])
+        ),
         median_excess_return=float(np.median(symbol_excess)),
         median_calmar=float(np.median(calmars)) if calmars else None,
         median_max_drawdown=float(
             np.median([result.max_drawdown for result in evaluations.values()])
         ),
-        dates=tuple(str(value) for value in aligned.index),
+        median_exposure=float(
+            np.median([result.exposure for result in evaluations.values()])
+        ),
+        total_closed_trades=sum(result.closed_trades for result in evaluations.values()),
+        dates=tuple(str(value) for value in common_dates),
+        strategy_daily_returns=tuple(float(value) for value in equal_weight_strategy),
+        benchmark_daily_returns=tuple(float(value) for value in equal_weight_benchmark),
         excess_daily_returns=tuple(float(value) for value in equal_weight_excess),
     )
 

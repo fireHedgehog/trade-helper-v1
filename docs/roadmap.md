@@ -140,12 +140,13 @@ assumptions, and uncertainty or limitation.
 **Exit gate:** the final test set remains untouched until a written model is
 locked, and results are reported even when they fail.
 
-**Current checkpoint (v0.19.4):** partition mechanics, preregistration,
+**Current checkpoint (v0.19.6):** partition mechanics, preregistration,
 dependence-aware testing, fold-local returns, and validation-only selection are
-implemented and tested. The 54-candidate real-data run has not started. The
-hidden 504-bar SPY tail remains only a workflow rehearsal because earlier
-versions inspected it. Valid confirmation requires genuinely unseen future or
-otherwise uninspected point-in-time data.
+implemented and tested. A fingerprinted, atomic, resumable 14-fold × 54-candidate
+runner is ready, but the real-data run has not started. The hidden 504-bar SPY
+tail remains only a workflow rehearsal because earlier versions inspected it.
+Valid confirmation requires genuinely unseen future or otherwise uninspected
+point-in-time data.
 
 ## Stage 5 — portfolio and risk model
 

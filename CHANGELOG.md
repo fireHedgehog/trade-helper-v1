@@ -2,6 +2,17 @@
 
 # Changelog
 
+## v0.19.6 — 2026-08-18
+
+- Added a resumable CLI runner for the locked 14-fold × 54-candidate × 12-ETF
+  development experiment.
+- Cache identity hashes the full experiment specification and every locked OHLCV
+  series. Candidate cache and evidence writes are atomic; changed data cannot
+  silently resume stale work.
+- Evidence retains selected validation summaries, every raw/adjusted p-value,
+  and complete selected test daily returns needed for later drawdown and regime
+  auditing. **94 tests pass. The runner was not executed before this commit.**
+
 ## v0.19.5 — 2026-08-18
 
 - Completed a coverage-only audit of the locked 12-ETF universe and fetched the

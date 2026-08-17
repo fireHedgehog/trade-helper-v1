@@ -136,6 +136,9 @@ def test_candidate_uses_locked_symbols_and_common_dates(
     assert result.eligible_symbols == ("ONE", "TWO")
     assert result.excluded_symbols == (("MISSING", "missing"),)
     assert len(result.dates) == len(result.excess_daily_returns)
+    assert len(result.dates) == len(result.strategy_daily_returns)
+    assert len(result.dates) == len(result.benchmark_daily_returns)
+    assert result.total_closed_trades >= 0
 
 
 def test_candidate_fails_closed_on_insufficient_coverage(
@@ -161,10 +164,16 @@ def _candidate(name: str, excess: float, score: float) -> CandidateWindowEvaluat
         params={"name": name},
         eligible_symbols=("ONE", "TWO"),
         excluded_symbols=(),
+        median_strategy_return=score,
+        median_benchmark_return=0.0,
         median_excess_return=score,
         median_calmar=1.0,
         median_max_drawdown=-0.1,
+        median_exposure=0.5,
+        total_closed_trades=10,
         dates=tuple(f"2024-01-{day:02d}" for day in range(1, 21)),
+        strategy_daily_returns=(excess,) * 20,
+        benchmark_daily_returns=(0.0,) * 20,
         excess_daily_returns=(excess,) * 20,
     )
 

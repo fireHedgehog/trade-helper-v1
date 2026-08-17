@@ -108,6 +108,12 @@ excluded later ETF launches forever. The common calendar was therefore locked to
 2006-02-06 before inspecting candidate returns. This is recorded as a protocol
 amendment rather than silently rewritten.
 
+The experiment runner is resumable. Its cache path includes a SHA-256 fingerprint
+of the complete specification and every locked OHLCV series, so changed data or
+protocol settings cannot silently reuse old candidates. Candidate files and the
+evidence record are replaced atomically, and incomplete smoke runs are labeled
+incomplete. The runner itself was checkpointed before execution.
+
 ## Current boundary
 
 The checked-in notebook creates a candidate-tail partition and walk-forward
