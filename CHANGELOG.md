@@ -2,6 +2,15 @@
 
 # Changelog
 
+## v0.19.7 — 2026-08-18
+
+- Paused the first sequential execution after two completed folds when expanding-
+  history timing showed an excessive projected runtime; all completed candidates
+  remained in the fingerprinted cache.
+- Added deterministic process-level candidate parallelism without changing fold,
+  scoring, bootstrap, selection, or test semantics. Results are restored to the
+  original candidate order before correction and selection. **94 tests pass.**
+
 ## v0.19.6 — 2026-08-18
 
 - Added a resumable CLI runner for the locked 14-fold × 54-candidate × 12-ETF
