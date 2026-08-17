@@ -280,91 +280,80 @@ def _default_params(strategy_name: str) -> dict:
     return {key: value["default"] for key, value in STRATEGY_PARAMS[strategy_name].items()}
 
 
-def _new_position_from_window(bars: pd.DataFrame, strategy_name: str, params: dict) -> dict | None:
-    """Initial state for a symbol with no ledger row yet (first run)."""
-    signal = compute_signal(bars.tail(LOOKBACK), strategy_name, params)
-    if signal is None:
-        return None
-    if signal["state"] == "long":
-        window = bars.tail(LOOKBACK)
-        idx = _last_entry_index(_entry_series(window, strategy_name, params))
-        if idx is not None and idx + 1 < len(window):
-            entry_price = float(window["open"].iloc[idx + 1])
-            atr = float(_atr(window, 14).iloc[idx + 1])
-            return {
+def _closed_position(state: dict, date_str: str, close_px: float, reason: str) -> dict:
+    """Record the last exit (date, price, reason, realized P&L) and go flat."""
+    entry_px = state.get("entry_price")
+    pnl_pct = round((close_px / entry_px - 1) * 100, 2) if entry_px else None
+    pnl_usd = round(POSITION_SHARES * (close_px - entry_px), 2) if entry_px else None
+    return {
+        "state": "flat",
+        "entry_date": None, "entry_price": None, "stop": None, "tp": None,
+        "exit_date": date_str,
+        "exit_price": round(close_px, 2),
+        "exit_reason": reason,
+        "exit_pnl_pct": pnl_pct,
+        "exit_pnl_usd": pnl_usd,
+    }
+
+
+def _replay_ledger(bars: pd.DataFrame, strategy_name: str, params: dict) -> dict:
+    """Full-history replay of the paper position (flat → pending → long) for one
+    symbol: vectorized signal/ATR series plus a cheap scalar loop over bars.
+
+    Entry signals at the close, fill at the NEXT open (NDO), exits on the
+    3×ATR trailing stop or 2×ATR take-profit. Returns the current state plus
+    the last realized exit — the record that explains an otherwise-empty row.
+    """
+    entries = _entry_series(bars, strategy_name, params).to_numpy(dtype=bool)
+    atr = _atr(bars, 14).to_numpy()
+    dates = bars["date"].tolist()
+    opens = bars["open"].tolist()
+    closes = bars["close"].tolist()
+    state = {"state": "flat", "entry_date": None, "entry_price": None,
+             "stop": None, "tp": None, "exit_date": None, "exit_price": None,
+             "exit_reason": None, "exit_pnl_pct": None, "exit_pnl_usd": None}
+    for i in range(len(bars)):
+        open_px, close_px = opens[i], closes[i]
+        if state["state"] == "flat":
+            if entries[i]:
+                state["state"] = "entry_pending"  # keeps the last-exit record
+        elif state["state"] == "entry_pending":
+            a = atr[i] if i >= 14 else None
+            state = {
                 "state": "long",
-                "entry_date": str(window["date"].iloc[idx + 1]),
-                "entry_price": round(entry_price, 2),
-                "stop": round(entry_price - STOP_ATR_MULT * atr, 2),
-                "tp": round(entry_price + TP_ATR_MULT * atr, 2),
+                "entry_date": dates[i],
+                "entry_price": round(open_px, 2),
+                "stop": round(open_px - STOP_ATR_MULT * a, 2) if a else None,
+                "tp": round(open_px + TP_ATR_MULT * a, 2) if a else None,
+                "exit_date": None, "exit_price": None, "exit_reason": None,
+                "exit_pnl_pct": None, "exit_pnl_usd": None,
             }
-    if signal["event"] == "entry":
-        return {"state": "entry_pending", "entry_date": None, "entry_price": None,
-                "stop": None, "tp": None}
-    return None
+        else:  # long
+            a = atr[i] if i >= 14 else None
+            if a and state["stop"] is not None:
+                state["stop"] = round(max(state["stop"], close_px - STOP_ATR_MULT * a), 2)
+            if state["stop"] is not None and close_px < state["stop"]:
+                state = _closed_position(state, dates[i], close_px, "stop")
+            elif state["tp"] is not None and close_px >= state["tp"]:
+                state = _closed_position(state, dates[i], close_px, "target")
+    return state
 
 
 def advance_positions(strategy_name: str, params: dict | None = None, set_name: str = "defaults") -> None:
-    """Advance the core-watchlist ledger to the latest bar (idempotent per day)."""
+    """Replay the paper ledger for the core watchlist from full history.
+
+    Deterministic and idempotent: signal at close, fill at the next open,
+    exits on the 3×ATR trailing stop or 2×ATR take-profit. The latest
+    realized exit is kept in the ledger so a flat row always shows why.
+    """
     if params is None:
         params = _default_params(strategy_name)
     for symbol in CORE_WATCHLIST:
         bars = load_bars(symbol)
         if bars.empty:
             continue
-        latest_date = str(bars["date"].iloc[-1])
-        row = store.get_position(symbol, strategy_name, set_name)
-        if row is None:
-            new = _new_position_from_window(bars, strategy_name, params)
-            if new:
-                # Replay from the entry date so exits (stop/TP) that happened
-                # between entry and now are simulated, not skipped.
-                updated = new["entry_date"] if new["state"] == "long" else latest_date
-                store.save_position(symbol, strategy_name, new, updated, set_name)
-                row = store.get_position(symbol, strategy_name, set_name)
-            else:
-                continue
-        if row["updated"] >= latest_date:
-            continue
-        state = {
-            "state": row["state"], "entry_date": row["entry_date"],
-            "entry_price": row["entry_price"], "stop": row["stop"], "tp": row["tp"],
-        }
-        for i in bars.index[bars["date"] > row["updated"]]:
-            window = bars.iloc[max(0, i + 1 - LOOKBACK): i + 1]
-            signal = compute_signal(window, strategy_name, params)
-            if signal is None:
-                continue
-            open_px = float(bars["open"].iloc[i])
-            close_px = float(bars["close"].iloc[i])
-            atr_px = None
-            if i >= 14:
-                atr_px = float(_atr(bars.iloc[max(0, i + 1 - 60): i + 1], 14).iloc[-1])
-            if state["state"] == "flat":
-                if signal["event"] == "entry":
-                    state = {"state": "entry_pending", "entry_date": None,
-                             "entry_price": None, "stop": None, "tp": None}
-            elif state["state"] == "entry_pending":
-                state = {
-                    "state": "long",
-                    "entry_date": str(bars["date"].iloc[i]),
-                    "entry_price": round(open_px, 2),
-                    "stop": round(open_px - STOP_ATR_MULT * atr_px, 2) if atr_px else None,
-                    "tp": round(open_px + TP_ATR_MULT * atr_px, 2) if atr_px else None,
-                }
-            elif state["state"] == "long":
-                if atr_px and state["stop"] is not None:
-                    state["stop"] = round(max(state["stop"], close_px - STOP_ATR_MULT * atr_px), 2)
-                if state["stop"] is not None and close_px < state["stop"]:
-                    state = {"state": "flat", "entry_date": None, "entry_price": None,
-                             "stop": None, "tp": None}
-                elif state["tp"] is not None and close_px >= state["tp"]:
-                    state = {"state": "flat", "entry_date": None, "entry_price": None,
-                             "stop": None, "tp": None}
-        if state["state"] == "flat":
-            store.delete_position(symbol, strategy_name, set_name)
-        else:
-            store.save_position(symbol, strategy_name, state, latest_date, set_name)
+        state = _replay_ledger(bars, strategy_name, params)
+        store.save_position(symbol, strategy_name, state, str(bars["date"].iloc[-1]), set_name)
 
 
 def positions_payload(strategy_name: str, set_name: str = "defaults") -> list[dict]:
@@ -373,7 +362,16 @@ def positions_payload(strategy_name: str, set_name: str = "defaults") -> list[di
     for symbol in CORE_WATCHLIST:
         row = store.get_position(symbol, strategy_name, set_name)
         if not row or row["state"] == "flat":
-            rows.append({"symbol": symbol, "state": "flat"})
+            item = {"symbol": symbol, "state": "flat"}
+            if row and row.get("exit_date"):
+                item["last_exit"] = {
+                    "date": row.get("exit_date"),
+                    "price": row.get("exit_price"),
+                    "reason": row.get("exit_reason"),
+                    "pnl_pct": row.get("exit_pnl_pct"),
+                    "pnl_usd": row.get("exit_pnl_usd"),
+                }
+            rows.append(item)
             continue
         bars = load_bars(symbol)
         if bars.empty:

@@ -122,7 +122,7 @@ intended for cloud compute — do not trigger it on a laptop.
 3. Data pipeline: fetch SPY → SQLite (idempotent daily job) ✅
 4. First strategy (SMA cross) + minimal backtest → metrics ✅
 5. Chart viewer: candles + entry/exit markers + algorithm lines ✅
-5. Today view: scan ✅, simulated positions ✅, rule rank ✅, confidence ✅, saved sets ✅, pick cards ✅
+5. Today view: scan ✅, paper trading ✅, rule rank ✅, confidence ✅, saved sets ✅, pick cards ✅
 6. Strategy Lab: params ✅, symbols ✅, saved param sets ✅, scoreboard ✅, batch runs (later)
 7. Macro view: event-driven calendar ✅ (beat/miss history later)
 9. Classic TA series: S/R bounce ✅, Fib retrace ✅, wave pull ✅
@@ -171,17 +171,17 @@ intended for cloud compute — do not trigger it on a laptop.
 ## 9. Design notes (recorded, mostly future work)
 
 - **Saved params ("tuned models"):** ✅ built v0.7.1 — the Lab saves a tuned param set (name, params, date) into SQLite and Explorer applies saved sets from a dropdown. Next slice: let the Today scan use a saved set too.
-- **Daily signal state machine:** ✅ core watchlist built v0.9.0 — the `positions` ledger persists flat → entry_pending → long per symbol+strategy and advances when the Today view is fetched. Remaining: the daily cron job and a snapshot table for all symbols.
+- **Daily signal state machine:** ✅ core watchlist built v0.9.0 — the `positions` ledger persists flat → entry_pending → long per symbol+strategy. Since v0.11.2 it is replayed from full history on every Today fetch (vectorized signals + ATR, cheap scalar loop) and flat rows keep their **last exit** (date, price, stop/target, realized P&L). Remaining: the daily cron job and a snapshot table for all symbols.
 - **Rule-based ranking & confidence:** ✅ both built (v0.9.0–v0.10.0) — rule rank = momentum + trend + volatility score; confidence = per-strategy historical hit rate and avg 20-day return with all-time and 3Y slices. Sample-limited by default locally; full universe is a cloud-only trigger. Remaining: per-symbol slices.
 - **Classic TA validity lab:** ✅ S/R Bounce, Fib Retrace, Wave Pull built (v0.8.0–v0.9.0), each with params and an on-chart explanation. First honest measurement: Fib Retrace +6.7% vs +3,109% buy & hold on SPY over 33 years — the classic levels do not add value as implemented. Backtest first, believe later.
 - **Macro beat/miss:** last actuals come from FRED, next dates + forecasts from Trading Economics. Consensus history for past releases (needed for beat/miss badges) still needs a source — pending.
-- **Simulated positions (paper ledger) — designed v0.8.1, not built yet:**
+- **Paper trading ledger** — built v0.9.0, last-exit tracking added v0.11.2:
   - Replaces the "Holding" section and moves to the top of the Today view, above Entries/Exits.
   - One simulated position per symbol per strategy, fixed size **100 shares**.
   - Entry: next open after an entry signal (NDO). Exit: ATR trailing stop or take-profit, whichever first — exit at the following open.
   - Columns: Symbol | Entry date | Entry px | Now | P&L % | P&L $ (100 sh) | ATR stop | Take profit | Note.
   - ATR stop: starts at entry − 3×ATR(14), ratchets up to close − 3×ATR (never moves down). Take profit: entry + 2×ATR(14).
-  - Row shows "—" when no active position (never entered, or already exited).
+  - Flat rows show the **last exit** (date, price, `stop`/`target`, realized P&L) so an empty section always explains itself.
   - Default scope dropdown: SPY, QQQ, MAGS, SOXX, IGV, then all XLs in that order; "All symbols" option.
   - For the core watchlist, position state is computed from full history (entry never lost); for "All symbols", from the 300-bar lookback.
 
@@ -200,6 +200,11 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.11.2 — 2026-08-17
+
+- The Today positions section is renamed **Paper Trading — Sector ETFs** (a quick paper simulation of the selected model across all sector/core ETFs).
+- **Last exit tracking:** the ledger is now replayed from full history on every fetch (vectorized signal/ATR series + a cheap scalar loop — laptop-safe, no per-bar signal recomputation), and flat rows show their **last exit**: date, price, `stop` or `target`, and realized P&L. An empty row no longer hides why it's empty.
 
 ### v0.11.1 — 2026-08-17
 

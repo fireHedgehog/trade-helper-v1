@@ -68,6 +68,7 @@
   .chip.warning { background: #3a2d1f; color: var(--accent); }
   .ev-prev { color: var(--muted); }
   .badge { font-size: 10px; background: #374151; padding: 1px 6px; border-radius: 6px; color: var(--muted); margin-left: 6px; }
+  tr.muted td { opacity: .55; }
   .sample-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
   #regime-banner { font-size: 12px; padding: 6px 10px; border-radius: 8px; }
   #regime-banner.ok { background: #1f3a37; color: var(--green); }
@@ -261,7 +262,7 @@
         <div id="confidence-body">computing…</div>
       </section>
       <section class="panel">
-        <h2>Simulated Positions <span class="badge">paper · 100 sh · core watchlist</span></h2>
+        <h2>Paper Trading — Sector ETFs <span class="badge">selected model × sector ETFs · 100 sh · last exit tracked</span></h2>
         <table>
           <thead><tr><th>Symbol</th><th>Since</th><th>Entry</th><th>Now</th><th>P&L %</th><th>P&L $</th><th>ATR stop</th><th>Take profit</th><th>Note</th></tr></thead>
           <tbody id="sim-positions"></tbody>
@@ -849,13 +850,24 @@ async function loadToday(refresh = false) {
       `<div class="rank ${r.rank >= 0 ? 'pos' : 'neg'}" title="${r.rank_note || ''}">rank ${r.rank} — ${r.rank_note || ''}</div>` +
       `</div>`).join('') || '<div class="sample-note">none</div>';
     const simRows = (list) => list.map((r) => {
+      if (r.state === 'flat') {
+        const ex = r.last_exit;
+        if (!ex) return `<tr class="muted"><td>${r.symbol}</td><td colspan="8">— no trade yet —</td></tr>`;
+        const cls = ex.pnl_pct == null ? '' : (ex.pnl_pct >= 0 ? 'pos' : 'neg');
+        const pnl = ex.pnl_pct == null ? '—' : `${ex.pnl_pct >= 0 ? '+' : ''}${ex.pnl_pct.toFixed(1)}%`;
+        const usd = ex.pnl_usd == null ? '—' : `${ex.pnl_usd >= 0 ? '+' : ''}${ex.pnl_usd.toFixed(0)}`;
+        return `<tr class="muted"><td>${r.symbol}</td><td>${ex.date || '—'}</td><td>${ex.price ?? '—'}</td><td>—</td>` +
+          `<td class="${cls}">${pnl}</td><td class="${cls}">${usd}</td>` +
+          `<td colspan="2"><span class="chip ${ex.reason === 'target' ? 'entry' : 'exit'}">${ex.reason || 'exit'}</span></td>` +
+          `<td>closed — waiting for next signal</td></tr>`;
+      }
       const pnl = r.pnl_pct == null ? '—' : `${r.pnl_pct >= 0 ? '+' : ''}${r.pnl_pct.toFixed(1)}%`;
       const usd = r.pnl_usd == null ? '—' : `${r.pnl_usd >= 0 ? '+' : ''}${r.pnl_usd.toFixed(0)}`;
       const cls = r.pnl_pct == null ? '' : (r.pnl_pct >= 0 ? 'pos' : 'neg');
       return `<tr><td>${r.symbol}</td><td>${r.since || '—'}</td><td>${r.entry ?? '—'}</td>` +
         `<td>${r.now ?? '—'}</td><td class="${cls}">${pnl}</td><td class="${cls}">${usd}</td>` +
         `<td>${r.stop ?? '—'}</td><td>${r.tp ?? '—'}</td><td>${r.note || '—'}</td></tr>`;
-    }).join('') || '<tr><td colspan="9">no open simulated positions — all —</td></tr>';
+    }).join('') || '<tr><td colspan="9">ledger empty — no trades recorded yet</td></tr>';
     $('#sim-positions').innerHTML = simRows(positionsData.positions);
     $('#today-entries').innerHTML = pickCards(data.entries, 'ENTRY', 'entry');
     $('#today-exits').innerHTML = pickCards(data.exits, 'EXIT', 'exit');

@@ -47,6 +47,11 @@ CREATE TABLE IF NOT EXISTS positions (
     entry_price REAL,
     stop        REAL,
     tp          REAL,
+    exit_date   TEXT,
+    exit_price  REAL,
+    exit_reason TEXT,   -- 'stop' | 'target'
+    exit_pnl_pct REAL,
+    exit_pnl_usd REAL,
     updated     TEXT NOT NULL,   -- last bar date processed
     PRIMARY KEY (symbol, strategy, set_name)
 );
@@ -63,6 +68,14 @@ def connect() -> sqlite3.Connection:
     if cols and "set_name" not in cols:
         conn.execute("DROP TABLE positions")
         conn.executescript(SCHEMA)
+        cols = [row[1] for row in conn.execute("PRAGMA table_info(positions)").fetchall()]
+    # Migration: positions gained last-exit tracking (rows preserved).
+    for column, sql_type in (
+        ("exit_date", "TEXT"), ("exit_price", "REAL"), ("exit_reason", "TEXT"),
+        ("exit_pnl_pct", "REAL"), ("exit_pnl_usd", "REAL"),
+    ):
+        if column not in cols:
+            conn.execute(f"ALTER TABLE positions ADD COLUMN {column} {sql_type}")
     return conn
 
 
@@ -172,7 +185,8 @@ def delete_param_set(name: str) -> None:
 def get_position(symbol: str, strategy: str, set_name: str = "defaults") -> dict | None:
     with connect() as conn:
         row = conn.execute(
-            "SELECT state, entry_date, entry_price, stop, tp, updated "
+            "SELECT state, entry_date, entry_price, stop, tp, "
+            "exit_date, exit_price, exit_reason, exit_pnl_pct, exit_pnl_usd, updated "
             "FROM positions WHERE symbol = ? AND strategy = ? AND set_name = ?",
             (symbol, strategy, set_name),
         ).fetchone()
@@ -184,7 +198,12 @@ def get_position(symbol: str, strategy: str, set_name: str = "defaults") -> dict
         "entry_price": row[2],
         "stop": row[3],
         "tp": row[4],
-        "updated": row[5],
+        "exit_date": row[5],
+        "exit_price": row[6],
+        "exit_reason": row[7],
+        "exit_pnl_pct": row[8],
+        "exit_pnl_usd": row[9],
+        "updated": row[10],
     }
 
 
@@ -195,8 +214,9 @@ def save_position(
     with connect() as conn:
         conn.execute(
             "INSERT OR REPLACE INTO positions "
-            "(symbol, strategy, set_name, state, entry_date, entry_price, stop, tp, updated) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "(symbol, strategy, set_name, state, entry_date, entry_price, stop, tp, "
+            "exit_date, exit_price, exit_reason, exit_pnl_pct, exit_pnl_usd, updated) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 symbol,
                 strategy,
@@ -206,6 +226,11 @@ def save_position(
                 fields.get("entry_price"),
                 fields.get("stop"),
                 fields.get("tp"),
+                fields.get("exit_date"),
+                fields.get("exit_price"),
+                fields.get("exit_reason"),
+                fields.get("exit_pnl_pct"),
+                fields.get("exit_pnl_usd"),
                 updated,
             ),
         )
