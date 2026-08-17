@@ -5,8 +5,14 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from app.engine import backtest_bars_payload
-from app.execution import simulate
+from app.engine import (
+    ANNUAL_CASH_YIELD,
+    COMMISSION,
+    SLIPPAGE,
+    SPREAD,
+    backtest_bars_payload,
+)
+from app.execution import simulate, validate_bars
 from app.rules import RuleSet
 from app.signals import _replay_ledger, compute_stateful_signal
 from app.strategies import STRATEGY_PARAMS
@@ -111,7 +117,15 @@ def test_api_payload_is_the_same_canonical_simulation(
     research_bars: pd.DataFrame, strategy_name: str
 ) -> None:
     params = {key: meta["default"] for key, meta in STRATEGY_PARAMS[strategy_name].items()}
-    direct = simulate(research_bars, strategy_name, params)
+    direct = simulate(
+        research_bars,
+        strategy_name,
+        params,
+        commission=COMMISSION,
+        spread=SPREAD,
+        slippage=SLIPPAGE,
+        annual_cash_yield=ANNUAL_CASH_YIELD,
+    )
     payload = backtest_bars_payload(research_bars, "FIXTURE", strategy_name, params)
 
     assert payload["metrics"]["# Trades"] == len(direct.trades)
@@ -127,6 +141,13 @@ def test_api_payload_is_the_same_canonical_simulation(
     assert [trade["exit_date"] for trade in payload["trades"]] == [
         trade["exit_date"] for trade in direct.trades
     ]
+
+
+def test_adjusted_price_rounding_noise_is_not_an_invalid_candle() -> None:
+    bars = _bars([100.0, 101.0], [100.0, 101.0])
+    bars.loc[0, "high"] = bars.loc[0, "close"] * (1 - 1e-14)
+    bars.loc[0, "low"] = bars.loc[0, "close"] * (1 + 1e-14)
+    validate_bars(bars)
 
 
 @pytest.mark.parametrize("strategy_name", list(STRATEGY_PARAMS))

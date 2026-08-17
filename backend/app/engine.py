@@ -20,6 +20,9 @@ from .strategies import STRATEGIES, STRATEGY_PARAMS
 
 CASH = 100_000
 COMMISSION = 0.001  # 0.1% per side — deliberate, so results aren't fantasy
+SPREAD = 0.0002  # 2 bps quoted spread; each fill pays half
+SLIPPAGE = 0.0005  # 5 bps adverse movement per fill
+ANNUAL_CASH_YIELD = 0.0  # configurable; zero is conservative and reproducible
 
 METRICS = [
     "Start",
@@ -28,10 +31,20 @@ METRICS = [
     "Exposure Time [%]",
     "Return [%]",
     "Buy & Hold Return [%]",
+    "Exposure-Matched Benchmark [%]",
+    "CAGR [%]",
+    "Annual Volatility [%]",
+    "Downside Deviation [%]",
+    "Sortino Ratio",
+    "Calmar Ratio",
     "Max. Drawdown [%]",
+    "Max. Drawdown Duration [bars]",
     "Win Rate [%]",
     "Profit Factor",
     "Sharpe Ratio",
+    "Expectancy [$]",
+    "Expectancy [%]",
+    "Annual Turnover [x]",
     "# Trades",
 ]
 
@@ -61,6 +74,10 @@ def backtest_payload(
     params: dict | None = None,
     start: str | None = None,
     end: str | None = None,
+    commission: float = COMMISSION,
+    spread: float = SPREAD,
+    slippage: float = SLIPPAGE,
+    annual_cash_yield: float = ANNUAL_CASH_YIELD,
 ) -> dict:
     """Full result: metrics + trades + equity curve — what the chart viewer renders.
 
@@ -73,7 +90,11 @@ def backtest_payload(
         bars = bars[bars["date"] >= start]
     if end:
         bars = bars[bars["date"] <= end]
-    return backtest_bars_payload(bars.reset_index(drop=True), symbol, strategy_name, params)
+    return backtest_bars_payload(
+        bars.reset_index(drop=True), symbol, strategy_name, params,
+        commission=commission, spread=spread, slippage=slippage,
+        annual_cash_yield=annual_cash_yield,
+    )
 
 
 def backtest_bars_payload(
@@ -81,6 +102,11 @@ def backtest_bars_payload(
     symbol: str,
     strategy_name: str,
     params: dict | None = None,
+    *,
+    commission: float = COMMISSION,
+    spread: float = SPREAD,
+    slippage: float = SLIPPAGE,
+    annual_cash_yield: float = ANNUAL_CASH_YIELD,
 ) -> dict:
     """Run the canonical engine on supplied bars (I/O-free and testable)."""
     if len(bars) < 60:
@@ -96,9 +122,14 @@ def backtest_bars_payload(
         strategy_name,
         resolved_params,
         initial_cash=CASH,
-        commission=COMMISSION,
+        commission=commission,
+        spread=spread,
+        slippage=slippage,
+        annual_cash_yield=annual_cash_yield,
     )
-    stats = execution_metrics(simulation, bars, CASH)
+    stats = execution_metrics(
+        simulation, bars, CASH, annual_cash_yield=annual_cash_yield
+    )
     metric_values = {metric: _plain(stats[metric]) for metric in METRICS if metric in stats}
     metric_values["Open Position"] = stats.get("Open Position", False)
     metric_values["Pending Order"] = stats.get("Pending Order")
@@ -141,6 +172,16 @@ def backtest_bars_payload(
         "trades": trades,
         "equity": equity,
         "open_position": open_position,
+        "assumptions": {
+            "initial_cash": CASH,
+            "commission_per_side": commission,
+            "quoted_spread": spread,
+            "slippage_per_fill": slippage,
+            "annual_cash_yield": annual_cash_yield,
+            "signal_timing": "completed close",
+            "fill_timing": "next available open",
+            "stop_model": "close signal, next-open fill",
+        },
     }
 
 

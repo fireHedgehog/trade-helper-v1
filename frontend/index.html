@@ -243,6 +243,7 @@
       <div>
         <h2 id="metrics-title">Metrics</h2>
         <div class="metrics" id="metrics"></div>
+        <div class="sample-note" id="metric-assumptions"></div>
       </div>
       <div>
         <h2>Equity curve</h2>
@@ -273,7 +274,7 @@
     </div>
     <div class="today-body">
       <section class="panel">
-        <h2 id="confidence-title">Confidence</h2>
+        <h2 id="confidence-title">Historical post-signal statistics</h2>
         <div id="confidence-body">computing…</div>
       </section>
       <section class="panel">
@@ -304,7 +305,7 @@
   <div id="view-lab" class="view" hidden>
     <div class="macro-body">
       <section class="panel">
-        <h2>Strategy scoreboard — historical confidence</h2>
+        <h2>Strategy scoreboard — historical post-signal statistics</h2>
         <select id="lab-years" style="margin-right:8px">
           <option value="252" selected>1 year</option>
           <option value="756">3 years</option>
@@ -519,20 +520,36 @@ function metricCard(label, value, color = '') {
          `<div class="value ${color}">${value}</div></div>`;
 }
 
-function renderMetrics(m) {
+function renderMetrics(m, assumptions = {}) {
   $('#metrics-title').textContent = `Metrics — ${currentRange()}`;
   const fmt = (v) => (v == null ? '—' : typeof v === 'number' ? v.toFixed(2) : v);
   const ret = m['Return [%]'], bh = m['Buy & Hold Return [%]'];
   $('#metrics').innerHTML =
     metricCard('Return %', fmt(ret), ret >= 0 ? 'pos' : 'neg') +
     metricCard('Buy & Hold %', fmt(bh), bh >= 0 ? 'pos' : 'neg') +
+    metricCard('Exposure-match %', fmt(m['Exposure-Matched Benchmark [%]'])) +
+    metricCard('CAGR %', fmt(m['CAGR [%]'])) +
+    metricCard('Annual volatility %', fmt(m['Annual Volatility [%]'])) +
+    metricCard('Downside deviation %', fmt(m['Downside Deviation [%]'])) +
     metricCard('Max DD %', fmt(m['Max. Drawdown [%]']), 'neg') +
+    metricCard('DD duration', fmt(m['Max. Drawdown Duration [bars]'])) +
     metricCard('Win Rate %', fmt(m['Win Rate [%]'])) +
     metricCard('Profit Factor', fmt(m['Profit Factor'])) +
     metricCard('Sharpe', fmt(m['Sharpe Ratio'])) +
+    metricCard('Sortino', fmt(m['Sortino Ratio'])) +
+    metricCard('Calmar', fmt(m['Calmar Ratio'])) +
+    metricCard('Expectancy %', fmt(m['Expectancy [%]'])) +
+    metricCard('Turnover / yr', fmt(m['Annual Turnover [x]'])) +
     metricCard('# Trades', m['# Trades']) +
     metricCard('Exposure %', fmt(m['Exposure Time [%]'])) +
     metricCard('Position', m['Open Position'] ? 'OPEN' : 'flat', m['Open Position'] ? 'pos' : '');
+  $('#metric-assumptions').textContent =
+    `${m.Start || '?'} to ${m.End || '?'} · single historical path; point estimates, not proof · ` +
+    `costs per fill: commission ${(100 * (assumptions.commission_per_side || 0)).toFixed(2)}% · ` +
+    `spread ${(100 * (assumptions.quoted_spread || 0)).toFixed(2)}% quoted · ` +
+    `slippage ${(100 * (assumptions.slippage_per_fill || 0)).toFixed(2)}% · ` +
+    `cash yield ${(100 * (assumptions.annual_cash_yield || 0)).toFixed(2)}%/yr · ` +
+    `${assumptions.signal_timing || 'close signal'} → ${assumptions.fill_timing || 'next open'}`;
 }
 
 function renderTrades(trades) {
@@ -749,7 +766,7 @@ async function run() {
     renderChart(bars);
     setOverlays(strategy, bars);
     candleSeries.setMarkers(markersFromTrades(backtest.trades, backtest.open_position));
-    renderMetrics(backtest.metrics);
+    renderMetrics(backtest.metrics, backtest.assumptions);
     renderTrades(backtest.trades);
     renderEquity(backtest.equity);
     renderGuide(symbol, strategy);
@@ -869,7 +886,7 @@ async function loadScore(name, force, syms, days) {
       api(`/api/confidence?${q}`),
       api(`/api/score-return?${q}`),
     ]);
-    const a = c.all_time, r = c.last_3y, b = c.baseline || {};
+    const a = c.selected_window || c.all_time, r = c.recent_3y || c.last_3y, b = c.baseline || {};
     const win = (v) => v.hit_rate == null ? '—' : `${v.hit_rate}%`;
     const noise = a.samples > 0 && a.samples < 30 ? `<span class="chip warning">n=${a.samples}</span>` : '';
     const rCls = ret.ret_med != null && ret.bh_med != null
@@ -1001,26 +1018,30 @@ async function loadToday(refresh = false) {
 }
 
 function renderConfidence(c) {
-  const a = c.all_time, r = c.last_3y, b = c.baseline || {};
-  $('#confidence-title').textContent = `Confidence — ${c.strategy} (${c.horizon_days}-day forward)`;
+  const a = c.selected_window || c.all_time, r = c.recent_3y || c.last_3y, b = c.baseline || {};
+  $('#confidence-title').textContent = `Historical post-signal statistics — ${c.strategy} (${c.horizon_days}-day forward)`;
   if (!a.samples) {
     $('#confidence-body').textContent = 'not enough data yet';
     return;
   }
   const win = (v) => v.hit_rate == null ? '—' : `${v.hit_rate}%`;
   const stat = (k, v, cls) => `<div class="stat"><span class="k">${k}</span><span class="v ${cls || ''}">${v}</span></div>`;
-  const noise = a.samples < 30 ? ' <span class="chip warning">n=' + a.samples + '</span>' : '';
+  const noise = !a.sufficient_sample ? ' <span class="chip warning">low sample n=' + a.samples + '</span>' : '';
   const names = (c.sample?.names || []).join(' · ');
+  const hitCi = a.hit_rate_ci95 ? `${a.hit_rate_ci95[0]}–${a.hit_rate_ci95[1]}%` : '—';
+  const avgCi = a.avg_return_ci95 ? `${a.avg_return_ci95[0]}–${a.avg_return_ci95[1]}%` : '—';
   $('#confidence-body').innerHTML =
     `<div class="conf-stats">` +
     stat('win rate', win(a) + noise, a.hit_rate >= 50 ? 'pos' : 'neg') +
     stat(`avg ${c.horizon_days}d`, `${a.avg_return >= 0 ? '+' : ''}${a.avg_return}%`, a.avg_return >= 0 ? 'pos' : 'neg') +
     stat('signals', a.samples) +
+    stat('win 95% CI', hitCi) +
+    stat('avg 95% CI', avgCi) +
     stat('market base', win(b)) +
     stat('3Y win', win(r), r.hit_rate >= 50 ? 'pos' : 'neg') +
     stat('3Y signals', r.samples) +
     `</div>` +
-    `<div class="sample-note" title="${names}">sample: ${c.sample?.symbols ?? '?'} symbols × ${c.sample?.days ?? 'full'} bars (hover for names) · win rate only matters vs the baseline</div>`;
+    `<div class="sample-note" title="${names}">sample: ${c.sample?.symbols ?? '?'} symbols · ${c.sample?.start || '?'} to ${c.sample?.end || '?'} · non-overlapping within symbols · month-cluster bootstrap · descriptive, not probability · costs excluded</div>`;
 }
 
 async function loadMacro() {

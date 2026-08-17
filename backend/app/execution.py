@@ -61,11 +61,17 @@ def validate_bars(bars: pd.DataFrame) -> None:
         raise ValueError("OHLC prices must be positive")
     if (bars["volume"] < 0).any():
         raise ValueError("volume cannot be negative")
-    if (bars["high"] < bars[["open", "close"]].max(axis=1)).any():
+    expected_high = bars[["open", "close"]].max(axis=1)
+    expected_low = bars[["open", "close"]].min(axis=1)
+    # Adjusted provider data can differ at the final binary floating-point bit
+    # (for example 2.8e-14 at a $246 close). Keep real candle violations strict
+    # while accepting representation noise far below any tradable precision.
+    relative_tolerance = 1e-12
+    if (bars["high"] + expected_high * relative_tolerance < expected_high).any():
         raise ValueError("bar high cannot be below open or close")
-    if (bars["low"] > bars[["open", "close"]].min(axis=1)).any():
+    if (bars["low"] - expected_low * relative_tolerance > expected_low).any():
         raise ValueError("bar low cannot be above open or close")
-    if (bars["low"] > bars["high"]).any():
+    if (bars["low"] - bars["high"] * relative_tolerance > bars["high"]).any():
         raise ValueError("bar low cannot exceed high")
 
 
@@ -104,9 +110,23 @@ def simulate(
     initial_cash: float = 100_000.0,
     commission: float = 0.001,
     fixed_shares: int | None = None,
+    spread: float = 0.0,
+    slippage: float = 0.0,
+    annual_cash_yield: float = 0.0,
 ) -> Simulation:
     """Replay one long-only strategy without any same-bar fills."""
     validate_bars(bars)
+    for name, value in {
+        "commission": commission,
+        "spread": spread,
+        "slippage": slippage,
+    }.items():
+        if not math.isfinite(value) or not 0 <= value < 1:
+            raise ValueError(f"{name} must be finite and between 0 and 1")
+    if not math.isfinite(annual_cash_yield) or annual_cash_yield <= -1:
+        raise ValueError("annual_cash_yield must be finite and greater than -1")
+    if initial_cash <= 0 or not math.isfinite(initial_cash):
+        raise ValueError("initial_cash must be finite and positive")
     if bars.empty:
         return Simulation(strategy=strategy_name, position=Position())
 
@@ -114,17 +134,22 @@ def simulate(
     position = Position()
     result = Simulation(strategy=strategy_name, position=position)
     cash = float(initial_cash)
+    daily_cash_rate = (1 + annual_cash_yield) ** (1 / 252) - 1
     pending_signal_index: int | None = None
     exposure_bars = 0
 
     for index in range(len(bars)):
         row = bars.iloc[index]
         date = str(row["date"])
-        open_price = float(row["open"])
+        market_open = float(row["open"])
         close = float(row["close"])
+
+        if index > 0 and cash > 0 and annual_cash_yield:
+            cash *= 1 + daily_cash_rate
 
         if position.state == "entry_pending":
             assert pending_signal_index is not None
+            open_price = market_open * (1 + spread / 2 + slippage)
             shares = (
                 fixed_shares
                 if fixed_shares is not None
@@ -154,6 +179,7 @@ def simulate(
 
         elif position.state == "exit_pending":
             assert position.entry_price is not None
+            open_price = market_open * (1 - spread / 2 - slippage)
             proceeds = position.shares * open_price
             exit_fee = proceeds * commission
             cash += proceeds - exit_fee
@@ -225,7 +251,13 @@ def simulate(
     return result
 
 
-def metrics(simulation: Simulation, bars: pd.DataFrame, initial_cash: float) -> dict:
+def metrics(
+    simulation: Simulation,
+    bars: pd.DataFrame,
+    initial_cash: float,
+    *,
+    annual_cash_yield: float = 0.0,
+) -> dict:
     """Core performance metrics over canonical marked-to-market equity."""
     if not simulation.equity:
         return {}
@@ -239,19 +271,65 @@ def metrics(simulation: Simulation, bars: pd.DataFrame, initial_cash: float) -> 
     if len(daily) > 1 and float(daily.std(ddof=1)) > 0:
         sharpe = float(daily.mean() / daily.std(ddof=1) * math.sqrt(252))
     profit_factor = sum(wins) / abs(sum(losses)) if losses else None
+    start_date = pd.Timestamp(bars["date"].iloc[0])
+    end_date = pd.Timestamp(bars["date"].iloc[-1])
+    years = max((end_date - start_date).days / 365.25, 1 / 252)
+    total_return = float(equity.iloc[-1]) / initial_cash - 1
+    cagr = (1 + total_return) ** (1 / years) - 1 if total_return > -1 else -1.0
+    volatility = float(daily.std(ddof=1) * math.sqrt(252)) if len(daily) > 1 else None
+    downside = daily.clip(upper=0)
+    downside_deviation = (
+        float(math.sqrt(float((downside**2).mean())) * math.sqrt(252))
+        if len(downside)
+        else None
+    )
+    sortino = (
+        float(daily.mean() * 252 / downside_deviation)
+        if downside_deviation and downside_deviation > 0
+        else None
+    )
+    max_drawdown = float(drawdown.min())
+    calmar = cagr / abs(max_drawdown) if max_drawdown < 0 else None
+    underwater = drawdown < 0
+    max_drawdown_bars = 0
+    current = 0
+    for value in underwater:
+        current = current + 1 if value else 0
+        max_drawdown_bars = max(max_drawdown_bars, current)
+    exposure = sum(row["exposed"] for row in simulation.equity) / len(simulation.equity)
+    asset_daily = bars["close"].astype(float).pct_change().fillna(0)
+    cash_daily = (1 + annual_cash_yield) ** (1 / 252) - 1
+    matched_daily = exposure * asset_daily + (1 - exposure) * cash_daily
+    matched_return = float((1 + matched_daily).prod() - 1)
+    traded_notional = sum(
+        trade["size"] * (trade["entry_price"] + trade["exit_price"])
+        for trade in simulation.trades
+    )
+    annual_turnover = traded_notional / float(equity.mean()) / years
     return {
         "Start": str(bars["date"].iloc[0]),
         "End": str(bars["date"].iloc[-1]),
         "Duration": f"{len(bars)} bars",
-        "Exposure Time [%]": sum(row["exposed"] for row in simulation.equity)
-        / len(simulation.equity)
-        * 100,
-        "Return [%]": (float(equity.iloc[-1]) / initial_cash - 1) * 100,
+        "Exposure Time [%]": exposure * 100,
+        "Return [%]": total_return * 100,
         "Buy & Hold Return [%]": (float(bars["close"].iloc[-1]) / float(bars["close"].iloc[0]) - 1) * 100,
-        "Max. Drawdown [%]": float(drawdown.min() * 100),
+        "Exposure-Matched Benchmark [%]": matched_return * 100,
+        "CAGR [%]": cagr * 100,
+        "Annual Volatility [%]": volatility * 100 if volatility is not None else None,
+        "Downside Deviation [%]": downside_deviation * 100 if downside_deviation is not None else None,
+        "Sortino Ratio": sortino,
+        "Calmar Ratio": calmar,
+        "Max. Drawdown [%]": max_drawdown * 100,
+        "Max. Drawdown Duration [bars]": max_drawdown_bars,
         "Win Rate [%]": len(wins) / len(returns) * 100 if returns else None,
         "Profit Factor": profit_factor,
         "Sharpe Ratio": sharpe,
+        "Expectancy [$]": sum(returns) / len(returns) if returns else None,
+        "Expectancy [%]": sum(trade["return_pct"] for trade in simulation.trades)
+        / len(simulation.trades)
+        if simulation.trades
+        else None,
+        "Annual Turnover [x]": annual_turnover,
         "# Trades": len(simulation.trades),
         "Open Position": simulation.position.state in {"long", "exit_pending"},
         "Pending Order": simulation.position.state if simulation.position.state.endswith("pending") else None,

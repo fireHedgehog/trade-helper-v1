@@ -66,10 +66,10 @@ async def test_backtest_rejects_bad_window(client) -> None:
 async def test_valid_backtest_parameters_reach_engine(client, monkeypatch) -> None:
     captured = {}
 
-    def fake_payload(symbol, strategy, params, start, end):
+    def fake_payload(symbol, strategy, params, start, end, **assumptions):
         captured.update(
             {"symbol": symbol, "strategy": strategy, "params": params,
-             "start": start, "end": end}
+             "start": start, "end": end, "assumptions": assumptions}
         )
         return {"ok": True}
 
@@ -81,6 +81,7 @@ async def test_valid_backtest_parameters_reach_engine(client, monkeypatch) -> No
     assert response.status_code == 200
     assert response.json() == {"ok": True}
     assert captured["params"] == {"atr_mult": 4.5, "n_entry": 120}
+    assert captured["assumptions"]["spread"] == 0.0002
 
 
 async def test_saved_set_rejects_invalid_params(client) -> None:
@@ -102,3 +103,9 @@ async def test_bars_rejects_oversized_request(client) -> None:
     response = await client.get("/api/bars/SPY", params={"days": 100_001})
     assert response.status_code == 400
     assert response.json()["detail"] == "days must be between 0 and 10000"
+
+
+async def test_backtest_rejects_impossible_cost_assumption(client) -> None:
+    response = await client.get("/api/backtest/SPY", params={"slippage": -0.1})
+    assert response.status_code == 400
+    assert "slippage must be between" in response.json()["detail"]

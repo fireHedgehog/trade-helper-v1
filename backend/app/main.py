@@ -4,6 +4,7 @@ Run (from backend/):
     uvicorn app.main:app --reload
 """
 import time
+import math
 from datetime import date
 from pathlib import Path
 
@@ -171,8 +172,15 @@ def backtest(
     strategy: str = "CTA Trend",
     start: str | None = None,
     end: str | None = None,
+    commission: float = 0.001,
+    spread: float = 0.0002,
+    slippage: float = 0.0005,
+    cash_yield: float = 0.0,
 ):
-    reserved = {"symbol", "strategy", "start", "end"}
+    reserved = {
+        "symbol", "strategy", "start", "end", "commission", "spread",
+        "slippage", "cash_yield",
+    }
     unknown = set(request.query_params) - reserved - set(STRATEGY_PARAMS.get(strategy, {}))
     if unknown:
         raise HTTPException(status_code=400, detail=f"unknown parameter: {sorted(unknown)[0]}")
@@ -183,8 +191,30 @@ def backtest(
     }
     params = _validated_strategy_params(strategy, raw)
     _validated_window(start, end)
+    cost_values = {
+        "commission": (commission, 0.0, 0.05),
+        "spread": (spread, 0.0, 0.05),
+        "slippage": (slippage, 0.0, 0.05),
+        "cash_yield": (cash_yield, -0.2, 0.5),
+    }
+    for name, (value, lower, upper) in cost_values.items():
+        if not math.isfinite(value) or not lower <= value <= upper:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{name} must be between {lower} and {upper}",
+            )
     try:
-        return backtest_payload(symbol, strategy, params=params, start=start, end=end)
+        return backtest_payload(
+            symbol,
+            strategy,
+            params=params,
+            start=start,
+            end=end,
+            commission=commission,
+            spread=spread,
+            slippage=slippage,
+            annual_cash_yield=cash_yield,
+        )
     except KeyError:
         raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
     except RuntimeError as exc:
