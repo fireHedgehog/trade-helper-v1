@@ -2,6 +2,20 @@
 
 # Changelog
 
+## v0.20.0 — 2026-08-18
+
+- Completed the locked 14-fold × 54-candidate × 12-ETF development experiment.
+  No candidate survived validation in any fold; every minimum Holm-adjusted
+  p-value was 1.0.
+- Enforced the preregistered cash fallback in all 14 test folds. Observed test
+  evidence is therefore 0 trades, 0/14 positive-excess folds, and no estimable
+  Calmar—not a successful cash strategy.
+- Rejected CTA Trend v1 for insufficient validated evidence without changing the
+  grid, thresholds, costs, or correction. The contaminated candidate tail was
+  not evaluated.
+- Committed the fingerprinted evidence and a plain-language gate report. Large
+  resumable candidate caches remain ignored local data.
+
 ## v0.19.7 — 2026-08-18
 
 - Paused the first sequential execution after two completed folds when expanding-

@@ -125,28 +125,30 @@ assumptions, and uncertainty or limitation.
       parameter search ([research protocol](research-protocol.md)).
 - [x] Divide data chronologically into training, validation, and untouched test
       periods.
-- [ ] Implement rolling walk-forward evaluation with parameters selected only
+- [x] Implement rolling walk-forward evaluation with parameters selected only
       from information available at that time.
 - [ ] Reserve an untouched holdout universe and period.
-- [ ] Plot parameter stability and reject isolated "best" combinations.
+- [x] Report parameter stability: no configuration survived any validation fold,
+      so there is no selected-parameter series to plot and v1 is rejected.
 - [x] Start an append-only attempt ledger, including the contaminated legacy
       14-configuration CTA tuning run and the preregistered 54-candidate run.
-- [ ] Apply a suitable multiple-comparison or false-discovery adjustment.
-- [ ] Prefer point-in-time membership data; until available, limit claims and use
+- [x] Apply the preregistered 20-bar bootstrap and Holm family-wise correction to
+      all 54 candidates in every fold.
+- [x] Limit claims to the 12 locked long-lived ETFs because point-in-time index
+      membership is unavailable.
       long-lived broad ETFs to reduce survivorship bias.
-- [ ] Test bear, bull, sideways, high-volatility, and rising-rate regimes
-      separately without tuning to each result after inspection.
+- [x] Record regime results as not estimable: the locked selector held cash in
+      every test fold, so post-hoc regime tuning would be misleading.
 
 **Exit gate:** the final test set remains untouched until a written model is
 locked, and results are reported even when they fail.
 
-**Current checkpoint (v0.19.6):** partition mechanics, preregistration,
-dependence-aware testing, fold-local returns, and validation-only selection are
-implemented and tested. A fingerprinted, atomic, resumable 14-fold × 54-candidate
-runner is ready, but the real-data run has not started. The hidden 504-bar SPY
-tail remains only a workflow rehearsal because earlier versions inspected it.
-Valid confirmation requires genuinely unseen future or otherwise uninspected
-point-in-time data.
+**Current checkpoint (v0.20.0):** the development experiment is complete and CTA
+Trend v1 is rejected. No candidate survived any validation fold after Holm
+correction; all 14 test folds held cash, producing zero trades and insufficient
+evidence. The hidden 504-bar SPY tail was not evaluated and remains contaminated.
+A revised strategy requires a new preregistered experiment; valid confirmation
+still requires genuinely unseen future or uninspected point-in-time data.
 
 ## Stage 5 — portfolio and risk model
 

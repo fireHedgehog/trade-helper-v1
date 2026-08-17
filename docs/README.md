@@ -10,6 +10,8 @@
   rules, recorded design decisions, and limitations.
 - [Out-of-sample research protocol](research-protocol.md) — preregistered CTA
   hypothesis, partitions, acceptance gates, and contamination disclosure.
+- [CTA Trend walk-forward v1 result](research-results/cta-trend-wf-v1.md) —
+  rejected development hypothesis and exact gate outcomes.
 - [Changelog](../CHANGELOG.md) — complete version history.
 
 ## Architecture decisions

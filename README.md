@@ -23,8 +23,8 @@ out-of-sample research, is in progress.
 - Trading costs, spread, slippage, gaps, idle-cash yield, uncertainty intervals,
   and benchmark limitations are explicit.
 - The CTA walk-forward experiment is preregistered with a 12-ETF universe and
-  54 parameter candidates. Fold-local returns and selection are implemented and
-  tested, but no new real-data candidate ranking has been calculated yet.
+  54 parameter candidates. The completed development run rejected v1: no
+  candidate survived validation in any of 14 folds, so every test fold held cash.
 - Existing historical SPY results are exploratory and contaminated by prior
   inspection. Valid confirmation requires genuinely unseen future or otherwise
   uninspected point-in-time data.
@@ -34,6 +34,10 @@ out-of-sample research, is in progress.
 The honest baseline is poor as an “edge”: full-history SPY CTA returned roughly
 276.5% net versus roughly 3,119.6% buy-and-hold. Lower drawdown does not by itself
 prove that the strategy adds value.
+
+The stricter [walk-forward result](docs/research-results/cta-trend-wf-v1.md) is
+more negative: after costs and multiple-testing correction, CTA Trend v1 produced
+no validated candidate and is rejected for insufficient evidence.
 
 ## Quick start
 

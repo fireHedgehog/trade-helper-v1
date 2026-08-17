@@ -3,7 +3,8 @@
 # Rule of thumb: we commit the CODE that handles data (fetch/store/backtest .py),
 # never the DATA itself (market history, datasets, model artifacts).
 
-/data/                    # local market-data store
+/data/*
+!/data/README.md
 
 # Data file formats, wherever they appear
 *.sqlite
