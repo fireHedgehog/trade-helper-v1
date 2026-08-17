@@ -22,6 +22,8 @@ def test_locked_experiment_grid_has_declared_family_size() -> None:
     assert len(candidates) == 54
     assert len(spec["universe"]) == 12
     assert spec["multiple_testing"]["block_bars"] == 20
+    assert spec["selection"]["minimum_symbols"] == 8
+    assert spec["selection"]["no_survivor"].startswith("hold cash")
     assert spec["confirmation"].startswith("prospective")
 
 

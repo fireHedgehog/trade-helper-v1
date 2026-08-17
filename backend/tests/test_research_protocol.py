@@ -65,6 +65,7 @@ def test_window_returns_and_benchmark_have_identical_dates(
     assert result.actual_start >= result.requested_start
     assert result.actual_end == result.requested_end
     assert result.bars == len(result.strategy_daily_returns)
+    assert result.bars == len(result.dates)
     assert result.bars == len(result.benchmark_daily_returns)
     assert result.bars == len(result.excess_daily_returns)
     assert result.excess_daily_returns == tuple(

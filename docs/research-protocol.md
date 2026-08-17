@@ -66,6 +66,16 @@ raw p-values will receive a Holm family-wise-error correction at alpha 0.05.
 This controls the declared family but not the unrecorded human choices that led
 to it, which is why prospective confirmation remains necessary.
 
+Selection is also locked before evaluation. A symbol is eligible only when its
+stored history reaches the fold's training start and covers the validation
+window; at least 8 of the 12 preregistered ETFs must be eligible. Each candidate
+is measured on the intersection of those symbols' validation dates. The primary
+score is the median across symbols of net strategy return minus the constant-
+exposure benchmark return. A candidate must also pass the Holm-adjusted 0.05
+gate. Ties prefer higher median Calmar, then less-severe median drawdown, then
+lexicographic parameter JSON. If no candidate survives, the following test fold
+holds cash; it does not promote the least-bad configuration.
+
 The statistical primitives are implemented and deterministic. They center each
 candidate's excess-return series under a zero-mean null, resample contiguous
 blocks with circular wrapping, use an add-one p-value correction, and apply Holm

@@ -38,5 +38,18 @@
     "alpha": 0.05,
     "family_size": 54
   },
+  "selection": {
+    "phase": "validation",
+    "score": "median strategy return minus constant-exposure benchmark return across eligible symbols",
+    "minimum_symbols": 8,
+    "calendar_alignment": "intersection of eligible symbol dates; equal-weight daily excess",
+    "significance_gate": "Holm-adjusted one-sided block-bootstrap p-value <= 0.05",
+    "tie_breakers": [
+      "higher median Calmar",
+      "less severe median maximum drawdown",
+      "lexicographic parameter JSON"
+    ],
+    "no_survivor": "hold cash for the following test fold"
+  },
   "confirmation": "prospective post-lock data required; historical candidate tail is contaminated"
 }

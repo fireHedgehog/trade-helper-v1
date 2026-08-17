@@ -56,6 +56,7 @@ class WindowEvaluation:
     max_drawdown: float
     calmar: float | None
     closed_trades: int
+    dates: tuple[str, ...]
     strategy_daily_returns: tuple[float, ...]
     benchmark_daily_returns: tuple[float, ...]
     excess_daily_returns: tuple[float, ...]
@@ -64,7 +65,7 @@ class WindowEvaluation:
         return {
             key: value
             for key, value in asdict(self).items()
-            if not key.endswith("_daily_returns")
+            if not key.endswith("_daily_returns") and key != "dates"
         }
 
 
@@ -220,6 +221,7 @@ def evaluate_window(
         max_drawdown=max_drawdown,
         calmar=calmar,
         closed_trades=closed_trades,
+        dates=tuple(str(value) for value in daily["date"]),
         strategy_daily_returns=tuple(float(value) for value in daily["strategy_return"]),
         benchmark_daily_returns=tuple(float(value) for value in daily["benchmark_return"]),
         excess_daily_returns=tuple(float(value) for value in daily["excess_return"]),
@@ -231,7 +233,7 @@ def load_experiment_spec(path: str | Path) -> dict:
     spec = json.loads(Path(path).read_text())
     required = {
         "experiment_id", "status", "strategy", "universe", "parameter_grid",
-        "candidate_count", "costs", "partitions", "multiple_testing",
+        "candidate_count", "costs", "partitions", "multiple_testing", "selection",
     }
     missing = required - set(spec)
     if missing:
@@ -252,6 +254,13 @@ def load_experiment_spec(path: str | Path) -> dict:
         raise ValueError("multiple-testing family must cover every candidate")
     if correction.get("adjustment") != "Holm family-wise error rate":
         raise ValueError("unsupported multiple-testing adjustment")
+    selection = spec["selection"]
+    if selection.get("phase") != "validation":
+        raise ValueError("candidate selection phase must be validation")
+    if not 1 <= selection.get("minimum_symbols", 0) <= len(universe):
+        raise ValueError("selection minimum_symbols must fit the locked universe")
+    if selection.get("no_survivor") != "hold cash for the following test fold":
+        raise ValueError("selection must define the conservative no-survivor action")
     return spec
 
 

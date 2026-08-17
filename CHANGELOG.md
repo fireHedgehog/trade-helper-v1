@@ -2,6 +2,15 @@
 
 # Changelog
 
+## v0.19.3 — 2026-08-18
+
+- Locked fold-local selection before candidate evaluation: validation-only
+  scoring, at least 8 of 12 ETFs, common-date equal-weight aggregation, median
+  benchmark-relative return, Holm significance gate, deterministic tie breakers,
+  and a cash fallback when nothing survives.
+- Recorded the amendment in the append-only attempt ledger. No candidate
+  performance was calculated before this checkpoint.
+
 ## v0.19.2 — 2026-08-18
 
 - Added fold-local strategy, constant-exposure benchmark, and excess daily-return
