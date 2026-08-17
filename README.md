@@ -201,6 +201,12 @@ Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
 
+### v0.11.1 — 2026-08-17
+
+- Confidence now shows the **market baseline** next to every hit rate (% of ALL sampled windows that were up) — a 100% win rate on 11 signals in a trending sample is exposed for what it is.
+- Small samples (<30) get a visible "n=…" noise chip in the scoreboard.
+- Fixed: FRED series with zero values produced `inf` forward returns → JSON 500; non-finite returns are now filtered.
+
 ### v0.11.0 — 2026-08-17
 
 - Macro calendar is now **event-driven**: a curated US catalog (FOMC, CPI, Core PCE, NFP, unemployment, jobless claims, GDP, retail sales, ISM) where each event shows the next release date + forecast (Trading Economics) and the last actual vs previous (FRED), with category icons. Beat/miss vs consensus is honestly marked n/a until a forecast-history source exists.

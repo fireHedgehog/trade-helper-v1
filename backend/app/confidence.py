@@ -14,6 +14,7 @@ is opt-in (Strategy Lab trigger) and is meant for cloud compute.
 import time
 from datetime import datetime, timedelta
 
+import numpy as np
 import pandas as pd
 
 from .signals import CORE_WATCHLIST, _entry_series
@@ -33,7 +34,9 @@ _cache: dict = {}
 def _summarize(returns: list[float]) -> dict:
     if not returns:
         return {"samples": 0, "hit_rate": None, "avg_return": None}
-    series = pd.Series(returns)
+    series = pd.Series(returns).replace([np.inf, -np.inf], np.nan).dropna()
+    if series.empty:
+        return {"samples": 0, "hit_rate": None, "avg_return": None}
     return {
         "samples": int(len(series)),
         "hit_rate": round(float((series > 0).mean() * 100), 1),
@@ -69,6 +72,7 @@ def compute_confidence(
     params = {k: v["default"] for k, v in STRATEGY_PARAMS[strategy_name].items()}
     returns: list[float] = []
     dates: list[str] = []
+    all_forward: list[float] = []  # every window -> market baseline
 
     for symbol in symbols:
         if max_days > 0:
@@ -82,13 +86,16 @@ def compute_confidence(
         except Exception:
             continue
         forward = bars["close"].shift(-HORIZON) / bars["close"] - 1
-        mask = entries & forward.notna()
+        valid = forward.notna()
+        all_forward.extend(forward[valid].astype(float).tolist())
+        mask = entries & valid
         if not mask.any():
             continue
         returns.extend(forward[mask].astype(float).tolist())
         dates.extend(bars["date"][mask].astype(str).tolist())
 
     all_time = _summarize(returns)
+    baseline = _summarize(all_forward)  # if baseline is high, any long works
     last_3y = {"samples": 0, "hit_rate": None, "avg_return": None}
     if dates:
         cutoff = (
@@ -106,6 +113,7 @@ def compute_confidence(
         },
         "all_time": all_time,
         "last_3y": last_3y,
+        "baseline": baseline,
     }
     _cache[key] = {"at": time.time(), "data": data}
     return data

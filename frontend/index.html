@@ -65,6 +65,7 @@
   .ev-name { flex: 1.2; font-weight: 600; }
   .ev-cell { flex: 1; font-size: 12px; color: var(--muted); }
   .chip.forecast { background: #234; color: #93c5fd; }
+  .chip.warning { background: #3a2d1f; color: var(--accent); }
   .ev-prev { color: var(--muted); }
   .badge { font-size: 10px; background: #374151; padding: 1px 6px; border-radius: 6px; color: var(--muted); margin-left: 6px; }
   .sample-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
@@ -289,7 +290,7 @@
         <button class="primary" id="lab-compute">Compute / refresh all</button>
         <div class="sample-note" id="lab-sample-note"></div>
         <table style="margin-top:10px">
-          <thead><tr><th>Strategy</th><th>All-time win</th><th>Avg 20d</th><th>Samples</th><th>3Y win</th><th>3Y samples</th></tr></thead>
+          <thead><tr><th>Strategy</th><th>All-time win</th><th>Mkt base</th><th>Avg 20d</th><th>Samples</th><th>3Y win</th><th>3Y samples</th></tr></thead>
           <tbody id="scoreboard"></tbody>
         </table>
         <div class="sample-note">Honest statistics: measured past performance, not a prediction. Small samples are noise.</div>
@@ -780,7 +781,7 @@ async function loadLab(force = false) {
     : `sample: ${sym} symbols × ${day || 'all'} bars — laptop-safe`;
   const { strategies } = await api('/api/strategies');
   $('#scoreboard').innerHTML = strategies.map((s) =>
-    `<tr data-strategy="${s.name}"><td>${s.name}</td><td colspan="5" class="muted">…</td></tr>`
+    `<tr data-strategy="${s.name}"><td>${s.name}</td><td colspan="6" class="muted">…</td></tr>`
   ).join('');
   loading(true, 'computing confidence…');
   try {
@@ -797,17 +798,19 @@ async function loadScore(name, force, sym, day) {
   if (!row) return;
   try {
     const c = await api(`/api/confidence?strategy=${encodeURIComponent(name)}&symbols=${sym}&days=${day}${force ? '&force=1' : ''}`);
-    const a = c.all_time, r = c.last_3y;
+    const a = c.all_time, r = c.last_3y, b = c.baseline || {};
     const win = (v) => v.hit_rate == null ? '—' : `${v.hit_rate}%`;
+    const noise = a.samples > 0 && a.samples < 30 ? `<span class="chip warning">n=${a.samples}</span>` : '';
     row.innerHTML =
       `<td>${name}</td>` +
-      `<td class="${a.hit_rate != null && a.hit_rate >= 50 ? 'pos' : 'neg'}">${win(a)}</td>` +
+      `<td class="${a.hit_rate != null && a.hit_rate >= 50 ? 'pos' : 'neg'}">${win(a)} ${noise}</td>` +
+      `<td>${win(b)}</td>` +
       `<td>${a.avg_return ?? '—'}%</td>` +
       `<td>${a.samples}</td>` +
       `<td class="${r.hit_rate != null && r.hit_rate >= 50 ? 'pos' : 'neg'}">${win(r)}</td>` +
       `<td>${r.samples}</td>`;
   } catch (err) {
-    row.innerHTML = `<td>${name}</td><td colspan="5">error: ${err.message}</td>`;
+    row.innerHTML = `<td>${name}</td><td colspan="6">error: ${err.message}</td>`;
   }
 }
 
@@ -879,13 +882,15 @@ async function loadToday(refresh = false) {
 }
 
 function renderConfidence(c) {
-  const a = c.all_time, r = c.last_3y;
+  const a = c.all_time, r = c.last_3y, b = c.baseline || {};
   $('#confidence-title').textContent = `Confidence — ${c.strategy} (${c.horizon_days}-day forward)`;
   const win = (v) => v.hit_rate == null ? '—' : `${v.hit_rate}%`;
   $('#confidence-body').innerHTML = a.samples
-    ? `All-time: <b class="${a.hit_rate >= 50 ? 'pos' : 'neg'}">${win(a)}</b> win · avg <b>${a.avg_return}%</b> in ${c.horizon_days}d · ${a.samples} signals &nbsp;|&nbsp; ` +
-      `Last 3Y: <b class="${r.hit_rate >= 50 ? 'pos' : 'neg'}">${win(r)}</b> win · avg <b>${r.avg_return}%</b> · ${r.samples} signals` +
-      `<div class="sample-note">sample: ${c.sample?.symbols ?? '?'} symbols × ${c.sample?.days ?? 'full'} bars — laptop-safe default; fuller runs in Strategy Lab</div>`
+    ? `All-time: <b class="${a.hit_rate >= 50 ? 'pos' : 'neg'}">${win(a)}</b> win · avg <b>${a.avg_return}%</b> in ${c.horizon_days}d · ${a.samples} signals` +
+      (a.samples < 30 ? ' <span class="chip warning">small sample — noise</span>' : '') +
+      ` &nbsp;|&nbsp; market baseline: <b>${win(b)}</b> of all windows up` +
+      ` &nbsp;|&nbsp; Last 3Y: <b class="${r.hit_rate >= 50 ? 'pos' : 'neg'}">${win(r)}</b> win · avg <b>${r.avg_return}%</b> · ${r.samples} signals` +
+      `<div class="sample-note">sample: ${c.sample?.symbols ?? '?'} symbols × ${c.sample?.days ?? 'full'} bars — laptop-safe default; fuller runs in Strategy Lab. Win rate only matters vs the baseline.</div>`
     : 'not enough data yet';
 }
 
