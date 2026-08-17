@@ -2,6 +2,15 @@
 
 # Changelog
 
+## v0.19.1 — 2026-08-18
+
+- Implemented the preregistered one-sided circular moving-block bootstrap for
+  mean excess returns, including null centering, deterministic seeds, circular
+  blocks, and a non-zero add-one p-value correction.
+- Added complete-family Holm adjustment reporting without running it on strategy
+  candidates yet. Fold-local return construction remains a separate review gate.
+- Verified **82 tests pass**.
+
 ## v0.19.0 — 2026-08-18
 
 - Replaced the 787-line root README with a concise project landing page focused

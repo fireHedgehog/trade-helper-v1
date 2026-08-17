@@ -13,6 +13,7 @@ import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from .execution import validate_bars
@@ -163,3 +164,74 @@ def holm_adjust(p_values: list[float]) -> list[float]:
         running = max(running, min(1.0, (count - rank) * value))
         adjusted[original] = running
     return adjusted
+
+
+def circular_block_bootstrap_p_value(
+    excess_returns: list[float] | pd.Series,
+    *,
+    block_bars: int = 20,
+    resamples: int = 5_000,
+    seed: int = 17_291,
+) -> float:
+    """One-sided p-value for positive mean excess return under serial dependence.
+
+    Returns are centered to impose the zero-mean null, then sampled in circular
+    contiguous blocks. The add-one correction prevents a misleading zero p-value.
+    """
+    values = np.asarray(excess_returns, dtype=float)
+    values = values[np.isfinite(values)]
+    if len(values) < 2:
+        raise ValueError("bootstrap requires at least two finite returns")
+    if block_bars <= 0 or block_bars > len(values):
+        raise ValueError("block_bars must be between 1 and the sample length")
+    if resamples <= 0:
+        raise ValueError("resamples must be positive")
+
+    observed = float(values.mean())
+    centered = values - observed
+    blocks_needed = (len(values) + block_bars - 1) // block_bars
+    offsets = np.arange(block_bars)
+    rng = np.random.default_rng(seed)
+    at_least_observed = 0
+    for _ in range(resamples):
+        starts = rng.integers(0, len(values), size=blocks_needed)
+        indexes = (starts[:, None] + offsets) % len(values)
+        boot_mean = float(centered[indexes.ravel()[: len(values)]].mean())
+        if boot_mean >= observed:
+            at_least_observed += 1
+    return (at_least_observed + 1) / (resamples + 1)
+
+
+def multiple_testing_report(
+    returns_by_candidate: dict[str, list[float] | pd.Series],
+    *,
+    block_bars: int,
+    resamples: int,
+    alpha: float,
+    seed: int = 17_291,
+) -> list[dict]:
+    """Apply the locked bootstrap and Holm correction to one candidate family."""
+    if not returns_by_candidate:
+        raise ValueError("candidate family cannot be empty")
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must be between 0 and 1")
+    names = list(returns_by_candidate)
+    raw = [
+        circular_block_bootstrap_p_value(
+            returns_by_candidate[name],
+            block_bars=block_bars,
+            resamples=resamples,
+            seed=seed + index,
+        )
+        for index, name in enumerate(names)
+    ]
+    adjusted = holm_adjust(raw)
+    return [
+        {
+            "candidate": name,
+            "raw_p_value": raw[index],
+            "holm_p_value": adjusted[index],
+            "reject_zero_excess": adjusted[index] <= alpha,
+        }
+        for index, name in enumerate(names)
+    ]

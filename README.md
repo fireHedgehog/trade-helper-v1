@@ -19,7 +19,7 @@ out-of-sample research, is in progress.
 
 - One canonical state machine drives backtests, signals, chart markers, and the
   simulated ledger: completed-close signal → next-available-open fill.
-- The deterministic test suite currently contains 79 passing tests.
+- The deterministic test suite currently contains 82 passing tests.
 - Trading costs, spread, slippage, gaps, idle-cash yield, uncertainty intervals,
   and benchmark limitations are explicit.
 - The CTA walk-forward experiment is preregistered with a 12-ETF universe and

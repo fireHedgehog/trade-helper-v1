@@ -66,6 +66,12 @@ raw p-values will receive a Holm family-wise-error correction at alpha 0.05.
 This controls the declared family but not the unrecorded human choices that led
 to it, which is why prospective confirmation remains necessary.
 
+The statistical primitives are implemented and deterministic. They center each
+candidate's excess-return series under a zero-mean null, resample contiguous
+blocks with circular wrapping, use an add-one p-value correction, and apply Holm
+across the complete candidate family. They have not yet been run on candidate
+performance; fold-local return construction and selection remain the next gate.
+
 ## Current boundary
 
 The checked-in notebook creates a candidate-tail partition and walk-forward
