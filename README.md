@@ -271,10 +271,13 @@ assumptions, and uncertainty or limitation.
 **Exit gate:** the final test set remains untouched until a written model is
 locked, and results are reported even when they fail.
 
-**Current checkpoint (v0.18.0):** partition mechanics and the preregistered
-hypothesis are complete, but Stage 4 is not. The final 504-bar holdout has not
-been evaluated. Parameter ranking remains blocked until the universe, finite
-grid, attempt ledger, and multiple-testing treatment are committed.
+**Current checkpoint (v0.18.1 correction):** partition mechanics and the
+preregistered hypothesis are complete, but Stage 4 is not. The hidden 504-bar
+SPY tail is only a workflow rehearsal, not an untouched holdout: earlier versions
+already tuned and displayed full-history SPY results. Parameter ranking remains
+blocked until the universe, finite grid, attempt ledger, and multiple-testing
+treatment are committed. Valid confirmation must use genuinely unseen future or
+otherwise uninspected point-in-time data.
 
 ### Stage 5 — portfolio and risk model
 
@@ -477,13 +480,24 @@ Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
 
+### v0.18.1 — 2026-08-17
+
+- Corrected an overclaim in v0.18.0: the hidden 504-bar SPY tail is not a valid
+  untouched holdout because prior app versions and research inspected full-history
+  SPY, including that period. Renamed the code boundary to `CandidateHoldout` and
+  labeled it as a workflow rehearsal.
+- A valid confirmatory result now explicitly requires prospectively collected
+  post-lock data or another genuinely uninspected point-in-time dataset. Prior
+  exposure cannot be repaired by hiding the same observations later.
+
 ### v0.18.0 — 2026-08-17
 
 - **Stage 4 foundation only — not a strategy result:** preregistered the CTA
   hypothesis, primary benchmark-relative metric, stability/risk/evidence gates,
   failure rule, and final-holdout unlock boundary.
-- Added tested expanding 756/252/252-bar train/validation/test manifests and
-  reserved the latest 504 SPY bars without evaluating their performance.
+- Added tested expanding 756/252/252-bar train/validation/test manifests and hid
+  the latest 504 SPY bars without evaluating them in the new notebook. See the
+  v0.18.1 correction: this tail was already exposed by older full-history work.
 - Added a reproducible Jupyter experiment under `output/jupyter-notebook/`. It
   runs from repository-local data, exposes partition dates rather than holdout
   returns, and stops before parameter ranking.

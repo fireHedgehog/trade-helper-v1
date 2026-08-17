@@ -1,8 +1,9 @@
 """Guard rails for chronological, out-of-sample research.
 
 This module only defines data partitions and manifests. It deliberately does not
-choose parameters or inspect a reserved final holdout. Performance evaluation is
-added separately so the boundary is easy to test and review.
+choose parameters or evaluate candidate holdout performance. Existing SPY history
+has already been inspected, so a tail partition is a workflow rehearsal rather
+than a statistically untouched confirmatory sample.
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ from .execution import validate_bars
 
 
 @dataclass(frozen=True)
-class HoldoutReservation:
+class CandidateHoldout:
     start: str
     end: str
     bars: int
@@ -38,10 +39,10 @@ class WalkForwardFold:
         return asdict(self)
 
 
-def reserve_final_holdout(
+def partition_candidate_holdout(
     bars: pd.DataFrame, *, holdout_bars: int
-) -> tuple[pd.DataFrame, HoldoutReservation]:
-    """Return development data and metadata only for the untouched final tail."""
+) -> tuple[pd.DataFrame, CandidateHoldout]:
+    """Hide a historical tail for workflow rehearsal, not confirmation."""
     validate_bars(bars)
     if holdout_bars <= 0:
         raise ValueError("holdout_bars must be positive")
@@ -50,7 +51,7 @@ def reserve_final_holdout(
     boundary = len(bars) - holdout_bars
     development = bars.iloc[:boundary].reset_index(drop=True).copy()
     reserved = bars.iloc[boundary:]
-    return development, HoldoutReservation(
+    return development, CandidateHoldout(
         start=str(reserved["date"].iloc[0]),
         end=str(reserved["date"].iloc[-1]),
         bars=len(reserved),

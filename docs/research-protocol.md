@@ -1,6 +1,6 @@
 # Out-of-sample research protocol
 
-Status: Stage 4 foundation; no final holdout result has been inspected.
+Status: Stage 4 foundation; **no valid historical final holdout currently exists**.
 
 ## Question locked before testing
 
@@ -28,14 +28,18 @@ a new named experiment and counts as another attempted specification.
 
 ## Data boundaries
 
-1. Reserve the latest 504 available trading bars (about two years) as the final
-   holdout. Code exposes only its dates and count during development.
+1. Hide the latest 504 available trading bars (about two years) as a candidate
+   holdout solely to rehearse the workflow. It is contaminated: earlier versions
+   tuned and displayed full-history SPY results, and therefore already exposed
+   this period. It cannot support a confirmatory claim.
 2. Use the earlier history for expanding walk-forward folds: 756 training bars,
    252 validation bars, and 252 test bars, stepping 252 bars at a time.
 3. Parameter candidates may use only a fold's training and validation history.
    A fold's test results cannot change that fold's chosen parameters.
-4. The final holdout remains unopened until the hypothesis, universe, parameter
-   grid, costs, metrics, and code commit are locked.
+4. A valid final confirmation requires observations not previously inspected:
+   prospectively collected bars after the model commit is locked, or a genuinely
+   unexamined point-in-time universe. The contaminated tail remains useful only
+   for engineering tests and clearly labeled exploratory estimates.
 
 ## Universe and bias controls
 
@@ -57,7 +61,8 @@ is recorded, the notebook may inspect partitions but must not rank parameters.
 
 ## Current boundary
 
-The checked-in notebook creates the holdout reservation and walk-forward
+The checked-in notebook creates a candidate-tail partition and walk-forward
 manifest only. It intentionally does not evaluate returns or select a winner.
-This is a safety feature: the next implementation slice must define the attempt
-ledger, finite grid, selection score, and multiple-testing treatment first.
+The next implementation slice must define the attempt ledger, finite grid,
+selection score, and multiple-testing treatment first. Even after that work, the
+historical SPY tail remains exploratory because prior inspection cannot be undone.

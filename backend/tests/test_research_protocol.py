@@ -5,11 +5,11 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from app.research import reserve_final_holdout, walk_forward_folds
+from app.research import partition_candidate_holdout, walk_forward_folds
 
 
-def test_final_holdout_is_removed_from_development(research_bars: pd.DataFrame) -> None:
-    development, holdout = reserve_final_holdout(research_bars, holdout_bars=100)
+def test_candidate_holdout_is_removed_from_development(research_bars: pd.DataFrame) -> None:
+    development, holdout = partition_candidate_holdout(research_bars, holdout_bars=100)
     assert len(development) == len(research_bars) - 100
     assert development["date"].iloc[-1] < holdout.start
     assert holdout.end == research_bars["date"].iloc[-1]
@@ -18,7 +18,7 @@ def test_final_holdout_is_removed_from_development(research_bars: pd.DataFrame) 
 def test_walk_forward_boundaries_are_strictly_chronological(
     research_bars: pd.DataFrame,
 ) -> None:
-    development, _ = reserve_final_holdout(research_bars, holdout_bars=100)
+    development, _ = partition_candidate_holdout(research_bars, holdout_bars=100)
     folds = walk_forward_folds(
         development, train_bars=200, validation_bars=50, test_bars=50
     )
