@@ -108,6 +108,13 @@ cd backend
 uvicorn app.main:app --reload
 ```
 
+⚠ **Local compute safety (important):** the confidence engine scans
+symbols × bars, and a full-universe run is heavy (hundreds of MB of bars,
+minutes of CPU — laptop fans will complain). Locally, confidence is ALWAYS
+sample-limited by default (**5 symbols × 1 year**) and the Today view keeps
+that default. The "Full universe" option in Strategy Lab is opt-in and
+intended for cloud compute — do not trigger it on a laptop.
+
 ## 6. Roadmap (build order)
 
 1. Docs + decisions ✅
@@ -115,11 +122,12 @@ uvicorn app.main:app --reload
 3. Data pipeline: fetch SPY → SQLite (idempotent daily job) ✅
 4. First strategy (SMA cross) + minimal backtest → metrics ✅
 5. Chart viewer: candles + entry/exit markers + algorithm lines ✅
-6. Today view: scan ✅, simulated positions ✅, rule rank ✅ (historical confidence later)
-7. Strategy Lab: params ✅, symbols ✅, saved param sets ✅, batch runs (later)
+6. Today view: scan ✅, simulated positions ✅, rule rank ✅, confidence ✅ (sample-limited locally)
+7. Strategy Lab: params ✅, symbols ✅, saved param sets ✅, scoreboard ✅, batch runs (later)
 8. Macro view: raw ✅ (real calendar source later)
 9. Classic TA series: S/R bounce ✅, Fib retrace ✅, wave pull ✅
-10. AWS deployment (phase 2)
+10. Daily cron script ✅ (`scripts/daily.sh`)
+11. AWS deployment (phase 2)
 
 ## 7. Product spec — the three views
 
@@ -164,7 +172,7 @@ uvicorn app.main:app --reload
 
 - **Saved params ("tuned models"):** ✅ built v0.7.1 — the Lab saves a tuned param set (name, params, date) into SQLite and Explorer applies saved sets from a dropdown. Next slice: let the Today scan use a saved set too.
 - **Daily signal state machine:** ✅ core watchlist built v0.9.0 — the `positions` ledger persists flat → entry_pending → long per symbol+strategy and advances when the Today view is fetched. Remaining: the daily cron job and a snapshot table for all symbols.
-- **Rule-based ranking & confidence:** ✅ rule rank built v0.9.0 — momentum + trend agreement + volatility penalty, breakdown shown in the UI. Remaining: historical hit-rate confidence per pattern.
+- **Rule-based ranking & confidence:** ✅ both built (v0.9.0–v0.10.0) — rule rank = momentum + trend + volatility score; confidence = per-strategy historical hit rate and avg 20-day return with all-time and 3Y slices. Sample-limited by default locally; full universe is a cloud-only trigger. Remaining: per-symbol slices.
 - **Classic TA validity lab:** ✅ S/R Bounce, Fib Retrace, Wave Pull built (v0.8.0–v0.9.0), each with params and an on-chart explanation. First honest measurement: Fib Retrace +6.7% vs +3,109% buy & hold on SPY over 33 years — the classic levels do not add value as implemented. Backtest first, believe later.
 - **Simulated positions (paper ledger) — designed v0.8.1, not built yet:**
   - Replaces the "Holding" section and moves to the top of the Today view, above Entries/Exits.
@@ -191,6 +199,15 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.10.0 — 2026-08-17
+
+- **Historical hit-rate confidence** (per strategy): win rate + avg 20-day forward return over past entry signals, all-time and 3Y slices — honest statistics, not probabilities.
+- **Sample-limited by default** for local dev (5 symbols × 1 year); the full-universe run is opt-in via the Strategy Lab trigger and marked "cloud only".
+- Strategy Lab scoreboard shows all strategies side by side; Today view shows the selected strategy's confidence with its sample size.
+- Regime filter now suppresses Today picks when US10Y ≥ 5%.
+- Added `scripts/daily.sh` cron script for the daily universe fetch.
+- Fixed: Strategy Lab was a blank page (now the scoreboard).
 
 ### v0.9.0 — 2026-08-17
 

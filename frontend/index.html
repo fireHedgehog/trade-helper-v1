@@ -224,6 +224,10 @@
     </div>
     <div class="today-body">
       <section class="panel">
+        <h2 id="confidence-title">Confidence</h2>
+        <div id="confidence-body">computing…</div>
+      </section>
+      <section class="panel">
         <h2>Simulated Positions <span class="badge">paper · 100 sh · core watchlist</span></h2>
         <table>
           <thead><tr><th>Symbol</th><th>Since</th><th>Entry</th><th>Now</th><th>P&L %</th><th>P&L $</th><th>ATR stop</th><th>Take profit</th><th>Note</th></tr></thead>
@@ -243,6 +247,26 @@
           <thead><tr><th>Symbol</th><th>Rank</th><th>Reason</th></tr></thead>
           <tbody id="today-exits"></tbody>
         </table>
+      </section>
+    </div>
+  </div>
+
+  <div id="view-lab" class="view" hidden>
+    <div class="macro-body">
+      <section class="panel">
+        <h2>Strategy scoreboard — historical confidence</h2>
+        <select id="lab-sample" style="margin-right:8px">
+          <option value="5|252" selected>Sample: 5 symbols × 1 year</option>
+          <option value="20|756">Sample: 20 symbols × 3 years</option>
+          <option value="0|0">Full universe — cloud only</option>
+        </select>
+        <button class="primary" id="lab-compute">Compute / refresh all</button>
+        <div class="sample-note" id="lab-sample-note"></div>
+        <table style="margin-top:10px">
+          <thead><tr><th>Strategy</th><th>All-time win</th><th>Avg 20d</th><th>Samples</th><th>3Y win</th><th>3Y samples</th></tr></thead>
+          <tbody id="scoreboard"></tbody>
+        </table>
+        <div class="sample-note">Honest statistics: measured past performance, not a prediction. Small samples are noise.</div>
       </section>
     </div>
   </div>
@@ -683,7 +707,42 @@ function showView(name) {
   document.querySelectorAll('.view').forEach((v) => { v.hidden = v.id !== `view-${name}`; });
   if (name === 'today') loadToday();
   if (name === 'macro') loadMacro();
+  if (name === 'lab') loadLab();
 }
+
+/* ---------- Strategy Lab: confidence scoreboard ---------- */
+async function loadLab(force = false) {
+  const [sym, day] = $('#lab-sample').value.split('|').map(Number);
+  $('#lab-sample-note').textContent = sym === 0
+    ? '⚠ full universe — cloud compute recommended (heavy CPU/RAM)'
+    : `sample: ${sym} symbols × ${day || 'all'} bars — laptop-safe`;
+  const { strategies } = await api('/api/strategies');
+  $('#scoreboard').innerHTML = strategies.map((s) =>
+    `<tr data-strategy="${s.name}"><td>${s.name}</td><td colspan="5" class="muted">…</td></tr>`
+  ).join('');
+  strategies.forEach((s) => loadScore(s.name, force, sym, day));
+}
+
+async function loadScore(name, force, sym, day) {
+  const row = document.querySelector(`#scoreboard tr[data-strategy="${name}"]`);
+  if (!row) return;
+  try {
+    const c = await api(`/api/confidence?strategy=${encodeURIComponent(name)}&symbols=${sym}&days=${day}${force ? '&force=1' : ''}`);
+    const a = c.all_time, r = c.last_3y;
+    const win = (v) => v.hit_rate == null ? '—' : `${v.hit_rate}%`;
+    row.innerHTML =
+      `<td>${name}</td>` +
+      `<td class="${a.hit_rate != null && a.hit_rate >= 50 ? 'pos' : 'neg'}">${win(a)}</td>` +
+      `<td>${a.avg_return ?? '—'}%</td>` +
+      `<td>${a.samples}</td>` +
+      `<td class="${r.hit_rate != null && r.hit_rate >= 50 ? 'pos' : 'neg'}">${win(r)}</td>` +
+      `<td>${r.samples}</td>`;
+  } catch (err) {
+    row.innerHTML = `<td>${name}</td><td colspan="5">error: ${err.message}</td>`;
+  }
+}
+
+$('#lab-compute').addEventListener('click', () => loadLab(true));
 
 /* ---------- Today + Macro views (raw) ---------- */
 async function loadToday(refresh = false) {
@@ -692,10 +751,11 @@ async function loadToday(refresh = false) {
   $('#today-status').textContent = 'scanning…';
   try {
     const query = `/api/today?strategy=${encodeURIComponent(strategy)}&scope=${scope}${refresh ? '&refresh=1' : ''}`;
-    const [data, macro, positionsData] = await Promise.all([
+    const [data, macro, positionsData, confidence] = await Promise.all([
       api(query),
       api('/api/macro'),
       api(`/api/positions?strategy=${encodeURIComponent(strategy)}`),
+      api(`/api/confidence?strategy=${encodeURIComponent(strategy)}`),
     ]);
     const signalRows = (list) => list.map((r) =>
       `<tr><td>${r.symbol}</td><td>${r.rank.toFixed(1)}</td><td>${r.note}</td></tr>`).join('')
@@ -711,6 +771,11 @@ async function loadToday(refresh = false) {
     $('#sim-positions').innerHTML = simRows(positionsData.positions);
     $('#today-entries').innerHTML = signalRows(data.entries);
     $('#today-exits').innerHTML = signalRows(data.exits);
+    renderConfidence(confidence);
+    if (!macro.regime.ok) {
+      $('#today-entries').innerHTML =
+        '<tr><td colspan="3">suppressed — US10Y ≥ 5% regime filter (no new trades)</td></tr>';
+    }
     $('#today-status').textContent = `scanned ${data.scanned} symbols`;
     const regime = macro.regime;
     const banner = $('#regime-banner');
@@ -724,6 +789,17 @@ async function loadToday(refresh = false) {
   } catch (err) {
     $('#today-status').textContent = `error: ${err.message}`;
   }
+}
+
+function renderConfidence(c) {
+  const a = c.all_time, r = c.last_3y;
+  $('#confidence-title').textContent = `Confidence — ${c.strategy} (${c.horizon_days}-day forward)`;
+  const win = (v) => v.hit_rate == null ? '—' : `${v.hit_rate}%`;
+  $('#confidence-body').innerHTML = a.samples
+    ? `All-time: <b class="${a.hit_rate >= 50 ? 'pos' : 'neg'}">${win(a)}</b> win · avg <b>${a.avg_return}%</b> in ${c.horizon_days}d · ${a.samples} signals &nbsp;|&nbsp; ` +
+      `Last 3Y: <b class="${r.hit_rate >= 50 ? 'pos' : 'neg'}">${win(r)}</b> win · avg <b>${r.avg_return}%</b> · ${r.samples} signals` +
+      `<div class="sample-note">sample: ${c.sample?.symbols ?? '?'} symbols × ${c.sample?.days ?? 'full'} bars — laptop-safe default; fuller runs in Strategy Lab</div>`
+    : 'not enough data yet';
 }
 
 async function loadMacro() {

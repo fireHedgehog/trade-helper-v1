@@ -10,6 +10,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 
 from . import store
+from .confidence import compute_confidence
 from .engine import backtest_payload
 from .signals import (
     CORE_WATCHLIST,
@@ -98,6 +99,22 @@ def positions(strategy: str = "SMA Cross"):
     if strategy not in STRATEGIES:
         raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
     return {"positions": positions_payload(strategy)}
+
+
+@app.get("/api/confidence")
+def confidence(
+    strategy: str = "SMA Cross",
+    symbols: int = 5,
+    days: int = 252,
+    force: bool = False,
+):
+    """Hit-rate stats. Sample-limited by default (laptop-safe); symbols<=0 or
+    days<=0 means the full run — intended for cloud compute."""
+    if strategy not in STRATEGIES:
+        raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
+    symbols = max(-1, min(int(symbols), 1000))
+    days = max(-1, min(int(days), 100000))
+    return compute_confidence(strategy, force=force, max_symbols=symbols, max_days=days)
 
 
 @app.get("/api/backtest/{symbol}")
