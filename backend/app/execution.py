@@ -79,7 +79,7 @@ def _known_number(value) -> float | None:
     return float(value) if value is not None and pd.notna(value) else None
 
 
-def _entry_levels(
+def entry_levels(
     strategy_name: str,
     rules: RuleSet,
     params: dict,
@@ -100,6 +100,40 @@ def _entry_levels(
         _known_number(rules.stop_levels.iloc[signal_index]),
         _known_number(rules.target_levels.iloc[signal_index]),
     )
+
+
+def close_exit_decision(
+    strategy_name: str,
+    rules: RuleSet,
+    params: dict,
+    index: int,
+    close: float,
+    stop: float | None,
+    target: float | None,
+) -> tuple[float | None, str | None]:
+    """Return the close-known trailing stop and any canonical exit reason."""
+    updated_stop = stop
+    if strategy_name in TRAILING_STRATEGIES:
+        current_atr = _known_number(rules.atr.iloc[index])
+        if current_atr is not None:
+            candidate = close - float(params.get("atr_mult", 3.0)) * current_atr
+            updated_stop = max(stop, candidate) if stop is not None else candidate
+
+    reason = None
+    if bool(rules.exits.iloc[index]):
+        reason = "strategy"
+    elif updated_stop is not None and close < updated_stop:
+        reason = "stop"
+    elif target is not None and close >= target:
+        reason = "target"
+    elif strategy_name == "S/R Bounce":
+        current_stop = _known_number(rules.stop_levels.iloc[index])
+        current_target = _known_number(rules.target_levels.iloc[index])
+        if current_stop is not None and close < current_stop:
+            reason = "stop"
+        elif current_target is not None and close >= current_target:
+            reason = "target"
+    return updated_stop, reason
 
 
 def simulate(
@@ -159,7 +193,7 @@ def simulate(
                 cost = shares * open_price
                 entry_fee = cost * commission
                 cash -= cost + entry_fee
-                stop, target = _entry_levels(
+                stop, target = entry_levels(
                     strategy_name, rules, params, pending_signal_index, open_price
                 )
                 position = Position(
@@ -213,26 +247,15 @@ def simulate(
         )
 
         if position.state == "long":
-            if strategy_name in TRAILING_STRATEGIES:
-                current_atr = _known_number(rules.atr.iloc[index])
-                if current_atr is not None:
-                    candidate = close - float(params.get("atr_mult", 3.0)) * current_atr
-                    position.stop = max(position.stop, candidate) if position.stop is not None else candidate
-
-            reason = None
-            if bool(rules.exits.iloc[index]):
-                reason = "strategy"
-            elif position.stop is not None and close < position.stop:
-                reason = "stop"
-            elif position.target is not None and close >= position.target:
-                reason = "target"
-            elif strategy_name == "S/R Bounce":
-                stop = _known_number(rules.stop_levels.iloc[index])
-                target = _known_number(rules.target_levels.iloc[index])
-                if stop is not None and close < stop:
-                    reason = "stop"
-                elif target is not None and close >= target:
-                    reason = "target"
+            position.stop, reason = close_exit_decision(
+                strategy_name,
+                rules,
+                params,
+                index,
+                close,
+                position.stop,
+                position.target,
+            )
 
             if reason:
                 position.state = "exit_pending"

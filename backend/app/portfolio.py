@@ -56,6 +56,7 @@ class PortfolioPosition:
     sector: str
     cluster: str
     market_price: float
+    target: float | None = None
 
     @property
     def market_value(self) -> float:
@@ -65,7 +66,7 @@ class PortfolioPosition:
 @dataclass(frozen=True)
 class CandidateOrder:
     signal_date: str
-    order_date: str
+    order_date: str | None
     symbol: str
     expected_open: float
     stop: float | None
@@ -87,7 +88,7 @@ class EntrySizing:
 @dataclass(frozen=True)
 class PendingOrder:
     signal_date: str
-    order_date: str
+    order_date: str | None
     symbol: str
     requested_shares: int
     shares: int
@@ -113,12 +114,30 @@ class RejectedOrder:
 
 
 @dataclass(frozen=True)
+class PendingExit:
+    signal_date: str
+    order_date: str | None
+    symbol: str
+    reason: str
+
+
+@dataclass(frozen=True)
+class CashSettlement:
+    trade_date: str
+    available_date: str | None
+    symbol: str
+    amount: float
+
+
+@dataclass(frozen=True)
 class PortfolioState:
     cash: float
     peak_equity: float
     halted: bool = False
     positions: dict[str, PortfolioPosition] = field(default_factory=dict)
     pending_orders: tuple[PendingOrder, ...] = ()
+    pending_exits: tuple[PendingExit, ...] = ()
+    settlements: tuple[CashSettlement, ...] = ()
     rejected_orders: tuple[RejectedOrder, ...] = ()
 
 
@@ -204,7 +223,7 @@ def _rejection(
     reason: str,
 ) -> RejectedOrder:
     return RejectedOrder(
-        date=candidate.order_date,
+        date=candidate.order_date or candidate.signal_date,
         symbol=candidate.symbol,
         requested_shares=requested_shares,
         available_cash=max(0.0, available_cash),
@@ -247,11 +266,19 @@ def allocate_entries(
             or position.market_value <= 0
         ):
             raise ValueError("portfolio positions must have finite positive exposure")
-        sector_value[position.sector] = sector_value.get(position.sector, 0.0) + position.market_value
-        cluster_value[position.cluster] = cluster_value.get(position.cluster, 0.0) + position.market_value
+        sector_value[position.sector] = (
+            sector_value.get(position.sector, 0.0) + position.market_value
+        )
+        cluster_value[position.cluster] = (
+            cluster_value.get(position.cluster, 0.0) + position.market_value
+        )
     for order in state.pending_orders:
-        sector_value[order.sector] = sector_value.get(order.sector, 0.0) + order.estimated_market_value
-        cluster_value[order.cluster] = cluster_value.get(order.cluster, 0.0) + order.estimated_market_value
+        sector_value[order.sector] = (
+            sector_value.get(order.sector, 0.0) + order.estimated_market_value
+        )
+        cluster_value[order.cluster] = (
+            cluster_value.get(order.cluster, 0.0) + order.estimated_market_value
+        )
 
     def priority(candidate: CandidateOrder) -> tuple[float, str]:
         score = candidate.score if math.isfinite(candidate.score) else -math.inf
@@ -358,8 +385,12 @@ def allocate_entries(
         accepted.append(pending)
         occupied_symbols.add(candidate.symbol)
         available_cash = max(0.0, available_cash - cash_required)
-        sector_value[candidate.sector] = sector_value.get(candidate.sector, 0.0) + pending.estimated_market_value
-        cluster_value[candidate.cluster] = cluster_value.get(candidate.cluster, 0.0) + pending.estimated_market_value
+        sector_value[candidate.sector] = (
+            sector_value.get(candidate.sector, 0.0) + pending.estimated_market_value
+        )
+        cluster_value[candidate.cluster] = (
+            cluster_value.get(candidate.cluster, 0.0) + pending.estimated_market_value
+        )
 
     return AllocationResult(
         accepted=tuple(accepted),

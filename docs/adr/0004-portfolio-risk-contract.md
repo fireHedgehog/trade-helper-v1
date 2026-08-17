@@ -27,18 +27,28 @@ cash constrained:
   or reuse of unsettled hypothetical proceeds;
 - signal at completed close, order at the next available open, using the same
   commission, spread, slippage, and gap model as the canonical engine;
+- require every symbol in one replay to have the same validated date calendar;
+  fail closed rather than silently forward-fill a stale mark or discard a date;
 - size from the smaller of 0.5% equity at stop risk and 10% equity at entry
   notional, rounded down to whole shares;
+- size provisionally from the signal close, then recheck stop risk, notional,
+  cash, sector, and cluster limits at the actual next open; reduce the fill or
+  reject it when an overnight gap invalidates the provisional order;
 - reject an entry when its stop is missing, non-finite, or not below the expected
   entry. Unknown risk is not treated as zero risk;
 - maximum 25% equity in one declared sector and 30% in one declared correlated-
   asset cluster;
 - deterministic order priority: higher locked rule score, then symbol ascending;
+- the first replay accepts immutable per-symbol priority scores declared before
+  the run; omitted scores are equal and therefore resolve by symbol;
 - when a valid order does not fully fit a cash, sector, or cluster limit, reduce it
   to the largest permitted whole-share quantity; reject it only when zero shares
   fit;
 - every rejected order records date, symbol, requested shares, available cash,
   and one machine-readable reason;
+- sale proceeds remain an equity receivable on the trade date and become
+  spendable cash on the next recorded shared-calendar session (a conservative
+  T+1 research approximation);
 - mark all open positions to the same completed close for daily equity, exposure,
   concentration, and drawdown;
 - at a 15% portfolio drawdown from the running equity peak, cancel pending entries,
@@ -66,12 +76,12 @@ a rejected strategy result.
 
 ## Implementation status
 
-Checkpoint v0.21.1 implements the strategy-independent foundation in
-`backend/app/portfolio.py`: validated configuration and account state,
-cost-aware stop-risk sizing, whole-share notional sizing, deterministic
-concurrent-order allocation, cash reservations, sector/cluster caps, and
-machine-readable rejection reasons. Twenty-two focused tests cover these contracts.
+Checkpoint v0.21.2 adds `backend/app/portfolio_execution.py` to the v0.21.1
+strategy-independent foundation. The replay now processes multi-symbol entry and
+exit signals through one cash ledger, rechecks every limit at the actual open,
+charges canonical costs, tracks T+1 sale settlements, preserves final pending
+orders, and marks equity/exposure/concentration/drawdown at each shared close.
+Thirty-five focused portfolio tests cover the combined contracts.
 
-The daily multi-symbol replay, actual next-open fills, exits, same-close marking,
-drawdown-trigger calculation and liquidation, API/UI integration, and paper/live
-connections remain unimplemented.
+Drawdown-triggered cancellation and liquidation, portfolio performance metrics,
+API/UI integration, and paper/live connections remain unimplemented.

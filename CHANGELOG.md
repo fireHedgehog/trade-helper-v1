@@ -2,6 +2,24 @@
 
 # Changelog
 
+## v0.21.2 — 2026-08-18
+
+- Added a deterministic multi-symbol daily replay using one shared, cash-
+  constrained portfolio ledger and strict validated calendar.
+- Preserved canonical completed-close to next-open timing and execution costs by
+  extracting shared entry-level and close-exit decisions from the single-symbol
+  engine.
+- Rechecked stop risk, position notional, available cash, sector exposure, and
+  cluster exposure at actual gap-affected entry opens; fills reduce or reject
+  instead of silently breaking limits.
+- Added next-session settlement for sale proceeds, common-close equity/exposure/
+  concentration/drawdown snapshots, actual fills, completed trades, rejection
+  records, and final pending-order preservation.
+- Added 13 portfolio replay integration tests, including real CTA rules, a
+  future-price mutation check, and a same-open lookahead guard. All 129 tests
+  pass. Kill-switch execution, portfolio metrics, API/UI, and paper/live
+  integration remain pending.
+
 ## v0.21.1 — 2026-08-18
 
 - Added a pure, strategy-independent portfolio foundation with explicit account

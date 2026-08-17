@@ -154,21 +154,25 @@ still requires genuinely unseen future or uninspected point-in-time data.
 
 **Goal:** stop presenting independent fixed-share trades as a portfolio.
 
-**Current checkpoint (v0.21.1):** ADR 0004 is accepted. The first pure portfolio
-module now validates account configuration, sizes whole-share entries against
-cost-aware stop risk and notional limits, deterministically allocates concurrent
-orders within cash/sector/cluster caps, reserves pending cash, and records stable
-rejection reasons. Twenty-two focused tests pass. The daily replay, actual fills,
-exits, equity marking, drawdown-triggered liquidation, and UI integration remain
-pending; the existing 100-share view is still a signal replay, not a portfolio.
+**Current checkpoint (v0.21.2):** the pure multi-symbol replay now uses one shared
+cash ledger and exact shared calendar. It processes completed-close signals at
+the next open, rechecks sizing and every cap after gaps, charges canonical costs,
+holds sale proceeds until the next session, marks common-close equity and
+concentration, and preserves final pending orders. Thirty-five focused portfolio
+tests pass. Kill-switch execution, portfolio metrics, and API/UI integration
+remain pending; the existing 100-share view is still a signal replay, not a
+portfolio.
 
 - [x] Add explicit $100k account state and conservative validated defaults.
 - [x] Add cost-aware stop-risk and maximum-notional entry sizing.
 - [x] Add deterministic entry allocation, pending-cash reservation, and rejection
       records for cash, classification, concentration, duplicate, and halt gates.
-- [ ] Process multi-symbol next-open fills and exits against one cash ledger.
-- [ ] Mark all positions on a common daily calendar and calculate portfolio risk.
+- [x] Process multi-symbol next-open fills and exits against one cash ledger.
+- [x] Mark all positions on a strict common daily calendar and record equity,
+      exposure, concentration, peak, and drawdown.
+- [x] Keep sale proceeds unavailable until the next shared-calendar session.
 - [ ] Trigger and execute drawdown kill-switch liquidations.
+- [ ] Calculate portfolio-level return, volatility, turnover, and risk metrics.
 - [ ] Integrate tested portfolio results into the API and UI.
 
 - [ ] Replace the fixed 100-share convention with explicit capital and sizing.

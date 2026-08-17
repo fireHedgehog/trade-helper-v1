@@ -55,6 +55,7 @@ def _position(
         sector=sector,
         cluster=cluster,
         market_price=market_value / 100,
+        target=None,
     )
 
 

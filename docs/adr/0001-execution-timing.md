@@ -2,7 +2,8 @@
 
 # ADR 0001: Daily signal and execution timing
 
-- Status: accepted research convention; implementation parity pending
+- Status: accepted and implemented across canonical single-symbol and portfolio
+  replay
 - Date: 2026-08-17
 
 ## Context
