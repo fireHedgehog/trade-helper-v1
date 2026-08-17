@@ -115,10 +115,10 @@ uvicorn app.main:app --reload
 3. Data pipeline: fetch SPY → SQLite (idempotent daily job) ✅
 4. First strategy (SMA cross) + minimal backtest → metrics ✅
 5. Chart viewer: candles + entry/exit markers + algorithm lines ✅
-6. Today view: scan + since-entry P&L + watchlist scope ✅ (rule-based ranking later)
+6. Today view: scan ✅, simulated positions ✅, rule rank ✅ (historical confidence later)
 7. Strategy Lab: params ✅, symbols ✅, saved param sets ✅, batch runs (later)
 8. Macro view: raw ✅ (real calendar source later)
-9. Classic TA series: S/R bounce ✅ (Fibonacci / wave queued)
+9. Classic TA series: S/R bounce ✅, Fib retrace ✅, wave pull ✅
 10. AWS deployment (phase 2)
 
 ## 7. Product spec — the three views
@@ -163,9 +163,18 @@ uvicorn app.main:app --reload
 ## 9. Design notes (recorded, mostly future work)
 
 - **Saved params ("tuned models"):** ✅ built v0.7.1 — the Lab saves a tuned param set (name, params, date) into SQLite and Explorer applies saved sets from a dropdown. Next slice: let the Today scan use a saved set too.
-- **Daily signal state machine:** the Today scan recomputes state from recent bars. Plan: persistent per-symbol trade state (flat → long → exit transitions) computed by the daily job and snapshotted into the DB, so "entered 3 days ago, still holding" is known exactly.
-- **Rule-based ranking & confidence:** today's rank is a 12-week momentum placeholder. Plan: multi-factor rule scores (momentum, volatility, trend agreement) plus historical hit rate — labeled honestly as scores, not probabilities.
-- **Classic TA validity lab:** S/R Bounce added v0.8.0. Queued: Fibonacci retracement entries and Elliott-wave-style swing logic. Goal: measure whether these "ancient" techniques add value — backtest first, believe later.
+- **Daily signal state machine:** ✅ core watchlist built v0.9.0 — the `positions` ledger persists flat → entry_pending → long per symbol+strategy and advances when the Today view is fetched. Remaining: the daily cron job and a snapshot table for all symbols.
+- **Rule-based ranking & confidence:** ✅ rule rank built v0.9.0 — momentum + trend agreement + volatility penalty, breakdown shown in the UI. Remaining: historical hit-rate confidence per pattern.
+- **Classic TA validity lab:** ✅ S/R Bounce, Fib Retrace, Wave Pull built (v0.8.0–v0.9.0), each with params and an on-chart explanation. First honest measurement: Fib Retrace +6.7% vs +3,109% buy & hold on SPY over 33 years — the classic levels do not add value as implemented. Backtest first, believe later.
+- **Simulated positions (paper ledger) — designed v0.8.1, not built yet:**
+  - Replaces the "Holding" section and moves to the top of the Today view, above Entries/Exits.
+  - One simulated position per symbol per strategy, fixed size **100 shares**.
+  - Entry: next open after an entry signal (NDO). Exit: ATR trailing stop or take-profit, whichever first — exit at the following open.
+  - Columns: Symbol | Entry date | Entry px | Now | P&L % | P&L $ (100 sh) | ATR stop | Take profit | Note.
+  - ATR stop: starts at entry − 3×ATR(14), ratchets up to close − 3×ATR (never moves down). Take profit: entry + 2×ATR(14).
+  - Row shows "—" when no active position (never entered, or already exited).
+  - Default scope dropdown: SPY, QQQ, MAGS, SOXX, IGV, then all XLs in that order; "All symbols" option.
+  - For the core watchlist, position state is computed from full history (entry never lost); for "All symbols", from the 300-bar lookback.
 
 ---
 
@@ -182,6 +191,18 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.9.0 — 2026-08-17
+
+- Strategy guide panel under the chart: plain-language description, entry/exit rules, chart legend, param tooltips, and a live "now" line explaining the current signal with indicator values and the rule-rank breakdown.
+- Two classic-TA strategies with params: **Fib Retrace** (n_swing, m_pullback, fib level) and **Wave Pull** (impulse_bars, impulse_pct, pullback_bars), with chart overlays.
+- **Simulated Positions** (design note built): state machine ledger per symbol+strategy on the core watchlist — 100 shares, entry at next open, exit on 3×ATR trailing stop or 2×ATR take-profit. Table shows all 16 watchlist rows in order, "—" for flat symbols.
+- **Rule-based ranking**: momentum + trend agreement + volatility penalty, labeled as a score with its breakdown shown.
+- First honest measurements (SPY, full history): Fib Retrace +6.7% vs +3,109% buy & hold; Wave Pull +121% vs +3,057%.
+
+### v0.8.1 — 2026-08-17
+
+- Recorded the **Simulated Positions** design (100-share paper ledger, ATR stop + take-profit levels, default watchlist order) in the design notes. Reviewed the parking lot — no ideas lost.
 
 ### v0.8.0 — 2026-08-17
 

@@ -132,6 +132,16 @@
   .set-select { width: 100%; margin-top: 8px; }
   button.ghost.danger { border-color: #3a2222; color: var(--red); margin-top: 6px; }
   #equity { height: 150px; }
+  .guide {
+    border-top: 1px solid var(--border); background: var(--panel);
+    padding: 10px 14px; font-size: 12px; color: var(--text);
+    max-height: 170px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+  }
+  .guide-title { font-weight: 600; color: var(--accent); }
+  .guide-rules div, .guide-chart, .guide-now { line-height: 1.5; }
+  .guide .rule { color: var(--text); }
+  .guide .rule b { color: var(--muted); }
+  .guide-now { color: var(--green); }
 </style>
 </head>
 <body>
@@ -164,6 +174,12 @@
         </div>
       </div>
       <div id="chart"></div>
+      <div class="guide" id="guide">
+        <div class="guide-title" id="guide-title">—</div>
+        <div class="guide-rules" id="guide-rules"></div>
+        <div class="guide-chart" id="guide-chart"></div>
+        <div class="guide-now" id="guide-now"></div>
+      </div>
     </div>
     <div class="rail">
       <div>
@@ -208,17 +224,17 @@
     </div>
     <div class="today-body">
       <section class="panel">
+        <h2>Simulated Positions <span class="badge">paper · 100 sh · core watchlist</span></h2>
+        <table>
+          <thead><tr><th>Symbol</th><th>Since</th><th>Entry</th><th>Now</th><th>P&L %</th><th>P&L $</th><th>ATR stop</th><th>Take profit</th><th>Note</th></tr></thead>
+          <tbody id="sim-positions"></tbody>
+        </table>
+      </section>
+      <section class="panel">
         <h2>Entries today</h2>
         <table>
           <thead><tr><th>Symbol</th><th>Rank</th><th>Reason</th></tr></thead>
           <tbody id="today-entries"></tbody>
-        </table>
-      </section>
-      <section class="panel">
-        <h2>Holding</h2>
-        <table>
-          <thead><tr><th>Symbol</th><th>Since</th><th>Entry</th><th>Now</th><th>P&L</th></tr></thead>
-          <tbody id="today-holding"></tbody>
         </table>
       </section>
       <section class="panel">
@@ -346,6 +362,17 @@ function atrFloorData(bars, period, mult) {
   return out;
 }
 
+function fibLevelData(bars, n, m, f) {
+  const out = [];
+  for (let i = Math.max(n, m); i < bars.length; i++) {
+    let h = -Infinity, l = Infinity;
+    for (let j = i - n; j < i; j++) h = Math.max(h, bars[j].high);
+    for (let j = i - m; j < i; j++) l = Math.min(l, bars[j].low);
+    out.push({ time: bars[i].date, value: +(l + f * (h - l)).toFixed(2) });
+  }
+  return out;
+}
+
 function setOverlays(strategy, bars) {
   const p = currentParams;
   const none = () => { upperLine.setData([]); lowerLine.setData([]); atrFloorLine.setData([]); };
@@ -362,6 +389,16 @@ function setOverlays(strategy, bars) {
     smaFast.setData([]); smaSlow.setData([]);
     upperLine.setData(rollingExtreme(bars, p.n_window || 20, 'high', 'max'));
     lowerLine.setData(rollingExtreme(bars, p.n_window || 20, 'low', 'min'));
+    atrFloorLine.setData([]);
+  } else if (strategy === 'Fib Retrace') {
+    smaFast.setData([]); smaSlow.setData([]);
+    upperLine.setData(rollingExtreme(bars, p.n_swing || 60, 'high', 'max'));
+    lowerLine.setData(rollingExtreme(bars, p.m_pullback || 10, 'low', 'min'));
+    atrFloorLine.setData(fibLevelData(bars, p.n_swing || 60, p.m_pullback || 10, p.fib || 0.618));
+  } else if (strategy === 'Wave Pull') {
+    smaFast.setData([]); smaSlow.setData([]);
+    upperLine.setData(rollingExtreme(bars, p.pullback_bars || 3, 'high', 'max'));
+    lowerLine.setData(rollingExtreme(bars, p.pullback_bars || 3, 'low', 'min'));
     atrFloorLine.setData([]);
   } else {
     smaFast.setData([]); smaSlow.setData([]);
@@ -416,6 +453,24 @@ function renderEquity(equity) {
   equityChart.timeScale().fitContent();
 }
 
+async function renderGuide(symbol, strategy) {
+  const meta = strategiesMeta.find((s) => s.name === strategy);
+  if (!meta || !meta.info) return;
+  const info = meta.info;
+  $('#guide-title').textContent = `${strategy} — ${info.tagline}`;
+  $('#guide-rules').innerHTML =
+    `<div class="rule"><b>Entry:</b> ${info.entry}</div>` +
+    `<div class="rule"><b>Exit:</b> ${info.exit}</div>`;
+  $('#guide-chart').textContent = `Chart: ${info.chart}`;
+  try {
+    const signal = await api(`/api/signal/${symbol}?strategy=${encodeURIComponent(strategy)}`);
+    const ind = Object.entries(signal.indicators || {}).map(([k, v]) => `${k} ${v}`).join(' · ');
+    $('#guide-now').textContent = `Now: ${signal.note} (${ind}) — rank ${signal.rank} [${signal.rank_note}]`;
+  } catch (err) {
+    $('#guide-now').textContent = '';
+  }
+}
+
 /* ---------- flow ---------- */
 let symbolList = [];
 let selectedSymbol = 'SPY';
@@ -458,11 +513,12 @@ function resetParams() {
 function renderParams() {
   const meta = currentMeta();
   $('#params').innerHTML =
-    Object.entries(meta.params).map(([key, p]) =>
-      `<label class="param"><span>${key}</span>` +
-      `<input type="number" data-key="${key}" value="${currentParams[key]}" ` +
-      `min="${p.min}" max="${p.max}" step="${p.step || 1}"></label>`
-    ).join('') +
+    Object.entries(meta.params).map(([key, p]) => {
+      const doc = meta.info?.params?.[key] || '';
+      return `<label class="param"><span title="${doc}">${key}</span>` +
+        `<input type="number" data-key="${key}" value="${currentParams[key]}" ` +
+        `min="${p.min}" max="${p.max}" step="${p.step || 1}" title="${doc}"></label>`;
+    }).join('') +
     '<button id="reset-params" class="ghost">Reset defaults</button>';
   $('#params').querySelectorAll('input').forEach((inp) =>
     inp.addEventListener('change', () => {
@@ -598,6 +654,7 @@ async function run() {
     renderMetrics(backtest.metrics);
     renderTrades(backtest.trades);
     renderEquity(backtest.equity);
+    renderGuide(symbol, strategy);
     $('#status').textContent =
       `${backtest.trades.length} trades · ${symbol} · ${strategy} · ${label}`;
   } catch (err) {
@@ -635,19 +692,24 @@ async function loadToday(refresh = false) {
   $('#today-status').textContent = 'scanning…';
   try {
     const query = `/api/today?strategy=${encodeURIComponent(strategy)}&scope=${scope}${refresh ? '&refresh=1' : ''}`;
-    const [data, macro] = await Promise.all([api(query), api('/api/macro')]);
+    const [data, macro, positionsData] = await Promise.all([
+      api(query),
+      api('/api/macro'),
+      api(`/api/positions?strategy=${encodeURIComponent(strategy)}`),
+    ]);
     const signalRows = (list) => list.map((r) =>
       `<tr><td>${r.symbol}</td><td>${r.rank.toFixed(1)}</td><td>${r.note}</td></tr>`).join('')
       || '<tr><td colspan="3">none</td></tr>';
-    const holdingRows = (list) => list.map((r) => {
+    const simRows = (list) => list.map((r) => {
       const pnl = r.pnl_pct == null ? '—' : `${r.pnl_pct >= 0 ? '+' : ''}${r.pnl_pct.toFixed(1)}%`;
+      const usd = r.pnl_usd == null ? '—' : `${r.pnl_usd >= 0 ? '+' : ''}${r.pnl_usd.toFixed(0)}`;
       const cls = r.pnl_pct == null ? '' : (r.pnl_pct >= 0 ? 'pos' : 'neg');
-      return `<tr><td>${r.symbol}</td><td>${r.entry_date || '—'}</td>` +
-        `<td>${r.entry_price ?? '—'}</td><td>${r.close ?? '—'}</td>` +
-        `<td class="${cls}">${pnl}</td></tr>`;
-    }).join('') || '<tr><td colspan="5">none</td></tr>';
+      return `<tr><td>${r.symbol}</td><td>${r.since || '—'}</td><td>${r.entry ?? '—'}</td>` +
+        `<td>${r.now ?? '—'}</td><td class="${cls}">${pnl}</td><td class="${cls}">${usd}</td>` +
+        `<td>${r.stop ?? '—'}</td><td>${r.tp ?? '—'}</td><td>${r.note || '—'}</td></tr>`;
+    }).join('') || '<tr><td colspan="9">no open simulated positions — all —</td></tr>';
+    $('#sim-positions').innerHTML = simRows(positionsData.positions);
     $('#today-entries').innerHTML = signalRows(data.entries);
-    $('#today-holding').innerHTML = holdingRows(data.holding);
     $('#today-exits').innerHTML = signalRows(data.exits);
     $('#today-status').textContent = `scanned ${data.scanned} symbols`;
     const regime = macro.regime;

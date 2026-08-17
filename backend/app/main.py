@@ -11,8 +11,14 @@ from fastapi.staticfiles import StaticFiles
 
 from . import store
 from .engine import backtest_payload
-from .signals import CORE_WATCHLIST, scan
-from .strategies import STRATEGIES, STRATEGY_PARAMS
+from .signals import (
+    CORE_WATCHLIST,
+    advance_positions,
+    compute_signal,
+    positions_payload,
+    scan,
+)
+from .strategies import STRATEGIES, STRATEGY_INFO, STRATEGY_PARAMS
 
 FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
 
@@ -61,9 +67,37 @@ def bars(symbol: str, days: int = 0):
 def strategies():
     return {
         "strategies": [
-            {"name": name, "params": STRATEGY_PARAMS[name]} for name in STRATEGIES
+            {
+                "name": name,
+                "params": STRATEGY_PARAMS[name],
+                "info": STRATEGY_INFO[name],
+            }
+            for name in STRATEGIES
         ]
     }
+
+
+@app.get("/api/signal/{symbol}")
+def signal_now(symbol: str, strategy: str = "SMA Cross"):
+    if strategy not in STRATEGIES:
+        raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
+    bars = store.load_recent_bars(symbol, 300)
+    if bars.empty:
+        raise HTTPException(status_code=404, detail=f"no bars for {symbol}")
+    params = {
+        key: value["default"] for key, value in STRATEGY_PARAMS[strategy].items()
+    }
+    result = compute_signal(bars, strategy, params)
+    if result is None:
+        raise HTTPException(status_code=404, detail="not enough bars")
+    return {"symbol": symbol, "strategy": strategy, **result}
+
+
+@app.get("/api/positions")
+def positions(strategy: str = "SMA Cross"):
+    if strategy not in STRATEGIES:
+        raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
+    return {"positions": positions_payload(strategy)}
 
 
 @app.get("/api/backtest/{symbol}")
@@ -101,6 +135,8 @@ def today(strategy: str = "SMA Cross", scope: str = "core", refresh: bool = Fals
     cached = _today_cache.get(cache_key)
     if not refresh and cached and time.time() - cached["at"] < 60:
         return cached["data"]
+    if scope == "core":
+        advance_positions(strategy)  # advance the paper ledger to the latest bar
     result = scan(strategy, symbols)
     result["strategy"] = strategy
     result["scope"] = scope

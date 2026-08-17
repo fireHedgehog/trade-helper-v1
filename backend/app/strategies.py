@@ -145,11 +145,87 @@ class SrBounce(Strategy):
                 self.position.close()
 
 
+class FibRetrace(Strategy):
+    """Fibonacci retracement (quantified approximation): after a swing high
+    pulls back to a swing low, buy when the close recovers above the chosen
+    fib retracement level. Stop at the pullback low, target at the swing high.
+
+    Approximation note: swings are rolling N/M-day extremes, not hand-drawn
+    chartist swings — the idea is measured, the aesthetics are not.
+    """
+
+    n_swing = 60
+    m_pullback = 10
+    fib = 0.618
+
+    def init(self):
+        high = pd.Series(self.data.High)
+        low = pd.Series(self.data.Low)
+        h = high.shift(1).rolling(self.n_swing).max()
+        l = low.shift(1).rolling(self.m_pullback).min()
+        self.swing_high = self.I(lambda: h, name="swing_high")
+        self.pullback_low = self.I(lambda: l, name="pullback_low")
+        self.level = self.I(lambda: l + self.fib * (h - l), name="fib_level")
+
+    def next(self):
+        close = self.data.Close[-1]
+        if not self.position:
+            if (
+                self.swing_high[-1] > self.pullback_low[-1]
+                and close > self.level[-1]
+                and self.data.Close[-2] <= self.level[-2]
+            ):
+                self.buy()
+                self.stop = self.pullback_low[-1]
+                self.target = self.swing_high[-1]
+        elif close <= self.stop or close >= self.target:
+            self.position.close()
+
+
+class WavePull(Strategy):
+    """Impulse-pullback ("wave-lite"): after a strong impulse up, buy the first
+    breakout of the following pullback. Quantified stand-in for wave counting —
+    stop at the pullback low, take profit at 2× the entry risk.
+    """
+
+    impulse_bars = 8
+    impulse_pct = 6.0
+    pullback_bars = 3
+
+    def init(self):
+        close = pd.Series(self.data.Close)
+        high = pd.Series(self.data.High)
+        low = pd.Series(self.data.Low)
+        self.impulse = self.I(
+            lambda: close / close.shift(self.impulse_bars) - 1 >= self.impulse_pct / 100,
+            name="impulse",
+        )
+        self.breakout = self.I(
+            lambda: high.shift(1).rolling(self.pullback_bars).max(), name="pullback_high"
+        )
+        self.pullback_low = self.I(
+            lambda: low.shift(1).rolling(self.pullback_bars).min(), name="pullback_low"
+        )
+
+    def next(self):
+        close = self.data.Close[-1]
+        if not self.position:
+            if self.impulse[-1] and close > self.breakout[-1]:
+                self.buy()
+                risk = self.breakout[-1] - self.pullback_low[-1]
+                self.stop = self.pullback_low[-1]
+                self.target = self.breakout[-1] + 2 * risk
+        elif close <= self.stop or close >= self.target:
+            self.position.close()
+
+
 # Registry used by the backtest CLI, the API, and the Strategy Lab.
 STRATEGIES = {
     "SMA Cross": SmaCross,
     "Donchian Trend": DonchianTrend,
     "S/R Bounce": SrBounce,
+    "Fib Retrace": FibRetrace,
+    "Wave Pull": WavePull,
     "RSI Reversion": RsiReversion,
 }
 
@@ -178,9 +254,100 @@ STRATEGY_PARAMS = {
         "atr_period": _int(14, 2, 100),
         "atr_mult": _float(3.0, 1.0, 10.0),
     },
+    "Fib Retrace": {
+        "n_swing": _int(60, 20, 250),
+        "m_pullback": _int(10, 3, 60),
+        "fib": _float(0.618, 0.2, 0.9, 0.05),
+    },
+    "Wave Pull": {
+        "impulse_bars": _int(8, 3, 30),
+        "impulse_pct": _float(6.0, 1.0, 25.0, 0.5),
+        "pullback_bars": _int(3, 1, 15),
+    },
+    "Fib Retrace": {
+        "n_swing": _int(60, 20, 250),
+        "m_pullback": _int(10, 3, 60),
+        "fib": _float(0.618, 0.2, 0.9, 0.05),
+    },
+    "Wave Pull": {
+        "impulse_bars": _int(8, 3, 30),
+        "impulse_pct": _float(6.0, 1.0, 25.0, 0.5),
+        "pullback_bars": _int(3, 1, 15),
+    },
     "RSI Reversion": {
         "period": _int(14, 2, 50),
         "buy_below": _int(30, 5, 49),
         "sell_above": _int(70, 51, 95),
+    },
+}
+
+
+# Human explanations shown in the Strategy guide panel in the Explorer.
+STRATEGY_INFO = {
+    "SMA Cross": {
+        "tagline": "Classic trend-following: trade with the direction of the two moving averages.",
+        "entry": "Fast average crosses ABOVE the slow average → buy at the next open.",
+        "exit": "Fast average crosses BELOW the slow average → exit at the next open.",
+        "chart": "Orange line = fast average, purple = slow average. A 'cross' is where the two lines intersect — that is the signal. Green ▲ = entries, red ▼ = exits.",
+        "params": {
+            "n_fast": "Fast average length in days (lower = more sensitive, more whipsaws).",
+            "n_slow": "Slow average length in days (higher = slower trend, fewer signals).",
+        },
+    },
+    "Donchian Trend": {
+        "tagline": "Turtle-style breakout: ride trends that make new highs.",
+        "entry": "Close above the highest high of the last N days → buy at the next open.",
+        "exit": "Close below the lowest low of the last M days, OR below the trailing ATR stop.",
+        "chart": "Blue dashed = N-day high (entry level), pink dashed = M-day low (exit level), red = trailing ATR stop.",
+        "params": {
+            "n_entry": "Lookback in days for the breakout high.",
+            "n_exit": "Lookback in days for the exit low.",
+            "atr_period": "ATR smoothing period.",
+            "atr_mult": "Stop distance in multiples of ATR below the close.",
+        },
+    },
+    "S/R Bounce": {
+        "tagline": "Classic support/resistance: buy where support held before, sell where resistance rejected.",
+        "entry": "Price dips to the N-day support and closes back above it → buy at the next open.",
+        "exit": "Price touches the N-day resistance, or closes below support by atr_mult × ATR.",
+        "chart": "Blue dashed = N-day resistance, pink dashed = N-day support. Entries happen near the support line, exits near resistance.",
+        "params": {
+            "n_window": "Lookback in days for the support/resistance levels.",
+            "atr_period": "ATR smoothing period.",
+            "atr_mult": "Breakdown buffer below support, in ATR units.",
+        },
+    },
+    "Fib Retrace": {
+        "tagline": "Fibonacci retracement: buy the pullback of an up-swing at a fib level.",
+        "entry": "After a swing high (N-day high) pulls back to a swing low (M-day low), buy when the close recovers above the fib retracement level of that pullback.",
+        "exit": "Stop below the pullback low; take profit at the swing high.",
+        "chart": "The fib level is where entry happens. Approximation note: swing high/low are rolling N/M-day extremes, not chartist hand-drawn swings.",
+        "params": {
+            "n_swing": "Lookback for the swing high.",
+            "m_pullback": "Lookback for the pullback low.",
+            "fib": "Retracement level: 0.382 / 0.5 / 0.618 (classic) / 0.786.",
+        },
+    },
+    "Wave Pull": {
+        "tagline": "Impulse-pullback ('wave-lite'): after a strong impulse, buy the first breakout of the pullback.",
+        "entry": "Close rises at least impulse_pct% over impulse_bars days, then breaks above the pullback's recent high.",
+        "exit": "Stop below the pullback low; take profit at 2× the entry risk.",
+        "chart": "Entry markers appear right after pullbacks that follow strong impulses. This is a quantified stand-in for wave counting, not Elliott analysis itself.",
+        "params": {
+            "impulse_bars": "Bars the impulse is measured over.",
+            "impulse_pct": "Minimum % move that counts as an impulse.",
+            "pullback_bars": "Recent bars defining the pullback high/low.",
+        },
+    },
+    "RSI Reversion": {
+        "tagline": "Mean reversion: buy fear, sell the recovery.",
+        "entry": "RSI drops below the oversold line → buy at the next open.",
+        "exit": "RSI recovers above the overbought line → exit at the next open.",
+        "chart": "RSI is not drawn on the price chart — the entry markers cluster after sharp drops, when RSI is oversold.",
+        "params": {
+            "period": "RSI smoothing period (2 = very sensitive, 14 = classic).",
+            "buy_below": "Oversold threshold.",
+            "sell_above": "Overbought exit threshold.",
+        },
     },
 }

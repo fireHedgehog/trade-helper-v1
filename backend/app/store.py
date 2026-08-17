@@ -37,6 +37,18 @@ CREATE TABLE IF NOT EXISTS param_sets (
     params     TEXT    NOT NULL,   -- JSON
     created_at TEXT    NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS positions (
+    symbol      TEXT NOT NULL,
+    strategy    TEXT NOT NULL,
+    state       TEXT NOT NULL,   -- flat | entry_pending | long
+    entry_date  TEXT,
+    entry_price REAL,
+    stop        REAL,
+    tp          REAL,
+    updated     TEXT NOT NULL,   -- last bar date processed
+    PRIMARY KEY (symbol, strategy)
+);
 """
 
 
@@ -149,3 +161,51 @@ def list_param_sets(strategy: str | None = None) -> list[dict]:
 def delete_param_set(name: str) -> None:
     with connect() as conn:
         conn.execute("DELETE FROM param_sets WHERE name = ?", (name,))
+
+
+def get_position(symbol: str, strategy: str) -> dict | None:
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT state, entry_date, entry_price, stop, tp, updated "
+            "FROM positions WHERE symbol = ? AND strategy = ?",
+            (symbol, strategy),
+        ).fetchone()
+    if row is None:
+        return None
+    return {
+        "state": row[0],
+        "entry_date": row[1],
+        "entry_price": row[2],
+        "stop": row[3],
+        "tp": row[4],
+        "updated": row[5],
+    }
+
+
+def save_position(
+    symbol: str, strategy: str, fields: dict, updated: str
+) -> None:
+    with connect() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO positions "
+            "(symbol, strategy, state, entry_date, entry_price, stop, tp, updated) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                symbol,
+                strategy,
+                fields["state"],
+                fields.get("entry_date"),
+                fields.get("entry_price"),
+                fields.get("stop"),
+                fields.get("tp"),
+                updated,
+            ),
+        )
+
+
+def delete_position(symbol: str, strategy: str) -> None:
+    with connect() as conn:
+        conn.execute(
+            "DELETE FROM positions WHERE symbol = ? AND strategy = ?",
+            (symbol, strategy),
+        )
