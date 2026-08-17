@@ -118,7 +118,8 @@ uvicorn app.main:app --reload
 6. Today view: scan + since-entry P&L + watchlist scope ✅ (rule-based ranking later)
 7. Strategy Lab: params ✅, symbols ✅, saved param sets ✅, batch runs (later)
 8. Macro view: raw ✅ (real calendar source later)
-9. AWS deployment (phase 2)
+9. Classic TA series: S/R bounce ✅ (Fibonacci / wave queued)
+10. AWS deployment (phase 2)
 
 ## 7. Product spec — the three views
 
@@ -164,6 +165,7 @@ uvicorn app.main:app --reload
 - **Saved params ("tuned models"):** ✅ built v0.7.1 — the Lab saves a tuned param set (name, params, date) into SQLite and Explorer applies saved sets from a dropdown. Next slice: let the Today scan use a saved set too.
 - **Daily signal state machine:** the Today scan recomputes state from recent bars. Plan: persistent per-symbol trade state (flat → long → exit transitions) computed by the daily job and snapshotted into the DB, so "entered 3 days ago, still holding" is known exactly.
 - **Rule-based ranking & confidence:** today's rank is a 12-week momentum placeholder. Plan: multi-factor rule scores (momentum, volatility, trend agreement) plus historical hit rate — labeled honestly as scores, not probabilities.
+- **Classic TA validity lab:** S/R Bounce added v0.8.0. Queued: Fibonacci retracement entries and Elliott-wave-style swing logic. Goal: measure whether these "ancient" techniques add value — backtest first, believe later.
 
 ---
 
@@ -180,6 +182,12 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.8.0 — 2026-08-17
+
+- Fixed: switching strategy left the previous strategy's entry/exit markers on the chart. Root cause: short windows produced NaN metrics → 500 → markers never refreshed. NaN now serializes as null ("—" in the UI), and markers/overlays are cleared at the start of every run.
+- Added classic **S/R Bounce** strategy: long when price tests and holds the N-day support, exit at the N-day resistance or on an ATR stop breakdown. The chart draws the algorithm-computed support/resistance bands.
+- Today scan supports S/R Bounce.
 
 ### v0.7.1 — 2026-08-17
 

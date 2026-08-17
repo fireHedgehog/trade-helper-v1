@@ -8,6 +8,7 @@ Assumptions (see README "Trading ground rules"):
 - cash $100k, commission 0.1% per side, signals execute at next bar's open.
 """
 import argparse
+import math
 import sys
 
 import pandas as pd
@@ -46,9 +47,10 @@ def to_ohlc(bars: pd.DataFrame) -> pd.DataFrame:
 def _plain(value):
     """Convert numpy/timestamp values into plain JSON-friendly types."""
     if value is None or isinstance(value, (int, float, str, bool)):
-        return value
+        return None if isinstance(value, float) and math.isnan(value) else value
     if hasattr(value, "item"):  # numpy scalars
-        return value.item()
+        item = value.item()
+        return None if isinstance(item, float) and math.isnan(item) else item
     return str(value)
 
 

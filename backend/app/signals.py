@@ -108,6 +108,21 @@ def compute_signal(bars: pd.DataFrame, strategy_name: str, params: dict) -> dict
         )
         entry_index = _last_entry_index(crossed) if long_now else None
 
+    elif strategy_name == "S/R Bounce":
+        n_window = int(params.get("n_window", 20))
+        support = bars["low"].shift(1).rolling(n_window).min()
+        resistance = bars["high"].shift(1).rolling(n_window).max()
+        tested = (close > support) & (bars["low"] <= support)
+        long_now = bool(close.iloc[-1] > support.iloc[-1])
+        result["state"] = "long" if long_now else "flat"
+        result["event"] = "entry" if bool(tested.iloc[-1]) else "none"
+        result["note"] = (
+            f"held {n_window}-day support at {support.iloc[-1]:.2f}"
+            if long_now
+            else f"below {n_window}-day support at {support.iloc[-1]:.2f}"
+        )
+        entry_index = _last_entry_index(tested) if long_now else None
+
     else:
         return None
 

@@ -280,8 +280,8 @@ function initChart() {
   chart.priceScale('').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
   smaFast = chart.addLineSeries({ color: '#f59e0b', lineWidth: 1, title: 'SMA fast' });
   smaSlow = chart.addLineSeries({ color: '#8b5cf6', lineWidth: 1, title: 'SMA slow' });
-  upperLine = chart.addLineSeries({ color: '#38bdf8', lineWidth: 1, lineStyle: 2, title: 'Donchian entry' });
-  lowerLine = chart.addLineSeries({ color: '#f472b6', lineWidth: 1, lineStyle: 2, title: 'Donchian exit' });
+  upperLine = chart.addLineSeries({ color: '#38bdf8', lineWidth: 1, lineStyle: 2, title: 'Resistance / entry' });
+  lowerLine = chart.addLineSeries({ color: '#f472b6', lineWidth: 1, lineStyle: 2, title: 'Support / exit' });
   atrFloorLine = chart.addLineSeries({ color: '#ef4444', lineWidth: 1, title: 'ATR stop' });
   window.__chart = chart; // exposed for in-app testing
 
@@ -358,6 +358,11 @@ function setOverlays(strategy, bars) {
     upperLine.setData(rollingExtreme(bars, p.n_entry || 55, 'high', 'max'));
     lowerLine.setData(rollingExtreme(bars, p.n_exit || 20, 'low', 'min'));
     atrFloorLine.setData(atrFloorData(bars, p.atr_period || 14, p.atr_mult || 3));
+  } else if (strategy === 'S/R Bounce') {
+    smaFast.setData([]); smaSlow.setData([]);
+    upperLine.setData(rollingExtreme(bars, p.n_window || 20, 'high', 'max'));
+    lowerLine.setData(rollingExtreme(bars, p.n_window || 20, 'low', 'min'));
+    atrFloorLine.setData([]);
   } else {
     smaFast.setData([]); smaSlow.setData([]);
     none();
@@ -383,7 +388,7 @@ function metricCard(label, value, color = '') {
 
 function renderMetrics(m) {
   $('#metrics-title').textContent = `Metrics — ${currentRange()}`;
-  const fmt = (v) => (typeof v === 'number' ? v.toFixed(2) : v);
+  const fmt = (v) => (v == null ? '—' : typeof v === 'number' ? v.toFixed(2) : v);
   const ret = m['Return [%]'], bh = m['Buy & Hold Return [%]'];
   $('#metrics').innerHTML =
     metricCard('Return %', fmt(ret), ret >= 0 ? 'pos' : 'neg') +
@@ -568,6 +573,8 @@ async function run() {
   const strategy = $('#strategy').value;
   const label = currentRange();
   $('#status').textContent = `running ${strategy} on ${symbol} (${label})…`;
+  candleSeries.setMarkers([]);  // clear the previous strategy's markers
+  equitySeries.setData([]);
   try {
     let bars = barsCache[symbol];
     if (!bars) {

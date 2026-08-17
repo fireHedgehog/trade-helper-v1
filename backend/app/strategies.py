@@ -101,10 +101,55 @@ class RsiReversion(Strategy):
             self.position.close()
 
 
+class SrBounce(Strategy):
+    """Classic support/resistance bounce: buy when price tests and holds the
+    N-day support, exit when it reaches the N-day resistance or breaks the
+    support by more than atr_mult × ATR. This is the first of the classic-TA
+    validity series (Fibonacci / wave ideas queued).
+    """
+
+    n_window = 20
+    atr_period = 14
+    atr_mult = 3.0
+
+    def init(self):
+        low = pd.Series(self.data.Low)
+        high = pd.Series(self.data.High)
+        close = pd.Series(self.data.Close)
+        self.support = self.I(
+            lambda: low.shift(1).rolling(self.n_window).min(), name="support"
+        )
+        self.resistance = self.I(
+            lambda: high.shift(1).rolling(self.n_window).max(), name="resistance"
+        )
+        prev_close = close.shift(1)
+        tr = pd.concat(
+            [high - low, (high - prev_close).abs(), (low - prev_close).abs()], axis=1
+        ).max(axis=1)
+        self.atr = self.I(
+            lambda: tr.ewm(alpha=1 / self.atr_period, adjust=False).mean(), name="ATR"
+        )
+
+    def next(self):
+        close = self.data.Close[-1]
+        support = self.support[-1]
+        resistance = self.resistance[-1]
+        if not self.position:
+            # Dipped to support today and closed back above it -> support held.
+            if close > support and self.data.Low[-1] <= support:
+                self.buy()
+        else:
+            if self.data.High[-1] >= resistance:
+                self.position.close()
+            elif close < support - self.atr_mult * self.atr[-1]:
+                self.position.close()
+
+
 # Registry used by the backtest CLI, the API, and the Strategy Lab.
 STRATEGIES = {
     "SMA Cross": SmaCross,
     "Donchian Trend": DonchianTrend,
+    "S/R Bounce": SrBounce,
     "RSI Reversion": RsiReversion,
 }
 
@@ -125,6 +170,11 @@ STRATEGY_PARAMS = {
     "Donchian Trend": {
         "n_entry": _int(55, 10, 250),
         "n_exit": _int(20, 5, 120),
+        "atr_period": _int(14, 2, 100),
+        "atr_mult": _float(3.0, 1.0, 10.0),
+    },
+    "S/R Bounce": {
+        "n_window": _int(20, 5, 120),
         "atr_period": _int(14, 2, 100),
         "atr_mult": _float(3.0, 1.0, 10.0),
     },
