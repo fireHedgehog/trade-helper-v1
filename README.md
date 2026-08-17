@@ -200,6 +200,12 @@ Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
 
+### v0.10.1 — 2026-08-17
+
+- **Today is now the default view** on load (the daily workflow: confidence, simulated positions, picks).
+- **URL routing:** the browser URL now reflects the active view via hash (`/#today`, `/#explorer`, `/#lab`, `/#macro`), including browser back/forward buttons and shareable links.
+- Symbol Explorer loads lazily on first visit instead of on startup.
+
 ### v0.10.0 — 2026-08-17
 
 - **Historical hit-rate confidence** (per strategy): win rate + avg 20-day forward return over past entry signals, all-time and 3Y slices — honest statistics, not probabilities.

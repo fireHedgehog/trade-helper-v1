@@ -147,13 +147,13 @@
 <body>
 <aside>
   <h1>trade-helper-v1</h1>
-  <div class="nav-item" data-view="today">Today</div>
-  <div class="nav-item active" data-view="explorer">Symbol Explorer</div>
+  <div class="nav-item active" data-view="today">Today</div>
+  <div class="nav-item" data-view="explorer">Symbol Explorer</div>
   <div class="nav-item" data-view="lab">Strategy Lab</div>
   <div class="nav-item" data-view="macro">Macro</div>
 </aside>
 <main>
-  <div id="view-explorer" class="view">
+  <div id="view-explorer" class="view" hidden>
   <div class="toolbar">
     <div class="symbol-box">
       <input id="symbol-input" type="text" placeholder="Symbol (e.g. SPY)" autocomplete="off" spellcheck="false">
@@ -211,7 +211,7 @@
   </div>
   </div>
 
-  <div id="view-today" class="view" hidden>
+  <div id="view-today" class="view">
     <div class="toolbar">
       <select id="today-scope">
         <option value="core" selected>Core watchlist</option>
@@ -697,18 +697,40 @@ function windowForRange(bars, label) {
 
 document.querySelectorAll('.nav-item').forEach((item) => {
   item.addEventListener('click', () => {
-    document.querySelectorAll('.nav-item').forEach((i) => i.classList.remove('active'));
-    item.classList.add('active');
     showView(item.dataset.view);
   });
 });
 
-function showView(name) {
+/* ---------- view routing (URL hash reflects the active view) ---------- */
+const VIEWS = ['today', 'explorer', 'lab', 'macro'];
+let currentView = null;
+let explorerLoaded = false;
+
+function applyView(name) {
+  if (!VIEWS.includes(name)) name = 'today';
+  currentView = name;
   document.querySelectorAll('.view').forEach((v) => { v.hidden = v.id !== `view-${name}`; });
+  document.querySelectorAll('.nav-item').forEach((i) => {
+    i.classList.toggle('active', i.dataset.view === name);
+  });
   if (name === 'today') loadToday();
   if (name === 'macro') loadMacro();
   if (name === 'lab') loadLab();
+  if (name === 'explorer' && !explorerLoaded) {
+    explorerLoaded = true;
+    loadSymbols().then(run);
+  }
 }
+
+function showView(name) {
+  applyView(name);
+  if (location.hash !== `#${name}`) location.hash = name; // updates the URL
+}
+
+window.addEventListener('hashchange', () => {
+  const name = location.hash.replace('#', '') || 'today';
+  if (name !== currentView) applyView(name); // back/forward buttons
+});
 
 /* ---------- Strategy Lab: confidence scoreboard ---------- */
 async function loadLab(force = false) {
@@ -878,7 +900,11 @@ $('#run').addEventListener('click', run);
 $('#strategy').addEventListener('change', () => { resetParams(); renderParams(); loadParamSets(); run(); });
 
 initChart();
-loadStrategies().then(loadSymbols).then(run);
+loadStrategies().then(() => {
+  const initial = location.hash.replace('#', '') || 'today';
+  applyView(initial);
+  if (!location.hash) history.replaceState(null, '', `#${initial}`);
+});
 </script>
 </body>
 </html>
