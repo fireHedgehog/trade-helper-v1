@@ -115,9 +115,10 @@ uvicorn app.main:app --reload
 3. Data pipeline: fetch SPY → SQLite (idempotent daily job) ✅
 4. First strategy (SMA cross) + minimal backtest → metrics ✅
 5. Chart viewer: candles + entry/exit markers + algorithm lines ✅
-6. Today view: pick cards + confidence + reasons
+6. Today view: raw scan ✅ (cards + confidence + saved params later)
 7. Strategy Lab: params ✅, symbols ✅, batch runs (later)
-8. AWS deployment (phase 2)
+8. Macro view: raw ✅ (real calendar source later)
+9. AWS deployment (phase 2)
 
 ## 7. Product spec — the three views
 
@@ -158,6 +159,12 @@ uvicorn app.main:app --reload
 - **Survivorship bias:** index lists are today's members only — backtests ignore delisted names and look better than reality.
 - **Over-tuning:** few trades + great stats = suspicious. Walk-forward testing later.
 
+## 9. Design notes (recorded, not built yet)
+
+- **Saved params ("tuned models"):** strategy params are hardcoded defaults today. Plan: the Lab can save a tuned param set (name, params, date, notes); Explorer and Today views pick a saved set to run with — no re-typing.
+- **Daily signal state machine:** the Today scan is stateless per symbol. Plan: persistent per-symbol trade state (flat → long → exit transitions) computed by the daily job and snapshotted into the DB, so "entered 3 days ago, still holding" is known.
+- **Rule-based ranking & confidence:** today's rank is a 12-week momentum placeholder. Plan: multi-factor rule scores (momentum, volatility, trend agreement) plus historical hit rate — labeled honestly as scores, not probabilities.
+
 ---
 
 ## Versioning
@@ -173,6 +180,12 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.7.0 — 2026-08-17
+
+- Today view (raw): per-strategy scan of all fetched symbols — entries today / holding / exits today, ranked by a momentum placeholder, with a refresh button.
+- Macro view (raw): cards for SPY, gold (`GC=F`), crude (`CL=F`), US 10Y (`^TNX`), 2Y proxy (`SHY`); sample event calendar (clearly marked — real source later); blunt regime filter (US10Y ≥ 5% → caution banner).
+- Recorded design notes: saved/tuned param sets, daily signal state machine, rule-based ranking + confidence.
 
 ### v0.6.0 — 2026-08-17
 

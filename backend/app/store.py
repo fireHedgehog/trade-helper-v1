@@ -73,6 +73,18 @@ def load_bars(symbol: str) -> pd.DataFrame:
         )
 
 
+def load_recent_bars(symbol: str, n: int) -> pd.DataFrame:
+    """Last n bars for one symbol, oldest first (fast — no full-history read)."""
+    with connect() as conn:
+        df = pd.read_sql_query(
+            "SELECT date, open, high, low, close, volume "
+            "FROM bars WHERE symbol = ? ORDER BY date DESC LIMIT ?",
+            conn,
+            params=(symbol, n),
+        )
+    return df.iloc[::-1].reset_index(drop=True)
+
+
 def list_symbols() -> list[str]:
     with connect() as conn:
         rows = conn.execute(
