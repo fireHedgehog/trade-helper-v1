@@ -26,18 +26,28 @@ TE_HEADERS = {
 }
 CACHE_TTL = 6 * 3600
 
-# (key, display name, category, TE keywords, FRED series, value mode)
-# mode: level | mom | yoy_monthly | none
+# (key, display name, category, TE keywords, FRED series, value mode,
+#  good_when, why) — good_when: which direction of the change is good for
+#  equities. A rule-of-thumb interpretation, NOT a forecast.
 CATALOG = [
-    ("fomc", "FOMC Rate Decision", "Fed", ("fed rate decision",), "DFEDTARU", "level"),
-    ("cpi", "CPI Inflation (YoY)", "Inflation", ("inflation rate",), "CPIAUCSL", "yoy_monthly"),
-    ("pce", "Core PCE Price Index (YoY)", "Inflation", ("core pce",), "PCEPILFE", "yoy_monthly"),
-    ("nfp", "Nonfarm Payrolls", "Labor", ("non farm payrolls",), "PAYEMS", "mom"),
-    ("unemp", "Unemployment Rate", "Labor", ("unemployment rate",), "UNRATE", "level"),
-    ("claims", "Initial Jobless Claims", "Labor", ("jobless claims",), "ICSA", "level"),
-    ("gdp", "GDP Growth (annualized)", "Growth", ("gdp growth",), "A191RL1Q225SBEA", "level"),
-    ("retail", "Retail Sales (MoM)", "Consumption", ("retail sales",), "RSXFSN", "mom"),
-    ("ism", "ISM Manufacturing PMI", "Activity", ("ism manufacturing",), None, "none"),
+    ("fomc", "FOMC Rate Decision", "Fed", ("fed rate decision",), "DFEDTARU", "level",
+     "down", "rate cuts loosen financial conditions"),
+    ("cpi", "CPI Inflation (YoY)", "Inflation", ("inflation rate",), "CPIAUCSL", "yoy_monthly",
+     "down", "cooling inflation supports valuations"),
+    ("pce", "Core PCE Price Index (YoY)", "Inflation", ("core pce",), "PCEPILFE", "yoy_monthly",
+     "down", "cooling inflation supports valuations"),
+    ("nfp", "Nonfarm Payrolls", "Labor", ("non farm payrolls",), "PAYEMS", "mom",
+     "up", "job growth supports earnings (watch for overheating)"),
+    ("unemp", "Unemployment Rate", "Labor", ("unemployment rate",), "UNRATE", "level",
+     "down", "falling unemployment = stronger consumer"),
+    ("claims", "Initial Jobless Claims", "Labor", ("jobless claims",), "ICSA", "level",
+     "down", "fewer layoffs = healthier labor market"),
+    ("gdp", "GDP Growth (annualized)", "Growth", ("gdp growth",), "A191RL1Q225SBEA", "level",
+     "up", "growth supports earnings"),
+    ("retail", "Retail Sales (MoM)", "Consumption", ("retail sales",), "RSXFSN", "mom",
+     "up", "consumer strength supports revenue"),
+    ("ism", "ISM Manufacturing PMI", "Activity", ("ism manufacturing",), None, "none",
+     "up", "expanding manufacturing supports cyclicals"),
 ]
 
 _cache: dict = {"at": 0.0, "events": []}
@@ -110,6 +120,17 @@ def _fred_last(series: str, mode: str) -> dict | None:
     }
 
 
+def _equity_read(change: float | None, good_when: str, why: str) -> dict | None:
+    """Interpret the latest change for equities: good or bad direction."""
+    if change is None or good_when == "none":
+        return None
+    if change == 0:
+        return {"good": True, "why": "unchanged — neutral"}
+    up = change > 0
+    good = (good_when == "up" and up) or (good_when == "down" and not up)
+    return {"good": good, "why": why}
+
+
 def macro_events(force: bool = False) -> list[dict]:
     if not force and _cache["events"] and time.time() - _cache["at"] < CACHE_TTL:
         return _cache["events"]
@@ -118,7 +139,7 @@ def macro_events(force: bool = False) -> list[dict]:
     except Exception:
         te_rows = []
     events = []
-    for key, name, category, keywords, fred, mode in CATALOG:
+    for key, name, category, keywords, fred, mode, good_when, why in CATALOG:
         match = next(
             (r for r in te_rows if any(k in r["name"].lower() for k in keywords)),
             None,
@@ -131,13 +152,17 @@ def macro_events(force: bool = False) -> list[dict]:
                 "time": match["time"],
                 "forecast": forecast,
             }
+        last_info = _fred_last(fred, mode) if fred else None
         events.append(
             {
                 "key": key,
                 "name": name,
                 "category": category,
                 "next": next_info,
-                "last": _fred_last(fred, mode) if fred else None,
+                "last": last_info,
+                "read": _equity_read(
+                    last_info["change"] if last_info else None, good_when, why
+                ),
             }
         )
     _cache["at"] = time.time()

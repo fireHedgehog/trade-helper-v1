@@ -126,8 +126,9 @@ intended for cloud compute — do not trigger it on a laptop.
 6. Strategy Lab: params ✅, symbols ✅, saved param sets ✅, scoreboard ✅, batch runs (later)
 7. Macro view: event-driven calendar ✅ (beat/miss history later)
 9. Classic TA series: S/R bounce ✅, Fib retrace ✅, wave pull ✅
-10. Daily cron script ✅ (`scripts/daily.sh`)
-11. AWS deployment (phase 2)
+10. CTA trend-following (tuned default) ✅
+11. Daily cron script ✅ (`scripts/daily.sh`)
+12. AWS deployment (phase 2)
 
 ## 7. Product spec — the three views
 
@@ -171,10 +172,11 @@ intended for cloud compute — do not trigger it on a laptop.
 ## 9. Design notes (recorded, mostly future work)
 
 - **Saved params ("tuned models"):** ✅ built v0.7.1 — the Lab saves a tuned param set (name, params, date) into SQLite and Explorer applies saved sets from a dropdown. Next slice: let the Today scan use a saved set too.
-- **Daily signal state machine:** ✅ core watchlist built v0.9.0 — the `positions` ledger persists flat → entry_pending → long per symbol+strategy. Since v0.11.2 it is replayed from full history on every Today fetch (vectorized signals + ATR, cheap scalar loop) and flat rows keep their **last exit** (date, price, stop/target, realized P&L). Remaining: the daily cron job and a snapshot table for all symbols.
-- **Rule-based ranking & confidence:** ✅ both built (v0.9.0–v0.10.0) — rule rank = momentum + trend + volatility score; confidence = per-strategy historical hit rate and avg 20-day return with all-time and 3Y slices. Sample-limited by default locally; full universe is a cloud-only trigger. Remaining: per-symbol slices.
+- **Daily signal state machine:** ✅ core watchlist built v0.9.0 — the `positions` ledger persists flat → entry_pending → long per symbol+strategy. Since v0.11.2 it is replayed from full history on every Today fetch (vectorized signals + ATR, cheap scalar loop) and flat rows keep their **last exit** (date, price, take-profit/stop-loss/trend-changed, realized P&L). Remaining: the daily cron job and a snapshot table for all symbols.
+- **Rule-based ranking & confidence:** ✅ both built (v0.9.0–v0.10.0) — rule rank = momentum + trend + volatility score; confidence = per-strategy historical hit rate and avg 20-day return with all-time and 3Y slices. Sample-limited by default locally (deliberate curated list first, v0.12.0); full universe is a cloud-only trigger. Remaining: per-symbol slices.
+- **CTA Trend (managed-futures style):** ✅ built v0.12.0 — breakout above an N-day high confirmed by a trend average; exits: M-day low (trend changed), trailing ATR stop, optional ATR TP. Defaults tuned on a 15-symbol curated basket (14 configs): `100/40/100, 5×ATR, no TP` → median PF 2.53, Sharpe 0.36, +228% all-time; SPY +286% / −20% maxDD. Honest caveat: trails 30-year buy & hold total return on this survivorship-biased basket — the value is drawdown control (~41% exposure) and positive expectancy, not beating the index. Backtest first, believe later.
 - **Classic TA validity lab:** ✅ S/R Bounce, Fib Retrace, Wave Pull built (v0.8.0–v0.9.0), each with params and an on-chart explanation. First honest measurement: Fib Retrace +6.7% vs +3,109% buy & hold on SPY over 33 years — the classic levels do not add value as implemented. Backtest first, believe later.
-- **Macro beat/miss:** last actuals come from FRED, next dates + forecasts from Trading Economics. Consensus history for past releases (needed for beat/miss badges) still needs a source — pending.
+- **Macro beat/miss:** last actuals come from FRED, next dates + forecasts from Trading Economics. Each event also gets a **Read** interpretation (good/bad for equities + why, per-event direction semantics) — a rule-of-thumb, not a forecast. Consensus history for past releases (needed for beat/miss badges) still needs a source — pending.
 - **Paper trading ledger** — built v0.9.0, last-exit tracking added v0.11.2:
   - Replaces the "Holding" section and moves to the top of the Today view, above Entries/Exits.
   - One simulated position per symbol per strategy, fixed size **100 shares**.
@@ -200,6 +202,14 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.12.0 — 2026-08-17
+
+- **CTA Trend** — a managed-futures-style trend follower: N-day high breakout above a trend average, exit on the M-day low (trend changed), trailing ATR stop, optional ATR take-profit. It is now the **default strategy everywhere** (Today, Explorer, Lab, API defaults) and it does enter at all-time highs by design.
+- **Tuned defaults, not a toy:** swept 14 configs across 15 deliberate symbols (sector ETFs + megacaps + cyclicals + defensives). Winner: `n_entry=100, n_exit=40, trend_ma=100, 5×ATR stop, no TP` — median Profit Factor **2.53**, median Sharpe **0.36**, +228% all-time; SPY +286% at −20% max drawdown. Honest caveats: total return still trails 30-year buy & hold on this survivorship-biased basket (~41% exposure; the value is drawdown control + positive expectancy), win rate ~53%.
+- **Curated prior-probability list** (`CURATED_SYMBOLS`): sector/core ETFs + AAPL, NVDA, MSFT, AMZN, GOOGL, META, AVGO, TSLA, JPM, XOM, CAT, UNH, LLY, HD, KO, V, MA, GS — confidence samples now draw from this deliberate list instead of a random draw.
+- **Closed rows say WHY:** the paper ledger now also exits on the strategy's own exit rule, and flat rows show `take profit` / `stop loss` / `trend changed` with the realized P&L. The ledger honors each strategy's `atr_mult`/`atr_tp_mult` so paper matches backtest.
+- **Macro Read column:** each calendar event interprets the latest change for equities (e.g. cooling CPI = good, falling NFP = bad) with a plain-language why — labeled as a rule-of-thumb, not a forecast.
 
 ### v0.11.2 — 2026-08-17
 

@@ -72,7 +72,7 @@ def strategies():
 
 
 @app.get("/api/signal/{symbol}")
-def signal_now(symbol: str, strategy: str = "SMA Cross"):
+def signal_now(symbol: str, strategy: str = "CTA Trend"):
     if strategy not in STRATEGIES:
         raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
     bars = store.load_recent_bars(symbol, 300)
@@ -88,7 +88,7 @@ def signal_now(symbol: str, strategy: str = "SMA Cross"):
 
 
 @app.get("/api/positions")
-def positions(strategy: str = "SMA Cross", set: str = "defaults"):
+def positions(strategy: str = "CTA Trend", set: str = "defaults"):
     if strategy not in STRATEGIES:
         raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
     return {"positions": positions_payload(strategy, set)}
@@ -96,7 +96,7 @@ def positions(strategy: str = "SMA Cross", set: str = "defaults"):
 
 @app.get("/api/confidence")
 def confidence(
-    strategy: str = "SMA Cross",
+    strategy: str = "CTA Trend",
     symbols: int = 5,
     days: int = 252,
     force: bool = False,
@@ -114,7 +114,7 @@ def confidence(
 def backtest(
     symbol: str,
     request: Request,
-    strategy: str = "SMA Cross",
+    strategy: str = "CTA Trend",
     start: str | None = None,
     end: str | None = None,
 ):
@@ -138,7 +138,7 @@ def backtest(
 
 @app.get("/api/today")
 def today(
-    strategy: str = "SMA Cross",
+    strategy: str = "CTA Trend",
     scope: str = "core",
     set: str = "defaults",
     refresh: bool = False,

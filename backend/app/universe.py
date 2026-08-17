@@ -35,6 +35,18 @@ HEADERS = {
 # Select Sector SPDR funds — sector rotation tracking.
 XL_ETFS = ["XLB", "XLC", "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY"]
 
+# Curated prior-probability list: sector/core ETFs + liquid, diverse megacaps.
+# Used as the deliberate default sample for confidence and tuning runs — a
+# deliberate mix, not a random draw (documented, not hidden).
+CURATED_SYMBOLS = (
+    ["SPY", "QQQ", "MAGS", "SOXX", "IGV"]
+    + XL_ETFS
+    + [
+        "AAPL", "NVDA", "MSFT", "AMZN", "GOOGL", "META", "AVGO", "TSLA",
+        "JPM", "XOM", "CAT", "UNH", "LLY", "HD", "KO", "V", "MA", "GS",
+    ]
+)
+
 
 def _normalize(ticker: str) -> str:
     return ticker.strip().upper().replace(".", "-")

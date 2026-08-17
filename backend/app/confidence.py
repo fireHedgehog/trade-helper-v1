@@ -17,9 +17,10 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
-from .signals import CORE_WATCHLIST, _entry_series
+from .signals import _entry_series
 from .store import latest_bar_date, list_symbols, load_bars, load_recent_bars
 from .strategies import STRATEGY_PARAMS
+from .universe import CURATED_SYMBOLS
 
 HORIZON = 20  # trading days of forward return
 CACHE_TTL = 600  # seconds
@@ -45,10 +46,12 @@ def _summarize(returns: list[float]) -> dict:
 
 
 def _ordered_symbols(limit: int) -> list[str]:
+    """Deliberate prior-probability order: the curated diverse list first,
+    then everything else (a random symbol draw would not be reproducible)."""
     symbols = list_symbols()
-    core = [s for s in CORE_WATCHLIST if s in symbols]
-    rest = [s for s in symbols if s not in CORE_WATCHLIST]
-    return (core + rest)[:limit]
+    curated = [s for s in CURATED_SYMBOLS if s in symbols]
+    rest = [s for s in symbols if s not in CURATED_SYMBOLS]
+    return (curated + rest)[:limit]
 
 
 def compute_confidence(

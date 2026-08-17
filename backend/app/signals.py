@@ -84,9 +84,47 @@ def _entry_series(bars: pd.DataFrame, strategy_name: str, params: dict) -> pd.Se
         )
         breakout = bars["high"].shift(1).rolling(int(params.get("pullback_bars", 3))).max()
         return impulse & (close > breakout)
+    if strategy_name == "CTA Trend":
+        n_entry = int(params.get("n_entry", 100))
+        trend_ma = int(params.get("trend_ma", 100))
+        upper = bars["high"].shift(1).rolling(n_entry).max()
+        trend = close.rolling(trend_ma).mean()
+        up = (close > upper) & (close > trend)
+        return up & ~up.shift(1, fill_value=False)
     if strategy_name == "RSI Reversion":
         in_zone = _rsi(close, int(params.get("period", 14))) < int(params.get("buy_below", 30))
         return in_zone & ~in_zone.shift(1, fill_value=False)
+    return pd.Series(False, index=bars.index)
+
+
+def _exit_series(bars: pd.DataFrame, strategy_name: str, params: dict) -> pd.Series:
+    """Boolean series: True on bars where the strategy's OWN exit rule fires
+    ("trend changed"). Complements the generic ATR stop / take-profit."""
+    close = bars["close"]
+    if strategy_name == "SMA Cross":
+        nf, ns = int(params.get("n_fast", 20)), int(params.get("n_slow", 50))
+        up = close.rolling(nf).mean() > close.rolling(ns).mean()
+        return ~up & up.shift(1, fill_value=False)
+    if strategy_name in ("Donchian Trend", "CTA Trend"):
+        n_exit = int(params.get("n_exit", 40 if strategy_name == "CTA Trend" else 20))
+        lower = bars["low"].shift(1).rolling(n_exit).min()
+        below = close < lower
+        return below & ~below.shift(1, fill_value=False)
+    if strategy_name == "S/R Bounce":
+        support = bars["low"].shift(1).rolling(int(params.get("n_window", 20))).min()
+        below = close < support
+        return below & ~below.shift(1, fill_value=False)
+    if strategy_name == "Fib Retrace":
+        pullback_low = bars["low"].shift(1).rolling(int(params.get("m_pullback", 10))).min()
+        below = close < pullback_low
+        return below & ~below.shift(1, fill_value=False)
+    if strategy_name == "Wave Pull":
+        pullback_low = bars["low"].shift(1).rolling(int(params.get("pullback_bars", 3))).min()
+        below = close < pullback_low
+        return below & ~below.shift(1, fill_value=False)
+    if strategy_name == "RSI Reversion":
+        recovered = _rsi(close, int(params.get("period", 14))) > int(params.get("sell_above", 70))
+        return recovered & ~recovered.shift(1, fill_value=False)
     return pd.Series(False, index=bars.index)
 
 
@@ -245,6 +283,37 @@ def compute_signal(bars: pd.DataFrame, strategy_name: str, params: dict) -> dict
         result["indicators"] = {"RSI": round(float(rsi.iloc[-1]), 1)}
         entry_index = _last_entry_index(crossed) if long_now else None
 
+    elif strategy_name == "CTA Trend":
+        n_entry = int(params.get("n_entry", 100))
+        n_exit = int(params.get("n_exit", 40))
+        trend_ma = int(params.get("trend_ma", 100))
+        upper = bars["high"].shift(1).rolling(n_entry).max()
+        lower = bars["low"].shift(1).rolling(n_exit).min()
+        trend = close.rolling(trend_ma).mean()
+        up = (close > upper) & (close > trend)
+        crossed = up & ~up.shift(1, fill_value=False)
+        exited = (close < lower) & ~(close < lower).shift(1, fill_value=False)
+        long_now = bool(up.iloc[-1])
+        result["state"] = "long" if long_now else "flat"
+        if bool(crossed.iloc[-1]):
+            result["event"] = "entry"
+            result["note"] = f"new {n_entry}-day high above the {trend_ma}-day trend"
+        elif bool(exited.iloc[-1]):
+            result["event"] = "exit"
+            result["note"] = f"closed below the {n_exit}-day low — trend changed"
+        elif long_now:
+            result["event"] = "none"
+            result["note"] = f"trend on: above the {n_entry}-day high and the {trend_ma}-day average"
+        else:
+            result["event"] = "none"
+            result["note"] = "no trend setup"
+        result["indicators"] = {
+            f"{n_entry}-day high": round(float(upper.iloc[-1]), 2) if pd.notna(upper.iloc[-1]) else None,
+            f"{n_exit}-day low": round(float(lower.iloc[-1]), 2) if pd.notna(lower.iloc[-1]) else None,
+            f"SMA {trend_ma}": round(float(trend.iloc[-1]), 2) if pd.notna(trend.iloc[-1]) else None,
+        }
+        entry_index = _last_entry_index(crossed) if long_now else None
+
     else:
         return None
 
@@ -301,11 +370,16 @@ def _replay_ledger(bars: pd.DataFrame, strategy_name: str, params: dict) -> dict
     symbol: vectorized signal/ATR series plus a cheap scalar loop over bars.
 
     Entry signals at the close, fill at the NEXT open (NDO), exits on the
-    3×ATR trailing stop or 2×ATR take-profit. Returns the current state plus
-    the last realized exit — the record that explains an otherwise-empty row.
+    strategy's own exit rule (trend changed), the ATR trailing stop, or the
+    ATR take-profit. Stop/TP distances come from the strategy's params so the
+    paper ledger mirrors its backtest. Returns the current state plus the
+    last realized exit — the record that explains an otherwise-empty row.
     """
     entries = _entry_series(bars, strategy_name, params).to_numpy(dtype=bool)
+    exits = _exit_series(bars, strategy_name, params).to_numpy(dtype=bool)
     atr = _atr(bars, 14).to_numpy()
+    stop_mult = float(params.get("atr_mult", STOP_ATR_MULT))
+    tp_mult = float(params.get("atr_tp_mult", TP_ATR_MULT))
     dates = bars["date"].tolist()
     opens = bars["open"].tolist()
     closes = bars["close"].tolist()
@@ -323,16 +397,18 @@ def _replay_ledger(bars: pd.DataFrame, strategy_name: str, params: dict) -> dict
                 "state": "long",
                 "entry_date": dates[i],
                 "entry_price": round(open_px, 2),
-                "stop": round(open_px - STOP_ATR_MULT * a, 2) if a else None,
-                "tp": round(open_px + TP_ATR_MULT * a, 2) if a else None,
+                "stop": round(open_px - stop_mult * a, 2) if a else None,
+                "tp": round(open_px + tp_mult * a, 2) if a and tp_mult > 0 else None,
                 "exit_date": None, "exit_price": None, "exit_reason": None,
                 "exit_pnl_pct": None, "exit_pnl_usd": None,
             }
         else:  # long
             a = atr[i] if i >= 14 else None
             if a and state["stop"] is not None:
-                state["stop"] = round(max(state["stop"], close_px - STOP_ATR_MULT * a), 2)
-            if state["stop"] is not None and close_px < state["stop"]:
+                state["stop"] = round(max(state["stop"], close_px - stop_mult * a), 2)
+            if exits[i]:
+                state = _closed_position(state, dates[i], close_px, "trend")
+            elif state["stop"] is not None and close_px < state["stop"]:
                 state = _closed_position(state, dates[i], close_px, "stop")
             elif state["tp"] is not None and close_px >= state["tp"]:
                 state = _closed_position(state, dates[i], close_px, "target")

@@ -68,6 +68,8 @@
   .chip.warning { background: #3a2d1f; color: var(--accent); }
   .ev-prev { color: var(--muted); }
   .badge { font-size: 10px; background: #374151; padding: 1px 6px; border-radius: 6px; color: var(--muted); margin-left: 6px; }
+  .chip.trend { background: #1f2b3a; color: #7dd3fc; }
+  .ev-why { color: var(--muted); font-size: 11px; }
   tr.muted td { opacity: .55; }
   .sample-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
   #regime-banner { font-size: 12px; padding: 6px 10px; border-radius: 8px; }
@@ -554,10 +556,10 @@ async function loadSymbols() {
 async function loadStrategies() {
   const { strategies } = await api('/api/strategies');
   strategiesMeta = strategies;
-  $('#strategy').innerHTML = strategies.map((s) =>
-    `<option ${s.name === 'SMA Cross' ? 'selected' : ''}>${s.name}</option>`).join('');
-  $('#today-strategy').innerHTML = strategies.map((s) =>
-    `<option ${s.name === 'SMA Cross' ? 'selected' : ''}>${s.name}</option>`).join('');
+  $('#strategy').innerHTML = strategies.map((s, i) =>
+    `<option ${i === 0 ? 'selected' : ''}>${s.name}</option>`).join('');
+  $('#today-strategy').innerHTML = strategies.map((s, i) =>
+    `<option ${i === 0 ? 'selected' : ''}>${s.name}</option>`).join('');
   resetParams();
   renderParams();
   loadParamSets();
@@ -856,10 +858,12 @@ async function loadToday(refresh = false) {
         const cls = ex.pnl_pct == null ? '' : (ex.pnl_pct >= 0 ? 'pos' : 'neg');
         const pnl = ex.pnl_pct == null ? '—' : `${ex.pnl_pct >= 0 ? '+' : ''}${ex.pnl_pct.toFixed(1)}%`;
         const usd = ex.pnl_usd == null ? '—' : `${ex.pnl_usd >= 0 ? '+' : ''}${ex.pnl_usd.toFixed(0)}`;
+        const labels = { target: 'take profit', stop: 'stop loss', trend: 'trend changed' };
+        const chipCls = ex.reason === 'target' ? 'entry' : ex.reason === 'trend' ? 'trend' : 'exit';
         return `<tr class="muted"><td>${r.symbol}</td><td>${ex.date || '—'}</td><td>${ex.price ?? '—'}</td><td>—</td>` +
           `<td class="${cls}">${pnl}</td><td class="${cls}">${usd}</td>` +
-          `<td colspan="2"><span class="chip ${ex.reason === 'target' ? 'entry' : 'exit'}">${ex.reason || 'exit'}</span></td>` +
-          `<td>closed — waiting for next signal</td></tr>`;
+          `<td colspan="2"><span class="chip ${chipCls}">${labels[ex.reason] || ex.reason || 'exit'}</span></td>` +
+          `<td>closed — ${labels[ex.reason] || 'exit'}</td></tr>`;
       }
       const pnl = r.pnl_pct == null ? '—' : `${r.pnl_pct >= 0 ? '+' : ''}${r.pnl_pct.toFixed(1)}%`;
       const usd = r.pnl_usd == null ? '—' : `${r.pnl_usd >= 0 ? '+' : ''}${r.pnl_usd.toFixed(0)}`;
@@ -936,14 +940,20 @@ function renderEvents(events) {
         (e.last.previous != null ? `<span class="ev-prev"> (prev ${e.last.previous})</span>` : '');
       if (e.last.consensus == null) last += '<span class="sample-note"> · consensus n/a</span>';
     }
+    let read = '—';
+    if (e.read) {
+      read = `<span class="${e.read.good ? 'pos' : 'neg'}">${e.read.good ? 'good' : 'bad'} for equities</span>` +
+        `<span class="ev-why"> · ${e.read.why}</span>`;
+    }
     return `<div class="event-row">
       <span class="ev-name">${CAT_ICONS[e.category] || '●'} ${e.name}</span>
       <span class="ev-cell">Next: ${next}</span>
       <span class="ev-cell">Last: ${last}</span>
+      <span class="ev-cell">Read: ${read}</span>
     </div>`;
   }).join('');
   return rows +
-    '<div class="sample-note">Next dates & forecasts: Trading Economics (US) · Last actuals: FRED · beat/miss vs consensus pending a forecast-history source.</div>';
+    '<div class="sample-note">Next dates & forecasts: Trading Economics (US) · Last actuals: FRED · Read is a rule-of-thumb interpretation of the latest change, not a forecast.</div>';
 }
 
 $('#today-strategy').addEventListener('change', () => {
