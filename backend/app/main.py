@@ -4,6 +4,7 @@ Run (from backend/):
     uvicorn app.main:app --reload
 """
 import time
+from datetime import date
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -38,6 +39,48 @@ _today_cache: dict = {}
 app = FastAPI(title="trade-helper-v1")
 
 
+def _validated_strategy_params(strategy: str, raw: dict) -> dict:
+    """Coerce and enforce the same parameter contract advertised to the UI."""
+    if strategy not in STRATEGIES:
+        raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
+    meta = STRATEGY_PARAMS[strategy]
+    parsed = {}
+    for key, value in raw.items():
+        if key not in meta:
+            raise HTTPException(status_code=400, detail=f"unknown parameter: {key}")
+        try:
+            parsed[key] = float(value) if meta[key]["type"] == "float" else int(value)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail=f"bad value for {key}: {value}")
+        if not meta[key]["min"] <= parsed[key] <= meta[key]["max"]:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"{key} must be between {meta[key]['min']} and "
+                    f"{meta[key]['max']}"
+                ),
+            )
+    resolved = {key: value["default"] for key, value in meta.items()}
+    resolved.update(parsed)
+    if strategy == "SMA Cross" and resolved["n_fast"] >= resolved["n_slow"]:
+        raise HTTPException(status_code=400, detail="n_fast must be below n_slow")
+    if strategy in {"CTA Trend", "Donchian Trend"} and resolved["n_exit"] >= resolved["n_entry"]:
+        raise HTTPException(status_code=400, detail="n_exit must be below n_entry")
+    if strategy == "RSI Reversion" and resolved["buy_below"] >= resolved["sell_above"]:
+        raise HTTPException(status_code=400, detail="buy_below must be below sell_above")
+    return parsed
+
+
+def _validated_window(start: str | None, end: str | None) -> None:
+    try:
+        parsed_start = date.fromisoformat(start) if start else None
+        parsed_end = date.fromisoformat(end) if end else None
+    except ValueError:
+        raise HTTPException(status_code=400, detail="start/end must be YYYY-MM-DD")
+    if parsed_start and parsed_end and parsed_start > parsed_end:
+        raise HTTPException(status_code=400, detail="start must not be after end")
+
+
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
@@ -50,6 +93,8 @@ def symbols():
 
 @app.get("/api/bars/{symbol}")
 def bars(symbol: str, days: int = 0):
+    if days < 0 or days > 10_000:
+        raise HTTPException(status_code=400, detail="days must be between 0 and 10000")
     frame = store.load_bars(symbol)
     if frame.empty:
         raise HTTPException(status_code=404, detail=f"no bars for {symbol}")
@@ -128,15 +173,16 @@ def backtest(
     end: str | None = None,
 ):
     reserved = {"symbol", "strategy", "start", "end"}
-    meta = STRATEGY_PARAMS.get(strategy, {})
-    params = {}
-    for key, value in request.query_params.items():
-        if key in reserved or key not in meta:
-            continue
-        try:
-            params[key] = float(value) if meta[key]["type"] == "float" else int(value)
-        except ValueError:
-            raise HTTPException(status_code=400, detail=f"bad value for {key}: {value}")
+    unknown = set(request.query_params) - reserved - set(STRATEGY_PARAMS.get(strategy, {}))
+    if unknown:
+        raise HTTPException(status_code=400, detail=f"unknown parameter: {sorted(unknown)[0]}")
+    raw = {
+        key: value
+        for key, value in request.query_params.items()
+        if key not in reserved
+    }
+    params = _validated_strategy_params(strategy, raw)
+    _validated_window(start, end)
     try:
         return backtest_payload(symbol, strategy, params=params, start=start, end=end)
     except KeyError:
@@ -234,6 +280,7 @@ def save_param_set(payload: dict):
         raise HTTPException(status_code=400, detail="need a name and a valid strategy")
     if not isinstance(params, dict):
         raise HTTPException(status_code=400, detail="params must be an object")
+    params = _validated_strategy_params(strategy, params)
     store.save_param_set(name, strategy, params)
     return {"ok": True}
 

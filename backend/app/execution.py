@@ -40,6 +40,35 @@ class Simulation:
 TRAILING_STRATEGIES = {"CTA Trend", "Donchian Trend"}
 
 
+def validate_bars(bars: pd.DataFrame) -> None:
+    """Reject malformed market bars before they can produce plausible metrics."""
+    required = {"date", "open", "high", "low", "close", "volume"}
+    missing = required - set(bars.columns)
+    if missing:
+        raise ValueError(f"bars missing columns: {', '.join(sorted(missing))}")
+    if bars.empty:
+        return
+    if bars["date"].isna().any() or bars["date"].duplicated().any():
+        raise ValueError("bar dates must be present and unique")
+    dates = pd.to_datetime(bars["date"], errors="coerce")
+    if dates.isna().any() or not dates.is_monotonic_increasing:
+        raise ValueError("bar dates must be valid and strictly increasing")
+    for column in ("open", "high", "low", "close", "volume"):
+        numeric = pd.to_numeric(bars[column], errors="coerce")
+        if numeric.isna().any() or not numeric.map(math.isfinite).all():
+            raise ValueError(f"bar {column} values must be finite numbers")
+    if (bars[["open", "high", "low", "close"]] <= 0).any().any():
+        raise ValueError("OHLC prices must be positive")
+    if (bars["volume"] < 0).any():
+        raise ValueError("volume cannot be negative")
+    if (bars["high"] < bars[["open", "close"]].max(axis=1)).any():
+        raise ValueError("bar high cannot be below open or close")
+    if (bars["low"] > bars[["open", "close"]].min(axis=1)).any():
+        raise ValueError("bar low cannot be above open or close")
+    if (bars["low"] > bars["high"]).any():
+        raise ValueError("bar low cannot exceed high")
+
+
 def _known_number(value) -> float | None:
     return float(value) if value is not None and pd.notna(value) else None
 
@@ -77,10 +106,7 @@ def simulate(
     fixed_shares: int | None = None,
 ) -> Simulation:
     """Replay one long-only strategy without any same-bar fills."""
-    required = {"date", "open", "high", "low", "close", "volume"}
-    missing = required - set(bars.columns)
-    if missing:
-        raise ValueError(f"bars missing columns: {', '.join(sorted(missing))}")
+    validate_bars(bars)
     if bars.empty:
         return Simulation(strategy=strategy_name, position=Position())
 

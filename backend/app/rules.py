@@ -18,8 +18,12 @@ class RuleSet:
 
 def rsi(close: pd.Series, period: int) -> pd.Series:
     delta = close.diff()
-    gain = delta.clip(lower=0).ewm(alpha=1 / period, adjust=False).mean()
-    loss = (-delta.clip(upper=0)).ewm(alpha=1 / period, adjust=False).mean()
+    gain = delta.clip(lower=0).ewm(
+        alpha=1 / period, adjust=False, min_periods=period
+    ).mean()
+    loss = (-delta.clip(upper=0)).ewm(
+        alpha=1 / period, adjust=False, min_periods=period
+    ).mean()
     return 100 - 100 / (1 + gain / loss.replace(0, 1e-12))
 
 
@@ -34,7 +38,9 @@ def atr(bars: pd.DataFrame, period: int) -> pd.Series:
         ],
         axis=1,
     ).max(axis=1)
-    return true_range.ewm(alpha=1 / period, adjust=False).mean()
+    return true_range.ewm(
+        alpha=1 / period, adjust=False, min_periods=period
+    ).mean()
 
 
 def _false(index: pd.Index) -> pd.Series:

@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from .execution import validate_bars
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = REPO_ROOT / "data"
 DB_PATH = DATA_DIR / "market.db"
@@ -83,12 +85,20 @@ def upsert_bars(df: pd.DataFrame) -> None:
     """Insert-or-replace bars keyed by (symbol, date).
 
     Expects columns: symbol, date (YYYY-MM-DD), open, high, low, close, volume.
-    Rows with missing OHLC values are dropped (Yahoo can return NaN rows).
+    The whole batch is rejected if a row is malformed; callers must clean and
+    validate provider data before publishing it.
     """
-    df = df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].copy()
-    df = df.dropna(subset=['open', 'high', 'low', 'close'])
+    required = ['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']
+    missing = set(required) - set(df.columns)
+    if missing:
+        raise ValueError(f"bars missing columns: {', '.join(sorted(missing))}")
+    df = df[required].copy()
     if df.empty:
-        raise RuntimeError('no valid bars to store (all rows had missing values)')
+        raise ValueError('no bars to store')
+    if df["symbol"].isna().any() or (df["symbol"].astype(str).str.strip() == "").any():
+        raise ValueError("bar symbols must be present")
+    for _symbol, group in df.groupby("symbol", sort=False):
+        validate_bars(group.drop(columns="symbol").reset_index(drop=True))
     # Convert to plain Python types so sqlite3 binds them without errors.
     df["date"] = df["date"].astype(str)
     df = df.astype(

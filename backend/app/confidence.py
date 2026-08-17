@@ -43,13 +43,15 @@ def _summarize(returns: list[float]) -> dict:
     }
 
 
-def _resolve_symbols(symbols: list[str] | None) -> list[str]:
+def _resolve_symbols(symbols: list[str] | None) -> tuple[list[str], list[str]]:
     """Symbols to sample: the explicitly chosen list, or the deliberate
     liquid basket (16 explainable names). Never a blind random draw."""
     available = set(list_symbols())
-    if symbols:
-        return [s for s in symbols if s in available]
-    return [s for s in DEFAULT_BASKET if s in available]
+    requested = symbols or DEFAULT_BASKET
+    return (
+        [symbol for symbol in requested if symbol in available],
+        [symbol for symbol in requested if symbol not in available],
+    )
 
 
 def compute_confidence(
@@ -62,7 +64,7 @@ def compute_confidence(
 
     symbols=None -> the DEFAULT_BASKET. max_days <= 0 -> full history (heavy).
     """
-    chosen = _resolve_symbols(symbols)
+    chosen, missing = _resolve_symbols(symbols)
     key = f"{strategy_name}|{','.join(chosen)}|{max_days}"
     cached = _cache.get(key)
     data_date = latest_bar_date()
@@ -74,6 +76,7 @@ def compute_confidence(
     returns: list[float] = []
     dates: list[str] = []
     all_forward: list[float] = []  # every window -> market baseline
+    failures: list[dict] = []
 
     for symbol in chosen:
         if max_days > 0:
@@ -84,7 +87,10 @@ def compute_confidence(
             continue
         try:
             entries = _entry_series(bars, strategy_name, params)
-        except Exception:
+        except Exception as exc:
+            failures.append(
+                {"symbol": symbol, "error": str(exc), "type": type(exc).__name__}
+            )
             continue
         forward = bars["close"].shift(-HORIZON) / bars["close"] - 1
         valid = forward.notna()
@@ -113,10 +119,15 @@ def compute_confidence(
             "names": chosen,
             "days": max_days if max_days > 0 else None,
         },
+        "coverage": {
+            "requested": len(chosen) + len(missing),
+            "processed": len(chosen) - len(failures),
+            "missing": missing,
+            "failed": failures,
+        },
         "all_time": all_time,
         "last_3y": last_3y,
         "baseline": baseline,
     }
     _cache[key] = {"at": time.time(), "data": data}
     return data
-

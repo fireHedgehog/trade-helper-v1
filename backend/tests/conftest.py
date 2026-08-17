@@ -67,3 +67,8 @@ def make_research_bars() -> pd.DataFrame:
 @pytest.fixture(scope="session")
 def research_bars() -> pd.DataFrame:
     return make_research_bars()
+
+
+@pytest.fixture(scope="session")
+def anyio_backend() -> str:
+    return "asyncio"

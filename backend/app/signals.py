@@ -304,20 +304,37 @@ def scan(strategy_name: str, symbols: list[str], params: dict | None = None) -> 
     if params is None:
         params = {key: value["default"] for key, value in STRATEGY_PARAMS[strategy_name].items()}
     rows = []
+    missing = []
+    failures = []
     for symbol in symbols:
         bars = load_bars(symbol)
         if bars.empty:
+            missing.append(symbol)
             continue
         try:
             signal = compute_stateful_signal(bars, strategy_name, params)
-        except Exception:
+        except Exception as exc:
+            failures.append(
+                {"symbol": symbol, "error": str(exc), "type": type(exc).__name__}
+            )
             continue
         if signal is not None:
             rows.append({"symbol": symbol, **signal})
     entries = sorted((r for r in rows if r["event"] == "entry"), key=lambda r: -r["rank"])
     exits = sorted((r for r in rows if r["event"] == "exit"), key=lambda r: -r["rank"])
     holding = sorted((r for r in rows if r["state"] == "long"), key=lambda r: -r["rank"])
-    return {"entries": entries, "exits": exits, "holding": holding, "scanned": len(rows)}
+    return {
+        "entries": entries,
+        "exits": exits,
+        "holding": holding,
+        "scanned": len(rows),
+        "coverage": {
+            "requested": len(symbols),
+            "processed": len(rows),
+            "missing": missing,
+            "failed": failures,
+        },
+    }
 
 
 # ---------------------------------------------------------------------------

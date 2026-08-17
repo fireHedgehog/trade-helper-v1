@@ -980,7 +980,10 @@ async function loadToday(refresh = false) {
       $('#today-entries').innerHTML =
         '<div class="sample-note">suppressed — US10Y ≥ 5% regime filter (no new trades)</div>';
     }
-    $('#today-status').textContent = `scanned ${data.scanned} symbols`;
+    const coverage = data.coverage || { requested: data.scanned, processed: data.scanned, missing: [], failed: [] };
+    $('#today-status').textContent = `scanned ${coverage.processed}/${coverage.requested}` +
+      (coverage.missing.length ? ` · missing ${coverage.missing.length}` : '') +
+      (coverage.failed.length ? ` · FAILED ${coverage.failed.length}` : '');
     const regime = macro.regime;
     const banner = $('#regime-banner');
     if (regime.ok) {

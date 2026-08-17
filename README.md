@@ -202,18 +202,20 @@ the same position state and fill dates/prices.
 
 **Goal:** turn trading assumptions into executable checks.
 
-- [ ] Unit-test every entry rule, exit rule, ATR calculation, indicator warm-up,
+- [x] Unit-test every entry rule, exit rule, ATR calculation, indicator warm-up,
       and parameter boundary.
-- [ ] Test next-open fills, overnight gaps through stops, no-next-bar cases, and
+- [x] Test next-open fills, overnight gaps through stops, no-next-bar cases, and
       open trades at the end of a sample.
-- [ ] Test SQLite idempotency, duplicate bars, invalid OHLC, zero/negative prices,
+- [x] Test SQLite idempotency, duplicate bars, invalid OHLC, zero/negative prices,
       missing volume, and non-monotonic dates.
-- [ ] Test split/dividend-adjusted price handling and document its benchmark
+- [x] Test split/dividend-adjusted price handling and document its benchmark
       implications.
-- [ ] Replace broad silent exception handling with structured errors containing
+- [x] Replace broad silent exception handling with structured errors containing
       the symbol, strategy, and failed calculation.
-- [ ] Return scan coverage: requested, processed, skipped, stale, and failed.
-- [ ] Add API integration tests for bad strategies, bad parameters, missing
+- [x] Return scan coverage: requested, processed, missing, and failed. Explicit
+      stale-data classification remains in Stage 6, where market timezone and
+      trading-calendar semantics are defined.
+- [x] Add API integration tests for bad strategies, bad parameters, missing
       symbols, empty samples, and oversized requests.
 
 **Exit gate:** the deterministic suite passes locally and a deliberately broken
@@ -453,6 +455,26 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.16.0 — 2026-08-17
+
+- **Stage 2 complete — correctness, data-quality, and API tests:** expanded the
+  deterministic suite to entry/exit rules, ATR/RSI warm-up, next-open execution,
+  final-bar pending orders, fixed-share accounting, SQLite, scan coverage, and
+  FastAPI contracts.
+- Market-data storage now rejects an entire malformed batch before writing any
+  row: missing/non-finite values, non-positive OHLC, impossible candles, negative
+  volume, duplicate dates, and non-monotonic dates are errors.
+- Added ADR 0002 documenting adjusted Yahoo OHLC semantics, total-return-like
+  benchmark implications, FRED non-tradability, provider revisions, and the
+  remaining data-lineage limitations.
+- API strategy parameters now enforce declared types/ranges and cross-field rules;
+  unknown parameters and invalid date windows return explicit 400 responses.
+- Scan and historical-signal calculations now return requested/processed/missing/
+  failed coverage instead of silently discarding calculation failures. Today
+  displays the coverage counts.
+- Canonical RSI and ATR require their full configured warm-up periods.
+- Verified **63 tests passed** with no warnings.
 
 ### v0.15.0 — 2026-08-17
 
