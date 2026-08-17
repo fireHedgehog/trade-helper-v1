@@ -19,12 +19,12 @@ out-of-sample research, is in progress.
 
 - One canonical state machine drives backtests, signals, chart markers, and the
   simulated ledger: completed-close signal → next-available-open fill.
-- The deterministic test suite currently contains 86 passing tests.
+- The deterministic test suite currently contains 91 passing tests.
 - Trading costs, spread, slippage, gaps, idle-cash yield, uncertainty intervals,
   and benchmark limitations are explicit.
 - The CTA walk-forward experiment is preregistered with a 12-ETF universe and
-  54 parameter candidates. Fold-local net and benchmark return construction is
-  implemented, but no new candidate ranking has been calculated yet.
+  54 parameter candidates. Fold-local returns and selection are implemented and
+  tested, but no new real-data candidate ranking has been calculated yet.
 - Existing historical SPY results are exploratory and contaminated by prior
   inspection. Valid confirmation requires genuinely unseen future or otherwise
   uninspected point-in-time data.

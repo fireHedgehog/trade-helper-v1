@@ -5,7 +5,22 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from app.research import evaluate_window, partition_candidate_holdout, walk_forward_folds
+from app.research import (
+    CandidateWindowEvaluation,
+    evaluate_candidate_window,
+    evaluate_window,
+    partition_candidate_holdout,
+    select_validation_candidate,
+    walk_forward_folds,
+)
+
+
+COSTS = {
+    "commission_per_side": 0.001,
+    "quoted_spread": 0.0002,
+    "slippage_per_fill": 0.0005,
+    "annual_cash_yield": 0.0,
+}
 
 
 def test_candidate_holdout_is_removed_from_development(research_bars: pd.DataFrame) -> None:
@@ -101,4 +116,90 @@ def test_window_rejects_reversed_dates(research_bars: pd.DataFrame) -> None:
             params={"n_fast": 20, "n_slow": 50},
             start="2022-01-01",
             end="2021-01-01",
+        )
+
+
+def test_candidate_uses_locked_symbols_and_common_dates(
+    research_bars: pd.DataFrame,
+) -> None:
+    result = evaluate_candidate_window(
+        {"ONE": research_bars, "TWO": research_bars.copy()},
+        universe=["ONE", "TWO", "MISSING"],
+        strategy_name="SMA Cross",
+        params={"n_fast": 20, "n_slow": 50},
+        training_start=str(research_bars["date"].iloc[0]),
+        start=str(research_bars["date"].iloc[300]),
+        end=str(research_bars["date"].iloc[500]),
+        minimum_symbols=2,
+        costs=COSTS,
+    )
+    assert result.eligible_symbols == ("ONE", "TWO")
+    assert result.excluded_symbols == (("MISSING", "missing"),)
+    assert len(result.dates) == len(result.excess_daily_returns)
+
+
+def test_candidate_fails_closed_on_insufficient_coverage(
+    research_bars: pd.DataFrame,
+) -> None:
+    with pytest.raises(ValueError, match="eligible symbols"):
+        evaluate_candidate_window(
+            {"ONE": research_bars},
+            universe=["ONE", "MISSING"],
+            strategy_name="SMA Cross",
+            params={"n_fast": 20, "n_slow": 50},
+            training_start=str(research_bars["date"].iloc[0]),
+            start=str(research_bars["date"].iloc[300]),
+            end=str(research_bars["date"].iloc[500]),
+            minimum_symbols=2,
+            costs=COSTS,
+        )
+
+
+def _candidate(name: str, excess: float, score: float) -> CandidateWindowEvaluation:
+    return CandidateWindowEvaluation(
+        candidate=name,
+        params={"name": name},
+        eligible_symbols=("ONE", "TWO"),
+        excluded_symbols=(),
+        median_excess_return=score,
+        median_calmar=1.0,
+        median_max_drawdown=-0.1,
+        dates=tuple(f"2024-01-{day:02d}" for day in range(1, 21)),
+        excess_daily_returns=(excess,) * 20,
+    )
+
+
+def test_selection_chooses_best_significant_candidate() -> None:
+    selected, report = select_validation_candidate(
+        [_candidate("lower", 0.01, 0.02), _candidate("higher", 0.02, 0.03)],
+        block_bars=4,
+        resamples=200,
+        alpha=0.05,
+        expected_family_size=2,
+    )
+    assert selected is not None
+    assert selected.candidate == "higher"
+    assert all(row["reject_zero_excess"] for row in report)
+
+
+def test_selection_holds_cash_when_nothing_survives() -> None:
+    selected, report = select_validation_candidate(
+        [_candidate("flat-a", 0.0, 0.0), _candidate("flat-b", 0.0, 0.0)],
+        block_bars=4,
+        resamples=100,
+        alpha=0.05,
+        expected_family_size=2,
+    )
+    assert selected is None
+    assert not any(row["reject_zero_excess"] for row in report)
+
+
+def test_selection_requires_complete_declared_family() -> None:
+    with pytest.raises(ValueError, match="expected 2"):
+        select_validation_candidate(
+            [_candidate("only", 0.01, 0.01)],
+            block_bars=4,
+            resamples=100,
+            alpha=0.05,
+            expected_family_size=2,
         )

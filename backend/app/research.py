@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import itertools
 import json
+import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -66,6 +67,26 @@ class WindowEvaluation:
             key: value
             for key, value in asdict(self).items()
             if not key.endswith("_daily_returns") and key != "dates"
+        }
+
+
+@dataclass(frozen=True)
+class CandidateWindowEvaluation:
+    candidate: str
+    params: dict
+    eligible_symbols: tuple[str, ...]
+    excluded_symbols: tuple[tuple[str, str], ...]
+    median_excess_return: float
+    median_calmar: float | None
+    median_max_drawdown: float
+    dates: tuple[str, ...]
+    excess_daily_returns: tuple[float, ...]
+
+    def summary(self) -> dict:
+        return {
+            key: value
+            for key, value in asdict(self).items()
+            if key not in {"dates", "excess_daily_returns"}
         }
 
 
@@ -228,6 +249,85 @@ def evaluate_window(
     )
 
 
+def evaluate_candidate_window(
+    bars_by_symbol: dict[str, pd.DataFrame],
+    *,
+    universe: list[str],
+    strategy_name: str,
+    params: dict,
+    training_start: str,
+    start: str,
+    end: str,
+    minimum_symbols: int,
+    costs: dict,
+) -> CandidateWindowEvaluation:
+    """Aggregate one candidate across the locked universe on common dates."""
+    evaluations: dict[str, WindowEvaluation] = {}
+    excluded: list[tuple[str, str]] = []
+    for symbol in universe:
+        bars = bars_by_symbol.get(symbol)
+        if bars is None or bars.empty:
+            excluded.append((symbol, "missing"))
+            continue
+        if str(bars["date"].iloc[0]) > training_start:
+            excluded.append((symbol, "history starts after fold training start"))
+            continue
+        if str(bars["date"].iloc[-1]) < end:
+            excluded.append((symbol, "history ends before evaluation end"))
+            continue
+        try:
+            evaluations[symbol] = evaluate_window(
+                bars,
+                strategy_name=strategy_name,
+                params=params,
+                start=start,
+                end=end,
+                commission=float(costs["commission_per_side"]),
+                spread=float(costs["quoted_spread"]),
+                slippage=float(costs["slippage_per_fill"]),
+                annual_cash_yield=float(costs["annual_cash_yield"]),
+            )
+        except (KeyError, ValueError) as exc:
+            excluded.append((symbol, f"evaluation failed: {exc}"))
+    if len(evaluations) < minimum_symbols:
+        raise ValueError(
+            f"candidate has {len(evaluations)} eligible symbols; need {minimum_symbols}; "
+            f"excluded={dict(excluded)}"
+        )
+
+    series = {
+        symbol: pd.Series(result.excess_daily_returns, index=result.dates, dtype=float)
+        for symbol, result in evaluations.items()
+    }
+    aligned = pd.concat(series, axis=1, join="inner").sort_index()
+    if len(aligned) < 2:
+        raise ValueError("eligible symbols have fewer than two common return dates")
+    equal_weight_excess = aligned.mean(axis=1)
+    symbol_excess = [
+        result.strategy_return - result.benchmark_return
+        for result in evaluations.values()
+    ]
+    calmars = [
+        result.calmar
+        for result in evaluations.values()
+        if result.calmar is not None and np.isfinite(result.calmar)
+    ]
+    candidate = json.dumps(params, sort_keys=True, separators=(",", ":"))
+    return CandidateWindowEvaluation(
+        candidate=candidate,
+        params=dict(params),
+        eligible_symbols=tuple(evaluations),
+        excluded_symbols=tuple(excluded),
+        median_excess_return=float(np.median(symbol_excess)),
+        median_calmar=float(np.median(calmars)) if calmars else None,
+        median_max_drawdown=float(
+            np.median([result.max_drawdown for result in evaluations.values()])
+        ),
+        dates=tuple(str(value) for value in aligned.index),
+        excess_daily_returns=tuple(float(value) for value in equal_weight_excess),
+    )
+
+
 def load_experiment_spec(path: str | Path) -> dict:
     """Load and validate a preregistration without evaluating any returns."""
     spec = json.loads(Path(path).read_text())
@@ -354,3 +454,46 @@ def multiple_testing_report(
         }
         for index, name in enumerate(names)
     ]
+
+
+def select_validation_candidate(
+    evaluations: list[CandidateWindowEvaluation],
+    *,
+    block_bars: int,
+    resamples: int,
+    alpha: float,
+    expected_family_size: int | None = None,
+    seed: int = 17_291,
+) -> tuple[CandidateWindowEvaluation | None, list[dict]]:
+    """Apply the locked significance gate and deterministic ranking contract."""
+    if expected_family_size is not None and len(evaluations) != expected_family_size:
+        raise ValueError(
+            f"candidate family has {len(evaluations)} evaluations; "
+            f"expected {expected_family_size}"
+        )
+    if len({item.candidate for item in evaluations}) != len(evaluations):
+        raise ValueError("candidate identifiers must be unique")
+    by_id = {item.candidate: item for item in evaluations}
+    report = multiple_testing_report(
+        {item.candidate: list(item.excess_daily_returns) for item in evaluations},
+        block_bars=block_bars,
+        resamples=resamples,
+        alpha=alpha,
+        seed=seed,
+    )
+    survivors = [
+        by_id[row["candidate"]] for row in report if row["reject_zero_excess"]
+    ]
+    if not survivors:
+        return None, report
+
+    def ranking(item: CandidateWindowEvaluation) -> tuple:
+        calmar = item.median_calmar if item.median_calmar is not None else -math.inf
+        return (
+            -item.median_excess_return,
+            -calmar,
+            -item.median_max_drawdown,
+            item.candidate,
+        )
+
+    return sorted(survivors, key=ranking)[0], report

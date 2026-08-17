@@ -2,6 +2,15 @@
 
 # Changelog
 
+## v0.19.4 — 2026-08-18
+
+- Implemented locked-universe candidate aggregation on common dates, including
+  explicit symbol exclusions and a hard minimum-coverage failure.
+- Implemented complete-family validation selection using the preregistered
+  bootstrap/Holm gate and deterministic score/Calmar/drawdown/parameter ties.
+- A family with no significant survivor now returns cash rather than promoting
+  the least-bad candidate. **91 tests pass. No real candidate run occurred.**
+
 ## v0.19.3 — 2026-08-18
 
 - Locked fold-local selection before candidate evaluation: validation-only

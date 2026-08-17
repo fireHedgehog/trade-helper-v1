@@ -88,7 +88,14 @@ position state, but bars after its declared end are removed before signals are
 constructed. Net strategy returns, constant-exposure benchmark returns, and
 their daily arithmetic difference use identical dates. Regression tests prove
 that modifying later bars cannot change an earlier window. Candidate ranking and
-fold-local parameter selection remain disabled at this checkpoint.
+fold-local parameter selection were initially disabled at that checkpoint.
+
+The selection layer is now implemented but has only run on deterministic test
+inputs. It reports every excluded locked symbol, refuses to proceed below the
+eight-symbol coverage gate, requires the complete declared candidate family,
+aligns eligible symbols on their common dates, applies the bootstrap/Holm gate,
+and executes the locked tie breakers. An empty survivor set returns an explicit
+cash decision. The real 54-candidate development run has not started.
 
 ## Current boundary
 
