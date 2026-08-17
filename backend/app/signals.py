@@ -1,21 +1,19 @@
-"""Daily signal scan for the Today view — raw first version.
+"""Daily signal scan for the Today view — raw-plus version.
 
-What this IS:
-- A stateless scan: compute each strategy's signal on the last bars of every
-  fetched symbol, and return today's entries / exits / holdings.
-
-What this is NOT (yet — see README design notes):
-- A state machine with persistent per-symbol trade state (entry/exit/hold).
-- A rule-based multi-factor rank / confidence score. The "rank" here is a
-  12-week momentum placeholder, honestly labeled as such.
-- Aware of saved/tuned param sets.
+State is still recomputed from recent bars (no persistent state machine yet —
+see README design notes). "Since entry" P&L uses the last entry signal inside
+the lookback window and executes at the NEXT open (NDO — no lookahead).
 """
 import pandas as pd
 
 from .store import load_recent_bars
 from .strategies import STRATEGY_PARAMS
+from .universe import XL_ETFS
 
 LOOKBACK = 300  # bars needed to compute signals
+
+# Default short watchlist for the Today view.
+CORE_WATCHLIST = ["SPY", "QQQ", "MAGS", "SOXX", "IGV"] + XL_ETFS
 
 
 def _rsi(close: pd.Series, period: int) -> pd.Series:
@@ -25,42 +23,95 @@ def _rsi(close: pd.Series, period: int) -> pd.Series:
     return 100 - 100 / (1 + gain / loss.replace(0, 1e-12))
 
 
+def _last_entry_index(crossed: pd.Series) -> int | None:
+    """Positional index of the most recent True in a boolean signal series."""
+    for i in range(len(crossed) - 1, -1, -1):
+        if bool(crossed.iloc[i]):
+            return i
+    return None
+
+
+def _finish(result: dict, bars: pd.DataFrame, entry_index: int | None) -> dict:
+    """Attach since-entry fields (entry executed at next open)."""
+    if entry_index is not None and entry_index + 1 < len(bars):
+        entry_price = float(bars["open"].iloc[entry_index + 1])
+        result.update(
+            {
+                "entry_date": str(bars["date"].iloc[entry_index + 1]),
+                "entry_price": round(entry_price, 2),
+                "close": round(float(bars["close"].iloc[-1]), 2),
+                "pnl_pct": round(
+                    (float(bars["close"].iloc[-1]) / entry_price - 1) * 100, 2
+                ),
+            }
+        )
+    return result
+
+
 def compute_signal(bars: pd.DataFrame, strategy_name: str, params: dict) -> dict | None:
     """bars: recent daily bars (ascending). Returns the signal for the last bar."""
     if len(bars) < 60:
         return None
     close = bars["close"]
-    rank = round(float(close.iloc[-1] / close.iloc[-60] - 1) * 100, 2)  # momentum placeholder
+    result = {"rank": round(float(close.iloc[-1] / close.iloc[-60] - 1) * 100, 2)}
 
     if strategy_name == "SMA Cross":
-        fast = close.rolling(int(params.get("n_fast", 20))).mean()
-        slow = close.rolling(int(params.get("n_slow", 50))).mean()
-        state = "long" if fast.iloc[-1] > slow.iloc[-1] else "flat"
-        crossed_up = fast.iloc[-1] > slow.iloc[-1] and fast.iloc[-2] <= slow.iloc[-2]
-        crossed_down = fast.iloc[-1] < slow.iloc[-1] and fast.iloc[-2] >= slow.iloc[-2]
-        event = "entry" if crossed_up else ("exit" if crossed_down else "none")
-        note = f"fast {fast.iloc[-1]:.2f} vs slow {slow.iloc[-1]:.2f}"
+        n_fast = int(params.get("n_fast", 20))
+        n_slow = int(params.get("n_slow", 50))
+        fast = close.rolling(n_fast).mean()
+        slow = close.rolling(n_slow).mean()
+        up = fast > slow
+        crossed_up = up & ~up.shift(1, fill_value=False)
+        crossed_down = ~up & up.shift(1, fill_value=False)
+        long_now = bool(up.iloc[-1])
+        result["state"] = "long" if long_now else "flat"
+        if bool(crossed_up.iloc[-1]):
+            result["event"] = "entry"
+            result["note"] = f"{n_fast}-day avg crossed ABOVE {n_slow}-day avg"
+        elif bool(crossed_down.iloc[-1]):
+            result["event"] = "exit"
+            result["note"] = f"{n_fast}-day avg crossed BELOW {n_slow}-day avg"
+        elif long_now:
+            result["event"] = "none"
+            result["note"] = f"uptrend: {n_fast}-day avg above {n_slow}-day avg"
+        else:
+            result["event"] = "none"
+            result["note"] = f"flat: {n_fast}-day avg below {n_slow}-day avg"
+        entry_index = _last_entry_index(crossed_up) if long_now else None
 
     elif strategy_name == "Donchian Trend":
         n_entry = int(params.get("n_entry", 55))
         upper = bars["high"].shift(1).rolling(n_entry).max()
-        state = "long" if close.iloc[-1] > upper.iloc[-1] else "flat"
-        crossed = close.iloc[-1] > upper.iloc[-1] and close.iloc[-2] <= upper.iloc[-2]
-        event = "entry" if crossed else "none"
-        note = f"close {close.iloc[-1]:.2f} vs {n_entry}d high {upper.iloc[-1]:.2f}"
+        above = close > upper
+        crossed = above & ~above.shift(1, fill_value=False)
+        long_now = bool(above.iloc[-1])
+        result["state"] = "long" if long_now else "flat"
+        result["event"] = "entry" if bool(crossed.iloc[-1]) else "none"
+        result["note"] = (
+            f"closed above the {n_entry}-day high" if long_now else "no breakout"
+        )
+        entry_index = _last_entry_index(crossed) if long_now else None
 
     elif strategy_name == "RSI Reversion":
-        rsi = _rsi(close, int(params.get("period", 14)))
+        period = int(params.get("period", 14))
         buy_below = int(params.get("buy_below", 30))
-        state = "long" if rsi.iloc[-1] < buy_below else "flat"
-        crossed = rsi.iloc[-1] < buy_below and rsi.iloc[-2] >= buy_below
-        event = "entry" if crossed else "none"
-        note = f"RSI {rsi.iloc[-1]:.1f} vs buy zone {buy_below}"
+        rsi = _rsi(close, period)
+        in_zone = rsi < buy_below
+        crossed = in_zone & ~in_zone.shift(1, fill_value=False)
+        long_now = bool(in_zone.iloc[-1])
+        result["state"] = "long" if long_now else "flat"
+        result["event"] = "entry" if bool(crossed.iloc[-1]) else "none"
+        result["note"] = (
+            f"RSI {rsi.iloc[-1]:.0f} in buy zone (<{buy_below})"
+            if long_now
+            else f"RSI {rsi.iloc[-1]:.0f} — no buy-zone signal"
+        )
+        entry_index = _last_entry_index(crossed) if long_now else None
 
     else:
         return None
 
-    return {"state": state, "event": event, "rank": rank, "note": note}
+    return _finish(result, bars, entry_index)
 
 
 def scan(strategy_name: str, symbols: list[str]) -> dict:

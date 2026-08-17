@@ -115,8 +115,8 @@ uvicorn app.main:app --reload
 3. Data pipeline: fetch SPY → SQLite (idempotent daily job) ✅
 4. First strategy (SMA cross) + minimal backtest → metrics ✅
 5. Chart viewer: candles + entry/exit markers + algorithm lines ✅
-6. Today view: raw scan ✅ (cards + confidence + saved params later)
-7. Strategy Lab: params ✅, symbols ✅, batch runs (later)
+6. Today view: scan + since-entry P&L + watchlist scope ✅ (rule-based ranking later)
+7. Strategy Lab: params ✅, symbols ✅, saved param sets ✅, batch runs (later)
 8. Macro view: raw ✅ (real calendar source later)
 9. AWS deployment (phase 2)
 
@@ -159,10 +159,10 @@ uvicorn app.main:app --reload
 - **Survivorship bias:** index lists are today's members only — backtests ignore delisted names and look better than reality.
 - **Over-tuning:** few trades + great stats = suspicious. Walk-forward testing later.
 
-## 9. Design notes (recorded, not built yet)
+## 9. Design notes (recorded, mostly future work)
 
-- **Saved params ("tuned models"):** strategy params are hardcoded defaults today. Plan: the Lab can save a tuned param set (name, params, date, notes); Explorer and Today views pick a saved set to run with — no re-typing.
-- **Daily signal state machine:** the Today scan is stateless per symbol. Plan: persistent per-symbol trade state (flat → long → exit transitions) computed by the daily job and snapshotted into the DB, so "entered 3 days ago, still holding" is known.
+- **Saved params ("tuned models"):** ✅ built v0.7.1 — the Lab saves a tuned param set (name, params, date) into SQLite and Explorer applies saved sets from a dropdown. Next slice: let the Today scan use a saved set too.
+- **Daily signal state machine:** the Today scan recomputes state from recent bars. Plan: persistent per-symbol trade state (flat → long → exit transitions) computed by the daily job and snapshotted into the DB, so "entered 3 days ago, still holding" is known exactly.
 - **Rule-based ranking & confidence:** today's rank is a 12-week momentum placeholder. Plan: multi-factor rule scores (momentum, volatility, trend agreement) plus historical hit rate — labeled honestly as scores, not probabilities.
 
 ---
@@ -180,6 +180,12 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.7.1 — 2026-08-17
+
+- Today view polished: human-readable signal reasons, since-entry P&L (entry at next open, green/red %), watchlist scope dropdown (default: SPY, QQQ, MAGS, SOXX, IGV + XL ETFs; "All symbols" option).
+- Saved param sets (design note #1): save/apply/delete tuned params per strategy, stored in SQLite `param_sets` table.
+- Removed the "later" badges from the sidebar.
 
 ### v0.7.0 — 2026-08-17
 

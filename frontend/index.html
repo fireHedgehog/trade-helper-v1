@@ -124,16 +124,23 @@
     width: 100%; margin-top: 8px; background: transparent;
     border: 1px dashed var(--border); color: var(--muted); font-size: 12px; padding: 6px;
   }
+  .param-save-row { display: flex; gap: 6px; margin-top: 8px; }
+  #param-set-name {
+    flex: 1; min-width: 0; background: #1f2634; border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); padding: 6px 8px; font-size: 12px;
+  }
+  .set-select { width: 100%; margin-top: 8px; }
+  button.ghost.danger { border-color: #3a2222; color: var(--red); margin-top: 6px; }
   #equity { height: 150px; }
 </style>
 </head>
 <body>
 <aside>
   <h1>trade-helper-v1</h1>
-  <div class="nav-item" data-view="today">Today <span class="tag">later</span></div>
+  <div class="nav-item" data-view="today">Today</div>
   <div class="nav-item active" data-view="explorer">Symbol Explorer</div>
-  <div class="nav-item" data-view="lab">Strategy Lab <span class="tag">later</span></div>
-  <div class="nav-item" data-view="macro">Macro <span class="tag">later</span></div>
+  <div class="nav-item" data-view="lab">Strategy Lab</div>
+  <div class="nav-item" data-view="macro">Macro</div>
 </aside>
 <main>
   <div id="view-explorer" class="view">
@@ -162,6 +169,12 @@
       <div>
         <h2>Params</h2>
         <div id="params"></div>
+        <div class="param-save-row">
+          <input id="param-set-name" placeholder="name for this tuning…" autocomplete="off" spellcheck="false">
+          <button id="save-param-set" class="ghost">Save</button>
+        </div>
+        <select id="param-set" class="set-select"></select>
+        <button id="delete-param-set" class="ghost danger">Delete selected</button>
       </div>
       <div>
         <h2 id="metrics-title">Metrics</h2>
@@ -184,6 +197,10 @@
 
   <div id="view-today" class="view" hidden>
     <div class="toolbar">
+      <select id="today-scope">
+        <option value="core" selected>Core watchlist</option>
+        <option value="all">All symbols</option>
+      </select>
       <select id="today-strategy"></select>
       <button class="primary" id="today-refresh">Refresh scan</button>
       <span id="today-status"></span>
@@ -200,7 +217,7 @@
       <section class="panel">
         <h2>Holding</h2>
         <table>
-          <thead><tr><th>Symbol</th><th>Rank</th><th>Reason</th></tr></thead>
+          <thead><tr><th>Symbol</th><th>Since</th><th>Entry</th><th>Now</th><th>P&L</th></tr></thead>
           <tbody id="today-holding"></tbody>
         </table>
       </section>
@@ -232,8 +249,8 @@
 <script>
 const $ = (sel) => document.querySelector(sel);
 
-async function api(path) {
-  const res = await fetch(path);
+async function api(path, options = {}) {
+  const res = await fetch(path, options);
   if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
   return res.json();
 }
@@ -420,6 +437,7 @@ async function loadStrategies() {
     `<option ${s.name === 'SMA Cross' ? 'selected' : ''}>${s.name}</option>`).join('');
   resetParams();
   renderParams();
+  loadParamSets();
 }
 
 function currentMeta() {
@@ -451,6 +469,48 @@ function renderParams() {
   );
   $('#reset-params').addEventListener('click', () => { resetParams(); renderParams(); run(); });
 }
+
+/* ---------- saved param sets (tuned models) ---------- */
+async function loadParamSets() {
+  const { sets } = await api(`/api/param-sets?strategy=${encodeURIComponent($('#strategy').value)}`);
+  $('#param-set').innerHTML =
+    '<option value="">— saved sets —</option>' +
+    sets.map((s) => `<option value="${s.name}">${s.name}</option>`).join('');
+}
+
+async function saveParamSet() {
+  const name = $('#param-set-name').value.trim();
+  if (!name) return;
+  await api('/api/param-sets', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, strategy: $('#strategy').value, params: currentParams }),
+  });
+  $('#param-set-name').value = '';
+  await loadParamSets();
+  $('#status').textContent = `saved param set "${name}"`;
+}
+
+$('#save-param-set').addEventListener('click', saveParamSet);
+
+$('#param-set').addEventListener('change', async () => {
+  const name = $('#param-set').value;
+  if (!name) return;
+  const { sets } = await api(`/api/param-sets?strategy=${encodeURIComponent($('#strategy').value)}`);
+  const set = sets.find((s) => s.name === name);
+  if (set) {
+    currentParams = { ...set.params };
+    renderParams();
+    run();
+  }
+});
+
+$('#delete-param-set').addEventListener('click', async () => {
+  const name = $('#param-set').value;
+  if (!name) return;
+  await api(`/api/param-sets/${encodeURIComponent(name)}`, { method: 'DELETE' });
+  await loadParamSets();
+});
 
 function renderMenu(query) {
   const q = query.trim().toUpperCase();
@@ -564,16 +624,24 @@ function showView(name) {
 /* ---------- Today + Macro views (raw) ---------- */
 async function loadToday(refresh = false) {
   const strategy = $('#today-strategy').value;
+  const scope = $('#today-scope').value;
   $('#today-status').textContent = 'scanning…';
   try {
-    const query = `/api/today?strategy=${encodeURIComponent(strategy)}${refresh ? '&refresh=1' : ''}`;
+    const query = `/api/today?strategy=${encodeURIComponent(strategy)}&scope=${scope}${refresh ? '&refresh=1' : ''}`;
     const [data, macro] = await Promise.all([api(query), api('/api/macro')]);
-    const rows = (list) => list.map((r) =>
+    const signalRows = (list) => list.map((r) =>
       `<tr><td>${r.symbol}</td><td>${r.rank.toFixed(1)}</td><td>${r.note}</td></tr>`).join('')
       || '<tr><td colspan="3">none</td></tr>';
-    $('#today-entries').innerHTML = rows(data.entries);
-    $('#today-holding').innerHTML = rows(data.holding);
-    $('#today-exits').innerHTML = rows(data.exits);
+    const holdingRows = (list) => list.map((r) => {
+      const pnl = r.pnl_pct == null ? '—' : `${r.pnl_pct >= 0 ? '+' : ''}${r.pnl_pct.toFixed(1)}%`;
+      const cls = r.pnl_pct == null ? '' : (r.pnl_pct >= 0 ? 'pos' : 'neg');
+      return `<tr><td>${r.symbol}</td><td>${r.entry_date || '—'}</td>` +
+        `<td>${r.entry_price ?? '—'}</td><td>${r.close ?? '—'}</td>` +
+        `<td class="${cls}">${pnl}</td></tr>`;
+    }).join('') || '<tr><td colspan="5">none</td></tr>';
+    $('#today-entries').innerHTML = signalRows(data.entries);
+    $('#today-holding').innerHTML = holdingRows(data.holding);
+    $('#today-exits').innerHTML = signalRows(data.exits);
     $('#today-status').textContent = `scanned ${data.scanned} symbols`;
     const regime = macro.regime;
     const banner = $('#regime-banner');
@@ -606,6 +674,7 @@ async function loadMacro() {
 }
 
 $('#today-strategy').addEventListener('change', () => loadToday());
+$('#today-scope').addEventListener('change', () => loadToday());
 $('#today-refresh').addEventListener('click', () => loadToday(true));
 
 /* ---------- range + zoom controls ---------- */
@@ -661,7 +730,7 @@ $('#fit').addEventListener('click', () => chart.timeScale().fitContent());
 buildRanges();
 
 $('#run').addEventListener('click', run);
-$('#strategy').addEventListener('change', () => { resetParams(); renderParams(); run(); });
+$('#strategy').addEventListener('change', () => { resetParams(); renderParams(); loadParamSets(); run(); });
 
 initChart();
 loadStrategies().then(loadSymbols).then(run);

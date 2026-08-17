@@ -8,6 +8,7 @@ Schema:
 
 Prices are split/dividend-adjusted (fetched with yfinance auto_adjust=True).
 """
+import json
 import sqlite3
 from pathlib import Path
 
@@ -28,6 +29,14 @@ CREATE TABLE IF NOT EXISTS bars (
     volume INTEGER NOT NULL,
     PRIMARY KEY (symbol, date)
 );
+
+CREATE TABLE IF NOT EXISTS param_sets (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT    NOT NULL UNIQUE,
+    strategy   TEXT    NOT NULL,
+    params     TEXT    NOT NULL,   -- JSON
+    created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+);
 """
 
 
@@ -35,7 +44,7 @@ def connect() -> sqlite3.Connection:
     """Open a connection (as a context manager it commits on success)."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
-    conn.execute(SCHEMA)
+    conn.executescript(SCHEMA)  # multiple statements -> executescript
     return conn
 
 
@@ -99,3 +108,44 @@ def row_count(symbol: str) -> int:
             "SELECT COUNT(*) FROM bars WHERE symbol = ?", (symbol,)
         ).fetchone()
     return count
+
+
+def save_param_set(name: str, strategy: str, params: dict) -> None:
+    """Upsert a named param set (same name overwrites — that's the tune loop)."""
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO param_sets (name, strategy, params, created_at) "
+            "VALUES (?, ?, ?, datetime('now')) "
+            "ON CONFLICT(name) DO UPDATE SET "
+            "strategy = excluded.strategy, params = excluded.params, "
+            "created_at = datetime('now')",
+            (name, strategy, json.dumps(params)),
+        )
+
+
+def list_param_sets(strategy: str | None = None) -> list[dict]:
+    with connect() as conn:
+        if strategy:
+            rows = conn.execute(
+                "SELECT name, strategy, params, created_at FROM param_sets "
+                "WHERE strategy = ? ORDER BY name",
+                (strategy,),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT name, strategy, params, created_at FROM param_sets ORDER BY name"
+            ).fetchall()
+    return [
+        {
+            "name": row[0],
+            "strategy": row[1],
+            "params": json.loads(row[2]),
+            "created_at": row[3],
+        }
+        for row in rows
+    ]
+
+
+def delete_param_set(name: str) -> None:
+    with connect() as conn:
+        conn.execute("DELETE FROM param_sets WHERE name = ?", (name,))

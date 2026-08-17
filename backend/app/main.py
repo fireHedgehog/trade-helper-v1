@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import store
 from .engine import backtest_payload
-from .signals import scan
+from .signals import CORE_WATCHLIST, scan
 from .strategies import STRATEGIES, STRATEGY_PARAMS
 
 FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
@@ -93,16 +93,43 @@ def backtest(
 
 
 @app.get("/api/today")
-def today(strategy: str = "SMA Cross", refresh: bool = False):
+def today(strategy: str = "SMA Cross", scope: str = "core", refresh: bool = False):
     if strategy not in STRATEGIES:
         raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
-    cached = _today_cache.get(strategy)
+    symbols = CORE_WATCHLIST if scope == "core" else store.list_symbols()
+    cache_key = f"{strategy}|{scope}"
+    cached = _today_cache.get(cache_key)
     if not refresh and cached and time.time() - cached["at"] < 60:
         return cached["data"]
-    result = scan(strategy, store.list_symbols())
+    result = scan(strategy, symbols)
     result["strategy"] = strategy
-    _today_cache[strategy] = {"at": time.time(), "data": result}
+    result["scope"] = scope
+    _today_cache[cache_key] = {"at": time.time(), "data": result}
     return result
+
+
+@app.get("/api/param-sets")
+def param_sets(strategy: str | None = None):
+    return {"sets": store.list_param_sets(strategy)}
+
+
+@app.post("/api/param-sets")
+def save_param_set(payload: dict):
+    name = (payload.get("name") or "").strip()
+    strategy = payload.get("strategy")
+    params = payload.get("params") or {}
+    if not name or strategy not in STRATEGIES:
+        raise HTTPException(status_code=400, detail="need a name and a valid strategy")
+    if not isinstance(params, dict):
+        raise HTTPException(status_code=400, detail="params must be an object")
+    store.save_param_set(name, strategy, params)
+    return {"ok": True}
+
+
+@app.delete("/api/param-sets/{name}")
+def delete_param_set(name: str):
+    store.delete_param_set(name)
+    return {"ok": True}
 
 
 @app.get("/api/macro")
