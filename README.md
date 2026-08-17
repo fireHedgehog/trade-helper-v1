@@ -2,7 +2,17 @@
 
 A simple stock-data helper app: pull US stock daily closing prices once a day from the free Yahoo Finance API, store the history locally, and run backtests against the local data — with a small web UI on top.
 
-> **Status: planning.** This README is a **living document**. Every idea we confirm or change is recorded here and versioned. See [Versioning](#versioning) and [Changelog](#changelog).
+> **Status: research prototype — not ready for live trading.** This README is a
+> **living document**. Every material decision, limitation, and completed change
+> is recorded here and versioned. See [Pre-deployment hardening plan](#6-pre-deployment-hardening-plan),
+> [Versioning](#versioning), and [Changelog](#changelog).
+
+> [!WARNING]
+> This project is educational research software, not investment advice or a
+> brokerage system. Backtests and simulated positions can be wrong because of
+> implementation defects, biased data, overfitting, transaction assumptions, or
+> market regime changes. Do not risk real money based on this app until the
+> validation gates in Section 6 are complete and independently reviewed.
 
 ---
 
@@ -15,14 +25,16 @@ A simple stock-data helper app: pull US stock daily closing prices once a day fr
 - **Frontend:** simple web UI to view data, trigger a fetch, and kick off backtests.
 - **Deployment (later):** AWS.
 
-## 2. Open questions (decide later — none of these block starting)
+## 2. Deferred decisions
 
 - AWS shape: one small **EC2** instance (simple) vs **Lambda + S3** (more moving parts)?
+  **Paused until Stage 9.**
 - Storage format: **SQLite** (start here) vs Parquet vs DuckDB?
 - Frontend hosting: served by the backend (start here) vs separate S3 + CloudFront?
 - Which symbols to track? ✅ decided — S&P 500 ∪ Nasdaq-100 ∪ XL sector ETFs (~530 symbols, deduped, survivorship-bias caveat applies).
 - Backtest engine: ✅ decided — `backtesting.py` as skeleton (v0.3.0).
-- Which ML models matter first? (start with plain stats, ML later)
+- Which ML models matter first? **Paused until Stages 1–4 establish a valid
+  non-ML research baseline.**
 
 ## 3. Architecture (current plan)
 
@@ -46,7 +58,7 @@ A simple stock-data helper app: pull US stock daily closing prices once a day fr
                                            └─────────────────────────┘
 ```
 
-### Phase 2 — AWS (later, same code)
+### Phase 2 — AWS (paused until the Stage 9 gates)
 
 - Small EC2 instance running the same backend + a daily cron job.
 - SQLite file on the instance's EBS disk (or moved to S3/Parquet if we outgrow it).
@@ -63,7 +75,7 @@ trade-helper-v1/
 │   └── app/             # main.py, fetch.py, store.py, universe.py, strategies.py, engine.py
 ├── frontend/            # static UI, no build step (index.html)
 │   └── README.md
-├── scripts/             # cron wrapper (planned, not created yet)
+├── scripts/             # daily cron wrapper (created; unattended use paused)
 └── data/                # local market data (gitignored)
     └── README.md
 ```
@@ -110,25 +122,254 @@ uvicorn app.main:app --reload
 
 ⚠ **Local compute safety (important):** the confidence engine scans
 symbols × bars, and a full-universe run is heavy (hundreds of MB of bars,
-minutes of CPU — laptop fans will complain). Locally, confidence is ALWAYS
-sample-limited by default (**5 symbols × 1 year**) and the Today view keeps
-that default. The "Full universe" option in Strategy Lab is opt-in and
+minutes of CPU — laptop fans will complain). Locally, confidence is
+sample-limited by default (**16 symbols × 1 year**) and the Today view keeps
+that default. Larger symbol/history selections in Strategy Lab are opt-in and
 intended for cloud compute — do not trigger it on a laptop.
 
-## 6. Roadmap (build order)
+## 6. Pre-deployment hardening plan
 
-1. Docs + decisions ✅
-2. Folder structure ✅
-3. Data pipeline: fetch SPY → SQLite (idempotent daily job) ✅
-4. First strategy (SMA cross) + minimal backtest → metrics ✅
-5. Chart viewer: candles + entry/exit markers + algorithm lines ✅
-5. Today view: scan ✅, model simulation ✅, rule rank ✅, confidence ✅, saved sets ✅, pick cards ✅
-6. Strategy Lab: params ✅, symbols ✅, saved param sets ✅, scoreboard ✅, batch runs (later)
-7. Macro view: event-driven calendar ✅ (beat/miss history later)
-9. Classic TA series: S/R bounce ✅, Fib retrace ✅, wave pull ✅
-10. CTA trend-following (tuned default) ✅
-11. Daily cron script ✅ (`scripts/daily.sh`)
-12. AWS deployment (phase 2)
+### 6.1 Audit baseline (Codex review, 2026-08-17)
+
+The repository was reviewed across the backend, frontend, data flow, strategy
+logic, documentation, and current validation setup. The review found a useful
+educational prototype with unusually honest caveats, but not yet a trustworthy
+trading decision system.
+
+The principal blockers are:
+
+- The backtest, Today scanner, historical confidence calculation, and simulated
+  ledger do not yet share one canonical position/execution engine.
+- The simulated ledger documents next-open exits but currently records some
+  exits at the signal day's close.
+- The Today scanner can confuse a condition that is true now with a position
+  that was actually entered and remains open.
+- "Confidence" measures a fixed 20-day forward return after an entry signal; it
+  does not measure the strategy's realized trade result or a calibrated
+  probability.
+- Parameter selection is in-sample. There is no untouched holdout, walk-forward
+  evaluation, uncertainty estimate, or multiple-testing control yet.
+- There is no automated test suite, and calculation failures can be silently
+  skipped by broad exception handlers.
+- The frontend does not yet make data freshness, execution timing, missing data,
+  and research-only status prominent enough for a money-related product.
+- Security, accessibility, reproducibility, and deployment controls need to be
+  completed before cron or AWS work.
+
+The stages below deliberately put correctness before new strategies, automation,
+or deployment. Each stage should be completed in a small pull request or commit,
+with tests and README evidence, so changes can be reviewed one at a time.
+
+### Stage 0 — freeze the research baseline
+
+**Goal:** preserve today's behaviour before refactoring it.
+
+- [ ] Record the Python version and pin direct dependency versions.
+- [ ] Add a deterministic small OHLC fixture covering gaps, trends, reversals,
+      stops, and missing bars.
+- [ ] Save baseline outputs for each strategy on that fixture.
+- [ ] Add `pytest` and a documented test command without downloading market data.
+- [ ] Separate generated data, caches, logs, and research artifacts from source.
+- [ ] Add a short decision record explaining close signal → next-open fill.
+
+**Exit gate:** a fresh clone can install dependencies and reproduce the same
+fixture results locally.
+
+### Stage 1 — one canonical execution model (highest priority)
+
+**Goal:** every view reports the same entries, exits, fills, and position state.
+
+- [ ] Define explicit states: `flat`, `entry_pending`, `long`, and
+      `exit_pending`.
+- [ ] Define fill rules for normal opens, overnight gaps, missing next bars, and
+      the final bar of a dataset.
+- [ ] Move each strategy's entry and exit rules into one reusable signal source.
+- [ ] Make the backtest, Today scan, ledger, and chart markers consume that source.
+- [ ] Use the configured ATR period consistently; do not hardcode 14 in one path.
+- [ ] Decide whether stops are close-based or intraday OHLC-based and implement
+      that decision consistently.
+- [ ] Remove forced end-of-window exits from headline statistics, or label them
+      separately from genuine strategy exits.
+- [ ] Add parity tests proving that identical bars and parameters produce
+      identical trades in all code paths.
+
+**Exit gate:** for every strategy and fixture, the API, ledger, and backtest have
+the same position state and fill dates/prices.
+
+### Stage 2 — automated correctness and data-quality tests
+
+**Goal:** turn trading assumptions into executable checks.
+
+- [ ] Unit-test every entry rule, exit rule, ATR calculation, indicator warm-up,
+      and parameter boundary.
+- [ ] Test next-open fills, overnight gaps through stops, no-next-bar cases, and
+      open trades at the end of a sample.
+- [ ] Test SQLite idempotency, duplicate bars, invalid OHLC, zero/negative prices,
+      missing volume, and non-monotonic dates.
+- [ ] Test split/dividend-adjusted price handling and document its benchmark
+      implications.
+- [ ] Replace broad silent exception handling with structured errors containing
+      the symbol, strategy, and failed calculation.
+- [ ] Return scan coverage: requested, processed, skipped, stale, and failed.
+- [ ] Add API integration tests for bad strategies, bad parameters, missing
+      symbols, empty samples, and oversized requests.
+
+**Exit gate:** the deterministic suite passes locally and a deliberately broken
+rule produces a failing test.
+
+### Stage 3 — honest research statistics and benchmarks
+
+**Goal:** make the displayed evidence answer the right questions.
+
+- [ ] Rename "Confidence" to "Historical post-signal statistics" unless a
+      probability model is later calibrated and validated.
+- [ ] Clearly separate fixed-horizon signal analysis from full-trade performance.
+- [ ] Show the sample start/end dates; never label a one-year window "all-time".
+- [ ] Report CAGR, annualized volatility, downside deviation, Sortino, Calmar,
+      maximum drawdown duration, exposure, turnover, and trade expectancy.
+- [ ] Compare against buy-and-hold and an exposure-matched/cash-yield benchmark.
+- [ ] Include commission, spread, slippage, overnight gaps, and configurable cash
+      yield in net results.
+- [ ] Account for overlapping 20-day observations and correlated symbols when
+      estimating uncertainty.
+- [ ] Add confidence intervals/bootstrap distributions, not only point estimates.
+- [ ] Display insufficient-sample warnings using predefined thresholds.
+
+**Exit gate:** every headline metric states its window, sample, benchmark, cost
+assumptions, and uncertainty or limitation.
+
+### Stage 4 — out-of-sample research protocol
+
+**Goal:** test hypotheses without advertising in-sample winners as proven edges.
+
+- [ ] Write the hypothesis and acceptance metric before each parameter search.
+- [ ] Divide data chronologically into training, validation, and untouched test
+      periods.
+- [ ] Implement rolling walk-forward evaluation with parameters selected only
+      from information available at that time.
+- [ ] Reserve an untouched holdout universe and period.
+- [ ] Plot parameter stability and reject isolated "best" combinations.
+- [ ] Record every attempted strategy/configuration to expose multiple testing.
+- [ ] Apply a suitable multiple-comparison or false-discovery adjustment.
+- [ ] Prefer point-in-time membership data; until available, limit claims and use
+      long-lived broad ETFs to reduce survivorship bias.
+- [ ] Test bear, bull, sideways, high-volatility, and rising-rate regimes
+      separately without tuning to each result after inspection.
+
+**Exit gate:** the final test set remains untouched until a written model is
+locked, and results are reported even when they fail.
+
+### Stage 5 — portfolio and risk model
+
+**Goal:** stop presenting independent fixed-share trades as a portfolio.
+
+- [ ] Replace the fixed 100-share convention with explicit capital and sizing.
+- [ ] Add maximum position, sector, correlated-asset, and portfolio exposure.
+- [ ] Model concurrent signals, available cash, turnover, and rejected orders.
+- [ ] Separate per-trade stop distance from portfolio risk limits.
+- [ ] Add portfolio equity, drawdown, concentration, and daily return history.
+- [ ] Add a hard kill switch and maximum-loss controls for any future paper/live
+      integration.
+- [ ] Keep paper and live data stores physically and visually distinct.
+
+**Exit gate:** no displayed dollar P&L can imply capital that the portfolio did
+not actually have.
+
+### Stage 6 — UX, accessibility, and safety language
+
+**Goal:** make uncertainty and system state obvious to a beginner.
+
+- [ ] Show `data as of`, market timezone, fetch status, and stale/missing symbols
+      beside every decision-oriented view.
+- [ ] Distinguish `no signal`, `not enough history`, `stale data`, and
+      `calculation failed`.
+- [ ] Show signal time, intended order time, assumed fill time, and actual
+      simulation fill as separate fields.
+- [ ] Put the research-only warning and key bias/cost assumptions beside results,
+      not only in this README.
+- [ ] Replace hover-only explanations with keyboard/touch-accessible disclosures.
+- [ ] Add labels/ARIA, visible focus states, responsive layouts, and accessible
+      table/card alternatives.
+- [ ] Confirm destructive actions such as deleting saved parameter sets.
+- [ ] Break the single frontend file into testable modules when doing so reduces
+      risk rather than merely changing technology.
+- [ ] Add Playwright smoke tests for Today, Explorer, Strategy Lab, Macro, error
+      states, and narrow-screen layouts.
+
+**Exit gate:** a new user can identify data freshness, assumptions, current
+position state, and failure conditions without relying on a tooltip.
+
+### Stage 7 — API and local security hardening
+
+**Goal:** make local operation safe before exposing any endpoint externally.
+
+- [ ] Validate parameters server-side using typed request models, declared ranges,
+      and cross-field rules such as fast periods being below slow periods.
+- [ ] Escape or safely render saved names and external calendar content instead
+      of inserting untrusted strings with `innerHTML`.
+- [ ] Add request size and compute limits; reject accidental full-universe/full-
+      history jobs unless explicitly authorized.
+- [ ] Add structured logging without secrets or sensitive account data.
+- [ ] Define authentication, authorization, CSRF/CORS, rate limiting, TLS, secret
+      storage, and dependency-scanning requirements for any non-local deployment.
+- [ ] Run the security-best-practices review and record accepted risks.
+- [ ] Back up and test restoration of SQLite before schema migrations.
+
+**Exit gate:** the application has a documented threat model and no endpoint is
+internet-exposed by default.
+
+### Stage 8 — reliable daily operation (cron only after Stages 0–7)
+
+**Goal:** make an unattended update observable, idempotent, and recoverable.
+
+- [ ] Fetch into a staging transaction and validate before publishing new bars.
+- [ ] Handle market holidays, early closes, timezones, partial downloads, revised
+      macro data, and provider schema changes.
+- [ ] Use a lock so two fetch jobs cannot run concurrently.
+- [ ] Add retry limits, timeouts, run IDs, per-symbol results, and non-zero failure
+      status when coverage is incomplete.
+- [ ] Alert on stale data, abnormal row counts, missing core symbols, and failed
+      backups.
+- [ ] Recompute derived results only after a successful validated data update.
+- [ ] Document rollback and manual recovery procedures.
+
+**Exit gate:** repeated scheduled runs cannot corrupt or silently partially
+publish the dataset, and a failed run produces a visible alert.
+
+### Stage 9 — AWS deployment (last)
+
+**Goal:** deploy a validated research application, not move unresolved risk to
+the cloud.
+
+- [ ] Choose the architecture from measured workload and recovery requirements.
+- [ ] Separate application, persistent data, backups, and secrets.
+- [ ] Add TLS, authentication, least-privilege IAM, network restrictions, patching,
+      monitoring, budgets, and log retention.
+- [ ] Create reproducible infrastructure/deployment configuration and a rollback.
+- [ ] Test restore, dependency failure, provider outage, disk exhaustion, and
+      process restart.
+- [ ] Keep brokerage connectivity explicitly out of scope until a separate,
+      independently reviewed live-trading safety project is approved.
+
+**Exit gate:** deployment and disaster recovery are repeatable, monitored, and
+cost-bounded. AWS completion does not imply that a strategy is profitable.
+
+### Recommended implementation order
+
+Work one small slice at a time:
+
+1. Stage 0 test foundation.
+2. CTA Trend canonical state machine and parity tests.
+3. Apply the same engine to the remaining strategies.
+4. Correct/rename confidence and benchmark statistics.
+5. Build the walk-forward research notebook and protocol.
+6. Add portfolio/risk semantics.
+7. Complete UX and security gates.
+8. Revisit cron only after the earlier gates pass.
+9. Revisit AWS only after cron is demonstrably reliable.
+
+Adding new strategies, machine learning, broker integration, cron automation,
+and AWS deployment is intentionally paused until the relevant gates above pass.
 
 ## 7. Product spec — the three views
 
@@ -202,6 +443,21 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.13.0 — 2026-08-17
+
+- **Codex audit and pre-deployment hardening plan:** reviewed the repository's
+  backend, frontend, data flow, strategy logic, documentation, and validation
+  setup. Recorded the principal correctness, quant-research, UX, security, and
+  operational risks without claiming they are already fixed.
+- Changed the project status from "planning" to **research prototype — not ready
+  for live trading**, with a prominent educational-use warning.
+- Replaced the feature-oriented roadmap with staged validation gates: freeze the
+  baseline; unify execution; add automated tests; correct research statistics;
+  implement out-of-sample evaluation; define portfolio risk; harden UX/security;
+  then revisit cron and AWS.
+- Paused new strategies, machine learning, brokerage integration, cron
+  automation, and cloud deployment until their prerequisite gates pass.
 
 ### v0.12.4 — 2026-08-17
 
