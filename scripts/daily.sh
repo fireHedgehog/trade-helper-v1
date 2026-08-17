@@ -14,4 +14,5 @@ LOG="$ROOT/data/daily-fetch.log"
 echo "[$(date -Iseconds)] daily fetch start" >> "$LOG"
 cd "$ROOT/backend"
 "$ROOT/.venv/bin/python" -u -m app.fetch --universe --delay 1 >> "$LOG" 2>&1
+"$ROOT/.venv/bin/python" -m app.fred DGS2 DFEDTARU CPIAUCSL PCEPILFE PAYEMS UNRATE A191RL1Q225SBEA ICSA RSXFSN >> "$LOG" 2>&1
 echo "[$(date -Iseconds)] daily fetch done" >> "$LOG"

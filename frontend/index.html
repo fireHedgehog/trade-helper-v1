@@ -44,15 +44,46 @@
   .card .label { font-size: 11px; color: var(--muted); }
   .card .price { font-size: 18px; font-weight: 600; margin-top: 2px; }
   .card .chg { font-size: 12px; margin-top: 2px; }
-  .event-row {
-    display: flex; justify-content: space-between; padding: 7px 0;
-    border-bottom: 1px solid var(--border); font-size: 13px;
+  .pick-cards { display: flex; flex-wrap: wrap; gap: 10px; }
+  .pick-card {
+    background: #1f2634; border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px; min-width: 180px;
   }
+  .pick-card.entry { border-left: 3px solid var(--green); }
+  .pick-card.exit { border-left: 3px solid var(--red); }
+  .pick-card .sym { font-size: 16px; font-weight: 700; }
+  .chip { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 6px; margin-left: 6px; vertical-align: 2px; }
+  .chip.entry { background: #1f3a37; color: var(--green); }
+  .chip.exit { background: #3a2222; color: var(--red); }
+  .pick-card .reason { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .pick-card .rank { font-size: 11px; margin-top: 6px; }
+  .rank.pos { color: var(--green); } .rank.neg { color: var(--red); }
+  .event-row {
+    display: flex; justify-content: space-between; gap: 10px; padding: 7px 0;
+    border-bottom: 1px solid var(--border); font-size: 13px; align-items: baseline;
+  }
+  .ev-name { flex: 1.2; font-weight: 600; }
+  .ev-cell { flex: 1; font-size: 12px; color: var(--muted); }
+  .chip.forecast { background: #234; color: #93c5fd; }
+  .ev-prev { color: var(--muted); }
   .badge { font-size: 10px; background: #374151; padding: 1px 6px; border-radius: 6px; color: var(--muted); margin-left: 6px; }
   .sample-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
   #regime-banner { font-size: 12px; padding: 6px 10px; border-radius: 8px; }
   #regime-banner.ok { background: #1f3a37; color: var(--green); }
   #regime-banner.caution { background: #3a2222; color: var(--red); }
+  .dimmer {
+    position: fixed; inset: 0; background: rgba(10, 12, 18, .65); z-index: 50;
+    display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center;
+  }
+  .dimmer[hidden] { display: none; }
+  .spinner {
+    width: 34px; height: 34px; border: 3px solid #242a37;
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #dimmer-text { font-size: 13px; color: var(--text); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
   .toolbar {
     display: flex; gap: 10px; align-items: center; padding: 12px 16px;
     border-bottom: 1px solid var(--border); background: var(--panel);
@@ -218,6 +249,7 @@
         <option value="all">All symbols</option>
       </select>
       <select id="today-strategy"></select>
+      <select id="today-set"><option value="defaults">Params: defaults</option></select>
       <button class="primary" id="today-refresh">Refresh scan</button>
       <span id="today-status"></span>
       <span id="regime-banner"></span>
@@ -236,17 +268,11 @@
       </section>
       <section class="panel">
         <h2>Entries today</h2>
-        <table>
-          <thead><tr><th>Symbol</th><th>Rank</th><th>Reason</th></tr></thead>
-          <tbody id="today-entries"></tbody>
-        </table>
+        <div class="pick-cards" id="today-entries"></div>
       </section>
       <section class="panel">
         <h2>Exits today</h2>
-        <table>
-          <thead><tr><th>Symbol</th><th>Rank</th><th>Reason</th></tr></thead>
-          <tbody id="today-exits"></tbody>
-        </table>
+        <div class="pick-cards" id="today-exits"></div>
       </section>
     </div>
   </div>
@@ -280,7 +306,7 @@
       <section class="panel">
         <h2>Event calendar</h2>
         <div id="macro-events"></div>
-        <div class="sample-note">⚠ Sample dates — verify before relying on them (real source TBD).</div>
+        <div class="sample-note">Sourced from Trading Economics (US macro only). Verify before acting on any date.</div>
       </section>
     </div>
   </div>
@@ -293,6 +319,17 @@ async function api(path, options = {}) {
   const res = await fetch(path, options);
   if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
   return res.json();
+}
+
+/* Loading dimmer: prevents double-clicks that spin up the laptop. */
+let busyCount = 0;
+function loading(on, text) {
+  busyCount = Math.max(0, busyCount + (on ? 1 : -1));
+  $('#dimmer').hidden = busyCount === 0;
+  if (on && text) $('#dimmer-text').textContent = text;
+  document.querySelectorAll('#lab-compute, #today-refresh, #run').forEach((b) => {
+    b.disabled = busyCount > 0;
+  });
 }
 
 /* ---------- chart ---------- */
@@ -653,6 +690,7 @@ async function run() {
   const strategy = $('#strategy').value;
   const label = currentRange();
   $('#status').textContent = `running ${strategy} on ${symbol} (${label})…`;
+  loading(true, 'running backtest…');
   candleSeries.setMarkers([]);  // clear the previous strategy's markers
   equitySeries.setData([]);
   try {
@@ -683,6 +721,8 @@ async function run() {
       `${backtest.trades.length} trades · ${symbol} · ${strategy} · ${label}`;
   } catch (err) {
     $('#status').textContent = `error: ${err.message}`;
+  } finally {
+    loading(false);
   }
 }
 
@@ -742,7 +782,14 @@ async function loadLab(force = false) {
   $('#scoreboard').innerHTML = strategies.map((s) =>
     `<tr data-strategy="${s.name}"><td>${s.name}</td><td colspan="5" class="muted">…</td></tr>`
   ).join('');
-  strategies.forEach((s) => loadScore(s.name, force, sym, day));
+  loading(true, 'computing confidence…');
+  try {
+    await Promise.all(strategies.map((s) => loadScore(s.name, force, sym, day)));
+  } catch (err) {
+    $('#scoreboard').innerHTML = `<tr><td colspan="6">error: ${err.message}</td></tr>`;
+  } finally {
+    loading(false);
+  }
 }
 
 async function loadScore(name, force, sym, day) {
@@ -767,21 +814,37 @@ async function loadScore(name, force, sym, day) {
 $('#lab-compute').addEventListener('click', () => loadLab(true));
 
 /* ---------- Today + Macro views (raw) ---------- */
+async function refreshTodaySets(strategy) {
+  const { sets } = await api(`/api/param-sets?strategy=${encodeURIComponent(strategy)}`);
+  const current = $('#today-set').value;
+  $('#today-set').innerHTML =
+    '<option value="defaults">Params: defaults</option>' +
+    sets.map((s) =>
+      `<option value="${s.name}" ${s.name === current ? 'selected' : ''}>Params: ${s.name}</option>`
+    ).join('');
+}
+
 async function loadToday(refresh = false) {
   const strategy = $('#today-strategy').value;
   const scope = $('#today-scope').value;
+  const set = $('#today-set').value || 'defaults';
   $('#today-status').textContent = 'scanning…';
+  loading(true, 'scanning signals…');
   try {
-    const query = `/api/today?strategy=${encodeURIComponent(strategy)}&scope=${scope}${refresh ? '&refresh=1' : ''}`;
+    refreshTodaySets(strategy);
+    const query = `/api/today?strategy=${encodeURIComponent(strategy)}&scope=${scope}&set=${encodeURIComponent(set)}${refresh ? '&refresh=1' : ''}`;
     const [data, macro, positionsData, confidence] = await Promise.all([
       api(query),
       api('/api/macro'),
-      api(`/api/positions?strategy=${encodeURIComponent(strategy)}`),
+      api(`/api/positions?strategy=${encodeURIComponent(strategy)}&set=${encodeURIComponent(set)}`),
       api(`/api/confidence?strategy=${encodeURIComponent(strategy)}`),
     ]);
-    const signalRows = (list) => list.map((r) =>
-      `<tr><td>${r.symbol}</td><td>${r.rank.toFixed(1)}</td><td>${r.note}</td></tr>`).join('')
-      || '<tr><td colspan="3">none</td></tr>';
+    const pickCards = (list, chip, chipCls) => list.map((r) =>
+      `<div class="pick-card ${chipCls}">` +
+      `<span class="sym">${r.symbol}</span><span class="chip ${chipCls}">${chipCls === 'entry' ? '▲' : '▼'} ${chip}</span>` +
+      `<div class="reason">${r.note}</div>` +
+      `<div class="rank ${r.rank >= 0 ? 'pos' : 'neg'}" title="${r.rank_note || ''}">rank ${r.rank} — ${r.rank_note || ''}</div>` +
+      `</div>`).join('') || '<div class="sample-note">none</div>';
     const simRows = (list) => list.map((r) => {
       const pnl = r.pnl_pct == null ? '—' : `${r.pnl_pct >= 0 ? '+' : ''}${r.pnl_pct.toFixed(1)}%`;
       const usd = r.pnl_usd == null ? '—' : `${r.pnl_usd >= 0 ? '+' : ''}${r.pnl_usd.toFixed(0)}`;
@@ -791,12 +854,12 @@ async function loadToday(refresh = false) {
         `<td>${r.stop ?? '—'}</td><td>${r.tp ?? '—'}</td><td>${r.note || '—'}</td></tr>`;
     }).join('') || '<tr><td colspan="9">no open simulated positions — all —</td></tr>';
     $('#sim-positions').innerHTML = simRows(positionsData.positions);
-    $('#today-entries').innerHTML = signalRows(data.entries);
-    $('#today-exits').innerHTML = signalRows(data.exits);
+    $('#today-entries').innerHTML = pickCards(data.entries, 'ENTRY', 'entry');
+    $('#today-exits').innerHTML = pickCards(data.exits, 'EXIT', 'exit');
     renderConfidence(confidence);
     if (!macro.regime.ok) {
       $('#today-entries').innerHTML =
-        '<tr><td colspan="3">suppressed — US10Y ≥ 5% regime filter (no new trades)</td></tr>';
+        '<div class="sample-note">suppressed — US10Y ≥ 5% regime filter (no new trades)</div>';
     }
     $('#today-status').textContent = `scanned ${data.scanned} symbols`;
     const regime = macro.regime;
@@ -810,6 +873,8 @@ async function loadToday(refresh = false) {
     }
   } catch (err) {
     $('#today-status').textContent = `error: ${err.message}`;
+  } finally {
+    loading(false);
   }
 }
 
@@ -832,15 +897,43 @@ async function loadMacro() {
       `<div class="price">${c.close}</div>` +
       `<div class="chg ${c.change_pct >= 0 ? 'pos' : 'neg'}">${c.change_pct >= 0 ? '+' : ''}${c.change_pct.toFixed(2)}%</div></div>`
     ).join('');
-    $('#macro-events').innerHTML = macro.events.map((e) =>
-      `<div class="event-row"><span>${e.date} — ${e.name}</span><span class="badge">${e.note}</span></div>`
-    ).join('');
+    $('#macro-events').innerHTML = renderEvents(macro.events);
   } catch (err) {
     $('#macro-events').textContent = `error: ${err.message}`;
   }
 }
 
-$('#today-strategy').addEventListener('change', () => loadToday());
+const CAT_ICONS = { Fed: '🏛', Inflation: '📈', Labor: '👷', Growth: '🏭', Consumption: '🛒', Activity: '📊' };
+
+function renderEvents(events) {
+  const rows = events.map((e) => {
+    let next = '—';
+    if (e.next) {
+      next = `<span class="ev-date">${e.next.date}${e.next.time ? ' ' + e.next.time : ''}</span>` +
+        (e.next.forecast ? `<span class="chip forecast">f/c ${e.next.forecast}</span>` : '');
+    }
+    let last = '—';
+    if (e.last && e.last.actual != null) {
+      const cls = e.last.change == null ? '' : e.last.change > 0 ? 'pos' : e.last.change < 0 ? 'neg' : '';
+      last = `<span class="${cls}">${e.last.actual}</span>` +
+        (e.last.previous != null ? `<span class="ev-prev"> (prev ${e.last.previous})</span>` : '');
+      if (e.last.consensus == null) last += '<span class="sample-note"> · consensus n/a</span>';
+    }
+    return `<div class="event-row">
+      <span class="ev-name">${CAT_ICONS[e.category] || '●'} ${e.name}</span>
+      <span class="ev-cell">Next: ${next}</span>
+      <span class="ev-cell">Last: ${last}</span>
+    </div>`;
+  }).join('');
+  return rows +
+    '<div class="sample-note">Next dates & forecasts: Trading Economics (US) · Last actuals: FRED · beat/miss vs consensus pending a forecast-history source.</div>';
+}
+
+$('#today-strategy').addEventListener('change', () => {
+  refreshTodaySets($('#today-strategy').value);
+  loadToday();
+});
+$('#today-set').addEventListener('change', () => loadToday(true));
 $('#today-scope').addEventListener('change', () => loadToday());
 $('#today-refresh').addEventListener('click', () => loadToday(true));
 
@@ -906,5 +999,9 @@ loadStrategies().then(() => {
   if (!location.hash) history.replaceState(null, '', `#${initial}`);
 });
 </script>
+<div id="dimmer" class="dimmer" hidden>
+  <div class="spinner"></div>
+  <div id="dimmer-text">computing…</div>
+</div>
 </body>
 </html>

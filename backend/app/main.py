@@ -10,6 +10,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 
 from . import store
+from .calendar import macro_events
 from .confidence import compute_confidence
 from .engine import backtest_payload
 from .signals import (
@@ -28,16 +29,8 @@ MACRO_SYMBOLS = {
     "GC=F": "Gold",
     "CL=F": "Crude",
     "^TNX": "US 10Y yield",
-    "SHY": "US 2Y proxy",
+    "DGS2": "US 2Y yield",
 }
-
-# SAMPLE calendar — dates are placeholders until we wire a real source.
-MACRO_EVENTS = [
-    {"date": "2026-08-27", "name": "Jackson Hole Symposium", "note": "sample — verify"},
-    {"date": "2026-09-11", "name": "CPI release", "note": "sample — verify"},
-    {"date": "2026-09-15", "name": "FOMC decision", "note": "sample — verify"},
-    {"date": "2026-10-02", "name": "Non-farm payrolls", "note": "sample — verify"},
-]
 
 _today_cache: dict = {}
 
@@ -95,10 +88,10 @@ def signal_now(symbol: str, strategy: str = "SMA Cross"):
 
 
 @app.get("/api/positions")
-def positions(strategy: str = "SMA Cross"):
+def positions(strategy: str = "SMA Cross", set: str = "defaults"):
     if strategy not in STRATEGIES:
         raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
-    return {"positions": positions_payload(strategy)}
+    return {"positions": positions_payload(strategy, set)}
 
 
 @app.get("/api/confidence")
@@ -144,19 +137,32 @@ def backtest(
 
 
 @app.get("/api/today")
-def today(strategy: str = "SMA Cross", scope: str = "core", refresh: bool = False):
+def today(
+    strategy: str = "SMA Cross",
+    scope: str = "core",
+    set: str = "defaults",
+    refresh: bool = False,
+):
     if strategy not in STRATEGIES:
         raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
     symbols = CORE_WATCHLIST if scope == "core" else store.list_symbols()
-    cache_key = f"{strategy}|{scope}"
+    cache_key = f"{strategy}|{scope}|{set}"
     cached = _today_cache.get(cache_key)
     if not refresh and cached and time.time() - cached["at"] < 60:
         return cached["data"]
+    params = None
+    if set != "defaults":
+        saved = store.list_param_sets(strategy)
+        chosen = next((s for s in saved if s["name"] == set), None)
+        if chosen is None:
+            raise HTTPException(status_code=404, detail=f"unknown param set: {set}")
+        params = chosen["params"]
     if scope == "core":
-        advance_positions(strategy)  # advance the paper ledger to the latest bar
-    result = scan(strategy, symbols)
+        advance_positions(strategy, params, set)  # advance the paper ledger
+    result = scan(strategy, symbols, params)
     result["strategy"] = strategy
     result["scope"] = scope
+    result["set"] = set
     _today_cache[cache_key] = {"at": time.time(), "data": result}
     return result
 
@@ -202,15 +208,16 @@ def macro():
                 "change_pct": round(float(last["close"] / prev["close"] - 1) * 100, 2),
             }
         )
-    tnx = next((c for c in cards if c["symbol"] == "^TNX"), None)
-    us10y = tnx["close"] if tnx else None
+    us10y = next(
+        (c for c in cards if c["symbol"] in ("DGS10", "^TNX")), None
+    )
     return {
         "cards": cards,
-        "events": MACRO_EVENTS,
+        "events": macro_events(),
         "regime": {
-            "us10y": us10y,
+            "us10y": us10y["close"] if us10y else None,
             "threshold": 5.0,
-            "ok": us10y is None or us10y < 5.0,
+            "ok": us10y is None or us10y["close"] < 5.0,
         },
     }
 

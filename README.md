@@ -122,9 +122,9 @@ intended for cloud compute — do not trigger it on a laptop.
 3. Data pipeline: fetch SPY → SQLite (idempotent daily job) ✅
 4. First strategy (SMA cross) + minimal backtest → metrics ✅
 5. Chart viewer: candles + entry/exit markers + algorithm lines ✅
-6. Today view: scan ✅, simulated positions ✅, rule rank ✅, confidence ✅ (sample-limited locally)
-7. Strategy Lab: params ✅, symbols ✅, saved param sets ✅, scoreboard ✅, batch runs (later)
-8. Macro view: raw ✅ (real calendar source later)
+5. Today view: scan ✅, simulated positions ✅, rule rank ✅, confidence ✅, saved sets ✅, pick cards ✅
+6. Strategy Lab: params ✅, symbols ✅, saved param sets ✅, scoreboard ✅, batch runs (later)
+7. Macro view: event-driven calendar ✅ (beat/miss history later)
 9. Classic TA series: S/R bounce ✅, Fib retrace ✅, wave pull ✅
 10. Daily cron script ✅ (`scripts/daily.sh`)
 11. AWS deployment (phase 2)
@@ -174,6 +174,7 @@ intended for cloud compute — do not trigger it on a laptop.
 - **Daily signal state machine:** ✅ core watchlist built v0.9.0 — the `positions` ledger persists flat → entry_pending → long per symbol+strategy and advances when the Today view is fetched. Remaining: the daily cron job and a snapshot table for all symbols.
 - **Rule-based ranking & confidence:** ✅ both built (v0.9.0–v0.10.0) — rule rank = momentum + trend + volatility score; confidence = per-strategy historical hit rate and avg 20-day return with all-time and 3Y slices. Sample-limited by default locally; full universe is a cloud-only trigger. Remaining: per-symbol slices.
 - **Classic TA validity lab:** ✅ S/R Bounce, Fib Retrace, Wave Pull built (v0.8.0–v0.9.0), each with params and an on-chart explanation. First honest measurement: Fib Retrace +6.7% vs +3,109% buy & hold on SPY over 33 years — the classic levels do not add value as implemented. Backtest first, believe later.
+- **Macro beat/miss:** last actuals come from FRED, next dates + forecasts from Trading Economics. Consensus history for past releases (needed for beat/miss badges) still needs a source — pending.
 - **Simulated positions (paper ledger) — designed v0.8.1, not built yet:**
   - Replaces the "Holding" section and moves to the top of the Today view, above Entries/Exits.
   - One simulated position per symbol per strategy, fixed size **100 shares**.
@@ -199,6 +200,14 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.11.0 — 2026-08-17
+
+- Macro calendar is now **event-driven**: a curated US catalog (FOMC, CPI, Core PCE, NFP, unemployment, jobless claims, GDP, retail sales, ISM) where each event shows the next release date + forecast (Trading Economics) and the last actual vs previous (FRED), with category icons. Beat/miss vs consensus is honestly marked n/a until a forecast-history source exists.
+- Real US 2Y yield (`DGS2`) from FRED replaces the SHY price proxy; FRED series joined the bars pipeline and `scripts/daily.sh`.
+- Saved param sets are wired into the Today scan (`Params: <set>` dropdown); the simulated-positions ledger is tracked per set.
+- Loading dimmer + disabled buttons prevent double-clicks that spin up the laptop; the confidence cache is now date-aware (recomputes when new bars arrive, not on a timer).
+- Today picks are now cards with ENTRY/EXIT chips, color accents, and rank tooltips.
 
 ### v0.10.1 — 2026-08-17
 

@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 from .signals import CORE_WATCHLIST, _entry_series
-from .store import list_symbols, load_bars, load_recent_bars
+from .store import latest_bar_date, list_symbols, load_bars, load_recent_bars
 from .strategies import STRATEGY_PARAMS
 
 HORIZON = 20  # trading days of forward return
@@ -60,7 +60,9 @@ def compute_confidence(
     """
     key = f"{strategy_name}|{max_symbols}|{max_days}"
     cached = _cache.get(key)
-    if not force and cached and time.time() - cached["at"] < CACHE_TTL:
+    data_date = latest_bar_date()
+    # Date-aware cache: same bar count on a new day still recomputes.
+    if not force and cached and cached["data"].get("data_date") == data_date:
         return cached["data"]
 
     symbols = list_symbols() if max_symbols <= 0 else _ordered_symbols(max_symbols)
@@ -97,6 +99,7 @@ def compute_confidence(
     data = {
         "strategy": strategy_name,
         "horizon_days": HORIZON,
+        "data_date": data_date,
         "sample": {
             "symbols": len(symbols),
             "days": max_days if max_days > 0 else None,

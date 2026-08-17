@@ -251,9 +251,10 @@ def compute_signal(bars: pd.DataFrame, strategy_name: str, params: dict) -> dict
     return _finish(result, bars, entry_index)
 
 
-def scan(strategy_name: str, symbols: list[str]) -> dict:
+def scan(strategy_name: str, symbols: list[str], params: dict | None = None) -> dict:
     """Scan all symbols for today's entries/exits/holdings."""
-    params = {key: value["default"] for key, value in STRATEGY_PARAMS[strategy_name].items()}
+    if params is None:
+        params = {key: value["default"] for key, value in STRATEGY_PARAMS[strategy_name].items()}
     rows = []
     for symbol in symbols:
         bars = load_recent_bars(symbol, LOOKBACK)
@@ -303,23 +304,24 @@ def _new_position_from_window(bars: pd.DataFrame, strategy_name: str, params: di
     return None
 
 
-def advance_positions(strategy_name: str) -> None:
+def advance_positions(strategy_name: str, params: dict | None = None, set_name: str = "defaults") -> None:
     """Advance the core-watchlist ledger to the latest bar (idempotent per day)."""
-    params = _default_params(strategy_name)
+    if params is None:
+        params = _default_params(strategy_name)
     for symbol in CORE_WATCHLIST:
         bars = load_bars(symbol)
         if bars.empty:
             continue
         latest_date = str(bars["date"].iloc[-1])
-        row = store.get_position(symbol, strategy_name)
+        row = store.get_position(symbol, strategy_name, set_name)
         if row is None:
             new = _new_position_from_window(bars, strategy_name, params)
             if new:
                 # Replay from the entry date so exits (stop/TP) that happened
                 # between entry and now are simulated, not skipped.
                 updated = new["entry_date"] if new["state"] == "long" else latest_date
-                store.save_position(symbol, strategy_name, new, updated)
-                row = store.get_position(symbol, strategy_name)
+                store.save_position(symbol, strategy_name, new, updated, set_name)
+                row = store.get_position(symbol, strategy_name, set_name)
             else:
                 continue
         if row["updated"] >= latest_date:
@@ -360,16 +362,16 @@ def advance_positions(strategy_name: str) -> None:
                     state = {"state": "flat", "entry_date": None, "entry_price": None,
                              "stop": None, "tp": None}
         if state["state"] == "flat":
-            store.delete_position(symbol, strategy_name)
+            store.delete_position(symbol, strategy_name, set_name)
         else:
-            store.save_position(symbol, strategy_name, state, latest_date)
+            store.save_position(symbol, strategy_name, state, latest_date, set_name)
 
 
-def positions_payload(strategy_name: str) -> list[dict]:
+def positions_payload(strategy_name: str, set_name: str = "defaults") -> list[dict]:
     """The ledger for display: every core symbol in order; nulls where flat."""
     rows = []
     for symbol in CORE_WATCHLIST:
-        row = store.get_position(symbol, strategy_name)
+        row = store.get_position(symbol, strategy_name, set_name)
         if not row or row["state"] == "flat":
             rows.append({"symbol": symbol, "state": "flat"})
             continue

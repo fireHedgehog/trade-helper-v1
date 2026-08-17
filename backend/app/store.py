@@ -41,13 +41,14 @@ CREATE TABLE IF NOT EXISTS param_sets (
 CREATE TABLE IF NOT EXISTS positions (
     symbol      TEXT NOT NULL,
     strategy    TEXT NOT NULL,
+    set_name    TEXT NOT NULL DEFAULT 'defaults',
     state       TEXT NOT NULL,   -- flat | entry_pending | long
     entry_date  TEXT,
     entry_price REAL,
     stop        REAL,
     tp          REAL,
     updated     TEXT NOT NULL,   -- last bar date processed
-    PRIMARY KEY (symbol, strategy)
+    PRIMARY KEY (symbol, strategy, set_name)
 );
 """
 
@@ -57,6 +58,11 @@ def connect() -> sqlite3.Connection:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.executescript(SCHEMA)  # multiple statements -> executescript
+    # Migration: positions gained set_name (dev ledger, safe to rebuild).
+    cols = [row[1] for row in conn.execute("PRAGMA table_info(positions)").fetchall()]
+    if cols and "set_name" not in cols:
+        conn.execute("DROP TABLE positions")
+        conn.executescript(SCHEMA)
     return conn
 
 
@@ -163,12 +169,12 @@ def delete_param_set(name: str) -> None:
         conn.execute("DELETE FROM param_sets WHERE name = ?", (name,))
 
 
-def get_position(symbol: str, strategy: str) -> dict | None:
+def get_position(symbol: str, strategy: str, set_name: str = "defaults") -> dict | None:
     with connect() as conn:
         row = conn.execute(
             "SELECT state, entry_date, entry_price, stop, tp, updated "
-            "FROM positions WHERE symbol = ? AND strategy = ?",
-            (symbol, strategy),
+            "FROM positions WHERE symbol = ? AND strategy = ? AND set_name = ?",
+            (symbol, strategy, set_name),
         ).fetchone()
     if row is None:
         return None
@@ -183,16 +189,18 @@ def get_position(symbol: str, strategy: str) -> dict | None:
 
 
 def save_position(
-    symbol: str, strategy: str, fields: dict, updated: str
+    symbol: str, strategy: str, fields: dict, updated: str,
+    set_name: str = "defaults",
 ) -> None:
     with connect() as conn:
         conn.execute(
             "INSERT OR REPLACE INTO positions "
-            "(symbol, strategy, state, entry_date, entry_price, stop, tp, updated) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "(symbol, strategy, set_name, state, entry_date, entry_price, stop, tp, updated) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 symbol,
                 strategy,
+                set_name,
                 fields["state"],
                 fields.get("entry_date"),
                 fields.get("entry_price"),
@@ -203,9 +211,16 @@ def save_position(
         )
 
 
-def delete_position(symbol: str, strategy: str) -> None:
+def delete_position(symbol: str, strategy: str, set_name: str = "defaults") -> None:
     with connect() as conn:
         conn.execute(
-            "DELETE FROM positions WHERE symbol = ? AND strategy = ?",
-            (symbol, strategy),
+            "DELETE FROM positions WHERE symbol = ? AND strategy = ? AND set_name = ?",
+            (symbol, strategy, set_name),
         )
+
+
+def latest_bar_date() -> str:
+    """Newest bar date in the DB — cache-invalidation key for derived stats."""
+    with connect() as conn:
+        row = conn.execute("SELECT MAX(date) FROM bars").fetchone()
+    return row[0] or ""
