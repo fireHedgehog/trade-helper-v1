@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from .execution import validate_bars
+from .execution import simulate, validate_bars
 
 
 @dataclass(frozen=True)
@@ -41,6 +41,31 @@ class WalkForwardFold:
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+
+@dataclass(frozen=True)
+class WindowEvaluation:
+    requested_start: str
+    requested_end: str
+    actual_start: str
+    actual_end: str
+    bars: int
+    strategy_return: float
+    benchmark_return: float
+    exposure: float
+    max_drawdown: float
+    calmar: float | None
+    closed_trades: int
+    strategy_daily_returns: tuple[float, ...]
+    benchmark_daily_returns: tuple[float, ...]
+    excess_daily_returns: tuple[float, ...]
+
+    def summary(self) -> dict:
+        return {
+            key: value
+            for key, value in asdict(self).items()
+            if not key.endswith("_daily_returns")
+        }
 
 
 def partition_candidate_holdout(
@@ -114,6 +139,91 @@ def walk_forward_folds(
 def fold_manifest(folds: list[WalkForwardFold]) -> pd.DataFrame:
     """Small reviewable table; contains boundaries, never performance results."""
     return pd.DataFrame([fold.to_dict() for fold in folds])
+
+
+def evaluate_window(
+    bars: pd.DataFrame,
+    *,
+    strategy_name: str,
+    params: dict,
+    start: str,
+    end: str,
+    initial_cash: float = 100_000.0,
+    commission: float = 0.001,
+    spread: float = 0.0002,
+    slippage: float = 0.0005,
+    annual_cash_yield: float = 0.0,
+) -> WindowEvaluation:
+    """Evaluate one later window using only bars available through its end.
+
+    Earlier bars remain as legitimate indicator and position-state context. Bars
+    after ``end`` are cut before rule construction, making the no-future boundary
+    explicit and testable. The comparison is the ADR 0003 constant-exposure
+    control, not a tradable timing replica.
+    """
+    validate_bars(bars)
+    if start > end:
+        raise ValueError("evaluation start must not be after end")
+    history = bars[bars["date"] <= end].reset_index(drop=True)
+    if history.empty:
+        raise ValueError("no bars are available on or before evaluation end")
+    simulation = simulate(
+        history,
+        strategy_name,
+        params,
+        initial_cash=initial_cash,
+        commission=commission,
+        spread=spread,
+        slippage=slippage,
+        annual_cash_yield=annual_cash_yield,
+    )
+    equity = pd.DataFrame(simulation.equity)
+    equity["strategy_return"] = equity["equity"].pct_change()
+    asset = history[["date", "close"]].copy()
+    asset["asset_return"] = asset["close"].astype(float).pct_change()
+    daily = equity.merge(asset[["date", "asset_return"]], on="date", how="inner")
+    daily = daily[(daily["date"] >= start) & (daily["date"] <= end)].copy()
+    daily = daily.dropna(subset=["strategy_return", "asset_return"])
+    if len(daily) < 2:
+        raise ValueError("evaluation window needs at least two return observations")
+
+    exposure = float(daily["exposed"].mean())
+    cash_daily = (1 + annual_cash_yield) ** (1 / 252) - 1
+    daily["benchmark_return"] = (
+        exposure * daily["asset_return"] + (1 - exposure) * cash_daily
+    )
+    daily["excess_return"] = daily["strategy_return"] - daily["benchmark_return"]
+    strategy_return = float((1 + daily["strategy_return"]).prod() - 1)
+    benchmark_return = float((1 + daily["benchmark_return"]).prod() - 1)
+    wealth = pd.concat(
+        [pd.Series([1.0]), (1 + daily["strategy_return"]).cumprod().reset_index(drop=True)],
+        ignore_index=True,
+    )
+    max_drawdown = float((wealth / wealth.cummax() - 1).min())
+    first = pd.Timestamp(daily["date"].iloc[0])
+    last = pd.Timestamp(daily["date"].iloc[-1])
+    years = max((last - first).days / 365.25, 1 / 252)
+    cagr = (1 + strategy_return) ** (1 / years) - 1 if strategy_return > -1 else -1.0
+    calmar = cagr / abs(max_drawdown) if max_drawdown < 0 else None
+    closed_trades = sum(
+        start <= str(trade["exit_date"]) <= end for trade in simulation.trades
+    )
+    return WindowEvaluation(
+        requested_start=start,
+        requested_end=end,
+        actual_start=str(daily["date"].iloc[0]),
+        actual_end=str(daily["date"].iloc[-1]),
+        bars=len(daily),
+        strategy_return=strategy_return,
+        benchmark_return=benchmark_return,
+        exposure=exposure,
+        max_drawdown=max_drawdown,
+        calmar=calmar,
+        closed_trades=closed_trades,
+        strategy_daily_returns=tuple(float(value) for value in daily["strategy_return"]),
+        benchmark_daily_returns=tuple(float(value) for value in daily["benchmark_return"]),
+        excess_daily_returns=tuple(float(value) for value in daily["excess_return"]),
+    )
 
 
 def load_experiment_spec(path: str | Path) -> dict:

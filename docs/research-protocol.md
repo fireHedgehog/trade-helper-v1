@@ -70,7 +70,15 @@ The statistical primitives are implemented and deterministic. They center each
 candidate's excess-return series under a zero-mean null, resample contiguous
 blocks with circular wrapping, use an add-one p-value correction, and apply Holm
 across the complete candidate family. They have not yet been run on candidate
-performance; fold-local return construction and selection remain the next gate.
+performance; fold-local parameter selection remains the next gate.
+
+Fold-local return construction is now implemented separately from selection. A
+window receives the complete earlier history needed for indicators and existing
+position state, but bars after its declared end are removed before signals are
+constructed. Net strategy returns, constant-exposure benchmark returns, and
+their daily arithmetic difference use identical dates. Regression tests prove
+that modifying later bars cannot change an earlier window. Candidate ranking and
+fold-local parameter selection remain disabled at this checkpoint.
 
 ## Current boundary
 

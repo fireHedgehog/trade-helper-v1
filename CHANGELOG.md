@@ -2,6 +2,17 @@
 
 # Changelog
 
+## v0.19.2 — 2026-08-18
+
+- Added fold-local strategy, constant-exposure benchmark, and excess daily-return
+  construction using the canonical costed execution engine.
+- Explicitly removes every bar after a window's declared end before constructing
+  rules. Tests mutate future prices and prove earlier evaluation is unchanged.
+- Added aligned-date, configured-cost, invalid-window, drawdown, exposure, trade-
+  count, and compact-summary outputs. **86 tests pass.**
+- Candidate ranking remains intentionally disabled until fold-local selection is
+  implemented and reviewed.
+
 ## v0.19.1 — 2026-08-18
 
 - Implemented the preregistered one-sided circular moving-block bootstrap for

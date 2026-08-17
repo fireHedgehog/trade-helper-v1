@@ -5,7 +5,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from app.research import partition_candidate_holdout, walk_forward_folds
+from app.research import evaluate_window, partition_candidate_holdout, walk_forward_folds
 
 
 def test_candidate_holdout_is_removed_from_development(research_bars: pd.DataFrame) -> None:
@@ -45,3 +45,59 @@ def test_walk_forward_rejects_invalid_sizes(
 ) -> None:
     with pytest.raises(ValueError, match="must be positive"):
         walk_forward_folds(research_bars, **kwargs)
+
+
+def _evaluation(bars: pd.DataFrame, **costs):
+    return evaluate_window(
+        bars,
+        strategy_name="SMA Cross",
+        params={"n_fast": 20, "n_slow": 50},
+        start=str(bars["date"].iloc[300]),
+        end=str(bars["date"].iloc[500]),
+        **costs,
+    )
+
+
+def test_window_returns_and_benchmark_have_identical_dates(
+    research_bars: pd.DataFrame,
+) -> None:
+    result = _evaluation(research_bars)
+    assert result.actual_start >= result.requested_start
+    assert result.actual_end == result.requested_end
+    assert result.bars == len(result.strategy_daily_returns)
+    assert result.bars == len(result.benchmark_daily_returns)
+    assert result.bars == len(result.excess_daily_returns)
+    assert result.excess_daily_returns == tuple(
+        strategy - benchmark
+        for strategy, benchmark in zip(
+            result.strategy_daily_returns, result.benchmark_daily_returns
+        )
+    )
+
+
+def test_future_bars_cannot_change_earlier_window(research_bars: pd.DataFrame) -> None:
+    baseline = _evaluation(research_bars)
+    mutated = research_bars.copy()
+    future = mutated["date"] > baseline.requested_end
+    mutated.loc[future, ["open", "high", "low", "close"]] *= 10
+    changed_future = _evaluation(mutated)
+    assert changed_future == baseline
+
+
+def test_fold_window_includes_costs(research_bars: pd.DataFrame) -> None:
+    free = _evaluation(research_bars, commission=0, spread=0, slippage=0)
+    costed = _evaluation(
+        research_bars, commission=0.001, spread=0.0002, slippage=0.0005
+    )
+    assert costed.strategy_return < free.strategy_return
+
+
+def test_window_rejects_reversed_dates(research_bars: pd.DataFrame) -> None:
+    with pytest.raises(ValueError, match="start"):
+        evaluate_window(
+            research_bars,
+            strategy_name="SMA Cross",
+            params={"n_fast": 20, "n_slow": 50},
+            start="2022-01-01",
+            end="2021-01-01",
+        )
