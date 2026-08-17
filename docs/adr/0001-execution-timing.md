@@ -1,3 +1,5 @@
+[Home](../../README.md) · [Docs index](../README.md) · [Roadmap](../roadmap.md) · [Research protocol](../research-protocol.md) · [Changelog](../../CHANGELOG.md)
+
 # ADR 0001: Daily signal and execution timing
 
 - Status: accepted research convention; implementation parity pending

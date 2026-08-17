@@ -1,3 +1,5 @@
+[Home](../../README.md) · [Docs index](../README.md) · [Roadmap](../roadmap.md) · [Research protocol](../research-protocol.md) · [Changelog](../../CHANGELOG.md)
+
 # ADR 0002: Daily market-data contract
 
 - Status: accepted for the research prototype

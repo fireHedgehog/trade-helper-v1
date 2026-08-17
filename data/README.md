@@ -1,3 +1,5 @@
+[Project home](../README.md) · [Docs](../docs/README.md) · [Roadmap](../docs/roadmap.md) · [Changelog](../CHANGELOG.md)
+
 # data/
 
 Local market-data store. **Gitignored — never commit files in this folder.**

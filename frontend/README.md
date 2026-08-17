@@ -1,3 +1,5 @@
+[Project home](../README.md) · [Docs](../docs/README.md) · [Roadmap](../docs/roadmap.md) · [Changelog](../CHANGELOG.md)
+
 # frontend/
 
 Static web UI for trade-helper-v1. Served by the backend — **no build step, no framework yet**.
