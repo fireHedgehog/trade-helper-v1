@@ -47,6 +47,15 @@ CURATED_SYMBOLS = (
     ]
 )
 
+# Default sampling basket for confidence stats: broad market + sectors +
+# liquid megacaps — 16 explainable names, "not too many, not too few".
+# Chosen for liquidity and diversity; never a blind random draw.
+DEFAULT_BASKET = [
+    "SPY", "QQQ", "MAGS", "SOXX", "IGV",
+    "XLK", "XLE", "XLF", "XLU",
+    "AAPL", "NVDA", "MSFT", "JPM", "CAT", "KO", "LLY",
+]
+
 
 def _normalize(ticker: str) -> str:
     return ticker.strip().upper().replace(".", "-")

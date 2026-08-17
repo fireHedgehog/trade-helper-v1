@@ -122,7 +122,7 @@ intended for cloud compute — do not trigger it on a laptop.
 3. Data pipeline: fetch SPY → SQLite (idempotent daily job) ✅
 4. First strategy (SMA cross) + minimal backtest → metrics ✅
 5. Chart viewer: candles + entry/exit markers + algorithm lines ✅
-5. Today view: scan ✅, paper trading ✅, rule rank ✅, confidence ✅, saved sets ✅, pick cards ✅
+5. Today view: scan ✅, model simulation ✅, rule rank ✅, confidence ✅, saved sets ✅, pick cards ✅
 6. Strategy Lab: params ✅, symbols ✅, saved param sets ✅, scoreboard ✅, batch runs (later)
 7. Macro view: event-driven calendar ✅ (beat/miss history later)
 9. Classic TA series: S/R bounce ✅, Fib retrace ✅, wave pull ✅
@@ -177,7 +177,7 @@ intended for cloud compute — do not trigger it on a laptop.
 - **CTA Trend (managed-futures style):** ✅ built v0.12.0 — breakout above an N-day high confirmed by a trend average; exits: M-day low (trend changed), trailing ATR stop, optional ATR TP. Defaults tuned on a 15-symbol curated basket (14 configs): `100/40/100, 5×ATR, no TP` → median PF 2.53, Sharpe 0.36, +228% all-time; SPY +286% / −20% maxDD. Honest caveat: trails 30-year buy & hold total return on this survivorship-biased basket — the value is drawdown control (~41% exposure) and positive expectancy, not beating the index. Backtest first, believe later.
 - **Classic TA validity lab:** ✅ S/R Bounce, Fib Retrace, Wave Pull built (v0.8.0–v0.9.0), each with params and an on-chart explanation. First honest measurement: Fib Retrace +6.7% vs +3,109% buy & hold on SPY over 33 years — the classic levels do not add value as implemented. Backtest first, believe later.
 - **Macro beat/miss:** last actuals come from FRED, next dates + forecasts from Trading Economics. Each event also gets a **Read** interpretation (good/bad for equities + why, per-event direction semantics) — a rule-of-thumb, not a forecast. Consensus history for past releases (needed for beat/miss badges) still needs a source — pending.
-- **Paper trading ledger** — built v0.9.0, last-exit tracking added v0.11.2:
+- **Model simulation ledger (sector ETFs)** — built v0.9.0, last-exit tracking added v0.11.2, renamed v0.12.2:
   - Replaces the "Holding" section and moves to the top of the Today view, above Entries/Exits.
   - One simulated position per symbol per strategy, fixed size **100 shares**.
   - Entry: next open after an entry signal (NDO). Exit: ATR trailing stop or take-profit, whichever first — exit at the following open.
@@ -202,6 +202,14 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.12.2 — 2026-08-17
+
+- **Strategy Lab sample control:** the blind "5 symbols × 1 year" dropdown is gone. There is now a **symbol picker with All / Clear** buttons and a **year selector** (1/3/5/10 years, all history). Default selection is a deliberate 16-name liquid basket — SPY, QQQ, MAGS, SOXX, IGV, XLK, XLE, XLF, XLU, AAPL, NVDA, MSFT, JPM, CAT, KO, LLY — chosen for liquidity and diversity, so you always know exactly which names are being tested.
+- Selections above 40 symbols or "All history" show an explicit heavy-compute warning (cloud recommended) instead of silently spinning the fan.
+- `/api/confidence` now takes an explicit symbol list (`symbols=SPY,QQQ,XLK`); the default is the liquid basket, and the response includes the sampled names.
+- **Today confidence panel** reformatted from a run-on sentence into compact labeled stat boxes (win rate, avg 20d, signals, market base, 3Y win, 3Y signals) with the sample list on hover.
+- "Paper Trading" renamed **Model Simulation — Sector ETFs** (no paper-trading framing; it's a quick simulation of the selected model across the sector/core ETF list).
 
 ### v0.12.1 — 2026-08-17
 

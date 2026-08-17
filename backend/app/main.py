@@ -21,6 +21,7 @@ from .signals import (
     scan,
 )
 from .strategies import STRATEGIES, STRATEGY_INFO, STRATEGY_PARAMS
+from .universe import DEFAULT_BASKET
 
 FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
 
@@ -44,7 +45,7 @@ def health():
 
 @app.get("/api/symbols")
 def symbols():
-    return {"symbols": store.list_symbols()}
+    return {"symbols": store.list_symbols(), "default_basket": DEFAULT_BASKET}
 
 
 @app.get("/api/bars/{symbol}")
@@ -104,17 +105,18 @@ def positions(strategy: str = "CTA Trend", set: str = "defaults"):
 @app.get("/api/confidence")
 def confidence(
     strategy: str = "CTA Trend",
-    symbols: int = 5,
+    symbols: str = "",
     days: int = 252,
     force: bool = False,
 ):
-    """Hit-rate stats. Sample-limited by default (laptop-safe); symbols<=0 or
-    days<=0 means the full run — intended for cloud compute."""
+    """Hit-rate stats over a chosen symbol list and bar window. Defaults to
+    the deliberate liquid basket (16 names). days <= 0 = full history — heavy
+    on many symbols, so the UI warns before running it."""
     if strategy not in STRATEGIES:
         raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
-    symbols = max(-1, min(int(symbols), 1000))
     days = max(-1, min(int(days), 100000))
-    return compute_confidence(strategy, force=force, max_symbols=symbols, max_days=days)
+    chosen = [s.strip().upper() for s in symbols.split(",") if s.strip()] or None
+    return compute_confidence(strategy, force=force, symbols=chosen, max_days=days)
 
 
 @app.get("/api/backtest/{symbol}")

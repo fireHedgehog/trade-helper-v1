@@ -20,13 +20,11 @@ import pandas as pd
 from .signals import _entry_series
 from .store import latest_bar_date, list_symbols, load_bars, load_recent_bars
 from .strategies import STRATEGY_PARAMS
-from .universe import CURATED_SYMBOLS
+from .universe import DEFAULT_BASKET
 
 HORIZON = 20  # trading days of forward return
 CACHE_TTL = 600  # seconds
 
-# Local-friendly defaults — README says never raise these on a laptop.
-DEFAULT_SAMPLE_SYMBOLS = 5
 DEFAULT_SAMPLE_DAYS = 252  # one trading year
 
 _cache: dict = {}
@@ -45,39 +43,39 @@ def _summarize(returns: list[float]) -> dict:
     }
 
 
-def _ordered_symbols(limit: int) -> list[str]:
-    """Deliberate prior-probability order: the curated diverse list first,
-    then everything else (a random symbol draw would not be reproducible)."""
-    symbols = list_symbols()
-    curated = [s for s in CURATED_SYMBOLS if s in symbols]
-    rest = [s for s in symbols if s not in CURATED_SYMBOLS]
-    return (curated + rest)[:limit]
+def _resolve_symbols(symbols: list[str] | None) -> list[str]:
+    """Symbols to sample: the explicitly chosen list, or the deliberate
+    liquid basket (16 explainable names). Never a blind random draw."""
+    available = set(list_symbols())
+    if symbols:
+        return [s for s in symbols if s in available]
+    return [s for s in DEFAULT_BASKET if s in available]
 
 
 def compute_confidence(
     strategy_name: str,
     force: bool = False,
-    max_symbols: int = DEFAULT_SAMPLE_SYMBOLS,
+    symbols: list[str] | None = None,
     max_days: int = DEFAULT_SAMPLE_DAYS,
 ) -> dict:
-    """Confidence stats for one strategy, over a sample-limited symbol/bars set.
+    """Confidence stats for one strategy over a chosen symbol list + bar window.
 
-    max_symbols <= 0 -> all symbols. max_days <= 0 -> full history.
+    symbols=None -> the DEFAULT_BASKET. max_days <= 0 -> full history (heavy).
     """
-    key = f"{strategy_name}|{max_symbols}|{max_days}"
+    chosen = _resolve_symbols(symbols)
+    key = f"{strategy_name}|{','.join(chosen)}|{max_days}"
     cached = _cache.get(key)
     data_date = latest_bar_date()
     # Date-aware cache: same bar count on a new day still recomputes.
     if not force and cached and cached["data"].get("data_date") == data_date:
         return cached["data"]
 
-    symbols = list_symbols() if max_symbols <= 0 else _ordered_symbols(max_symbols)
     params = {k: v["default"] for k, v in STRATEGY_PARAMS[strategy_name].items()}
     returns: list[float] = []
     dates: list[str] = []
     all_forward: list[float] = []  # every window -> market baseline
 
-    for symbol in symbols:
+    for symbol in chosen:
         if max_days > 0:
             bars = load_recent_bars(symbol, max_days + HORIZON)
         else:
@@ -111,7 +109,8 @@ def compute_confidence(
         "horizon_days": HORIZON,
         "data_date": data_date,
         "sample": {
-            "symbols": len(symbols),
+            "symbols": len(chosen),
+            "names": chosen,
             "days": max_days if max_days > 0 else None,
         },
         "all_time": all_time,

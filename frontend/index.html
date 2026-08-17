@@ -70,6 +70,14 @@
   .badge { font-size: 10px; background: #374151; padding: 1px 6px; border-radius: 6px; color: var(--muted); margin-left: 6px; }
   .chip.trend { background: #1f2b3a; color: #7dd3fc; }
   .ev-why { color: var(--muted); font-size: 11px; }
+  .pos { color: var(--green); } .neg { color: var(--red); }
+  .conf-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 2px; }
+  .stat { background: #1f2634; border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; text-align: center; min-width: 84px; }
+  .stat .k { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .stat .v { font-size: 14px; font-weight: 600; }
+  .symbol-picker { display: flex; flex-wrap: wrap; gap: 1px 12px; max-height: 160px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 8px; margin: 8px 0; background: var(--bg); }
+  .symbol-picker label { font-size: 11px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .symbol-picker input { margin-right: 3px; vertical-align: -1px; }
   tr.muted td { opacity: .55; }
   .sample-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
   #regime-banner { font-size: 12px; padding: 6px 10px; border-radius: 8px; }
@@ -264,7 +272,7 @@
         <div id="confidence-body">computing…</div>
       </section>
       <section class="panel">
-        <h2>Paper Trading — Sector ETFs <span class="badge">selected model × sector ETFs · 100 sh · last exit tracked</span></h2>
+        <h2>Model Simulation — Sector ETFs <span class="badge">selected model × sector ETFs · 100 sh · last exit tracked</span></h2>
         <table>
           <thead><tr><th>Symbol</th><th>Date</th><th>Price</th><th>Now</th><th>P&L %</th><th>P&L $</th><th>Exit plan</th><th>Note</th></tr></thead>
           <tbody id="sim-positions"></tbody>
@@ -286,12 +294,17 @@
     <div class="macro-body">
       <section class="panel">
         <h2>Strategy scoreboard — historical confidence</h2>
-        <select id="lab-sample" style="margin-right:8px">
-          <option value="5|252" selected>Sample: 5 symbols × 1 year</option>
-          <option value="20|756">Sample: 20 symbols × 3 years</option>
-          <option value="0|0">Full universe — cloud only</option>
+        <select id="lab-years" style="margin-right:8px">
+          <option value="252" selected>1 year</option>
+          <option value="756">3 years</option>
+          <option value="1260">5 years</option>
+          <option value="2520">10 years</option>
+          <option value="0">All history</option>
         </select>
-        <button class="primary" id="lab-compute">Compute / refresh all</button>
+        <button id="lab-select-all">All symbols</button>
+        <button id="lab-clear">Clear</button>
+        <button class="primary" id="lab-compute">Compute / refresh</button>
+        <div class="symbol-picker" id="lab-symbols"></div>
         <div class="sample-note" id="lab-sample-note"></div>
         <table style="margin-top:10px">
           <thead><tr><th>Strategy</th><th>All-time win</th><th>Mkt base</th><th>Avg 20d</th><th>Samples</th><th>3Y win</th><th>3Y samples</th></tr></thead>
@@ -760,7 +773,10 @@ function applyView(name) {
   });
   if (name === 'today') loadToday();
   if (name === 'macro') loadMacro();
-  if (name === 'lab') loadLab();
+  if (name === 'lab') {
+    const ready = labPickerBuilt ? Promise.resolve() : buildSymbolPicker();
+    ready.then(() => loadLab());
+  }
   if (name === 'explorer' && !explorerLoaded) {
     explorerLoaded = true;
     loadSymbols().then(run);
@@ -778,18 +794,38 @@ window.addEventListener('hashchange', () => {
 });
 
 /* ---------- Strategy Lab: confidence scoreboard ---------- */
+let labPickerBuilt = false;
+
+async function buildSymbolPicker() {
+  const { symbols, default_basket } = await api('/api/symbols');
+  const dflt = new Set(default_basket || []);
+  $('#lab-symbols').innerHTML = symbols.map((s) =>
+    `<label><input type="checkbox" value="${s}" ${dflt.has(s) ? 'checked' : ''}> ${s}</label>`
+  ).join('');
+  labPickerBuilt = true;
+}
+
+function labNote() {
+  const days = Number($('#lab-years').value);
+  const checked = document.querySelectorAll('#lab-symbols input:checked').length;
+  $('#lab-sample-note').textContent = checked === 0
+    ? 'no symbols selected — tick the names you want or "All symbols"'
+    : (checked > 40 || days === 0)
+      ? `⚠ ${checked} symbols × ${days ? days + ' bars' : 'full history'} — heavy compute, cloud recommended (fan may spin)`
+      : `sample: ${checked} symbols × ${days ? days + ' bars' : 'full history'} — laptop-safe`;
+}
+
 async function loadLab(force = false) {
-  const [sym, day] = $('#lab-sample').value.split('|').map(Number);
-  $('#lab-sample-note').textContent = sym === 0
-    ? '⚠ full universe — cloud compute recommended (heavy CPU/RAM)'
-    : `sample: ${sym} symbols × ${day || 'all'} bars — laptop-safe`;
+  const days = Number($('#lab-years').value);
+  const checked = [...document.querySelectorAll('#lab-symbols input:checked')].map((el) => el.value);
+  labNote();
   const { strategies } = await api('/api/strategies');
   $('#scoreboard').innerHTML = strategies.map((s) =>
     `<tr data-strategy="${s.name}"><td>${s.name}</td><td colspan="6" class="muted">…</td></tr>`
   ).join('');
   loading(true, 'computing confidence…');
   try {
-    await Promise.all(strategies.map((s) => loadScore(s.name, force, sym, day)));
+    await Promise.all(strategies.map((s) => loadScore(s.name, force, checked, days)));
   } catch (err) {
     $('#scoreboard').innerHTML = `<tr><td colspan="6">error: ${err.message}</td></tr>`;
   } finally {
@@ -797,11 +833,14 @@ async function loadLab(force = false) {
   }
 }
 
-async function loadScore(name, force, sym, day) {
+async function loadScore(name, force, syms, days) {
   const row = document.querySelector(`#scoreboard tr[data-strategy="${name}"]`);
   if (!row) return;
   try {
-    const c = await api(`/api/confidence?strategy=${encodeURIComponent(name)}&symbols=${sym}&days=${day}${force ? '&force=1' : ''}`);
+    const q = `strategy=${encodeURIComponent(name)}&days=${days}` +
+      (syms.length ? '&symbols=' + encodeURIComponent(syms.join(',')) : '') +
+      (force ? '&force=1' : '');
+    const c = await api(`/api/confidence?${q}`);
     const a = c.all_time, r = c.last_3y, b = c.baseline || {};
     const win = (v) => v.hit_rate == null ? '—' : `${v.hit_rate}%`;
     const noise = a.samples > 0 && a.samples < 30 ? `<span class="chip warning">n=${a.samples}</span>` : '';
@@ -819,6 +858,15 @@ async function loadScore(name, force, sym, day) {
 }
 
 $('#lab-compute').addEventListener('click', () => loadLab(true));
+$('#lab-select-all').addEventListener('click', () => {
+  document.querySelectorAll('#lab-symbols input').forEach((el) => { el.checked = true; });
+  labNote();
+});
+$('#lab-clear').addEventListener('click', () => {
+  document.querySelectorAll('#lab-symbols input').forEach((el) => { el.checked = false; });
+  labNote();
+});
+$('#lab-symbols').addEventListener('change', labNote);
 
 /* ---------- Today + Macro views (raw) ---------- */
 async function refreshTodaySets(strategy) {
@@ -915,14 +963,24 @@ async function loadToday(refresh = false) {
 function renderConfidence(c) {
   const a = c.all_time, r = c.last_3y, b = c.baseline || {};
   $('#confidence-title').textContent = `Confidence — ${c.strategy} (${c.horizon_days}-day forward)`;
+  if (!a.samples) {
+    $('#confidence-body').textContent = 'not enough data yet';
+    return;
+  }
   const win = (v) => v.hit_rate == null ? '—' : `${v.hit_rate}%`;
-  $('#confidence-body').innerHTML = a.samples
-    ? `All-time: <b class="${a.hit_rate >= 50 ? 'pos' : 'neg'}">${win(a)}</b> win · avg <b>${a.avg_return}%</b> in ${c.horizon_days}d · ${a.samples} signals` +
-      (a.samples < 30 ? ' <span class="chip warning">small sample — noise</span>' : '') +
-      ` &nbsp;|&nbsp; market baseline: <b>${win(b)}</b> of all windows up` +
-      ` &nbsp;|&nbsp; Last 3Y: <b class="${r.hit_rate >= 50 ? 'pos' : 'neg'}">${win(r)}</b> win · avg <b>${r.avg_return}%</b> · ${r.samples} signals` +
-      `<div class="sample-note">sample: ${c.sample?.symbols ?? '?'} symbols × ${c.sample?.days ?? 'full'} bars — laptop-safe default; fuller runs in Strategy Lab. Win rate only matters vs the baseline.</div>`
-    : 'not enough data yet';
+  const stat = (k, v, cls) => `<div class="stat"><span class="k">${k}</span><span class="v ${cls || ''}">${v}</span></div>`;
+  const noise = a.samples < 30 ? ' <span class="chip warning">n=' + a.samples + '</span>' : '';
+  const names = (c.sample?.names || []).join(' · ');
+  $('#confidence-body').innerHTML =
+    `<div class="conf-stats">` +
+    stat('win rate', win(a) + noise, a.hit_rate >= 50 ? 'pos' : 'neg') +
+    stat(`avg ${c.horizon_days}d`, `${a.avg_return >= 0 ? '+' : ''}${a.avg_return}%`, a.avg_return >= 0 ? 'pos' : 'neg') +
+    stat('signals', a.samples) +
+    stat('market base', win(b)) +
+    stat('3Y win', win(r), r.hit_rate >= 50 ? 'pos' : 'neg') +
+    stat('3Y signals', r.samples) +
+    `</div>` +
+    `<div class="sample-note" title="${names}">sample: ${c.sample?.symbols ?? '?'} symbols × ${c.sample?.days ?? 'full'} bars (hover for names) · win rate only matters vs the baseline</div>`;
 }
 
 async function loadMacro() {
