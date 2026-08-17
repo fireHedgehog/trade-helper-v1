@@ -24,6 +24,9 @@
     "annual_cash_yield": 0.0
   },
   "partitions": {
+    "calendar_symbol": "SPY",
+    "common_history_start": "2006-02-06",
+    "calendar_end_policy": "earliest latest-date across the locked universe",
     "train_bars": 756,
     "validation_bars": 252,
     "test_bars": 252,

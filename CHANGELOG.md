@@ -2,6 +2,16 @@
 
 # Changelog
 
+## v0.19.5 — 2026-08-18
+
+- Completed a coverage-only audit of the locked 12-ETF universe and fetched the
+  seven missing preregistered histories without substituting symbols.
+- Corrected the pre-result calendar contract: folds begin on 2006-02-06, the
+  latest locked ETF inception, rather than SPY's 1993 start. The old anchor would
+  have permanently excluded later-launched ETFs under the history-coverage rule.
+- Recorded the change as an append-only no-results protocol amendment. Candidate
+  returns still have not been evaluated.
+
 ## v0.19.4 — 2026-08-18
 
 - Implemented locked-universe candidate aggregation on common dates, including

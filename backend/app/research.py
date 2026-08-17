@@ -354,6 +354,15 @@ def load_experiment_spec(path: str | Path) -> dict:
         raise ValueError("multiple-testing family must cover every candidate")
     if correction.get("adjustment") != "Holm family-wise error rate":
         raise ValueError("unsupported multiple-testing adjustment")
+    partitions = spec["partitions"]
+    if partitions.get("calendar_symbol") not in universe:
+        raise ValueError("partition calendar symbol must belong to the locked universe")
+    if not partitions.get("common_history_start"):
+        raise ValueError("partitions must lock a common_history_start")
+    if partitions.get("calendar_end_policy") != (
+        "earliest latest-date across the locked universe"
+    ):
+        raise ValueError("unsupported calendar end policy")
     selection = spec["selection"]
     if selection.get("phase") != "validation":
         raise ValueError("candidate selection phase must be validation")

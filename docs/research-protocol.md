@@ -34,11 +34,15 @@ a new named experiment and counts as another attempted specification.
    holdout solely to rehearse the workflow. It is contaminated: earlier versions
    tuned and displayed full-history SPY results, and therefore already exposed
    this period. It cannot support a confirmatory claim.
-2. Use the earlier history for expanding walk-forward folds: 756 training bars,
+2. Construct the experiment calendar from SPY sessions beginning 2006-02-06,
+   the latest inception date in the locked universe (DBC), and end it at the
+   earliest latest-date available across all locked ETFs. This coverage-only
+   boundary was recorded before candidate returns were calculated.
+3. Use the earlier history for expanding walk-forward folds: 756 training bars,
    252 validation bars, and 252 test bars, stepping 252 bars at a time.
-3. Parameter candidates may use only a fold's training and validation history.
+4. Parameter candidates may use only a fold's training and validation history.
    A fold's test results cannot change that fold's chosen parameters.
-4. A valid final confirmation requires observations not previously inspected:
+5. A valid final confirmation requires observations not previously inspected:
    prospectively collected bars after the model commit is locked, or a genuinely
    unexamined point-in-time universe. The contaminated tail remains useful only
    for engineering tests and clearly labeled exploratory estimates.
@@ -96,6 +100,13 @@ eight-symbol coverage gate, requires the complete declared candidate family,
 aligns eligible symbols on their common dates, applies the bootstrap/Holm gate,
 and executes the locked tie breakers. An empty survivor set returns an explicit
 cash decision. The real 54-candidate development run has not started.
+
+A pre-run coverage check found that only five locked ETFs were stored locally;
+the seven missing preregistered histories were fetched without substitution.
+Their inception metadata exposed an invalid 1993 SPY anchor that would have
+excluded later ETF launches forever. The common calendar was therefore locked to
+2006-02-06 before inspecting candidate returns. This is recorded as a protocol
+amendment rather than silently rewritten.
 
 ## Current boundary
 
