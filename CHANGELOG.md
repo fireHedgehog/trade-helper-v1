@@ -2,6 +2,15 @@
 
 # Changelog
 
+## v0.21.0 — 2026-08-18
+
+- Proposed ADR 0004 before Stage 5 code: explicit $100k portfolio capital,
+  stop-risk and notional sizing, cash constraints, sector/correlation limits,
+  deterministic order priority, rejected-order records, and a next-open 15%
+  drawdown kill switch.
+- Explicitly retained the current fixed-100-share display as a signal replay, not
+  a portfolio. Portfolio implementation and tests remain pending.
+
 ## v0.20.0 — 2026-08-18
 
 - Completed the locked 14-fold × 54-candidate × 12-ETF development experiment.

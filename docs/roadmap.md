@@ -154,6 +154,11 @@ still requires genuinely unseen future or uninspected point-in-time data.
 
 **Goal:** stop presenting independent fixed-share trades as a portfolio.
 
+**Current checkpoint (v0.21.0):** ADR 0004 proposes the capital, stop-risk
+sizing, position/sector/cluster limits, deterministic order priority, rejection
+records, and 15% drawdown kill-switch semantics. Implementation and tests remain
+pending; the existing 100-share view is still a signal replay, not a portfolio.
+
 - [ ] Replace the fixed 100-share convention with explicit capital and sizing.
 - [ ] Add maximum position, sector, correlated-asset, and portfolio exposure.
 - [ ] Model concurrent signals, available cash, turnover, and rejected orders.

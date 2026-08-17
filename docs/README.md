@@ -19,6 +19,7 @@
 - [ADR 0001: execution timing](adr/0001-execution-timing.md)
 - [ADR 0002: market-data contract](adr/0002-market-data-contract.md)
 - [ADR 0003: research statistics](adr/0003-research-statistics.md)
+- [ADR 0004: portfolio capital and risk](adr/0004-portfolio-risk-contract.md)
 
 ## Component guides
 
