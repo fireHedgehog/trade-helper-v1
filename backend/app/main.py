@@ -91,7 +91,14 @@ def signal_now(symbol: str, strategy: str = "CTA Trend"):
 def positions(strategy: str = "CTA Trend", set: str = "defaults"):
     if strategy not in STRATEGIES:
         raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
-    return {"positions": positions_payload(strategy, set)}
+    params = None
+    if set != "defaults":
+        saved = store.list_param_sets(strategy)
+        chosen = next((s for s in saved if s["name"] == set), None)
+        if chosen is None:
+            raise HTTPException(status_code=404, detail=f"unknown param set: {set}")
+        params = chosen["params"]
+    return {"positions": positions_payload(strategy, set, params)}
 
 
 @app.get("/api/confidence")

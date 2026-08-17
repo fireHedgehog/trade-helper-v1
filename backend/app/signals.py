@@ -432,8 +432,39 @@ def advance_positions(strategy_name: str, params: dict | None = None, set_name: 
         store.save_position(symbol, strategy_name, state, str(bars["date"].iloc[-1]), set_name)
 
 
-def positions_payload(strategy_name: str, set_name: str = "defaults") -> list[dict]:
+def _trend_exit_info(bars: pd.DataFrame, strategy_name: str, params: dict) -> dict:
+    """Current strategy-exit trigger for display: label, level, and the rule
+    in plain words (used by the Today exit-plan column)."""
+    close = bars["close"]
+    if strategy_name == "SMA Cross":
+        return {"label": "cross", "level": None,
+                "why": "fast average crosses below the slow average → trend changed"}
+    if strategy_name in ("Donchian Trend", "CTA Trend"):
+        n_exit = int(params.get("n_exit", 40 if strategy_name == "CTA Trend" else 20))
+        low = bars["low"].shift(1).rolling(n_exit).min().iloc[-1]
+        return {"label": "trend", "level": round(float(low), 2) if pd.notna(low) else None,
+                "why": f"close below the {n_exit}-day low → trend changed"}
+    if strategy_name == "S/R Bounce":
+        support = bars["low"].shift(1).rolling(int(params.get("n_window", 20))).min().iloc[-1]
+        return {"label": "support", "level": round(float(support), 2) if pd.notna(support) else None,
+                "why": "close below support → trend changed"}
+    if strategy_name in ("Fib Retrace", "Wave Pull"):
+        n = int(params.get("m_pullback", 10)) if strategy_name == "Fib Retrace" \
+            else int(params.get("pullback_bars", 3))
+        low = bars["low"].shift(1).rolling(n).min().iloc[-1]
+        return {"label": "pullback", "level": round(float(low), 2) if pd.notna(low) else None,
+                "why": "close below the pullback low → trend changed"}
+    if strategy_name == "RSI Reversion":
+        sell = int(params.get("sell_above", 70))
+        return {"label": "RSI", "level": sell,
+                "why": f"RSI recovers above {sell} → exit"}
+    return {"label": None, "level": None, "why": ""}
+
+
+def positions_payload(strategy_name: str, set_name: str = "defaults", params: dict | None = None) -> list[dict]:
     """The ledger for display: every core symbol in order; nulls where flat."""
+    if params is None:
+        params = _default_params(strategy_name)
     rows = []
     for symbol in CORE_WATCHLIST:
         row = store.get_position(symbol, strategy_name, set_name)
@@ -468,6 +499,15 @@ def positions_payload(strategy_name: str, set_name: str = "defaults") -> list[di
             pnl_pct = round((now / row["entry_price"] - 1) * 100, 2)
             item["pnl_pct"] = pnl_pct
             item["pnl_usd"] = round(POSITION_SHARES * (now - row["entry_price"]), 2)
+        if row["state"] == "long":
+            item["exit_plan"] = {
+                "trend": _trend_exit_info(bars, strategy_name, params),
+                "stop": {"level": row["stop"],
+                         "why": "close below the trailing ATR stop → stop loss"},
+                "target": {"level": row["tp"],
+                           "why": "close reaches the take-profit → take profit"}
+                if row["tp"] is not None else None,
+            }
         rows.append(item)
     return rows
 

@@ -266,9 +266,10 @@
       <section class="panel">
         <h2>Paper Trading — Sector ETFs <span class="badge">selected model × sector ETFs · 100 sh · last exit tracked</span></h2>
         <table>
-          <thead><tr><th>Symbol</th><th>Since</th><th>Entry</th><th>Now</th><th>P&L %</th><th>P&L $</th><th>ATR stop</th><th>Take profit</th><th>Note</th></tr></thead>
+          <thead><tr><th>Symbol</th><th>Date</th><th>Price</th><th>Now</th><th>P&L %</th><th>P&L $</th><th>Exit plan</th><th>Note</th></tr></thead>
           <tbody id="sim-positions"></tbody>
         </table>
+        <div class="sample-note">Open rows: Date/Price = entry · Exit plan = <span class="chip trend">trend</span> strategy level, <span class="chip exit">stop</span> trailing ATR stop, <span class="chip entry">target</span> take-profit (hover a chip for the rule). Closed rows: Date/Price = exit.</div>
       </section>
       <section class="panel">
         <h2>Entries today</h2>
@@ -851,27 +852,41 @@ async function loadToday(refresh = false) {
       `<div class="reason">${r.note}</div>` +
       `<div class="rank ${r.rank >= 0 ? 'pos' : 'neg'}" title="${r.rank_note || ''}">rank ${r.rank} — ${r.rank_note || ''}</div>` +
       `</div>`).join('') || '<div class="sample-note">none</div>';
+    const exitPlanChips = (plan) => {
+      if (!plan) return '—';
+      const chips = [];
+      if (plan.trend && (plan.trend.level != null || plan.trend.label === 'cross')) {
+        chips.push(`<span class="chip trend" title="${plan.trend.why}">${plan.trend.label}${plan.trend.level != null ? ' ' + plan.trend.level : ''}</span>`);
+      }
+      if (plan.stop && plan.stop.level != null) {
+        chips.push(`<span class="chip exit" title="${plan.stop.why}">stop ${plan.stop.level}</span>`);
+      }
+      if (plan.target && plan.target.level != null) {
+        chips.push(`<span class="chip entry" title="${plan.target.why}">target ${plan.target.level}</span>`);
+      }
+      return chips.join('') || '—';
+    };
     const simRows = (list) => list.map((r) => {
       if (r.state === 'flat') {
         const ex = r.last_exit;
-        if (!ex) return `<tr class="muted"><td>${r.symbol}</td><td colspan="8">— no trade yet —</td></tr>`;
+        if (!ex) return `<tr class="muted"><td>${r.symbol}</td><td colspan="7">— no trade yet —</td></tr>`;
         const cls = ex.pnl_pct == null ? '' : (ex.pnl_pct >= 0 ? 'pos' : 'neg');
         const pnl = ex.pnl_pct == null ? '—' : `${ex.pnl_pct >= 0 ? '+' : ''}${ex.pnl_pct.toFixed(1)}%`;
         const usd = ex.pnl_usd == null ? '—' : `${ex.pnl_usd >= 0 ? '+' : ''}${ex.pnl_usd.toFixed(0)}`;
         const labels = { target: 'take profit', stop: 'stop loss', trend: 'trend changed' };
         const chipCls = ex.reason === 'target' ? 'entry' : ex.reason === 'trend' ? 'trend' : 'exit';
-        return `<tr class="muted"><td>${r.symbol}</td><td>${ex.date || '—'}</td><td>${ex.price ?? '—'}</td><td>—</td>` +
+        return `<tr class="muted"><td>${r.symbol}</td><td title="exit date">exited ${ex.date || '—'}</td><td title="exit price">@ ${ex.price ?? '—'}</td><td>—</td>` +
           `<td class="${cls}">${pnl}</td><td class="${cls}">${usd}</td>` +
-          `<td colspan="2"><span class="chip ${chipCls}">${labels[ex.reason] || ex.reason || 'exit'}</span></td>` +
+          `<td><span class="chip ${chipCls}">${labels[ex.reason] || ex.reason || 'exit'}</span></td>` +
           `<td>closed — ${labels[ex.reason] || 'exit'}</td></tr>`;
       }
       const pnl = r.pnl_pct == null ? '—' : `${r.pnl_pct >= 0 ? '+' : ''}${r.pnl_pct.toFixed(1)}%`;
       const usd = r.pnl_usd == null ? '—' : `${r.pnl_usd >= 0 ? '+' : ''}${r.pnl_usd.toFixed(0)}`;
       const cls = r.pnl_pct == null ? '' : (r.pnl_pct >= 0 ? 'pos' : 'neg');
-      return `<tr><td>${r.symbol}</td><td>${r.since || '—'}</td><td>${r.entry ?? '—'}</td>` +
+      return `<tr><td>${r.symbol}</td><td title="entry date">${r.since || '—'}</td><td title="entry price">${r.entry ?? '—'}</td>` +
         `<td>${r.now ?? '—'}</td><td class="${cls}">${pnl}</td><td class="${cls}">${usd}</td>` +
-        `<td>${r.stop ?? '—'}</td><td>${r.tp ?? '—'}</td><td>${r.note || '—'}</td></tr>`;
-    }).join('') || '<tr><td colspan="9">ledger empty — no trades recorded yet</td></tr>';
+        `<td>${exitPlanChips(r.exit_plan)}</td><td>${r.note || (r.state === 'long' ? 'holding' : '—')}</td></tr>`;
+    }).join('') || '<tr><td colspan="8">ledger empty — no trades recorded yet</td></tr>';
     $('#sim-positions').innerHTML = simRows(positionsData.positions);
     $('#today-entries').innerHTML = pickCards(data.entries, 'ENTRY', 'entry');
     $('#today-exits').innerHTML = pickCards(data.exits, 'EXIT', 'exit');

@@ -203,6 +203,13 @@ Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
 
+### v0.12.1 — 2026-08-17
+
+- Paper Trading table reworked so you always know **when and why** a position exits:
+  - Open rows show an **Exit plan** column: the strategy's trend level, the trailing ATR stop, and the take-profit (when set), each with the exact rule as a hover tooltip (e.g. "close below the 40-day low → trend changed").
+  - Closed rows say `exited <date> @ <price>` plus the reason chip (`take profit` / `stop loss` / `trend changed`) and realized P&L.
+  - A legend under the table explains the chips; `/api/positions` now resolves saved-set params so the plan matches the selected model.
+
 ### v0.12.0 — 2026-08-17
 
 - **CTA Trend** — a managed-futures-style trend follower: N-day high breakout above a trend average, exit on the M-day low (trend changed), trailing ATR stop, optional ATR take-profit. It is now the **default strategy everywhere** (Today, Explorer, Lab, API defaults) and it does enter at all-time highs by design.
