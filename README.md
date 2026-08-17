@@ -71,9 +71,12 @@ A simple stock-data helper app: pull US stock daily closing prices once a day fr
 trade-helper-v1/
 ├── README.md            # this living document
 ├── .gitignore
-├── backend/             # Python FastAPI app
+├── backend/             # Python FastAPI app + tested research primitives
 │   ├── README.md
 │   └── app/             # main.py, fetch.py, store.py, universe.py, strategies.py, engine.py
+├── docs/                # architecture decisions + locked research protocol
+├── output/
+│   └── jupyter-notebook/ # reproducible research notebooks
 ├── frontend/            # static UI, no build step (index.html)
 │   └── README.md
 ├── scripts/             # daily cron wrapper (created; unattended use paused)
@@ -250,8 +253,9 @@ assumptions, and uncertainty or limitation.
 
 **Goal:** test hypotheses without advertising in-sample winners as proven edges.
 
-- [ ] Write the hypothesis and acceptance metric before each parameter search.
-- [ ] Divide data chronologically into training, validation, and untouched test
+- [x] Write the initial CTA hypothesis and acceptance metrics before any new
+      parameter search (`docs/research-protocol.md`).
+- [x] Divide data chronologically into training, validation, and untouched test
       periods.
 - [ ] Implement rolling walk-forward evaluation with parameters selected only
       from information available at that time.
@@ -266,6 +270,11 @@ assumptions, and uncertainty or limitation.
 
 **Exit gate:** the final test set remains untouched until a written model is
 locked, and results are reported even when they fail.
+
+**Current checkpoint (v0.18.0):** partition mechanics and the preregistered
+hypothesis are complete, but Stage 4 is not. The final 504-bar holdout has not
+been evaluated. Parameter ranking remains blocked until the universe, finite
+grid, attempt ledger, and multiple-testing treatment are committed.
 
 ### Stage 5 — portfolio and risk model
 
@@ -467,6 +476,21 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.18.0 — 2026-08-17
+
+- **Stage 4 foundation only — not a strategy result:** preregistered the CTA
+  hypothesis, primary benchmark-relative metric, stability/risk/evidence gates,
+  failure rule, and final-holdout unlock boundary.
+- Added tested expanding 756/252/252-bar train/validation/test manifests and
+  reserved the latest 504 SPY bars without evaluating their performance.
+- Added a reproducible Jupyter experiment under `output/jupyter-notebook/`. It
+  runs from repository-local data, exposes partition dates rather than holdout
+  returns, and stops before parameter ranking.
+- The next slice must lock the broad-ETF universe, finite parameter grid,
+  append-only attempt ledger, and multiple-testing treatment. Stage 4 remains
+  incomplete and no edge claim is permitted.
+- Verified **76 tests passed** and executed all notebook code cells top-to-bottom.
 
 ### v0.17.0 — 2026-08-17
 
