@@ -154,10 +154,22 @@ still requires genuinely unseen future or uninspected point-in-time data.
 
 **Goal:** stop presenting independent fixed-share trades as a portfolio.
 
-**Current checkpoint (v0.21.0):** ADR 0004 proposes the capital, stop-risk
-sizing, position/sector/cluster limits, deterministic order priority, rejection
-records, and 15% drawdown kill-switch semantics. Implementation and tests remain
+**Current checkpoint (v0.21.1):** ADR 0004 is accepted. The first pure portfolio
+module now validates account configuration, sizes whole-share entries against
+cost-aware stop risk and notional limits, deterministically allocates concurrent
+orders within cash/sector/cluster caps, reserves pending cash, and records stable
+rejection reasons. Twenty-two focused tests pass. The daily replay, actual fills,
+exits, equity marking, drawdown-triggered liquidation, and UI integration remain
 pending; the existing 100-share view is still a signal replay, not a portfolio.
+
+- [x] Add explicit $100k account state and conservative validated defaults.
+- [x] Add cost-aware stop-risk and maximum-notional entry sizing.
+- [x] Add deterministic entry allocation, pending-cash reservation, and rejection
+      records for cash, classification, concentration, duplicate, and halt gates.
+- [ ] Process multi-symbol next-open fills and exits against one cash ledger.
+- [ ] Mark all positions on a common daily calendar and calculate portfolio risk.
+- [ ] Trigger and execute drawdown kill-switch liquidations.
+- [ ] Integrate tested portfolio results into the API and UI.
 
 - [ ] Replace the fixed 100-share convention with explicit capital and sizing.
 - [ ] Add maximum position, sector, correlated-asset, and portfolio exposure.

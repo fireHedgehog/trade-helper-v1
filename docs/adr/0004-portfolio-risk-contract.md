@@ -2,7 +2,7 @@
 
 # ADR 0004: Portfolio capital and risk contract
 
-- Status: proposed for Stage 5 implementation
+- Status: accepted; Stage 5 implementation in progress
 - Date: 2026-08-18
 
 ## Context
@@ -34,6 +34,9 @@ cash constrained:
 - maximum 25% equity in one declared sector and 30% in one declared correlated-
   asset cluster;
 - deterministic order priority: higher locked rule score, then symbol ascending;
+- when a valid order does not fully fit a cash, sector, or cluster limit, reduce it
+  to the largest permitted whole-share quantity; reject it only when zero shares
+  fit;
 - every rejected order records date, symbol, requested shares, available cash,
   and one machine-readable reason;
 - mark all open positions to the same completed close for daily equity, exposure,
@@ -60,3 +63,15 @@ a rejected strategy result.
   impact, taxes, settlement rules, or losses inside an overnight gap.
 - A kill switch limits modeled continuation risk but cannot cap realized loss at
   exactly 15% because liquidation still occurs at the following available open.
+
+## Implementation status
+
+Checkpoint v0.21.1 implements the strategy-independent foundation in
+`backend/app/portfolio.py`: validated configuration and account state,
+cost-aware stop-risk sizing, whole-share notional sizing, deterministic
+concurrent-order allocation, cash reservations, sector/cluster caps, and
+machine-readable rejection reasons. Twenty-two focused tests cover these contracts.
+
+The daily multi-symbol replay, actual next-open fills, exits, same-close marking,
+drawdown-trigger calculation and liquidation, API/UI integration, and paper/live
+connections remain unimplemented.

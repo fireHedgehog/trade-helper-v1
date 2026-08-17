@@ -2,6 +2,20 @@
 
 # Changelog
 
+## v0.21.1 — 2026-08-18
+
+- Added a pure, strategy-independent portfolio foundation with explicit account
+  state and validated capital, risk, concentration, drawdown, and execution-cost
+  configuration.
+- Added conservative whole-share sizing using the smaller of cost-aware 0.5%
+  stop risk and 10% entry notional.
+- Added deterministic concurrent-entry allocation by locked score then symbol,
+  including pending-cash reservation, partial sizing within cash/sector/cluster
+  caps, and machine-readable rejection records.
+- Added 22 focused portfolio tests; the complete deterministic suite now has 116
+  passing tests. Daily replay, fills/exits, equity marking, kill-switch
+  triggering, UI integration, and paper/live trading remain pending.
+
 ## v0.21.0 — 2026-08-18
 
 - Proposed ADR 0004 before Stage 5 code: explicit $100k portfolio capital,

@@ -14,17 +14,21 @@ passive benchmarks.
 
 ## Current status
 
-Stages 0–3 of the [validation roadmap](docs/roadmap.md) are complete. Stage 4,
-out-of-sample research, is in progress.
+Stages 0–4 of the [validation roadmap](docs/roadmap.md) are complete. Stage 5,
+the portfolio and risk model, is in progress.
 
 - One canonical state machine drives backtests, signals, chart markers, and the
   simulated ledger: completed-close signal → next-available-open fill.
-- The deterministic test suite currently contains 94 passing tests.
+- The deterministic test suite currently contains 116 passing tests.
 - Trading costs, spread, slippage, gaps, idle-cash yield, uncertainty intervals,
   and benchmark limitations are explicit.
 - The CTA walk-forward experiment is preregistered with a 12-ETF universe and
   54 parameter candidates. The completed development run rejected v1: no
   candidate survived validation in any of 14 folds, so every test fold held cash.
+- The first portfolio foundation now provides cost-aware position sizing,
+  deterministic concurrent-order allocation, cash reservations, concentration
+  caps, and explicit rejection reasons. Multi-symbol replay and UI integration
+  remain pending.
 - Existing historical SPY results are exploratory and contaminated by prior
   inspection. Valid confirmation requires genuinely unseen future or otherwise
   uninspected point-in-time data.

@@ -35,6 +35,7 @@ Python FastAPI app — the only server component of trade-helper-v1.
         ├── strategies.py    # SMA Cross + Donchian Trend + RSI Reversion ✅
         ├── rules.py         # canonical vectorized strategy rules ✅
         ├── execution.py     # canonical next-open state machine ✅
+        ├── portfolio.py     # capital, sizing, and entry-allocation contracts 🚧
         └── engine.py        # API/CLI payloads + marked-to-market metrics ✅
 
 ## Commands
