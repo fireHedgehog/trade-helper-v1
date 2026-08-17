@@ -2,6 +2,19 @@
 
 # Changelog
 
+## v0.21.3 — 2026-08-18
+
+- Implemented the configured 15% portfolio drawdown kill switch from
+  completed-close equity: one auditable trigger event, persistent halted state,
+  entry cancellation/prevention, and next-open liquidation orders.
+- Preserved gap realism: a trigger at 20% drawdown can liquidate at a worse open,
+  and the resulting larger loss remains in the equity record rather than being
+  clipped to the threshold.
+- Kept final-bar liquidations pending instead of inventing a fill. Added four
+  focused safety tests; all 133 deterministic tests pass.
+- Portfolio performance metrics, API/UI integration, and paper/live connections
+  remain pending.
+
 ## v0.21.2 — 2026-08-18
 
 - Added a deterministic multi-symbol daily replay using one shared, cash-

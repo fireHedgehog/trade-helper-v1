@@ -19,7 +19,7 @@ the portfolio and risk model, is in progress.
 
 - One canonical state machine drives backtests, signals, chart markers, and the
   simulated ledger: completed-close signal → next-available-open fill.
-- The deterministic test suite currently contains 129 passing tests.
+- The deterministic test suite currently contains 133 passing tests.
 - Trading costs, spread, slippage, gaps, idle-cash yield, uncertainty intervals,
   and benchmark limitations are explicit.
 - The CTA walk-forward experiment is preregistered with a 12-ETF universe and
@@ -28,8 +28,9 @@ the portfolio and risk model, is in progress.
 - The portfolio engine now replays multiple symbols on one shared-cash account,
   with cost-aware sizing, gap-time limit checks, deterministic concurrent orders,
   concentration caps, next-session sale settlement, common-close equity, and
-  explicit rejection reasons. Kill-switch execution and UI integration remain
-  pending.
+  explicit rejection reasons. A 15% close-based drawdown now halts entries and
+  creates next-open liquidation orders without hiding further gap losses.
+  Portfolio metrics and UI integration remain pending.
 - Existing historical SPY results are exploratory and contaminated by prior
   inspection. Valid confirmation requires genuinely unseen future or otherwise
   uninspected point-in-time data.

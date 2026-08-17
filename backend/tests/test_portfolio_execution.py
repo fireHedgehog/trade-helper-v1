@@ -418,3 +418,152 @@ def test_replay_integrates_with_real_cta_rules(research_bars: pd.DataFrame) -> N
         position.stop < position.entry_price
         for position in replay.state.positions.values()
     )
+
+
+def test_drawdown_kill_switch_liquidates_at_next_open_and_records_gap_loss(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    bars = _bars(
+        opens=[100, 100, 80, 70, 70],
+        closes=[100, 100, 80, 70, 70],
+    )
+    monkeypatch.setattr(
+        "app.portfolio_execution.build_rules",
+        lambda *_args, **_kwargs: _rules(len(bars), entries={0}, stop=1),
+    )
+    config = PortfolioConfig(
+        risk_per_trade=1,
+        max_position_fraction=1,
+        max_sector_fraction=1,
+        max_cluster_fraction=1,
+        commission=0,
+        spread=0,
+        slippage=0,
+    )
+
+    replay = simulate_portfolio(
+        {"AAA": bars},
+        strategy_name="S/R Bounce",
+        params={},
+        classifications=_classifications("AAA"),
+        config=config,
+    )
+
+    trigger_date = str(bars["date"].iloc[2])
+    liquidation_date = str(bars["date"].iloc[3])
+    assert len(replay.risk_events) == 1
+    assert replay.risk_events[0].date == trigger_date
+    assert replay.risk_events[0].drawdown == pytest.approx(-0.20)
+    assert replay.risk_events[0].limit == 0.15
+    assert replay.trades[0].exit_date == liquidation_date
+    assert replay.trades[0].exit_reason == "kill_switch"
+    assert replay.equity[-1].equity == 70_000
+    assert replay.equity[-1].drawdown == pytest.approx(-0.30)
+    assert replay.state.halted
+    assert replay.state.positions == {}
+
+
+def test_drawdown_below_threshold_does_not_halt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    bars = _bars(
+        opens=[100, 100, 85.1, 85.1],
+        closes=[100, 100, 85.1, 85.1],
+    )
+    monkeypatch.setattr(
+        "app.portfolio_execution.build_rules",
+        lambda *_args, **_kwargs: _rules(len(bars), entries={0}, stop=1),
+    )
+    config = PortfolioConfig(
+        risk_per_trade=1,
+        max_position_fraction=1,
+        max_sector_fraction=1,
+        max_cluster_fraction=1,
+        commission=0,
+        spread=0,
+        slippage=0,
+    )
+
+    replay = simulate_portfolio(
+        {"AAA": bars},
+        strategy_name="S/R Bounce",
+        params={},
+        classifications=_classifications("AAA"),
+        config=config,
+    )
+
+    assert replay.equity[-1].drawdown == pytest.approx(-0.149)
+    assert replay.risk_events == ()
+    assert not replay.state.halted
+    assert "AAA" in replay.state.positions
+
+
+def test_final_bar_kill_switch_leaves_liquidation_pending_without_fake_exit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    bars = _bars(opens=[100, 100, 80], closes=[100, 100, 80])
+    monkeypatch.setattr(
+        "app.portfolio_execution.build_rules",
+        lambda *_args, **_kwargs: _rules(len(bars), entries={0}, stop=1),
+    )
+    config = PortfolioConfig(
+        risk_per_trade=1,
+        max_position_fraction=1,
+        max_sector_fraction=1,
+        max_cluster_fraction=1,
+        commission=0,
+        spread=0,
+        slippage=0,
+    )
+
+    replay = simulate_portfolio(
+        {"AAA": bars},
+        strategy_name="S/R Bounce",
+        params={},
+        classifications=_classifications("AAA"),
+        config=config,
+    )
+
+    assert [fill.side for fill in replay.fills] == ["entry"]
+    assert replay.trades == ()
+    assert replay.state.halted
+    assert replay.state.pending_exits[0].reason == "kill_switch"
+    assert replay.state.pending_exits[0].order_date is None
+    assert "AAA" in replay.state.positions
+
+
+def test_kill_switch_prevents_other_symbol_entry_on_trigger_close(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    aaa = _bars(opens=[100, 100, 80, 70], closes=[100, 100, 80, 70], marker=1)
+    bbb = _bars(opens=[100, 100, 100, 100], marker=2)
+
+    def rules_for(bars: pd.DataFrame, *_args, **_kwargs) -> RuleSet:
+        if int(bars["volume"].iloc[0]) == 1:
+            return _rules(len(bars), entries={0}, stop=1)
+        return _rules(len(bars), entries={2}, stop=90)
+
+    monkeypatch.setattr("app.portfolio_execution.build_rules", rules_for)
+    config = PortfolioConfig(
+        risk_per_trade=1,
+        max_position_fraction=1,
+        max_sector_fraction=1,
+        max_cluster_fraction=1,
+        commission=0,
+        spread=0,
+        slippage=0,
+    )
+
+    replay = simulate_portfolio(
+        {"AAA": aaa, "BBB": bbb},
+        strategy_name="S/R Bounce",
+        params={},
+        classifications=_classifications("AAA", "BBB"),
+        config=config,
+    )
+
+    assert not any(fill.symbol == "BBB" for fill in replay.fills)
+    assert any(
+        rejection.symbol == "BBB" and rejection.reason == "portfolio_halted"
+        for rejection in replay.state.rejected_orders
+    )

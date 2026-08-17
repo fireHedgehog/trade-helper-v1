@@ -76,12 +76,14 @@ a rejected strategy result.
 
 ## Implementation status
 
-Checkpoint v0.21.2 adds `backend/app/portfolio_execution.py` to the v0.21.1
+Checkpoint v0.21.3 adds `backend/app/portfolio_execution.py` to the v0.21.1
 strategy-independent foundation. The replay now processes multi-symbol entry and
 exit signals through one cash ledger, rechecks every limit at the actual open,
 charges canonical costs, tracks T+1 sale settlements, preserves final pending
-orders, and marks equity/exposure/concentration/drawdown at each shared close.
-Thirty-five focused portfolio tests cover the combined contracts.
+orders, and marks equity/exposure/concentration/drawdown at each shared close. A
+15% completed-close drawdown records an explicit risk event, halts entries, and
+creates next-open liquidation orders; a final-bar liquidation remains pending.
+Thirty-nine focused portfolio tests cover the combined contracts.
 
-Drawdown-triggered cancellation and liquidation, portfolio performance metrics,
-API/UI integration, and paper/live connections remain unimplemented.
+Portfolio performance metrics, API/UI integration, and paper/live connections
+remain unimplemented.

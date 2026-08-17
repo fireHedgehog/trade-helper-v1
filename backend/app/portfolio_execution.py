@@ -79,12 +79,23 @@ class PortfolioSnapshot:
 
 
 @dataclass(frozen=True)
+class PortfolioRiskEvent:
+    date: str
+    event: str
+    equity: float
+    peak_equity: float
+    drawdown: float
+    limit: float
+
+
+@dataclass(frozen=True)
 class PortfolioReplay:
     strategy: str
     state: PortfolioState
     fills: tuple[PortfolioFill, ...]
     trades: tuple[PortfolioTrade, ...]
     equity: tuple[PortfolioSnapshot, ...]
+    risk_events: tuple[PortfolioRiskEvent, ...]
 
 
 def _prepared_inputs(
@@ -209,6 +220,7 @@ def simulate_portfolio(
     fills: list[PortfolioFill] = []
     trades: list[PortfolioTrade] = []
     snapshots: list[PortfolioSnapshot] = []
+    risk_events: list[PortfolioRiskEvent] = []
 
     for index, date in enumerate(dates):
         next_date = dates[index + 1] if index + 1 < len(dates) else None
@@ -424,34 +436,81 @@ def simulate_portfolio(
         )
         snapshots.append(snapshot)
 
+        halted = state.halted
         pending_exits = list(remaining_exits)
-        exiting_symbols = {order.symbol for order in pending_exits}
-        for symbol in symbols:
-            position = positions.get(symbol)
-            if position is None or symbol in exiting_symbols:
-                continue
-            updated_stop, reason = close_exit_decision(
-                strategy_name,
-                rules[symbol],
-                params,
-                index,
-                float(bars[symbol]["close"].iloc[index]),
-                position.stop,
-                position.target,
-            )
-            positions[symbol] = replace(position, stop=updated_stop)
-            if reason:
-                pending_exits.append(
-                    PendingExit(
-                        signal_date=date,
-                        order_date=next_date,
-                        symbol=symbol,
-                        reason=reason,
-                    )
-                )
-                exiting_symbols.add(symbol)
-
         pending_entries = list(remaining_entries)
+        triggered = not halted and snapshot.drawdown <= -resolved.drawdown_limit
+        if triggered:
+            halted = True
+            risk_events.append(
+                PortfolioRiskEvent(
+                    date=date,
+                    event="drawdown_kill_switch",
+                    equity=snapshot.equity,
+                    peak_equity=snapshot.peak_equity,
+                    drawdown=snapshot.drawdown,
+                    limit=resolved.drawdown_limit,
+                )
+            )
+            rejected.extend(
+                RejectedOrder(
+                    date=date,
+                    symbol=order.symbol,
+                    requested_shares=order.shares,
+                    available_cash=max(0.0, cash),
+                    reason="kill_switch_cancelled",
+                )
+                for order in pending_entries
+            )
+            pending_entries = []
+            pending_exits = [
+                PendingExit(
+                    signal_date=date,
+                    order_date=next_date,
+                    symbol=symbol,
+                    reason="kill_switch",
+                )
+                for symbol in sorted(positions)
+            ]
+        else:
+            exiting_symbols = {order.symbol for order in pending_exits}
+            if halted:
+                for symbol in sorted(positions):
+                    if symbol not in exiting_symbols:
+                        pending_exits.append(
+                            PendingExit(
+                                signal_date=date,
+                                order_date=next_date,
+                                symbol=symbol,
+                                reason="kill_switch",
+                            )
+                        )
+            else:
+                for symbol in symbols:
+                    position = positions.get(symbol)
+                    if position is None or symbol in exiting_symbols:
+                        continue
+                    updated_stop, reason = close_exit_decision(
+                        strategy_name,
+                        rules[symbol],
+                        params,
+                        index,
+                        float(bars[symbol]["close"].iloc[index]),
+                        position.stop,
+                        position.target,
+                    )
+                    positions[symbol] = replace(position, stop=updated_stop)
+                    if reason:
+                        pending_exits.append(
+                            PendingExit(
+                                signal_date=date,
+                                order_date=next_date,
+                                symbol=symbol,
+                                reason=reason,
+                            )
+                        )
+                        exiting_symbols.add(symbol)
+
         candidates: list[CandidateOrder] = []
         occupied = set(positions) | {order.symbol for order in pending_entries}
         for symbol in symbols:
@@ -478,7 +537,7 @@ def simulate_portfolio(
         allocation_state = PortfolioState(
             cash=cash,
             peak_equity=snapshot.peak_equity,
-            halted=state.halted,
+            halted=halted,
             positions=positions,
             pending_orders=tuple(pending_entries),
             pending_exits=tuple(pending_exits),
@@ -505,4 +564,5 @@ def simulate_portfolio(
         fills=tuple(fills),
         trades=tuple(trades),
         equity=tuple(snapshots),
+        risk_events=tuple(risk_events),
     )

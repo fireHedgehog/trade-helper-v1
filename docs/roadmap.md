@@ -154,14 +154,15 @@ still requires genuinely unseen future or uninspected point-in-time data.
 
 **Goal:** stop presenting independent fixed-share trades as a portfolio.
 
-**Current checkpoint (v0.21.2):** the pure multi-symbol replay now uses one shared
+**Current checkpoint (v0.21.3):** the pure multi-symbol replay now uses one shared
 cash ledger and exact shared calendar. It processes completed-close signals at
 the next open, rechecks sizing and every cap after gaps, charges canonical costs,
 holds sale proceeds until the next session, marks common-close equity and
-concentration, and preserves final pending orders. Thirty-five focused portfolio
-tests pass. Kill-switch execution, portfolio metrics, and API/UI integration
-remain pending; the existing 100-share view is still a signal replay, not a
-portfolio.
+concentration, and preserves final pending orders. The 15% drawdown kill switch
+now records its trigger, blocks entries, and submits next-open liquidations while
+retaining any gap loss. Thirty-nine focused portfolio tests pass. Portfolio
+metrics and API/UI integration remain pending; the existing 100-share view is
+still a signal replay, not a portfolio.
 
 - [x] Add explicit $100k account state and conservative validated defaults.
 - [x] Add cost-aware stop-risk and maximum-notional entry sizing.
@@ -171,7 +172,8 @@ portfolio.
 - [x] Mark all positions on a strict common daily calendar and record equity,
       exposure, concentration, peak, and drawdown.
 - [x] Keep sale proceeds unavailable until the next shared-calendar session.
-- [ ] Trigger and execute drawdown kill-switch liquidations.
+- [x] Trigger and execute next-open drawdown kill-switch liquidations, including
+      final-bar pending state and gap-loss evidence.
 - [ ] Calculate portfolio-level return, volatility, turnover, and risk metrics.
 - [ ] Integrate tested portfolio results into the API and UI.
 
