@@ -203,6 +203,10 @@ Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
 
+### v0.12.4 — 2026-08-17
+
+- Exit-plan cells reverted to the compact chips (`trend 716.58`, `stop 738.42` — hover for the rule); the line-broken legend with bracketed explanations stays below the table.
+
 ### v0.12.3 — 2026-08-17
 
 - **Exit plan, plain English:** each open row now lists every exit trigger on its own line with the rule in brackets, e.g. `trend 716.58 (close below the 40-day low → trend changed)` / `stop 738.42 (close below trailing stop → stop loss)` — no more guessing what each number means. The legend under the table is the same format: one line per trigger with the explanation in parentheses.
