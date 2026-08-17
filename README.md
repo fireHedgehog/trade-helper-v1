@@ -203,6 +203,13 @@ Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
 
+### v0.12.3 — 2026-08-17
+
+- **Exit plan, plain English:** each open row now lists every exit trigger on its own line with the rule in brackets, e.g. `trend 716.58 (close below the 40-day low → trend changed)` / `stop 738.42 (close below trailing stop → stop loss)` — no more guessing what each number means. The legend under the table is the same format: one line per trigger with the explanation in parentheses.
+- **Scoreboard returns vs buy & hold:** two new columns, **Ret med** and **B&H med** — the median strategy return vs the median buy & hold return across the selected symbols and window (new `/api/score-return`). Honest result on the default 1-year sample: every strategy trails buy & hold in this bull window; RSI Reversion comes closest.
+- **Default button** in the Lab symbol picker restores the pre-ticked 16-name liquid basket — Clear no longer means "reload the page to get it back".
+- Lab row computations now run in a 3-way pool instead of all at once, keeping the laptop's CPU calm.
+
 ### v0.12.2 — 2026-08-17
 
 - **Strategy Lab sample control:** the blind "5 symbols × 1 year" dropdown is gone. There is now a **symbol picker with All / Clear** buttons and a **year selector** (1/3/5/10 years, all history). Default selection is a deliberate 16-name liquid basket — SPY, QQQ, MAGS, SOXX, IGV, XLK, XLE, XLF, XLU, AAPL, NVDA, MSFT, JPM, CAT, KO, LLY — chosen for liquidity and diversity, so you always know exactly which names are being tested.

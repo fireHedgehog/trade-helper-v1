@@ -78,6 +78,15 @@
   .symbol-picker { display: flex; flex-wrap: wrap; gap: 1px 12px; max-height: 160px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 8px; margin: 8px 0; background: var(--bg); }
   .symbol-picker label { font-size: 11px; color: var(--muted); cursor: pointer; white-space: nowrap; }
   .symbol-picker input { margin-right: 3px; vertical-align: -1px; }
+  .plan-line { display: block; font-size: 11px; line-height: 1.55; white-space: nowrap; }
+  .plan-line .why { color: var(--muted); }
+  .plan-line .trend { color: #7dd3fc; }
+  .plan-line .stop { color: var(--red); }
+  .plan-line .target { color: var(--green); }
+  .plan-legend { font-size: 11px; color: var(--muted); line-height: 1.6; }
+  .plan-legend .trend { color: #7dd3fc; }
+  .plan-legend .stop { color: var(--red); }
+  .plan-legend .target { color: var(--green); }
   tr.muted td { opacity: .55; }
   .sample-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
   #regime-banner { font-size: 12px; padding: 6px 10px; border-radius: 8px; }
@@ -277,7 +286,13 @@
           <thead><tr><th>Symbol</th><th>Date</th><th>Price</th><th>Now</th><th>P&L %</th><th>P&L $</th><th>Exit plan</th><th>Note</th></tr></thead>
           <tbody id="sim-positions"></tbody>
         </table>
-        <div class="sample-note">Open rows: Date/Price = entry · Exit plan = <span class="chip trend">trend</span> strategy level, <span class="chip exit">stop</span> trailing ATR stop, <span class="chip entry">target</span> take-profit (hover a chip for the rule). Closed rows: Date/Price = exit.</div>
+        <div class="plan-legend">
+          <div>Open rows: Date/Price = entry · Closed rows: Date/Price = exit.</div>
+          <div>Exit plan — one line per trigger (whichever hits first):</div>
+          <div>· <span class="trend">trend 716</span> = strategy reversal level (close below → trend turned bearish)</div>
+          <div>· <span class="stop">stop 738</span> = trailing ATR stop (close below → stop loss)</div>
+          <div>· <span class="target">target</span> = take-profit (close at/above → take profit)</div>
+        </div>
       </section>
       <section class="panel">
         <h2>Entries today</h2>
@@ -302,15 +317,16 @@
           <option value="0">All history</option>
         </select>
         <button id="lab-select-all">All symbols</button>
+        <button id="lab-default">Default</button>
         <button id="lab-clear">Clear</button>
         <button class="primary" id="lab-compute">Compute / refresh</button>
         <div class="symbol-picker" id="lab-symbols"></div>
         <div class="sample-note" id="lab-sample-note"></div>
         <table style="margin-top:10px">
-          <thead><tr><th>Strategy</th><th>All-time win</th><th>Mkt base</th><th>Avg 20d</th><th>Samples</th><th>3Y win</th><th>3Y samples</th></tr></thead>
+          <thead><tr><th>Strategy</th><th>All-time win</th><th>Mkt base</th><th>Avg 20d</th><th>Samples</th><th>3Y win</th><th>3Y samples</th><th>Ret med</th><th>B&H med</th></tr></thead>
           <tbody id="scoreboard"></tbody>
         </table>
-        <div class="sample-note">Honest statistics: measured past performance, not a prediction. Small samples are noise.</div>
+        <div class="sample-note">Honest statistics: measured past performance, not a prediction. Ret med / B&H med = median strategy vs buy &amp; hold return across the selected symbols and window. Small samples are noise.</div>
       </section>
     </div>
   </div>
@@ -795,10 +811,12 @@ window.addEventListener('hashchange', () => {
 
 /* ---------- Strategy Lab: confidence scoreboard ---------- */
 let labPickerBuilt = false;
+let defaultBasket = [];
 
 async function buildSymbolPicker() {
   const { symbols, default_basket } = await api('/api/symbols');
-  const dflt = new Set(default_basket || []);
+  defaultBasket = default_basket || [];
+  const dflt = new Set(defaultBasket);
   $('#lab-symbols').innerHTML = symbols.map((s) =>
     `<label><input type="checkbox" value="${s}" ${dflt.has(s) ? 'checked' : ''}> ${s}</label>`
   ).join('');
@@ -821,13 +839,18 @@ async function loadLab(force = false) {
   labNote();
   const { strategies } = await api('/api/strategies');
   $('#scoreboard').innerHTML = strategies.map((s) =>
-    `<tr data-strategy="${s.name}"><td>${s.name}</td><td colspan="6" class="muted">…</td></tr>`
+    `<tr data-strategy="${s.name}"><td>${s.name}</td><td colspan="8" class="muted">…</td></tr>`
   ).join('');
   loading(true, 'computing confidence…');
   try {
-    await Promise.all(strategies.map((s) => loadScore(s.name, force, checked, days)));
+    // 3-way pool: keeps the CPU load laptop-safe while all rows compute.
+    const queue = [...strategies];
+    const workers = Array.from({ length: Math.min(3, queue.length) }, async () => {
+      while (queue.length) await loadScore(queue.shift().name, force, checked, days);
+    });
+    await Promise.all(workers);
   } catch (err) {
-    $('#scoreboard').innerHTML = `<tr><td colspan="6">error: ${err.message}</td></tr>`;
+    $('#scoreboard').innerHTML = `<tr><td colspan="8">error: ${err.message}</td></tr>`;
   } finally {
     loading(false);
   }
@@ -840,10 +863,15 @@ async function loadScore(name, force, syms, days) {
     const q = `strategy=${encodeURIComponent(name)}&days=${days}` +
       (syms.length ? '&symbols=' + encodeURIComponent(syms.join(',')) : '') +
       (force ? '&force=1' : '');
-    const c = await api(`/api/confidence?${q}`);
+    const [c, ret] = await Promise.all([
+      api(`/api/confidence?${q}`),
+      api(`/api/score-return?${q}`),
+    ]);
     const a = c.all_time, r = c.last_3y, b = c.baseline || {};
     const win = (v) => v.hit_rate == null ? '—' : `${v.hit_rate}%`;
     const noise = a.samples > 0 && a.samples < 30 ? `<span class="chip warning">n=${a.samples}</span>` : '';
+    const rCls = ret.ret_med != null && ret.bh_med != null
+      ? (ret.ret_med >= ret.bh_med ? 'pos' : 'neg') : '';
     row.innerHTML =
       `<td>${name}</td>` +
       `<td class="${a.hit_rate != null && a.hit_rate >= 50 ? 'pos' : 'neg'}">${win(a)} ${noise}</td>` +
@@ -851,15 +879,22 @@ async function loadScore(name, force, syms, days) {
       `<td>${a.avg_return ?? '—'}%</td>` +
       `<td>${a.samples}</td>` +
       `<td class="${r.hit_rate != null && r.hit_rate >= 50 ? 'pos' : 'neg'}">${win(r)}</td>` +
-      `<td>${r.samples}</td>`;
+      `<td>${r.samples}</td>` +
+      `<td class="${rCls}" title="median strategy return across the selected symbols">${ret.ret_med ?? '—'}%</td>` +
+      `<td title="median buy & hold return across the selected symbols">${ret.bh_med ?? '—'}%</td>`;
   } catch (err) {
-    row.innerHTML = `<td>${name}</td><td colspan="6">error: ${err.message}</td>`;
+    row.innerHTML = `<td>${name}</td><td colspan="8">error: ${err.message}</td>`;
   }
 }
 
 $('#lab-compute').addEventListener('click', () => loadLab(true));
 $('#lab-select-all').addEventListener('click', () => {
   document.querySelectorAll('#lab-symbols input').forEach((el) => { el.checked = true; });
+  labNote();
+});
+$('#lab-default').addEventListener('click', () => {
+  const dflt = new Set(defaultBasket);
+  document.querySelectorAll('#lab-symbols input').forEach((el) => { el.checked = dflt.has(el.value); });
   labNote();
 });
 $('#lab-clear').addEventListener('click', () => {
@@ -900,19 +935,19 @@ async function loadToday(refresh = false) {
       `<div class="reason">${r.note}</div>` +
       `<div class="rank ${r.rank >= 0 ? 'pos' : 'neg'}" title="${r.rank_note || ''}">rank ${r.rank} — ${r.rank_note || ''}</div>` +
       `</div>`).join('') || '<div class="sample-note">none</div>';
-    const exitPlanChips = (plan) => {
+    const planLines = (plan) => {
       if (!plan) return '—';
-      const chips = [];
+      const lines = [];
       if (plan.trend && (plan.trend.level != null || plan.trend.label === 'cross')) {
-        chips.push(`<span class="chip trend" title="${plan.trend.why}">${plan.trend.label}${plan.trend.level != null ? ' ' + plan.trend.level : ''}</span>`);
+        lines.push(`<span class="plan-line"><b class="trend">${plan.trend.label}</b>${plan.trend.level != null ? ' ' + plan.trend.level : ''} <span class="why">(${plan.trend.why})</span></span>`);
       }
       if (plan.stop && plan.stop.level != null) {
-        chips.push(`<span class="chip exit" title="${plan.stop.why}">stop ${plan.stop.level}</span>`);
+        lines.push(`<span class="plan-line"><b class="stop">stop</b> ${plan.stop.level} <span class="why">(${plan.stop.why})</span></span>`);
       }
       if (plan.target && plan.target.level != null) {
-        chips.push(`<span class="chip entry" title="${plan.target.why}">target ${plan.target.level}</span>`);
+        lines.push(`<span class="plan-line"><b class="target">target</b> ${plan.target.level} <span class="why">(${plan.target.why})</span></span>`);
       }
-      return chips.join('') || '—';
+      return lines.join('') || '—';
     };
     const simRows = (list) => list.map((r) => {
       if (r.state === 'flat') {
@@ -933,7 +968,7 @@ async function loadToday(refresh = false) {
       const cls = r.pnl_pct == null ? '' : (r.pnl_pct >= 0 ? 'pos' : 'neg');
       return `<tr><td>${r.symbol}</td><td title="entry date">${r.since || '—'}</td><td title="entry price">${r.entry ?? '—'}</td>` +
         `<td>${r.now ?? '—'}</td><td class="${cls}">${pnl}</td><td class="${cls}">${usd}</td>` +
-        `<td>${exitPlanChips(r.exit_plan)}</td><td>${r.note || (r.state === 'long' ? 'holding' : '—')}</td></tr>`;
+        `<td>${planLines(r.exit_plan)}</td><td>${r.note || (r.state === 'long' ? 'holding' : '—')}</td></tr>`;
     }).join('') || '<tr><td colspan="8">ledger empty — no trades recorded yet</td></tr>';
     $('#sim-positions').innerHTML = simRows(positionsData.positions);
     $('#today-entries').innerHTML = pickCards(data.entries, 'ENTRY', 'entry');

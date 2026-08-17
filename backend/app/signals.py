@@ -503,9 +503,9 @@ def positions_payload(strategy_name: str, set_name: str = "defaults", params: di
             item["exit_plan"] = {
                 "trend": _trend_exit_info(bars, strategy_name, params),
                 "stop": {"level": row["stop"],
-                         "why": "close below the trailing ATR stop → stop loss"},
+                         "why": "close below trailing stop → stop loss"},
                 "target": {"level": row["tp"],
-                           "why": "close reaches the take-profit → take profit"}
+                           "why": "close reaches take-profit → take profit"}
                 if row["tp"] is not None else None,
             }
         rows.append(item)

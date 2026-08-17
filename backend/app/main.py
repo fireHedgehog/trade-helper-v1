@@ -176,6 +176,50 @@ def today(
     return result
 
 
+@app.get("/api/score-return")
+def score_return(
+    strategy: str = "CTA Trend",
+    symbols: str = "",
+    days: int = 252,
+):
+    """Median strategy return vs median buy & hold over the chosen sample
+    and window — the honest performance comparison for the scoreboard."""
+    if strategy not in STRATEGIES:
+        raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
+    days = max(-1, min(int(days), 100000))
+    chosen = [s.strip().upper() for s in symbols.split(",") if s.strip()] or DEFAULT_BASKET
+
+    def median(values: list[float]) -> float | None:
+        if not values:
+            return None
+        values = sorted(values)
+        mid = len(values) // 2
+        return round((values[mid] if len(values) % 2 else (values[mid - 1] + values[mid]) / 2), 1)
+
+    returns, buy_hold = [], []
+    for symbol in chosen:
+        start = None
+        if days > 0:
+            recent = store.load_recent_bars(symbol, days)
+            if recent.empty:
+                continue
+            start = str(recent["date"].iloc[0])
+        try:
+            metrics = backtest_payload(symbol, strategy, params=None, start=start)["metrics"]
+        except (RuntimeError, KeyError):
+            continue
+        if metrics.get("Return [%]") is not None:
+            returns.append(metrics["Return [%]"])
+        if metrics.get("Buy & Hold Return [%]") is not None:
+            buy_hold.append(metrics["Buy & Hold Return [%]"])
+    return {
+        "strategy": strategy,
+        "symbols": len(chosen),
+        "ret_med": median(returns),
+        "bh_med": median(buy_hold),
+    }
+
+
 @app.get("/api/param-sets")
 def param_sets(strategy: str | None = None):
     return {"sets": store.list_param_sets(strategy)}
