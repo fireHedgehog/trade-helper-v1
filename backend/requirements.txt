@@ -1,7 +1,7 @@
-fastapi
-uvicorn
-yfinance
-pandas
-lxml
-requests
-backtesting
+fastapi==0.141.1
+uvicorn==0.52.3
+yfinance==1.6.0
+pandas==3.0.5
+lxml==6.1.1
+requests==2.34.2
+backtesting==0.6.6

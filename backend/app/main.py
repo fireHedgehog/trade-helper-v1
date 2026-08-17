@@ -16,7 +16,7 @@ from .engine import backtest_payload
 from .signals import (
     CORE_WATCHLIST,
     advance_positions,
-    compute_signal,
+    compute_stateful_signal,
     positions_payload,
     scan,
 )
@@ -76,13 +76,13 @@ def strategies():
 def signal_now(symbol: str, strategy: str = "CTA Trend"):
     if strategy not in STRATEGIES:
         raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
-    bars = store.load_recent_bars(symbol, 300)
+    bars = store.load_bars(symbol)
     if bars.empty:
         raise HTTPException(status_code=404, detail=f"no bars for {symbol}")
     params = {
         key: value["default"] for key, value in STRATEGY_PARAMS[strategy].items()
     }
-    result = compute_signal(bars, strategy, params)
+    result = compute_stateful_signal(bars, strategy, params)
     if result is None:
         raise HTTPException(status_code=404, detail="not enough bars")
     return {"symbol": symbol, "strategy": strategy, **result}

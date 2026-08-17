@@ -1,0 +1,51 @@
+{
+  "CTA Trend": {
+    "buy_hold_pct": 57.702139,
+    "max_drawdown_pct": -6.165853,
+    "return_pct": -3.768636,
+    "trades": 1,
+    "win_rate_pct": 0.0
+  },
+  "Donchian Trend": {
+    "buy_hold_pct": 75.55462,
+    "max_drawdown_pct": -6.498672,
+    "return_pct": -4.109958,
+    "trades": 1,
+    "win_rate_pct": 0.0
+  },
+  "Fib Retrace": {
+    "buy_hold_pct": 73.943944,
+    "max_drawdown_pct": -0.176387,
+    "return_pct": 9.05775,
+    "trades": 2,
+    "win_rate_pct": 100.0
+  },
+  "RSI Reversion": {
+    "buy_hold_pct": 113.209008,
+    "max_drawdown_pct": -36.591724,
+    "return_pct": -31.180452,
+    "trades": 2,
+    "win_rate_pct": 0.0
+  },
+  "S/R Bounce": {
+    "buy_hold_pct": 96.853248,
+    "max_drawdown_pct": -41.827342,
+    "return_pct": -34.85016,
+    "trades": 2,
+    "win_rate_pct": 0.0
+  },
+  "SMA Cross": {
+    "buy_hold_pct": 77.658006,
+    "max_drawdown_pct": -9.136786,
+    "return_pct": 121.566306,
+    "trades": 2,
+    "win_rate_pct": 100.0
+  },
+  "Wave Pull": {
+    "buy_hold_pct": 111.430549,
+    "max_drawdown_pct": -3.637888,
+    "return_pct": -3.637888,
+    "trades": 2,
+    "win_rate_pct": 0.0
+  }
+}

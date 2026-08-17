@@ -1,4 +1,4 @@
-"""Minimal backtest runner: local bars -> trades -> metrics (via backtesting.py).
+"""Canonical backtest runner: local bars -> trades -> marked-to-market metrics.
 
 Usage (from backend/):
     python -m app.backtest SPY                    # SMA Cross on SPY
@@ -12,10 +12,11 @@ import math
 import sys
 
 import pandas as pd
-from backtesting import Backtest
 
+from .execution import metrics as execution_metrics
+from .execution import simulate
 from .store import load_bars
-from .strategies import STRATEGIES
+from .strategies import STRATEGIES, STRATEGY_PARAMS
 
 CASH = 100_000
 COMMISSION = 0.001  # 0.1% per side — deliberate, so results aren't fantasy
@@ -72,44 +73,74 @@ def backtest_payload(
         bars = bars[bars["date"] >= start]
     if end:
         bars = bars[bars["date"] <= end]
+    return backtest_bars_payload(bars.reset_index(drop=True), symbol, strategy_name, params)
+
+
+def backtest_bars_payload(
+    bars: pd.DataFrame,
+    symbol: str,
+    strategy_name: str,
+    params: dict | None = None,
+) -> dict:
+    """Run the canonical engine on supplied bars (I/O-free and testable)."""
     if len(bars) < 60:
         raise RuntimeError(f"window has only {len(bars)} bars — need at least 60")
-    strategy = STRATEGIES[strategy_name]
-    bt = Backtest(
-        to_ohlc(bars),
-        strategy,
-        cash=CASH,
-        commission=COMMISSION,
-        finalize_trades=True,  # close the last open trade so stats are complete
-    )
-    stats = bt.run(**(params or {}))
-    metrics = {
-        metric: _plain(stats[metric]) for metric in METRICS if metric in stats
+    if strategy_name not in STRATEGIES:
+        raise KeyError(strategy_name)
+    resolved_params = {
+        key: value["default"] for key, value in STRATEGY_PARAMS[strategy_name].items()
     }
+    resolved_params.update(params or {})
+    simulation = simulate(
+        bars,
+        strategy_name,
+        resolved_params,
+        initial_cash=CASH,
+        commission=COMMISSION,
+    )
+    stats = execution_metrics(simulation, bars, CASH)
+    metric_values = {metric: _plain(stats[metric]) for metric in METRICS if metric in stats}
+    metric_values["Open Position"] = stats.get("Open Position", False)
+    metric_values["Pending Order"] = stats.get("Pending Order")
     trades = [
         {
-            "entry_date": str(row.EntryTime)[:10],
-            "entry_price": round(float(row.EntryPrice), 2),
-            "exit_date": str(row.ExitTime)[:10],
-            "exit_price": round(float(row.ExitPrice), 2),
-            "size": int(row.Size),
-            "pnl": round(float(row.PnL), 2),
-            "return_pct": round(float(row.ReturnPct) * 100, 2),
+            "entry_date": trade["entry_date"],
+            "entry_price": round(float(trade["entry_price"]), 2),
+            "exit_date": trade["exit_date"],
+            "exit_price": round(float(trade["exit_price"]), 2),
+            "size": int(trade["size"]),
+            "pnl": round(float(trade["pnl"]), 2),
+            "return_pct": round(float(trade["return_pct"]), 2),
+            "exit_reason": trade["exit_reason"],
         }
-        for row in stats._trades.itertuples(index=False)
+        for trade in simulation.trades
     ]
-    equity_frame = stats._equity_curve
-    step = max(1, len(equity_frame) // 500)
+    step = max(1, len(simulation.equity) // 500)
     equity = [
-        {"date": str(index)[:10], "equity": round(float(row.Equity), 2)}
-        for index, row in equity_frame.iloc[::step].iterrows()
+        {"date": row["date"], "equity": round(float(row["equity"]), 2)}
+        for row in simulation.equity[::step]
     ]
+    open_position = None
+    if simulation.position.state in {"long", "exit_pending"}:
+        open_position = {
+            "state": simulation.position.state,
+            "entry_date": simulation.position.entry_date,
+            "entry_price": round(float(simulation.position.entry_price), 2),
+            "stop": round(float(simulation.position.stop), 2)
+            if simulation.position.stop is not None
+            else None,
+            "target": round(float(simulation.position.target), 2)
+            if simulation.position.target is not None
+            else None,
+            "pending_reason": simulation.position.pending_reason,
+        }
     return {
         "symbol": symbol,
         "strategy": strategy_name,
-        "metrics": metrics,
+        "metrics": metric_values,
         "trades": trades,
         "equity": equity,
+        "open_position": open_position,
     }
 
 

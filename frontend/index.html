@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
 <title>trade-helper-v1</title>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4/dist/lightweight-charts.standalone.production.js"></script>
 <style>
@@ -416,13 +417,18 @@ function smaData(bars, n) {
   return out;
 }
 
-function markersFromTrades(trades) {
-  return trades.flatMap((t) => [
+function markersFromTrades(trades, openPosition) {
+  const markers = trades.flatMap((t) => [
     { time: t.entry_date, position: 'belowBar', color: '#26a69a',
       shape: 'arrowUp', text: `LONG @ ${t.entry_price}` },
     { time: t.exit_date, position: 'aboveBar', color: '#ef5350',
       shape: 'arrowDown', text: `EXIT @ ${t.exit_price}` },
   ]);
+  if (openPosition?.entry_date) {
+    markers.push({ time: openPosition.entry_date, position: 'belowBar', color: '#38bdf8',
+      shape: 'arrowUp', text: `OPEN @ ${openPosition.entry_price}` });
+  }
+  return markers;
 }
 
 function rollingExtreme(bars, n, field, mode) {
@@ -525,7 +531,8 @@ function renderMetrics(m) {
     metricCard('Profit Factor', fmt(m['Profit Factor'])) +
     metricCard('Sharpe', fmt(m['Sharpe Ratio'])) +
     metricCard('# Trades', m['# Trades']) +
-    metricCard('Exposure %', fmt(m['Exposure Time [%]']));
+    metricCard('Exposure %', fmt(m['Exposure Time [%]'])) +
+    metricCard('Position', m['Open Position'] ? 'OPEN' : 'flat', m['Open Position'] ? 'pos' : '');
 }
 
 function renderTrades(trades) {
@@ -741,13 +748,13 @@ async function run() {
     }
     renderChart(bars);
     setOverlays(strategy, bars);
-    candleSeries.setMarkers(markersFromTrades(backtest.trades));
+    candleSeries.setMarkers(markersFromTrades(backtest.trades, backtest.open_position));
     renderMetrics(backtest.metrics);
     renderTrades(backtest.trades);
     renderEquity(backtest.equity);
     renderGuide(symbol, strategy);
     $('#status').textContent =
-      `${backtest.trades.length} trades · ${symbol} · ${strategy} · ${label}`;
+      `${backtest.trades.length} closed trades${backtest.open_position ? ' · open position' : ''} · ${symbol} · ${strategy} · ${label}`;
   } catch (err) {
     $('#status').textContent = `error: ${err.message}`;
   } finally {

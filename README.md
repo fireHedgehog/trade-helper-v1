@@ -32,7 +32,8 @@ A simple stock-data helper app: pull US stock daily closing prices once a day fr
 - Storage format: **SQLite** (start here) vs Parquet vs DuckDB?
 - Frontend hosting: served by the backend (start here) vs separate S3 + CloudFront?
 - Which symbols to track? ✅ decided — S&P 500 ∪ Nasdaq-100 ∪ XL sector ETFs (~530 symbols, deduped, survivorship-bias caveat applies).
-- Backtest engine: ✅ decided — `backtesting.py` as skeleton (v0.3.0).
+- Backtest engine: ✅ canonical in-repo daily execution state machine (v0.15.0);
+  `backtesting.py` is retained only as a frozen legacy comparison baseline.
 - Which ML models matter first? **Paused until Stages 1–4 establish a valid
   non-ML research baseline.**
 
@@ -85,7 +86,8 @@ trade-helper-v1/
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r backend/requirements.txt
+pip install -r backend/requirements-dev.txt
+pytest
 ```
 
 Daily fetch (idempotent — safe for cron or manual runs):
@@ -164,13 +166,13 @@ with tests and README evidence, so changes can be reviewed one at a time.
 
 **Goal:** preserve today's behaviour before refactoring it.
 
-- [ ] Record the Python version and pin direct dependency versions.
-- [ ] Add a deterministic small OHLC fixture covering gaps, trends, reversals,
+- [x] Record the Python version and pin direct dependency versions.
+- [x] Add a deterministic small OHLC fixture covering gaps, trends, reversals,
       stops, and missing bars.
-- [ ] Save baseline outputs for each strategy on that fixture.
-- [ ] Add `pytest` and a documented test command without downloading market data.
-- [ ] Separate generated data, caches, logs, and research artifacts from source.
-- [ ] Add a short decision record explaining close signal → next-open fill.
+- [x] Save baseline outputs for each strategy on that fixture.
+- [x] Add `pytest` and a documented test command without downloading market data.
+- [x] Separate generated data, caches, logs, and research artifacts from source.
+- [x] Add a short decision record explaining close signal → next-open fill.
 
 **Exit gate:** a fresh clone can install dependencies and reproduce the same
 fixture results locally.
@@ -179,18 +181,18 @@ fixture results locally.
 
 **Goal:** every view reports the same entries, exits, fills, and position state.
 
-- [ ] Define explicit states: `flat`, `entry_pending`, `long`, and
+- [x] Define explicit states: `flat`, `entry_pending`, `long`, and
       `exit_pending`.
-- [ ] Define fill rules for normal opens, overnight gaps, missing next bars, and
+- [x] Define fill rules for normal opens, overnight gaps, missing next bars, and
       the final bar of a dataset.
-- [ ] Move each strategy's entry and exit rules into one reusable signal source.
-- [ ] Make the backtest, Today scan, ledger, and chart markers consume that source.
-- [ ] Use the configured ATR period consistently; do not hardcode 14 in one path.
-- [ ] Decide whether stops are close-based or intraday OHLC-based and implement
+- [x] Move each strategy's entry and exit rules into one reusable signal source.
+- [x] Make the backtest, Today scan, ledger, and chart markers consume that source.
+- [x] Use the configured ATR period consistently; do not hardcode 14 in one path.
+- [x] Decide whether stops are close-based or intraday OHLC-based and implement
       that decision consistently.
-- [ ] Remove forced end-of-window exits from headline statistics, or label them
+- [x] Remove forced end-of-window exits from headline statistics, or label them
       separately from genuine strategy exits.
-- [ ] Add parity tests proving that identical bars and parameters produce
+- [x] Add parity tests proving that identical bars and parameters produce
       identical trades in all code paths.
 
 **Exit gate:** for every strategy and fixture, the API, ledger, and backtest have
@@ -388,7 +390,9 @@ and AWS deployment is intentionally paused until the relevant gates above pass.
 
 ### C. Strategy Lab
 
-- Engine skeleton: `backtesting.py` (open source) — not from scratch.
+- Engine: canonical close-signal/next-open execution state machine shared by the
+  API, Today, simulated ledger, and chart markers. `backtesting.py` remains only
+  for the frozen pre-refactor comparison tests.
 - Starter ladder: SMA cross → Donchian breakout (Turtle, the "hello world") → RSI mean reversion → Bollinger bands.
 - Default params + editable params + reset; run on any fetched symbol / date range.
 - Guard rails: cost/slippage assumptions; flag over-tuned results (too few trades).
@@ -413,7 +417,10 @@ and AWS deployment is intentionally paused until the relevant gates above pass.
 ## 9. Design notes (recorded, mostly future work)
 
 - **Saved params ("tuned models"):** ✅ built v0.7.1 — the Lab saves a tuned param set (name, params, date) into SQLite and Explorer applies saved sets from a dropdown. Next slice: let the Today scan use a saved set too.
-- **Daily signal state machine:** ✅ core watchlist built v0.9.0 — the `positions` ledger persists flat → entry_pending → long per symbol+strategy. Since v0.11.2 it is replayed from full history on every Today fetch (vectorized signals + ATR, cheap scalar loop) and flat rows keep their **last exit** (date, price, take-profit/stop-loss/trend-changed, realized P&L). Remaining: the daily cron job and a snapshot table for all symbols.
+- **Daily signal state machine:** ✅ canonical engine completed v0.15.0 — the
+  product uses `flat → entry_pending → long → exit_pending`, completed-close
+  signals, and next-available-open fills. Today, Explorer, chart markers, and
+  the 100-share ledger consume the same replay. Flat rows retain their last exit.
 - **Rule-based ranking & confidence:** ✅ both built (v0.9.0–v0.10.0) — rule rank = momentum + trend + volatility score; confidence = per-strategy historical hit rate and avg 20-day return with all-time and 3Y slices. Sample-limited by default locally (deliberate curated list first, v0.12.0); full universe is a cloud-only trigger. Remaining: per-symbol slices.
 - **CTA Trend (managed-futures style):** ✅ built v0.12.0 — breakout above an N-day high confirmed by a trend average; exits: M-day low (trend changed), trailing ATR stop, optional ATR TP. Defaults tuned on a 15-symbol curated basket (14 configs): `100/40/100, 5×ATR, no TP` → median PF 2.53, Sharpe 0.36, +228% all-time; SPY +286% / −20% maxDD. Honest caveat: trails 30-year buy & hold total return on this survivorship-biased basket — the value is drawdown control (~41% exposure) and positive expectancy, not beating the index. Backtest first, believe later.
 - **Classic TA validity lab:** ✅ S/R Bounce, Fib Retrace, Wave Pull built (v0.8.0–v0.9.0), each with params and an on-chart explanation. First honest measurement: Fib Retrace +6.7% vs +3,109% buy & hold on SPY over 33 years — the classic levels do not add value as implemented. Backtest first, believe later.
@@ -421,9 +428,12 @@ and AWS deployment is intentionally paused until the relevant gates above pass.
 - **Model simulation ledger (sector ETFs)** — built v0.9.0, last-exit tracking added v0.11.2, renamed v0.12.2:
   - Replaces the "Holding" section and moves to the top of the Today view, above Entries/Exits.
   - One simulated position per symbol per strategy, fixed size **100 shares**.
-  - Entry: next open after an entry signal (NDO). Exit: ATR trailing stop or take-profit, whichever first — exit at the following open.
+  - Entry: next open after an entry signal. Exit: the strategy rule, configured
+    close-based stop, or configured take-profit becomes pending at the close and
+    fills at the following available open.
   - Columns: Symbol | Entry date | Entry px | Now | P&L % | P&L $ (100 sh) | ATR stop | Take profit | Note.
-  - ATR stop: starts at entry − 3×ATR(14), ratchets up to close − 3×ATR (never moves down). Take profit: entry + 2×ATR(14).
+  - ATR stop/target settings come from the selected strategy parameters. Initial
+    levels use ATR known on the signal bar, never the not-yet-complete fill bar.
   - Flat rows show the **last exit** (date, price, `stop`/`target`, realized P&L) so an empty section always explains itself.
   - Default scope dropdown: SPY, QQQ, MAGS, SOXX, IGV, then all XLs in that order; "All symbols" option.
   - For the core watchlist, position state is computed from full history (entry never lost); for "All symbols", from the 300-bar lookback.
@@ -443,6 +453,44 @@ Doc version: `v<major>.<minor>.<patch>`.
 Every version gets a dated entry in the [Changelog](#changelog).
 
 ## Changelog
+
+### v0.15.0 — 2026-08-17
+
+- **Stage 1 complete — canonical execution model:** added one deterministic
+  `flat → entry_pending → long → exit_pending` engine and one reusable vectorized
+  rules source for all seven strategies.
+- Backtest API, Today scanner, position ledger, signal endpoint, and chart markers
+  now consume the same replay. Added all-strategy parity tests.
+- Corrected exits to become pending at the completed close and fill at the next
+  available open. Overnight gaps fill at that open; final-bar pending orders are
+  not fabricated as completed trades.
+- Corrected ATR lookahead: initial stop/target levels use the ATR known on the
+  signal bar, not high/low/close from the fill day that did not yet exist at its
+  open.
+- Removed forced final-bar liquidation from headline results. Explorer now shows
+  closed-trade count, an explicit OPEN position metric, and a marker for the open
+  entry.
+- Corrected the simulated ledger to calculate closed P&L with the displayed fixed
+  100-share size.
+- Verified **27 tests passed** and exercised Today and Explorer in a real browser
+  on an isolated server. The existing port-8000 VS Code process was left intact;
+  verification used port 8001.
+
+### v0.14.0 — 2026-08-17
+
+- **Stage 0 complete — reproducible research baseline:** pinned Python 3.12.3 and
+  all direct runtime dependencies, added a pinned development requirements file,
+  and documented the network-free `pytest` command.
+- Added deterministic synthetic OHLC data containing trends, reversals,
+  overnight gaps, and missing sessions; no local market database or live provider
+  is required by the tests.
+- Captured characterization metrics for all seven default strategies. These are
+  regression baselines, not profitability claims.
+- Added ADR 0001 defining completed-close signals, next-available-open fills,
+  pending final-bar orders, and close-based stops until an intraday ordering model
+  exists.
+- Verified the complete suite in both the project environment and a clean
+  temporary virtual environment: **9 tests passed**.
 
 ### v0.13.0 — 2026-08-17
 

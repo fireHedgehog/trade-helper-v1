@@ -31,13 +31,16 @@ Python FastAPI app — the only server component of trade-helper-v1.
         ├── store.py         # SQLite bars, PK (symbol, date), adjusted closes ✅
         ├── universe.py      # SP500 ∪ NDX ∪ XL ETFs from Wikipedia ✅
         ├── strategies.py    # SMA Cross + Donchian Trend + RSI Reversion ✅
-        └── engine.py        # backtest runner on backtesting.py ✅
+        ├── rules.py         # canonical vectorized strategy rules ✅
+        ├── execution.py     # canonical next-open state machine ✅
+        └── engine.py        # API/CLI payloads + marked-to-market metrics ✅
 
 ## Commands
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r backend/requirements.txt
+pip install -r backend/requirements-dev.txt  # app + local test tools
+pytest                                      # deterministic, no network/data fetch
 python -m app.fetch SPY              # daily fetch (idempotent), full history
 python -m app.fetch SPY GC=F CL=F    # more symbols
 python -m app.universe               # build/refresh the watch universe

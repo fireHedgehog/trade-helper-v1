@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS positions (
     symbol      TEXT NOT NULL,
     strategy    TEXT NOT NULL,
     set_name    TEXT NOT NULL DEFAULT 'defaults',
-    state       TEXT NOT NULL,   -- flat | entry_pending | long
+    state       TEXT NOT NULL,   -- flat | entry_pending | long | exit_pending
     entry_date  TEXT,
     entry_price REAL,
     stop        REAL,
