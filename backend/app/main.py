@@ -34,6 +34,8 @@ from .signals import (
 )
 from .strategies import STRATEGIES, STRATEGY_INFO, STRATEGY_PARAMS
 from .universe import DEFAULT_BASKET
+from .version import APP_VERSION
+from .workspace import create_strategy_snapshot
 
 FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
 
@@ -57,11 +59,21 @@ def _invalidate_derived_caches() -> None:
 
 _data_refresh_manager = DataRefreshManager(on_publish=_invalidate_derived_caches)
 
-app = FastAPI(title="trade-helper-v1")
+app = FastAPI(title="trade-helper-v1", version=APP_VERSION)
 
 
 class DataRefreshRequest(BaseModel):
     scope: Literal["core", "stale", "all"] = "core"
+
+
+class StrategyWatchlistRequest(BaseModel):
+    symbols: list[str]
+
+
+class StrategyRunRequest(BaseModel):
+    strategy: str = "CTA Trend"
+    set: str = "defaults"
+    scope: Literal["watchlist", "watchlist_core", "all"] = "watchlist_core"
 
 
 def _validated_strategy_params(strategy: str, raw: dict) -> dict:
@@ -106,9 +118,24 @@ def _validated_window(start: str | None, end: str | None) -> None:
         raise HTTPException(status_code=400, detail="start must not be after end")
 
 
+def _resolved_params(strategy: str, set_name: str) -> dict:
+    if strategy not in STRATEGIES:
+        raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
+    params = {
+        key: value["default"] for key, value in STRATEGY_PARAMS[strategy].items()
+    }
+    if set_name != "defaults":
+        saved = store.list_param_sets(strategy)
+        chosen = next((row for row in saved if row["name"] == set_name), None)
+        if chosen is None:
+            raise HTTPException(status_code=404, detail=f"unknown param set: {set_name}")
+        params.update(chosen["params"])
+    return _validated_strategy_params(strategy, params)
+
+
 @app.get("/api/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "version": APP_VERSION}
 
 
 @app.get("/api/symbols")
@@ -177,6 +204,98 @@ def strategies():
             for name in STRATEGIES
         ]
     }
+
+
+@app.get("/api/strategy-watchlist")
+def strategy_watchlist(strategy: str = "CTA Trend"):
+    if strategy not in STRATEGIES:
+        raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
+    rows = store.list_strategy_watchlist(strategy)
+    return {
+        "strategy": strategy,
+        "symbols": [row["symbol"] for row in rows],
+        "items": rows,
+        "suggested_defaults": CORE_WATCHLIST,
+    }
+
+
+@app.put("/api/strategy-watchlist")
+def save_strategy_watchlist(strategy: str, request: StrategyWatchlistRequest):
+    if strategy not in STRATEGIES:
+        raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
+    stored_symbols = set(store.list_symbols()) - set(FRED_MANAGED_SERIES)
+    normalized = list(dict.fromkeys(symbol.strip().upper() for symbol in request.symbols))
+    unknown = [symbol for symbol in normalized if symbol not in stored_symbols]
+    if unknown:
+        raise HTTPException(
+            status_code=400,
+            detail="watchlist symbols have no stored security data: " + ", ".join(unknown),
+        )
+    store.replace_strategy_watchlist(strategy, normalized)
+    return {"strategy": strategy, "symbols": normalized, "saved": True}
+
+
+@app.get("/api/strategy-runs/latest")
+def latest_strategy_run(
+    strategy: str = "CTA Trend",
+    set: str = "defaults",
+    scope: Literal["watchlist", "watchlist_core", "all"] | None = None,
+    latest_any_set: bool = False,
+):
+    if strategy not in STRATEGIES:
+        raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
+    run = store.latest_strategy_run(
+        strategy,
+        None if latest_any_set else set,
+        scope,
+    )
+    return {
+        "strategy": strategy,
+        "set": run["set"] if run else set,
+        "run": run,
+        "watchlist": store.list_strategy_watchlist(strategy),
+    }
+
+
+@app.post("/api/strategy-runs", status_code=201)
+def run_strategy_snapshot(request: StrategyRunRequest):
+    params = _resolved_params(request.strategy, request.set)
+    watch = [
+        row["symbol"] for row in store.list_strategy_watchlist(request.strategy)
+    ]
+    if request.scope == "watchlist":
+        if not watch:
+            raise HTTPException(
+                status_code=400,
+                detail="strategy watchlist is empty; save symbols in Strategy Lab first",
+            )
+        discovery = []
+    elif request.scope == "watchlist_core":
+        if not watch:
+            watch = list(CORE_WATCHLIST)
+        discovery = list(CORE_WATCHLIST)
+    else:
+        discovery = [
+            symbol
+            for symbol in store.list_symbols()
+            if symbol not in FRED_MANAGED_SERIES
+        ]
+    result = create_strategy_snapshot(
+        request.strategy,
+        params,
+        watch_symbols=watch,
+        discovery_symbols=discovery,
+    )
+    run_id = store.save_strategy_run(
+        request.strategy,
+        request.set,
+        request.scope,
+        "complete",
+        result["data_as_of"],
+        params,
+        result,
+    )
+    return store.get_strategy_run(run_id)
 
 
 @app.get("/api/signal/{symbol}")

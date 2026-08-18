@@ -6,6 +6,10 @@ passive benchmarks.
 
 [Documentation](docs/README.md) · [Roadmap](docs/roadmap.md) · [Product](docs/product.md) · [Research protocol](docs/research-protocol.md) · [Changelog](CHANGELOG.md)
 
+Current checkpoint: **v0.26.0 — research-workspace state foundation**. The
+visual productization and usability gates remain open; this is not a
+production-ready trading interface.
+
 > [!WARNING]
 > **Research prototype—not ready for live trading.** This is not investment
 > advice or a brokerage system. Backtests can be wrong because of defects,
@@ -17,12 +21,13 @@ passive benchmarks.
 Stages 0–3 and the Stage 5 engineering gate of the
 [validation roadmap](docs/roadmap.md) are complete. The Stage 4 CTA v1
 experiment is complete and rejected, while genuinely untouched confirmation
-data remains an open research gate. Stage 6 is now focused first on observable
-data freshness, manual refresh control, and safety clarity.
+data remains an open research gate. Stage 8 now provides the first usable local
+research-workspace slice: menus read stored state, while expensive research runs
+only after an explicit action.
 
 - One canonical state machine drives backtests, signals, chart markers, and the
   simulated ledger: completed-close signal → next-available-open fill.
-- The deterministic test suite currently contains 169 passing tests.
+- The deterministic test suite currently contains 176 passing tests.
 - Trading costs, spread, slippage, gaps, idle-cash yield, uncertainty intervals,
   and benchmark limitations are explicit.
 - The CTA walk-forward experiment is preregistered with a 12-ETF universe and
@@ -43,6 +48,11 @@ data freshness, manual refresh control, and safety clarity.
   expected completed US session, freshness, and refresh progress. Yahoo updates
   are manual, single-job, full-history refreshes with a fixed two-second
   inter-symbol delay and retry backoff. FRED series are kept out of Yahoo jobs.
+- Per-strategy observation lists and immutable completed-run snapshots now live
+  in SQLite. Today keeps user-watched symbols visible after exit and separates
+  their holding/entry/exit lifecycle from full-universe new-entry candidates.
+  Strategy Lab, Symbol Research, Today, and portfolio calculations all require
+  their own explicit run button; opening or changing a menu does not calculate.
 - Existing historical SPY results are exploratory and contaminated by prior
   inspection. Valid confirmation requires genuinely unseen future or otherwise
   uninspected point-in-time data.
@@ -50,8 +60,9 @@ data freshness, manual refresh control, and safety clarity.
   exits without fetching. AWS, machine learning, and brokerage integration also
   remain paused until their prerequisite gates pass.
 
-The remaining work is **not only cron and deployment**. The next product
-priority is the local strategy-validation gate: define what useful means,
+The remaining work is **not only cron and deployment**. The current product
+priority is to finish the local workspace persistence/usability gate. The next
+research priority is the local strategy-validation gate: define what useful means,
 compare each hypothesis fairly with buy-and-hold and cash after costs, test
 whether any apparent advantage is stable, and record an honest
 reject/revise/continue decision. This is disciplined validation, not repeated
@@ -72,7 +83,9 @@ Possible CTA v2 changes and machine learning are parked in the
 was surprising, its experiment plumbing received an
 [independent audit](docs/research-results/cta-trend-wf-v1-audit.md). No material
 defect was found, so the rejection remains valid under its locked rules. CTA v2
-remains parked while the next business hypothesis is defined.
+and ML remain parked. After the Stage 8 workspace gate, the preserved next
+research task is to select one economically justified hypothesis and write its
+numeric rejection criteria before running it.
 
 The honest baseline is poor as an “edge”: full-history SPY CTA returned roughly
 276.5% net versus roughly 3,119.6% buy-and-hold. Lower drawdown does not by itself
@@ -164,7 +177,7 @@ scripts/                 operational scripts; unattended scheduling is paused
 | Document | Purpose |
 | --- | --- |
 | [Documentation index](docs/README.md) | Navigation for all project documents |
-| [Validation roadmap](docs/roadmap.md) | Stages 0–10, exit gates, and current work |
+| [Validation roadmap](docs/roadmap.md) | Stages 0–11, exit gates, and current work |
 | [Product and research design](docs/product.md) | Views, trading rules, and design notes |
 | [Research protocol](docs/research-protocol.md) | Locked Stage 4 hypothesis and methodology |
 | [Architecture decisions](docs/README.md#architecture-decisions) | Execution, data, and statistics contracts |

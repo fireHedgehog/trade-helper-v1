@@ -27,7 +27,10 @@ def clear_portfolio_cache():
 
 
 async def test_health(client) -> None:
-    assert (await client.get("/api/health")).json() == {"status": "ok"}
+    assert (await client.get("/api/health")).json() == {
+        "status": "ok",
+        "version": "0.26.0",
+    }
 
 
 async def test_symbol_selector_excludes_fred_macro_series(client, monkeypatch) -> None:
@@ -208,6 +211,84 @@ async def test_bars_rejects_oversized_request(client) -> None:
     response = await client.get("/api/bars/SPY", params={"days": 100_001})
     assert response.status_code == 400
     assert response.json()["detail"] == "days must be between 0 and 10000"
+
+
+async def test_watchlist_save_rejects_symbols_without_stored_data(
+    client, monkeypatch
+) -> None:
+    monkeypatch.setattr(main.store, "list_symbols", lambda: ["SPY", "QQQ"])
+    response = await client.put(
+        "/api/strategy-watchlist?strategy=CTA%20Trend",
+        json={"symbols": ["SPY", "NOPE"]},
+    )
+    assert response.status_code == 400
+    assert "NOPE" in response.json()["detail"]
+
+
+async def test_latest_strategy_run_is_read_only_and_returns_empty_state(
+    client, monkeypatch
+) -> None:
+    captured = {}
+
+    def fake_latest(*args):
+        captured["args"] = args
+        return None
+
+    monkeypatch.setattr(main.store, "latest_strategy_run", fake_latest)
+    monkeypatch.setattr(main.store, "list_strategy_watchlist", lambda *_args: [])
+    response = await client.get(
+        "/api/strategy-runs/latest?strategy=CTA%20Trend"
+        "&scope=all&latest_any_set=true"
+    )
+    assert response.status_code == 200
+    assert response.json()["run"] is None
+    assert captured["args"] == ("CTA Trend", None, "all")
+
+
+async def test_explicit_strategy_run_persists_snapshot(client, monkeypatch) -> None:
+    monkeypatch.setattr(
+        main.store,
+        "list_strategy_watchlist",
+        lambda *_args: [{"symbol": "SPY"}],
+    )
+    monkeypatch.setattr(main.store, "save_strategy_run", lambda *_args: 7)
+    monkeypatch.setattr(
+        main.store,
+        "get_strategy_run",
+        lambda *_args: {"id": 7, "result": {"watchlist": [{"symbol": "SPY"}]}},
+    )
+    captured = {}
+
+    def fake_snapshot(strategy, params, *, watch_symbols, discovery_symbols):
+        captured.update(
+            strategy=strategy,
+            params=params,
+            watch=watch_symbols,
+            discovery=discovery_symbols,
+        )
+        return {"data_as_of": "2024-01-03", "watchlist": [{"symbol": "SPY"}]}
+
+    monkeypatch.setattr(main, "create_strategy_snapshot", fake_snapshot)
+    response = await client.post(
+        "/api/strategy-runs",
+        json={"strategy": "CTA Trend", "scope": "watchlist"},
+    )
+    assert response.status_code == 201
+    assert response.json()["id"] == 7
+    assert captured["watch"] == ["SPY"]
+    assert captured["discovery"] == []
+
+
+async def test_watchlist_run_requires_an_explicit_saved_watchlist(
+    client, monkeypatch
+) -> None:
+    monkeypatch.setattr(main.store, "list_strategy_watchlist", lambda *_args: [])
+    response = await client.post(
+        "/api/strategy-runs",
+        json={"strategy": "CTA Trend", "scope": "watchlist"},
+    )
+    assert response.status_code == 400
+    assert "watchlist is empty" in response.json()["detail"]
 
 
 async def test_backtest_rejects_impossible_cost_assumption(client) -> None:

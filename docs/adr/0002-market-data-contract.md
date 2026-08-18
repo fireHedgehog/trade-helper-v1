@@ -44,11 +44,11 @@ adjusted slice with an older adjustment basis.
 
 - Storage rejects the entire malformed batch before writing any row.
 - Fetch adapters are responsible for provider-specific cleaning before storage.
-- Stage 9 must add staging, coverage thresholds, revision detection, and atomic
+- Stage 10 must add staging, coverage thresholds, revision detection, and atomic
   publication before unattended updates are enabled.
 - Data-source, adjustment mode, fetch timestamp, and revision provenance still
   need explicit metadata; this ADR documents the current contract, not completion
   of data lineage.
 - v0.23.0 adds a holiday-unaware expected-US-weekday freshness classification,
   provider-separated inventory, and observable manual refresh progress. Exchange
-  holidays, persistent run history, staging, and revision diffs remain Stage 9.
+  holidays, persistent run history, staging, and revision diffs remain Stage 10.

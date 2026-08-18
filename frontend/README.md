@@ -8,12 +8,18 @@ Static web UI for trade-helper-v1. Served by the backend — **no build step, no
 
 Five views behind a sidebar nav:
 
-- **Today** ✅ — historical post-signal statistics, locked shared-capital
-  portfolio replay, current entry/exit cards, and regime state. The portfolio
-  panel shows actual account-sized positions and refuses strategies without a
-  protective stop.
-- **Symbol Explorer** ✅ — searchable symbol picker (typeahead), Lightweight Charts: candles, volume, per-strategy overlays (SMA / Donchian + ATR stop), entry/exit markers, 3M–10Y/ALL range buttons + zoom controls, range-aware metrics, equity curve, trades table, editable strategy params with reset.
-- **Strategy Lab** ✅ — compare strategies and edit/save parameter sets.
+- **Today** ✅ — immediately reads the last stored strategy snapshot and keeps
+  persistent watched lifecycle separate from full-universe entry discovery.
+  The discovery board has Intersections, Momentum, New Breakouts, and one tab
+  per algorithm; each populated model tab represents a completed all-security
+  scan and shows every entry-pending candidate. Watch updates, universe scans,
+  and portfolio comparisons have separate explicit run buttons.
+- **Symbol Research** ✅ — searchable symbol picker (typeahead), Lightweight
+  Charts, strategy overlays, markers, range controls, metrics, equity, trades,
+  editable parameters, and evidence-status strategy dossiers. Only Run Backtest
+  calculates; selection and navigation are read-only.
+- **Strategy Lab** ✅ — select/save a per-strategy watchlist, compare strategies,
+  and edit/save parameter sets. Only Compute / refresh runs the scoreboard.
 - **Macro** ✅ — event calendar, macro cards, and regime filter.
 - **Data Management** ✅ — provider-separated inventory, expected-session
   freshness, type-to-filter coverage table, manual Yahoo refresh controls, and
@@ -39,7 +45,7 @@ The backend computes everything; the frontend only draws. A backtest returns JSO
 
     frontend/
     ├── README.md
-    └── index.html     # single page: Today, Explorer, Lab, Macro, and Data ✅
+        └── index.html     # single page: Today, Research, Lab, Macro, and Data ✅
 
 ## How it's served
 

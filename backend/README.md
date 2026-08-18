@@ -8,9 +8,11 @@ Python FastAPI app — the only server component of trade-helper-v1.
 
 - **Manual fetch** — pull adjusted daily histories from Yahoo Finance via
   `yfinance`; unattended scheduling is parked.
-- **Store** — write fetched bars into SQLite under `../data/`.
+- **Store** — write fetched bars, saved strategy watchlists, and immutable
+  completed strategy snapshots into SQLite under `../data/`.
 - **REST API** — endpoints for symbols, price history, signal scans, single-symbol
-  backtests, research statistics, and the locked shared-account replay.
+  backtests, research statistics, watchlists, explicit strategy snapshots, and
+  the locked shared-account replay.
 - **Data operations** — inventory provider ownership/freshness and run one
   observable, rate-limited manual Yahoo refresh at a time.
 - **Serve the frontend** — static files from `../frontend/`.
@@ -46,6 +48,8 @@ Python FastAPI app — the only server component of trade-helper-v1.
         ├── portfolio_benchmark.py # Passive ETF-12, SPY, and cash controls ✅
         ├── portfolio_universe.py # locked ETF/risk-classification manifest ✅
         ├── portfolio_api.py # validated JSON adapter for /api/portfolio ✅
+        ├── workspace.py     # explicit strategy snapshot composition ✅
+        ├── version.py       # application checkpoint version ✅
         └── engine.py        # API/CLI payloads + marked-to-market metrics ✅
 
 ## Commands

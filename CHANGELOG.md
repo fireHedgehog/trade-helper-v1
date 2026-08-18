@@ -2,6 +2,42 @@
 
 # Changelog
 
+## v0.26.0 — 2026-08-18
+
+- Established v0.26.0 as the workflow/state foundation rather than a
+  production-ready UI, exposed the version through FastAPI/OpenAPI and
+  `/api/health`, and displayed it in the local sidebar.
+- Studied the user's older `trade-research-v1` workflow and recorded which
+  interaction patterns were adopted without importing its unvalidated
+  algorithms, ranking claims, or paper-trading state.
+- Made navigation read-only: Today reads the last stored strategy run, Strategy
+  Lab waits for Compute / refresh, and Symbol Research waits for Run Backtest.
+  Portfolio comparison and data refresh remain separate explicit actions.
+- Added ordered per-strategy observation lists and immutable completed-run
+  snapshots to SQLite, plus typed API endpoints for saving/reading watchlists,
+  creating explicit snapshots, and reading the latest snapshot without running
+  a strategy.
+- Restored the persistent personal observation workflow: watched symbols remain
+  visible through holding and exit with separate last-entry, last-exit, next
+  action, stop, and data fields. Removed the redundant recent-events panel and
+  removed the implicit core-list fallback from the user-owned watchlist.
+- Added evidence-status strategy dossiers to Symbol Research and a stored-result
+  discovery board with Intersections, Momentum, New Breakouts, and every current
+  algorithm. Tabs use completed full-universe scans and show every entry-pending
+  candidate; watchlist/core runs cannot populate them. Momentum remains empty,
+  while New Breakouts combines candidates without claiming a separate model.
+- Inserted the usable-workspace work as Stage 8 and preserved the next research
+  priority as Stage 9: select one economically justified hypothesis and write
+  its numeric rejection criteria before running it. Cron and AWS move to Stages
+  10 and 11 and remain parked.
+- Expanded Stage 8 into a product specification: semantic color and typography,
+  readable sentence templates, spacious page hierarchy, Today command-center
+  and Symbol Research dossier blueprints, rejection of vague confidence labels,
+  durable progress requirements, and non-programmer usability acceptance tests.
+- Added seven deterministic workspace/persistence/API tests; all 176 tests pass. Playwright
+  confirms Lab and Research navigation causes no calculation/loading overlay and
+  reports zero browser console errors.
+
 ## v0.25.0 — 2026-08-18
 
 - Implemented Passive ETF-12 v1 under ADR 0005: equal-weight whole-share entry

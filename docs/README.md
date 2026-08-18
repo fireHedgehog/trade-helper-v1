@@ -9,6 +9,9 @@
   postponed.
 - [Product and research design](product.md) — user-facing views, trading ground
   rules, recorded design decisions, and limitations.
+- [Research workspace redesign](workspace-redesign.md) — lessons from the older
+  app, explicit-run interaction contract, product visual/copy standard, page
+  blueprints, usability tests, watchlists, and model discovery.
 - [Out-of-sample research protocol](research-protocol.md) — preregistered CTA
   hypothesis, partitions, acceptance gates, and contamination disclosure.
 - [CTA Trend walk-forward v1 result](research-results/cta-trend-wf-v1.md) —

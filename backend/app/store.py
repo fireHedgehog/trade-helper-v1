@@ -57,6 +57,30 @@ CREATE TABLE IF NOT EXISTS positions (
     updated     TEXT NOT NULL,   -- last bar date processed
     PRIMARY KEY (symbol, strategy, set_name)
 );
+
+CREATE TABLE IF NOT EXISTS strategy_watchlists (
+    strategy   TEXT NOT NULL,
+    symbol     TEXT NOT NULL,
+    note       TEXT NOT NULL DEFAULT '',
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (strategy, symbol)
+);
+
+CREATE TABLE IF NOT EXISTS strategy_runs (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    strategy    TEXT NOT NULL,
+    set_name    TEXT NOT NULL DEFAULT 'defaults',
+    scope       TEXT NOT NULL,
+    status      TEXT NOT NULL,
+    data_as_of  TEXT,
+    params      TEXT NOT NULL,
+    result      TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_strategy_runs_latest
+ON strategy_runs(strategy, set_name, id DESC);
 """
 
 
@@ -78,6 +102,15 @@ def connect() -> sqlite3.Connection:
     ):
         if column not in cols:
             conn.execute(f"ALTER TABLE positions ADD COLUMN {column} {sql_type}")
+    watch_cols = [
+        row[1]
+        for row in conn.execute("PRAGMA table_info(strategy_watchlists)").fetchall()
+    ]
+    if watch_cols and "sort_order" not in watch_cols:
+        conn.execute(
+            "ALTER TABLE strategy_watchlists "
+            "ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0"
+        )
     return conn
 
 
@@ -277,3 +310,128 @@ def latest_bar_date() -> str:
     with connect() as conn:
         row = conn.execute("SELECT MAX(date) FROM bars").fetchone()
     return row[0] or ""
+
+
+def list_strategy_watchlist(strategy: str) -> list[dict]:
+    """Return the user's persistent, explicitly selected symbols in stable order."""
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT symbol, note, created_at FROM strategy_watchlists "
+            "WHERE strategy = ? ORDER BY sort_order, symbol",
+            (strategy,),
+        ).fetchall()
+    return [
+        {"symbol": row[0], "note": row[1], "created_at": row[2]}
+        for row in rows
+    ]
+
+
+def replace_strategy_watchlist(strategy: str, symbols: list[str]) -> None:
+    """Atomically replace one strategy's user-owned observation list."""
+    normalized = list(dict.fromkeys(symbol.strip().upper() for symbol in symbols))
+    if any(not symbol for symbol in normalized):
+        raise ValueError("watchlist symbols must be non-empty")
+    with connect() as conn:
+        existing = {
+            row[0]: row[1]
+            for row in conn.execute(
+                "SELECT symbol, note FROM strategy_watchlists WHERE strategy = ?",
+                (strategy,),
+            ).fetchall()
+        }
+        conn.execute("DELETE FROM strategy_watchlists WHERE strategy = ?", (strategy,))
+        conn.executemany(
+            "INSERT INTO strategy_watchlists"
+            "(strategy, symbol, note, sort_order) VALUES (?, ?, ?, ?)",
+            [
+                (strategy, symbol, existing.get(symbol, ""), index)
+                for index, symbol in enumerate(normalized)
+            ],
+        )
+
+
+def save_strategy_run(
+    strategy: str,
+    set_name: str,
+    scope: str,
+    status: str,
+    data_as_of: str | None,
+    params: dict,
+    result: dict,
+) -> int:
+    """Append one immutable explicit-run snapshot and return its identifier."""
+    with connect() as conn:
+        cursor = conn.execute(
+            "INSERT INTO strategy_runs "
+            "(strategy, set_name, scope, status, data_as_of, params, result) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                strategy,
+                set_name,
+                scope,
+                status,
+                data_as_of,
+                json.dumps(params, sort_keys=True),
+                json.dumps(result, sort_keys=True),
+            ),
+        )
+        return int(cursor.lastrowid)
+
+
+def latest_strategy_run(
+    strategy: str,
+    set_name: str | None = "defaults",
+    scope: str | None = None,
+) -> dict | None:
+    """Read the latest stored result without recalculating the strategy."""
+    clauses = ["strategy = ?"]
+    values: list[str] = [strategy]
+    if set_name is not None:
+        clauses.append("set_name = ?")
+        values.append(set_name)
+    if scope is not None:
+        clauses.append("scope = ?")
+        values.append(scope)
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT id, set_name, scope, status, data_as_of, params, result, created_at "
+            f"FROM strategy_runs WHERE {' AND '.join(clauses)} "
+            "ORDER BY id DESC LIMIT 1",
+            values,
+        ).fetchone()
+    if row is None:
+        return None
+    return {
+        "id": row[0],
+        "strategy": strategy,
+        "set": row[1],
+        "scope": row[2],
+        "status": row[3],
+        "data_as_of": row[4],
+        "params": json.loads(row[5]),
+        "result": json.loads(row[6]),
+        "created_at": row[7],
+    }
+
+
+def get_strategy_run(run_id: int) -> dict | None:
+    """Read one immutable run by identifier."""
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT strategy, set_name, scope, status, data_as_of, params, result, "
+            "created_at FROM strategy_runs WHERE id = ?",
+            (run_id,),
+        ).fetchone()
+    if row is None:
+        return None
+    return {
+        "id": run_id,
+        "strategy": row[0],
+        "set": row[1],
+        "scope": row[2],
+        "status": row[3],
+        "data_as_of": row[4],
+        "params": json.loads(row[5]),
+        "result": json.loads(row[6]),
+        "created_at": row[7],
+    }

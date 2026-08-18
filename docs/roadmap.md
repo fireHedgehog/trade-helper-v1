@@ -274,7 +274,90 @@ position state, and failure conditions without relying on a tooltip.
 **Exit gate:** the application has a documented threat model and no endpoint is
 internet-exposed by default.
 
-## Stage 8 — local strategy validation and product decision gate
+## Stage 8 — usable local research workspace
+
+**Goal:** make the daily research workflow deliberate, persistent, and useful
+before asking the user to evaluate another model. Statistical honesty and
+product usability are separate requirements: correct APIs do not compensate for
+an unreadable interface, and polished colors do not validate an algorithm.
+
+The interaction contract and reference-app review are recorded in the
+[workspace redesign](workspace-redesign.md).
+
+**v0.26.0 checkpoint:** the workflow/state foundation below is complete and
+versioned. The visual product, language, progress, and usability gates remain
+open; v0.26.0 must not be described as production-ready.
+
+### Stage 8A — workflow and persistence foundation
+
+- [x] Make menu navigation read stored results without triggering backtests,
+      scans, portfolio replay, or confidence calculations.
+- [x] Add explicit strategy-snapshot, portfolio, backtest, and Strategy Lab run
+      actions instead of treating selection changes as permission to compute.
+- [x] Persist an ordered observation list per strategy.
+- [x] Persist immutable strategy-run snapshots with parameters, scope, data date,
+      watch states, last entries/exits, new-entry candidates, rankings, and
+      coverage failures.
+- [x] Keep watched symbols visible through holding and exit states, while model
+      tabs read only separate completed full-universe candidate runs.
+- [x] Add evidence-status strategy accordions to Symbol Research.
+- [x] Add stored-result tabs for intersections, Momentum, New Breakouts, and
+      every current algorithm. Keep Momentum empty until it has a preregistered
+      model; treat New Breakouts as a cross-model entry-candidate view, not a new
+      claim.
+
+### Stage 8B — visual and language product system
+
+- [ ] Define and apply semantic green/red/amber/blue/gray tokens for measured
+      outcomes, state, cautions, selection, and unavailable data. Pair every
+      color with text; color never means statistical validity.
+- [ ] Increase base type, line height, card padding, table row height, and page
+      rhythm so the UI is readable and spacious rather than compact/debug-like.
+- [ ] Replace raw engine phrases with tested sentence templates containing exact
+      symbol, threshold/level, price, unit, data date, and intended fill timing.
+- [ ] Replace vague confidence/feasibility language with evidence status, sample,
+      benchmark, costs, interval or insufficient-evidence warning.
+- [ ] Give every empty, stale, failed, pending, and never-run state a designed
+      explanation and the correct next action.
+
+### Stage 8C — page productization
+
+- [ ] Rebuild Today as a command center ordered by data readiness → watched
+      lifecycle → new-entry candidates/intersections → explicit actions, with
+      portfolio research kept secondary.
+- [ ] Rebuild Symbol Research as a modern dossier: spacious identity summary,
+      plain-language model state, exact levels/timing, chart, evidence, benchmark,
+      risk, uncertainty, and expandable per-algorithm sections.
+- [ ] Make every signed price/return/risk/drawdown number easy to scan with units,
+      signs, semantic color, and supporting text.
+- [ ] Reorganize Strategy Lab into watchlist ownership, parameters, execution,
+      stored results, and evidence-decision sections.
+- [ ] Lead Data Management with readiness/action/progress and keep the detailed
+      searchable inventory below it.
+
+### Stage 8D — durable operation and usability verification
+
+- [ ] Persist Strategy Lab scoreboard results, not only strategy snapshots.
+- [ ] Add watchlist notes plus deliberate remove and reorder interactions.
+- [ ] Add persistent full-universe run progress, processed/total/current symbol,
+      completion/failure history, cancellation/recovery semantics, and clear
+      behavior after a server restart.
+- [ ] Add automated browser checks across reloads, empty state, stale/failure
+      states, unsupported portfolio strategies, full-universe progress, and a
+      narrow viewport.
+- [ ] Run and retain the non-programmer usability script defined in the workspace
+      redesign; resolve terminology or hierarchy failures before Stage 9.
+- [ ] Split the single frontend file after the interaction/visual contracts
+      stabilize, with state/render modules covered by focused tests.
+
+**Exit gate:** the user can refresh data, explicitly run research, close or
+reload the browser, and recover the same watched symbols and last completed
+results without any menu opening an expensive calculation. They can identify
+data readiness, current lifecycle, every new candidate, intended timing, risk,
+evidence status, and failure/empty states without source code, hover-only help,
+or unexplained abbreviations.
+
+## Stage 9 — local strategy validation and product decision gate
 
 **Goal:** decide locally whether a strategy is useful enough to continue before
 automating or deploying it.
@@ -322,7 +405,7 @@ rescued by changing its rules after seeing its result.
 hypothesis or locks exactly one candidate for future unseen-data observation.
 Working software or an attractive historical chart is not enough to pass.
 
-## Stage 9 — reliable daily operation (parked; cron only after Stages 0–8)
+## Stage 10 — reliable daily operation (parked; cron only after Stages 0–9)
 
 **Goal:** make an unattended update observable, idempotent, and recoverable.
 
@@ -344,7 +427,7 @@ staging, locks, persistent run history, alerts, and recovery controls below.
 **Exit gate:** repeated scheduled runs cannot corrupt or silently partially
 publish the dataset, and a failed run produces a visible alert.
 
-## Stage 10 — AWS deployment (last)
+## Stage 11 — AWS deployment (last)
 
 **Goal:** deploy a validated research application, not move unresolved risk to
 the cloud.
@@ -374,11 +457,12 @@ Work one small slice at a time:
 6. Add portfolio/risk semantics.
 7. Complete the local safety work needed for honest experimentation; keep the
    broader external-use UX and security requirements recorded.
-8. Run one hypothesis at a time through the local strategy-validation and
+8. Complete the usable local research workspace and explicit-run workflow.
+9. Run one hypothesis at a time through the local strategy-validation and
    product decision gate.
-9. Complete every external-use UX and security gate, then revisit cron only if
+10. Complete every external-use UX and security gate, then revisit cron only if
    unattended operation still has a clear product purpose.
-10. Revisit AWS only after cron is demonstrably reliable and deployment has a
+11. Revisit AWS only after cron is demonstrably reliable and deployment has a
     justified user need.
 
 Adding new strategies, machine learning, broker integration, cron automation,

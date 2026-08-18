@@ -22,6 +22,7 @@
     padding: 16px 10px; display: flex; flex-direction: column; gap: 6px;
   }
   aside h1 { font-size: 14px; margin: 0 8px 12px; color: var(--muted); font-weight: 600; }
+  .app-version { margin: -8px 8px 12px; color: var(--muted); font-size: 11px; }
   .nav-item {
     padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 14px;
     color: var(--muted);
@@ -212,13 +213,20 @@
   .guide .rule { color: var(--text); }
   .guide .rule b { color: var(--muted); }
   .guide-now { color: var(--green); }
+  .research-accordion details { border: 1px solid var(--border); border-radius: 8px; margin: 6px 0; padding: 8px; background: var(--panel); }
+  .research-accordion summary { cursor: pointer; font-size: 12px; font-weight: 600; }
+  .research-accordion p { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .model-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .model-tab { background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
+  .model-tab.active { color: var(--text); border-color: var(--blue); background: #17223a; }
 </style>
 </head>
 <body>
 <aside>
   <h1>trade-helper-v1</h1>
+  <div class="app-version" id="app-version">local research workspace</div>
   <div class="nav-item active" data-view="today">Today</div>
-  <div class="nav-item" data-view="explorer">Symbol Explorer</div>
+  <div class="nav-item" data-view="explorer">Symbol Research</div>
   <div class="nav-item" data-view="lab">Strategy Lab</div>
   <div class="nav-item" data-view="macro">Macro</div>
   <div class="nav-item" data-view="data">Data Management</div>
@@ -279,19 +287,19 @@
           <tbody></tbody>
         </table>
       </div>
+      <div>
+        <h2>Strategy research dossier</h2>
+        <div class="research-accordion" id="research-accordions"></div>
+      </div>
     </div>
   </div>
   </div>
 
   <div id="view-today" class="view">
     <div class="toolbar">
-      <select id="today-scope">
-        <option value="core" selected>Core watchlist</option>
-        <option value="all">All symbols</option>
-      </select>
       <select id="today-strategy"></select>
       <select id="today-set"><option value="defaults">Params: defaults</option></select>
-      <button class="primary" id="today-refresh">Refresh scan</button>
+      <button class="primary" id="today-refresh">Update watched status</button>
       <span id="today-status"></span>
       <span id="today-data-freshness"></span>
       <span id="regime-banner"></span>
@@ -299,26 +307,33 @@
     <div class="safety-banner">Research only. “Entry” and “exit” describe historical rule state at the latest stored close—not an order, forecast, or permission to trade. Check freshness and failures first.</div>
     <div class="today-body">
       <section class="panel">
-        <h2 id="confidence-title">Historical post-signal statistics</h2>
-        <div id="confidence-body">computing…</div>
+        <h2>Your watched symbols <span class="badge">persistent per strategy</span></h2>
+        <table>
+          <thead><tr><th>Symbol</th><th>Status</th><th>Last entry</th><th>Last exit</th><th>Next action</th><th>Close</th><th>Stop</th><th>Data</th></tr></thead>
+          <tbody id="today-watchlist"></tbody>
+        </table>
+        <div id="today-run-note" class="sample-note">Reading the last stored run; opening this menu never starts a scan.</div>
+      </section>
+      <section class="panel">
+        <h2>New-entry candidates by model <span class="badge">full stored universe · no calculation on tab click</span></h2>
+        <button id="today-run-discovery">Run full-universe picks for selected model</button>
+        <div class="model-tabs" id="model-discovery-tabs"></div>
+        <div class="sample-note" id="model-discovery-note"></div>
+        <table>
+          <thead><tr><th>#</th><th>Symbol</th><th>Model(s)</th><th>State / event</th><th>Score</th><th>Explanation</th><th>Data</th></tr></thead>
+          <tbody id="model-discovery-rows"></tbody>
+        </table>
       </section>
       <section class="panel">
         <h2>Shared-capital portfolio replay <span class="badge">locked 12 ETFs · one $100k account · historical mechanics only</span></h2>
+        <button id="today-run-portfolio">Run portfolio comparison</button>
         <div class="portfolio-summary" id="portfolio-summary"></div>
         <div class="portfolio-summary" id="portfolio-benchmark"></div>
         <table>
           <thead><tr><th>Symbol</th><th>Shares</th><th>Entry date</th><th>Entry</th><th>Close</th><th>Value</th><th>Unrealized P&amp;L</th><th>Stop</th><th>Sector</th></tr></thead>
           <tbody id="portfolio-positions"></tbody>
         </table>
-        <div class="sample-note" id="portfolio-note">loading portfolio replay…</div>
-      </section>
-      <section class="panel">
-        <h2>Entries today</h2>
-        <div class="pick-cards" id="today-entries"></div>
-      </section>
-      <section class="panel">
-        <h2>Exits today</h2>
-        <div class="pick-cards" id="today-exits"></div>
+        <div class="sample-note" id="portfolio-note">Not calculated on menu open. Use the explicit button when you need the historical portfolio comparison.</div>
       </section>
     </div>
   </div>
@@ -337,6 +352,8 @@
         <button id="lab-select-all">All symbols</button>
         <button id="lab-default">Default</button>
         <button id="lab-clear">Clear</button>
+        <select id="lab-watch-strategy"></select>
+        <button id="lab-save-watchlist">Save as strategy watchlist</button>
         <button class="primary" id="lab-compute">Compute / refresh</button>
         <input id="lab-symbol-search" type="search" placeholder="Filter 500+ symbols…" autocomplete="off" spellcheck="false">
         <span id="lab-data-freshness" class="sample-note"></span>
@@ -346,7 +363,7 @@
           <thead><tr><th>Strategy</th><th>All-time win</th><th>Mkt base</th><th>Avg 20d</th><th>Samples</th><th>3Y win</th><th>3Y samples</th><th>Ret med</th><th>B&H med</th></tr></thead>
           <tbody id="scoreboard"></tbody>
         </table>
-        <div class="sample-note">Honest statistics: measured past performance, not a prediction. Ret med / B&H med = median strategy vs buy &amp; hold return across the selected symbols and window. Small samples are noise.</div>
+        <div class="sample-note">Opening Strategy Lab does not compute. Save controls what remains visible on Today for this strategy; Compute explicitly runs historical statistics. Measured past performance is not a prediction.</div>
       </section>
     </div>
   </div>
@@ -413,6 +430,15 @@ async function api(path, options = {}) {
   return res.json();
 }
 
+async function loadAppVersion() {
+  try {
+    const health = await api('/api/health');
+    $('#app-version').textContent = `v${health.version} · local research workspace`;
+  } catch (_error) {
+    $('#app-version').textContent = 'local research workspace';
+  }
+}
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -428,7 +454,7 @@ function loading(on, text) {
   busyCount = Math.max(0, busyCount + (on ? 1 : -1));
   $('#dimmer').hidden = busyCount === 0;
   if (on && text) $('#dimmer-text').textContent = text;
-  document.querySelectorAll('#lab-compute, #today-refresh, #run').forEach((b) => {
+  document.querySelectorAll('#lab-compute, #today-refresh, #today-run-discovery, #today-run-portfolio, #run').forEach((b) => {
     b.disabled = busyCount > 0;
   });
 }
@@ -663,6 +689,15 @@ let strategiesMeta = [];
 let currentParams = {};
 const barsCache = {};
 const btCache = new Map();
+const STRATEGY_EVIDENCE = {
+  'CTA Trend': ['Rejected v1', 'Insufficient validated excess-return evidence; retained for study, not recommendation.'],
+  'SMA Cross': ['Baseline only', 'Learning control; no accepted portfolio edge claim.'],
+  'Donchian Trend': ['Unvalidated', 'Canonical mechanics exist; preregistered evidence gate pending.'],
+  'S/R Bounce': ['Exploratory', 'Classic-TA implementation; no durable-edge claim.'],
+  'Fib Retrace': ['Exploratory poor result', 'Historical SPY result materially trailed buy-and-hold.'],
+  'Wave Pull': ['Unvalidated', 'Mechanics exist; independent research evidence pending.'],
+  'RSI Reversion': ['Unvalidated', 'No protective-stop portfolio contract or accepted validation.'],
+};
 
 async function loadSymbols() {
   const { symbols } = await api('/api/symbols');
@@ -679,9 +714,24 @@ async function loadStrategies() {
     `<option ${i === 0 ? 'selected' : ''}>${s.name}</option>`).join('');
   $('#today-strategy').innerHTML = strategies.map((s, i) =>
     `<option ${i === 0 ? 'selected' : ''}>${s.name}</option>`).join('');
+  $('#lab-watch-strategy').innerHTML = strategies.map((s, i) =>
+    `<option ${i === 0 ? 'selected' : ''}>${s.name}</option>`).join('');
   resetParams();
   renderParams();
+  renderResearchAccordions();
   loadParamSets();
+}
+
+function renderResearchAccordions() {
+  $('#research-accordions').innerHTML = strategiesMeta.map((strategy) => {
+    const [label, evidence] = STRATEGY_EVIDENCE[strategy.name] || ['Pending', 'Evidence review pending.'];
+    const selected = strategy.name === $('#strategy').value ? ' open' : '';
+    return `<details${selected}><summary>${escapeHtml(strategy.name)} · ${escapeHtml(label)}</summary>` +
+      `<p><b>Evidence:</b> ${escapeHtml(evidence)}</p>` +
+      `<p><b>Rules:</b> ${escapeHtml(strategy.info.entry)} ${escapeHtml(strategy.info.exit)}</p>` +
+      `<p><b>Risk:</b> Historical daily-bar model; gaps, costs, sample size, and selection bias remain relevant.</p>` +
+      `<p><b>Sector relevance:</b> Pending explicit research. No sector suitability is inferred from a backtest.</p></details>`;
+  }).join('');
 }
 
 function currentMeta() {
@@ -709,10 +759,14 @@ function renderParams() {
       const p = meta.params[inp.dataset.key];
       currentParams[inp.dataset.key] =
         p.type === 'float' ? parseFloat(inp.value) : parseInt(inp.value, 10);
-      run();
+      $('#status').textContent = 'Parameters changed · press Run Backtest to calculate.';
     })
   );
-  $('#reset-params').addEventListener('click', () => { resetParams(); renderParams(); run(); });
+  $('#reset-params').addEventListener('click', () => {
+    resetParams();
+    renderParams();
+    $('#status').textContent = 'Defaults restored · press Run Backtest to calculate.';
+  });
 }
 
 /* ---------- saved param sets (tuned models) ---------- */
@@ -746,7 +800,7 @@ $('#param-set').addEventListener('change', async () => {
   if (set) {
     currentParams = { ...set.params };
     renderParams();
-    run();
+    $('#status').textContent = `Loaded "${name}" · press Run Backtest to calculate.`;
   }
 });
 
@@ -778,7 +832,7 @@ function chooseSymbol(s) {
   selectedSymbol = s;
   $('#symbol-input').value = s;
   closeMenu();
-  run();
+  $('#status').textContent = `${s} selected · press Run Backtest to calculate.`;
 }
 
 const symbolInput = $('#symbol-input');
@@ -882,16 +936,18 @@ function applyView(name) {
   document.querySelectorAll('.nav-item').forEach((i) => {
     i.classList.toggle('active', i.dataset.view === name);
   });
-  if (name === 'today') loadToday();
+  if (name === 'today') loadTodayStored();
   if (name === 'macro') loadMacro();
   if (name === 'data') loadData();
   if (name === 'lab') {
     const ready = labPickerBuilt ? Promise.resolve() : buildSymbolPicker();
-    ready.then(() => loadLab());
+    ready.then(() => labNote());
   }
   if (name === 'explorer' && !explorerLoaded) {
     explorerLoaded = true;
-    loadSymbols().then(run);
+    loadSymbols().then(() => {
+      $('#status').textContent = 'Select a symbol and strategy, then press Run Backtest.';
+    });
   }
 }
 
@@ -910,12 +966,14 @@ let labPickerBuilt = false;
 let defaultBasket = [];
 
 async function buildSymbolPicker() {
-  const [{ symbols, default_basket }, freshnessData] = await Promise.all([
+  const strategy = $('#lab-watch-strategy').value || 'CTA Trend';
+  const [{ symbols, default_basket }, freshnessData, watchlist] = await Promise.all([
     api('/api/symbols'),
     api('/api/data/status?details=false').catch(() => null),
+    api(`/api/strategy-watchlist?strategy=${encodeURIComponent(strategy)}`),
   ]);
   defaultBasket = default_basket || [];
-  const dflt = new Set(defaultBasket);
+  const dflt = new Set(watchlist.symbols.length ? watchlist.symbols : defaultBasket);
   $('#lab-symbols').innerHTML = symbols.map((s) =>
     `<label><input type="checkbox" value="${s}" ${dflt.has(s) ? 'checked' : ''}> ${s}</label>`
   ).join('');
@@ -929,6 +987,19 @@ async function buildSymbolPicker() {
   } else {
     $('#lab-data-freshness').textContent = 'Data freshness unavailable; do not assume current coverage.';
   }
+}
+
+async function saveLabWatchlist() {
+  const strategy = $('#lab-watch-strategy').value;
+  const symbols = [...document.querySelectorAll('#lab-symbols input:checked')]
+    .map((element) => element.value);
+  await api(`/api/strategy-watchlist?strategy=${encodeURIComponent(strategy)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ symbols }),
+  });
+  $('#lab-sample-note').textContent =
+    `Saved ${symbols.length} watched symbols for ${strategy}. They remain on Today even after exit.`;
 }
 
 function filterLabSymbols() {
@@ -1004,6 +1075,17 @@ async function loadScore(name, force, syms, days) {
 }
 
 $('#lab-compute').addEventListener('click', () => loadLab(true));
+$('#lab-save-watchlist').addEventListener('click', () => {
+  saveLabWatchlist().catch((err) => {
+    $('#lab-sample-note').textContent = `watchlist not saved: ${err.message}`;
+  });
+});
+$('#lab-watch-strategy').addEventListener('change', () => {
+  labPickerBuilt = false;
+  buildSymbolPicker().catch((err) => {
+    $('#lab-sample-note').textContent = `watchlist unavailable: ${err.message}`;
+  });
+});
 $('#lab-select-all').addEventListener('click', () => {
   document.querySelectorAll('#lab-symbols input').forEach((el) => { el.checked = true; });
   labNote();
@@ -1222,63 +1304,300 @@ function renderTodayFreshness(data) {
   $('#today-data-freshness').title = data.freshness_policy;
 }
 
-async function loadToday(refresh = false) {
+let activeDiscoveryTab = 'intersection';
+let storedModelRuns = {};
+
+// Product contract: tabs read completed full-universe runs only. Momentum
+// intentionally has no implementation yet; New Breakouts is derived from
+// canonical entry states; intersections never turn agreement into probability.
+function modelCandidateRows(run) {
+  if (!run?.result) return [];
+  if (Array.isArray(run.result.entry_candidates)) {
+    return run.result.entry_candidates;
+  }
+  return (run.result.ranked || []).filter((row) => row.state === 'entry_pending');
+}
+
+function modelDiscoveryTabs() {
+  return [
+    { id: 'intersection', label: 'Intersections' },
+    { id: 'momentum', label: 'Momentum' },
+    { id: 'new-breakouts', label: 'New Breakouts' },
+    ...strategiesMeta.map((strategy) => ({
+      id: `strategy:${strategy.name}`,
+      label: strategy.name,
+    })),
+  ];
+}
+
+function renderModelDiscoveryTabs() {
+  const tabs = modelDiscoveryTabs();
+  if (!tabs.some((tab) => tab.id === activeDiscoveryTab)) {
+    activeDiscoveryTab = 'intersection';
+  }
+  const container = $('#model-discovery-tabs');
+  container.innerHTML = '';
+  tabs.forEach((tab) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `model-tab${tab.id === activeDiscoveryTab ? ' active' : ''}`;
+    button.textContent = tab.label;
+    button.addEventListener('click', () => {
+      activeDiscoveryTab = tab.id;
+      renderModelDiscoveryTabs();
+      renderModelDiscovery();
+    });
+    container.appendChild(button);
+  });
+}
+
+function discoveryTable(rows, emptyMessage) {
+  $('#model-discovery-rows').innerHTML = rows.map((row, index) => {
+    const score = Number.isFinite(row.score) ? row.score.toFixed(1) : '—';
+    return `<tr><td>${index + 1}</td><td>${escapeHtml(row.symbol)}</td>` +
+      `<td>${escapeHtml(row.models.join(', '))}</td><td>${escapeHtml(row.state)}</td>` +
+      `<td>${score}</td><td>${escapeHtml(row.explanation)}</td>` +
+      `<td>${escapeHtml(row.dataAsOf || '—')}</td></tr>`;
+  }).join('') || `<tr><td colspan="7">${escapeHtml(emptyMessage)}</td></tr>`;
+}
+
+function aggregateModelRows(predicate) {
+  const bySymbol = new Map();
+  strategiesMeta.forEach((strategy) => {
+    const run = storedModelRuns[strategy.name];
+    modelCandidateRows(run).filter((row) => predicate(row, run)).forEach((row) => {
+      const current = bySymbol.get(row.symbol) || {
+        symbol: row.symbol,
+        models: [],
+        states: [],
+        score: Number.NEGATIVE_INFINITY,
+        notes: [],
+        dataAsOf: row.data_as_of,
+      };
+      current.models.push(strategy.name);
+      current.states.push('entry pending → next available open');
+      current.score = Math.max(current.score, Number(row.rank));
+      current.notes.push(`${strategy.name}: ${row.rank_note}`);
+      current.dataAsOf = current.dataAsOf > row.data_as_of
+        ? current.dataAsOf
+        : row.data_as_of;
+      bySymbol.set(row.symbol, current);
+    });
+  });
+  return [...bySymbol.values()];
+}
+
+function renderModelDiscovery() {
+  if (activeDiscoveryTab === 'momentum') {
+    $('#model-discovery-note').textContent =
+      'Facility reserved for a future cross-sectional momentum model. The old app’s 3/6/12-month and composite rankings were not imported; universe, horizons, volatility filter, costs, benchmark, and rejection gates must be preregistered first.';
+    discoveryTable([], 'No validated momentum model or stored momentum run exists yet.');
+    return;
+  }
+  if (activeDiscoveryTab === 'new-breakouts') {
+    const rows = aggregateModelRows(() => true).map((row) => ({
+      ...row,
+      state: [...new Set(row.states)].join(' / '),
+      explanation: row.notes.join(' · '),
+    })).sort((left, right) => right.score - left.score || left.symbol.localeCompare(right.symbol));
+    $('#model-discovery-note').textContent =
+      'Combined new-entry facility: every entry-pending candidate from completed full-universe model runs. It is an operational view across models, not a separately validated breakout algorithm.';
+    discoveryTable(rows, 'No model currently has a full-universe entry candidate.');
+    return;
+  }
+  if (activeDiscoveryTab === 'intersection') {
+    const rows = aggregateModelRows(() => true)
+      .filter((row) => row.models.length >= 2)
+      .map((row) => ({
+        ...row,
+        state: [...new Set(row.states)].join(' / '),
+        explanation: row.notes.join(' · '),
+      }))
+      .sort((left, right) => right.models.length - left.models.length ||
+        right.score - left.score || left.symbol.localeCompare(right.symbol));
+    $('#model-discovery-note').textContent =
+      'Symbols entry-pending in at least two completed full-universe model runs. Agreement is useful for review, but it is not independent evidence or permission to trade.';
+    discoveryTable(rows, 'No new-entry candidate currently intersects across two model runs.');
+    return;
+  }
+
+  const strategy = activeDiscoveryTab.replace('strategy:', '');
+  const run = storedModelRuns[strategy];
+  const [label, evidence] = STRATEGY_EVIDENCE[strategy] || ['Pending', 'Evidence review pending.'];
+  if (!run) {
+    $('#model-discovery-note').textContent =
+      `${strategy} · ${label}. No completed full-universe snapshot has been stored. ${evidence}`;
+    discoveryTable([], `No completed full-universe ${strategy} run. Use the full-universe picks button.`);
+    return;
+  }
+  const rows = modelCandidateRows(run).map((row) => ({
+    symbol: row.symbol,
+    models: [strategy],
+    state: 'entry pending → next available open',
+    score: Number(row.rank),
+    explanation: row.rank_note,
+    dataAsOf: row.data_as_of,
+  }));
+  const coverage = run.result.coverage || {};
+  $('#model-discovery-note').textContent =
+    `${strategy} · ${label} · full-universe run #${run.id}, params ${run.set}, data as of ${run.data_as_of || 'unknown'} · ` +
+    `${coverage.processed || 0}/${coverage.requested || 0} evaluated, ${rows.length} new-entry candidates. ` +
+    `${evidence} Ordering is this model’s heuristic rank, not probability.`;
+  discoveryTable(rows, `The completed ${strategy} universe scan has no entry-pending candidates.`);
+}
+
+async function loadModelDiscovery() {
+  const results = await Promise.all(strategiesMeta.map(async (strategy) => {
+    try {
+      const stored = await api(
+        `/api/strategy-runs/latest?strategy=${encodeURIComponent(strategy.name)}&scope=all&latest_any_set=true`
+      );
+      return [strategy.name, stored.run];
+    } catch (_error) {
+      return [strategy.name, null];
+    }
+  }));
+  storedModelRuns = Object.fromEntries(results);
+  renderModelDiscoveryTabs();
+  renderModelDiscovery();
+}
+
+function renderStrategySnapshot(run, savedWatchlist = []) {
+  const savedSymbols = savedWatchlist.map((item) => item.symbol || item);
+  if (!run) {
+    $('#today-watchlist').innerHTML = savedSymbols.map((symbol) =>
+      `<tr><td>${escapeHtml(symbol)}</td><td>not evaluated</td>` +
+      '<td>—</td><td>—</td><td>update watched status</td>' +
+      '<td>—</td><td>—</td><td>—</td></tr>'
+    ).join('') ||
+      '<tr><td colspan="8">No saved watched symbols. Select and save them in Strategy Lab first.</td></tr>';
+    $('#today-run-note').textContent =
+      'No calculation started. Opening this menu only checked SQLite for a previous run.';
+    return;
+  }
+  const result = run.result;
+  const snapshotBySymbol = new Map(
+    (result.watchlist || []).map((row) => [row.symbol, row])
+  );
+  const displayRows = savedSymbols.map((symbol) => snapshotBySymbol.get(symbol) || {
+    symbol,
+    state: 'unavailable',
+    status: 'not in stored run',
+    next_action: 'update watched status',
+  });
+  const legacyLifecycle = displayRows.some((row) =>
+    !Object.hasOwn(row, 'last_entry') || !Object.hasOwn(row, 'last_exit')
+  );
+  const fill = (value) => value
+    ? `${escapeHtml(value.date)} @ $${Number(value.price).toFixed(2)}`
+    : '—';
+  $('#today-watchlist').innerHTML = displayRows.map((row) => {
+    const legacy = row.last_event || null;
+    const lastEntry = row.last_entry || (legacy?.type === 'entry' ? legacy : null);
+    const lastExit = row.last_exit || (legacy?.type === 'exit' ? legacy : null);
+    const holding = row.state === 'long' || row.state === 'exit_pending';
+    const status = row.status || (
+      row.state === 'long' ? 'holding' :
+      row.state === 'exit_pending' ? 'holding · exit pending' :
+      row.state === 'entry_pending' ? 'entry pending' :
+      lastExit ? 'exited' : 'flat · never entered'
+    );
+    const nextAction = row.next_action || (
+      row.state === 'exit_pending' ? 'exit next available open' :
+      row.state === 'entry_pending' ? 'enter next available open' :
+      row.state === 'long' ? 'hold' : 'observe'
+    );
+    const exitText = !holding && lastExit
+      ? `${fill(lastExit)} · ${escapeHtml(lastExit.reason || '')}` +
+        `${lastExit.return_pct == null ? '' : ` · ${Number(lastExit.return_pct).toFixed(1)}%`}`
+      : '—';
+    return `<tr><td>${escapeHtml(row.symbol)}</td><td>${escapeHtml(status)}</td>` +
+      `<td>${fill(lastEntry)}</td><td>${exitText}</td>` +
+      `<td>${escapeHtml(nextAction)}</td>` +
+      `<td>${row.close == null ? '—' : `$${Number(row.close).toFixed(2)}`}</td>` +
+      `<td>${holding && row.stop != null ? `$${Number(row.stop).toFixed(2)}` : '—'}</td>` +
+      `<td>${escapeHtml(row.data_as_of || '—')}</td></tr>`;
+  }).join('') ||
+    '<tr><td colspan="8">No saved watched symbols. Select and save them in Strategy Lab first.</td></tr>';
+  const coverage = result.coverage;
+  const missing = coverage.missing.length;
+  const failed = coverage.failed.length;
+  $('#today-run-note').textContent =
+    `Stored run #${run.id} · created ${run.created_at} · data as of ${run.data_as_of || 'unknown'} · ` +
+    `${coverage.processed}/${coverage.requested} processed · ${missing} missing · ${failed} failed. ` +
+    `${result.ranking_warning}` +
+    (legacyLifecycle
+      ? ' This older snapshot lacks complete entry/exit history; use Update watched status once to replace it.'
+      : '');
+  $('#today-run-note').title = coverage.failed
+    .map((row) => `${row.symbol}: ${row.error}`).join(' | ');
+}
+
+async function loadTodayStored() {
   const strategy = $('#today-strategy').value;
-  const scope = $('#today-scope').value;
-  $('#today-status').textContent = 'scanning…';
-  loading(true, 'scanning signals…');
+  $('#today-status').textContent = 'reading stored run…';
   try {
     await refreshTodaySets(strategy);
     const set = $('#today-set').value || 'defaults';
-    const query = `/api/today?strategy=${encodeURIComponent(strategy)}&scope=${scope}&set=${encodeURIComponent(set)}${refresh ? '&refresh=1' : ''}`;
-    const portfolioQuery = `/api/portfolio?strategy=${encodeURIComponent(strategy)}&set=${encodeURIComponent(set)}${refresh ? '&refresh=1' : ''}`;
-    const [data, macro, portfolioData, confidence, freshnessData] = await Promise.all([
-      api(query),
-      api('/api/macro'),
-      api(portfolioQuery),
-      api(`/api/confidence?strategy=${encodeURIComponent(strategy)}`),
+    const [stored, freshnessData] = await Promise.all([
+      api(`/api/strategy-runs/latest?strategy=${encodeURIComponent(strategy)}&set=${encodeURIComponent(set)}`),
       api('/api/data/status?details=false').catch(() => null),
+      loadModelDiscovery(),
     ]);
-    const pickCards = (list, chip, chipCls, emptyMessage) => list.map((r) =>
-      `<div class="pick-card ${chipCls}">` +
-      `<span class="sym">${r.symbol}</span><span class="chip ${chipCls}">${chipCls === 'entry' ? '▲' : '▼'} ${chip}</span>` +
-      `<div class="reason">${r.note}</div>` +
-      `<div class="rank ${r.rank >= 0 ? 'pos' : 'neg'}" title="${r.rank_note || ''}">rank ${r.rank} — ${r.rank_note || ''}</div>` +
-      `</div>`).join('') || `<div class="sample-note">${emptyMessage}</div>`;
-    renderPortfolio(portfolioData);
+    renderStrategySnapshot(stored.run, stored.watchlist);
     renderTodayFreshness(freshnessData);
-    $('#today-entries').innerHTML = pickCards(
-      data.entries, 'ENTRY', 'entry', 'No entry signal at the latest completed stored close.'
-    );
-    $('#today-exits').innerHTML = pickCards(
-      data.exits, 'EXIT', 'exit', 'No exit signal at the latest completed stored close.'
-    );
-    renderConfidence(confidence);
-    if (!macro.regime.ok) {
-      $('#today-entries').innerHTML =
-        '<div class="sample-note">suppressed — US10Y ≥ 5% regime filter (no new trades)</div>';
-    }
-    const coverage = data.coverage || { requested: data.scanned, processed: data.scanned, missing: [], failed: [] };
-    $('#today-status').textContent = `scanned ${coverage.processed}/${coverage.requested}` +
-      (coverage.missing.length ? ` · missing ${coverage.missing.length}` : '') +
-      (coverage.failed.length ? ` · FAILED ${coverage.failed.length}` : '');
-    $('#today-status').title = [
-      coverage.missing.length ? `missing: ${coverage.missing.join(', ')}` : '',
-      coverage.failed.length
-        ? `failed: ${coverage.failed.map((row) => `${row.symbol}: ${row.error}`).join(' | ')}`
-        : '',
-    ].filter(Boolean).join(' · ');
-    const regime = macro.regime;
-    const banner = $('#regime-banner');
-    if (regime.ok) {
-      banner.className = 'ok';
-      banner.textContent = `Regime OK — US10Y ${regime.us10y}% < ${regime.threshold}%`;
-    } else {
-      banner.className = 'caution';
-      banner.textContent = `CAUTION — US10Y ${regime.us10y}% ≥ ${regime.threshold}% (filter: no new trades)`;
-    }
+    $('#today-status').textContent = !stored.watchlist.length
+      ? 'no saved watchlist · save symbols in Strategy Lab'
+      : stored.run
+        ? `stored run #${stored.run.id} · no calculation on menu open`
+        : 'watchlist saved · update watched status';
   } catch (err) {
     $('#today-status').textContent = `error: ${err.message}`;
+  }
+}
+
+async function runTodaySnapshot(scope) {
+  const strategy = $('#today-strategy').value;
+  const set = $('#today-set').value || 'defaults';
+  const fullUniverse = scope === 'all';
+  $('#today-status').textContent = fullUniverse
+    ? 'running full-universe candidate scan…'
+    : 'updating watched status…';
+  loading(true, fullUniverse
+    ? 'evaluating the stored universe for new entries…'
+    : 'updating watched strategy states…');
+  try {
+    const run = await api('/api/strategy-runs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ strategy, set, scope }),
+    });
+    const watchlist = await api(
+      `/api/strategy-watchlist?strategy=${encodeURIComponent(strategy)}`
+    );
+    renderStrategySnapshot(run, watchlist.items);
+    await loadModelDiscovery();
+    $('#today-status').textContent = fullUniverse
+      ? `full-universe run #${run.id} stored`
+      : `watched-status run #${run.id} stored`;
+  } catch (err) {
+    $('#today-status').textContent = `run failed: ${err.message}`;
+  } finally {
+    loading(false);
+  }
+}
+
+async function runTodayPortfolio() {
+  const strategy = $('#today-strategy').value;
+  const set = $('#today-set').value || 'defaults';
+  loading(true, 'running historical portfolio comparison…');
+  try {
+    const portfolio = await api(
+      `/api/portfolio?strategy=${encodeURIComponent(strategy)}&set=${encodeURIComponent(set)}`
+    );
+    renderPortfolio(portfolio);
+  } catch (err) {
+    $('#portfolio-note').textContent = `portfolio run failed: ${err.message}`;
   } finally {
     loading(false);
   }
@@ -1359,12 +1678,12 @@ function renderEvents(events) {
 }
 
 $('#today-strategy').addEventListener('change', () => {
-  refreshTodaySets($('#today-strategy').value);
-  loadToday();
+  loadTodayStored();
 });
-$('#today-set').addEventListener('change', () => loadToday(true));
-$('#today-scope').addEventListener('change', () => loadToday());
-$('#today-refresh').addEventListener('click', () => loadToday(true));
+$('#today-set').addEventListener('change', loadTodayStored);
+$('#today-refresh').addEventListener('click', () => runTodaySnapshot('watchlist'));
+$('#today-run-discovery').addEventListener('click', () => runTodaySnapshot('all'));
+$('#today-run-portfolio').addEventListener('click', runTodayPortfolio);
 
 /* ---------- range + zoom controls ---------- */
 const RANGES = [
@@ -1387,7 +1706,6 @@ function buildRanges() {
       document.querySelectorAll('.range').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       applyRange(btn.dataset.label);
-      run();
     })
   );
 }
@@ -1419,9 +1737,16 @@ $('#fit').addEventListener('click', () => chart.timeScale().fitContent());
 buildRanges();
 
 $('#run').addEventListener('click', run);
-$('#strategy').addEventListener('change', () => { resetParams(); renderParams(); loadParamSets(); run(); });
+$('#strategy').addEventListener('change', () => {
+  resetParams();
+  renderParams();
+  renderResearchAccordions();
+  loadParamSets();
+  $('#status').textContent = 'Strategy changed · press Run Backtest to calculate.';
+});
 
 initChart();
+loadAppVersion();
 loadStrategies().then(() => {
   const initial = location.hash.replace('#', '') || 'today';
   applyView(initial);

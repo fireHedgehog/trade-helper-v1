@@ -78,3 +78,46 @@ def test_non_monotonic_dates_are_rejected(isolated_store) -> None:
     rows = _valid_rows().iloc[::-1].reset_index(drop=True)
     with pytest.raises(ValueError, match="increasing"):
         isolated_store.upsert_bars(rows)
+
+
+def test_strategy_watchlist_is_persistent_ordered_and_replaceable(isolated_store) -> None:
+    isolated_store.replace_strategy_watchlist("CTA Trend", ["SPY", "QQQ", "SPY"])
+    assert [row["symbol"] for row in isolated_store.list_strategy_watchlist("CTA Trend")] == [
+        "SPY",
+        "QQQ",
+    ]
+
+    isolated_store.replace_strategy_watchlist("CTA Trend", ["IWM", "SPY"])
+    assert [row["symbol"] for row in isolated_store.list_strategy_watchlist("CTA Trend")] == [
+        "IWM",
+        "SPY",
+    ]
+
+
+def test_strategy_runs_append_and_latest_read_does_not_recalculate(isolated_store) -> None:
+    first = isolated_store.save_strategy_run(
+        "CTA Trend", "defaults", "watchlist", "complete", "2024-01-02", {"n": 1}, {"ranked": []}
+    )
+    second = isolated_store.save_strategy_run(
+        "CTA Trend", "defaults", "all", "complete", "2024-01-03", {"n": 2}, {"ranked": [{"symbol": "SPY"}]}
+    )
+    third = isolated_store.save_strategy_run(
+        "CTA Trend", "saved", "all", "complete", "2024-01-04", {"n": 3}, {"ranked": []}
+    )
+    assert second > first
+    assert third > second
+    latest = isolated_store.latest_strategy_run("CTA Trend")
+    assert latest["id"] == second
+    assert latest["scope"] == "all"
+    assert latest["params"] == {"n": 2}
+    assert latest["result"]["ranked"] == [{"symbol": "SPY"}]
+    assert isolated_store.latest_strategy_run(
+        "CTA Trend", scope="watchlist"
+    )["id"] == first
+    latest_full_scan = isolated_store.latest_strategy_run(
+        "CTA Trend", set_name=None, scope="all"
+    )
+    assert latest_full_scan["id"] == third
+    assert latest_full_scan["set"] == "saved"
+    assert isolated_store.get_strategy_run(first)["params"] == {"n": 1}
+    assert isolated_store.latest_strategy_run("SMA Cross") is None
