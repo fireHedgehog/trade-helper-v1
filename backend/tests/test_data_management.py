@@ -118,6 +118,14 @@ def test_inventory_keeps_fred_out_of_yahoo_freshness_counts(
     assert payload["summary"]["fred_managed"] == 1
     assert payload["symbols"][1]["provider"] == "fred"
     assert payload["symbols"][1]["freshness"] == "provider_managed"
+    assert payload["symbols"][0]["dataset_id"] == "yahoo-adjusted-daily-ohlcv-v1"
+    assert payload["symbols"][1]["dataset_id"] == "fred-final-revised-display-v1"
+    assert payload["symbols"][1]["point_in_time"].startswith("no")
+    assert {item["dataset_id"] for item in payload["datasets"]} == {
+        "yahoo-adjusted-daily-ohlcv-v1",
+        "fred-final-revised-display-v1",
+        "trading-economics-us-calendar-v1",
+    }
 
 
 def test_refresh_manager_records_each_result_and_fixed_delay(

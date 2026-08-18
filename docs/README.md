@@ -6,16 +6,16 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.29.1` |
-| Parent release | `0.29.0` (research-governance hardening) |
-| Current state | Stage 8C in progress: Symbol Research and Data Management slices completed |
-| Verification | `187 passed` plus headless Playwright workflow checks |
+| Version | `0.30.0` |
+| Parent release | `0.29.1` (independent governance audit) |
+| Current state | Stage 8C in progress: bounded dataset and strategy metadata productised |
+| Verification | `192 passed` plus headless Playwright workflow checks |
 | Completed | Stage 8A state foundation; Stage 8B visual system and Today command centre |
-| Next product work | Continue Stage 8C with Strategy Lab and remaining Data Management productisation |
+| Next product work | Continue Stage 8C with explicit Strategy Lab experiment hierarchy and durable Data Management job presentation |
 | Parked research | Stage 9A: acceptance standard and candidate priority; then 9B locked experiment |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 
-The application has the Stage 8B Today command centre plus Stage 8C improvements to Symbol Research, refresh recovery, and watchlist recovery. Version 0.29.1 audits the pulled governance work without changing runtime behaviour: it corrects CTA provenance, adds hypothesis engineering and benchmark suitability gates, makes statistical diagnostics design-dependent, and specifies extensible dataset/strategy metadata. Preserve the v0.26 state model and shared manual/scheduled pipeline contract; continue productising the remaining surfaces without importing legacy algorithms or vague confidence claims.
+The application has the Stage 8B Today command centre plus Stage 8C improvements to Symbol Research, refresh/watchlist recovery, and research metadata. Version 0.30.0 implements a deliberately bounded registry for the three existing data products and exposes version, family, evidence status, information profile, required datasets, and typed parameters for every executable strategy in the API and UI. It is not a universal ontology and does not authorize new providers, factors, or strategies. Preserve the v0.26 state model and shared manual/scheduled pipeline contract; continue productising the remaining surfaces without importing legacy algorithms or vague confidence claims.
 
 Heavy statistical work is intentionally paused. On resumption, first operationalize candidate theses, audit benchmark/universe suitability, and only then apply the model acceptance scorecard. Read the protocol, CTA result, audit, and backlog before experiment design. Do not tune CTA v1 after observing its rejection.
 

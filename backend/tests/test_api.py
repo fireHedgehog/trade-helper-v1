@@ -29,7 +29,7 @@ def clear_portfolio_cache():
 async def test_health(client) -> None:
     assert (await client.get("/api/health")).json() == {
         "status": "ok",
-        "version": "0.29.1",
+        "version": "0.30.0",
     }
 
 
@@ -67,6 +67,24 @@ async def test_data_status_includes_inventory_and_refresh_state(
     assert summary.status_code == 200
     assert "symbols" not in summary.json()
     assert "items" not in summary.json()["refresh"]
+
+
+async def test_strategy_catalog_exposes_typed_params_and_evidence(client) -> None:
+    response = await client.get("/api/strategies")
+
+    assert response.status_code == 200
+    cta = next(row for row in response.json()["strategies"] if row["name"] == "CTA Trend")
+    assert cta["strategy_id"] == "cta-trend"
+    assert cta["version"] == "v1-rejected"
+    assert cta["evidence"]["status"] == "rejected_v1"
+    assert cta["required_datasets"] == ["yahoo-adjusted-daily-ohlcv-v1"]
+    entry = next(row for row in cta["parameter_schema"] if row["name"] == "n_entry")
+    assert entry["type"] == "int"
+    assert entry["default"] == 100
+    assert entry["description"]
+    sr = next(row for row in response.json()["strategies"] if row["name"] == "S/R Bounce")
+    assert sr["evidence"]["status"] == "exploratory"
+    assert "support/resistance" in sr["evidence"]["summary"]
 
 
 async def test_data_refresh_selects_stored_core_symbols(client, monkeypatch) -> None:

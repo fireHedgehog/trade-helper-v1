@@ -20,6 +20,7 @@ import pandas as pd
 
 from . import fetch, store
 from .fred import MANAGED_SERIES as FRED_MANAGED_SERIES
+from .research_catalog import DATASETS, dataset_for_provider, dataset_registry
 
 
 REFRESH_PERIOD = "max"
@@ -90,6 +91,8 @@ def inventory_payload(*, today: date | None = None) -> dict:
     }
     for stored in store.bar_inventory():
         provider = "fred" if stored["symbol"] in FRED_MANAGED_SERIES else "yahoo"
+        dataset_id = dataset_for_provider(provider)
+        dataset = DATASETS[dataset_id]
         state, age, session_lag = freshness(stored["latest_date"], expected=expected)
         if provider == "fred":
             state = "provider_managed"
@@ -100,6 +103,10 @@ def inventory_payload(*, today: date | None = None) -> dict:
             {
                 **stored,
                 "provider": provider,
+                "dataset_id": dataset_id,
+                "information_class": dataset["information_class"],
+                "point_in_time": dataset["point_in_time"],
+                "research_use": dataset["research_use"],
                 "freshness": state,
                 "age_days": age,
                 "session_lag": session_lag,
@@ -127,6 +134,7 @@ def inventory_payload(*, today: date | None = None) -> dict:
             ),
         },
         "summary": {"symbols": len(rows), **counts},
+        "datasets": dataset_registry(),
         "symbols": rows,
     }
 

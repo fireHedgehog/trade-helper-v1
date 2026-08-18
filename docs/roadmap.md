@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.29.1`, Stage 8C in progress.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.30.0`, Stage 8C in progress.
 
 ## Completed foundation
 
@@ -50,7 +50,7 @@ Evidence: semantic CSS/state mapping, explicit four-step Today workflow, market-
 - Bring Macro presentation into ADR 0006 compliance: label current FRED observations as final-revised/display-only, distinguish observation from release time, remove causal `good/bad for equities` styling, and expose point-in-time capability as unavailable until implemented.
 - Preserve empty placeholders for CTA, SMA cross, breakout, and momentum until each has an executed valid protocol.
 
-Completed slices in `0.28.0`: multi-model Symbol Research accordions with selected-model-only markers; readable guide/dossier hierarchy; explicit refresh resume versus forced scopes; immutable watchlist-snapshot recovery. Remaining: Strategy Lab hierarchy and durable Data Management job presentation.
+Completed slices: `0.28.0` added multi-model Symbol Research accordions, readable guide/dossier hierarchy, explicit refresh semantics, and watchlist-snapshot recovery; `0.30.0` added a code-owned registry for only the existing Yahoo, FRED, and calendar products plus versioned evidence and typed parameter metadata for every executable strategy, rendered in Data Management, Symbol Research, and Strategy Lab. Remaining: explicit Strategy Lab experiment hierarchy, durable Data Management job presentation, Macro ADR 0006 presentation, and full asynchronous browser coverage.
 
 Gate: browser smoke tests cover primary workflows and every asynchronous state; no page load triggers data or strategy computation.
 

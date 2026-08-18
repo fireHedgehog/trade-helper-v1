@@ -136,6 +136,10 @@
     background: #1f2634; color: var(--text); border: 1px solid var(--border);
     border-radius: 8px; padding: 8px 12px; font-size: 13px;
   }
+  .catalog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+  .catalog-card { border: 1px solid var(--border); border-radius: 10px; padding: 12px; background: var(--panel); }
+  .catalog-card h3 { margin: 0 0 7px; font-size: 13px; color: var(--text); }
+  .catalog-card p { margin: 4px 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
   .symbol-box { position: relative; min-width: 180px; }
   #symbol-input {
     width: 100%; background: #1f2634; color: var(--text);
@@ -457,6 +461,7 @@
         <select id="lab-watch-strategy"></select>
         <button id="lab-save-watchlist">Save as strategy watchlist</button>
         <button class="primary" id="lab-compute">Compute / refresh</button>
+        <div id="lab-strategy-contract" class="sample-note"></div>
         <input id="lab-symbol-search" type="search" placeholder="Filter 500+ symbols…" autocomplete="off" spellcheck="false">
         <span id="lab-data-freshness" class="sample-note"></span>
         <div class="symbol-picker" id="lab-symbols"></div>
@@ -508,6 +513,10 @@
         <div class="progress-track"><div class="progress-fill" id="data-progress"></div></div>
         <div id="data-job-note" class="sample-note">No refresh running. Published symbols survive interruption; Resume / refresh needed skips symbols already current.</div>
         <div id="data-policy" class="sample-note"></div>
+      </section>
+      <section class="panel">
+        <h2>Dataset contracts <span class="badge">what the app actually has</span></h2>
+        <div id="dataset-catalog" class="catalog-grid"></div>
       </section>
       <section class="panel">
         <h2>Per-symbol coverage</h2>
@@ -791,16 +800,6 @@ let strategiesMeta = [];
 let currentParams = {};
 const barsCache = {};
 const btCache = new Map();
-const STRATEGY_EVIDENCE = {
-  'CTA Trend': ['Rejected v1', 'Insufficient validated excess-return evidence; retained for study, not recommendation.'],
-  'SMA Cross': ['Baseline only', 'Learning control; no accepted portfolio edge claim.'],
-  'Donchian Trend': ['Unvalidated', 'Canonical mechanics exist; preregistered evidence gate pending.'],
-  'S/R Bounce': ['Exploratory classical TA', 'Quantified support/resistance bounce with ATR-buffered stop; no durable-edge claim.'],
-  'Fib Retrace': ['Exploratory poor result', 'Historical SPY result materially trailed buy-and-hold.'],
-  'Wave Pull': ['Unvalidated', 'Mechanics exist; independent research evidence pending.'],
-  'RSI Reversion': ['Unvalidated', 'No protective-stop portfolio contract or accepted validation.'],
-};
-
 function strategyDisplayName(name) {
   return name === 'S/R Bounce' ? 'Classical TA · S/R Bounce' : name;
 }
@@ -824,6 +823,7 @@ async function loadStrategies() {
     `<option value="${escapeHtml(s.name)}" ${i === 0 ? 'selected' : ''}>${escapeHtml(strategyDisplayName(s.name))}</option>`).join('');
   resetParams();
   renderParams();
+  renderLabStrategyContract();
   renderResearchAccordions();
   loadParamSets();
 }
@@ -840,7 +840,8 @@ function signalStateLabel(signal) {
 
 function renderResearchAccordions(signals = {}, symbol = null) {
   $('#research-accordions').innerHTML = strategiesMeta.map((strategy) => {
-    const [label, evidence] = STRATEGY_EVIDENCE[strategy.name] || ['Pending', 'Evidence review pending.'];
+    const label = strategy.evidence?.label || 'Pending';
+    const evidence = strategy.evidence?.summary || 'Evidence review pending.';
     const selected = strategy.name === $('#strategy').value ? ' open' : '';
     const signal = signals[strategy.name];
     const stateLabel = signalStateLabel(signal);
@@ -873,6 +874,8 @@ function renderResearchAccordions(signals = {}, symbol = null) {
       `<p><b>Model levels:</b> ${indicators}</p>` +
       `<p><b>Lifecycle:</b> ${lifecycle}</p>` +
       `<p><b>Parameters:</b> ${escapeHtml(paramsNote)}</p>` +
+      `<p><b>Contract:</b> ${escapeHtml(strategy.version)} · ${escapeHtml(strategy.family)} · ` +
+      `${escapeHtml((strategy.information_profile || []).join(' · '))}</p>` +
       `<p><b>Evidence:</b> ${escapeHtml(evidence)}</p>` +
       `<p><b>Rules:</b> ${escapeHtml(strategy.info.entry)} ${escapeHtml(strategy.info.exit)}</p>` +
       `<p><b>Risk:</b> Historical daily-bar model; gaps, costs, sample size, and selection bias remain relevant.</p>` +
@@ -900,6 +903,27 @@ function currentMeta() {
   return strategiesMeta.find((s) => s.name === $('#strategy').value);
 }
 
+function renderLabStrategyContract() {
+  const selected = $('#lab-watch-strategy').value;
+  const meta = strategiesMeta.find((strategy) => strategy.name === selected);
+  if (!meta) {
+    $('#lab-strategy-contract').textContent = 'Strategy contract unavailable.';
+    return;
+  }
+  const parameters = (meta.parameter_schema || []).map((parameter) => {
+    const bounds = parameter.min == null || parameter.max == null
+      ? '' : `, ${parameter.min}–${parameter.max}`;
+    return `${parameter.label}: ${parameter.type}, default ${parameter.default}${bounds}`;
+  }).join(' · ');
+  $('#lab-strategy-contract').innerHTML =
+    `<b>Selected watchlist strategy contract:</b> ${escapeHtml(meta.version)} · ${escapeHtml(meta.family)} · ` +
+    `${escapeHtml(meta.evidence?.label || 'Pending')}<br>` +
+    `${escapeHtml(meta.evidence?.summary || 'Evidence review pending.')} ` +
+    `Information: ${escapeHtml((meta.information_profile || []).join(', '))}. ` +
+    `Datasets: ${escapeHtml((meta.required_datasets || []).join(', '))}.<br>` +
+    `<span>Parameters: ${escapeHtml(parameters || 'none')}</span>`;
+}
+
 function resetParams() {
   currentParams = Object.fromEntries(
     Object.entries(currentMeta().params).map(([key, p]) => [key, p.default])
@@ -909,11 +933,14 @@ function resetParams() {
 function renderParams() {
   const meta = currentMeta();
   $('#params').innerHTML =
-    Object.entries(meta.params).map(([key, p]) => {
-      const doc = meta.info?.params?.[key] || '';
-      return `<label class="param"><span title="${doc}">${key}</span>` +
-        `<input type="number" data-key="${key}" value="${currentParams[key]}" ` +
-        `min="${p.min}" max="${p.max}" step="${p.step || 1}" title="${doc}"></label>`;
+    `<div class="sample-note">${escapeHtml(meta.version)} · ${escapeHtml(meta.family)} · ` +
+    `${escapeHtml((meta.required_datasets || []).join(' · '))} · ${escapeHtml(meta.evidence?.label || 'Pending')}</div>` +
+    (meta.parameter_schema || []).map((p) => {
+      const key = p.name;
+      const doc = p.description || '';
+      return `<label class="param"><span title="${escapeHtml(doc)}">${escapeHtml(p.label)}</span>` +
+        `<input type="number" data-key="${escapeHtml(key)}" value="${currentParams[key]}" ` +
+        `min="${p.min}" max="${p.max}" step="${p.step || 1}" title="${escapeHtml(doc)}"></label>`;
     }).join('') +
     '<button id="reset-params" class="ghost">Reset defaults</button>';
   $('#params').querySelectorAll('input').forEach((inp) =>
@@ -1249,6 +1276,7 @@ $('#lab-save-watchlist').addEventListener('click', () => {
   });
 });
 $('#lab-watch-strategy').addEventListener('change', () => {
+  renderLabStrategyContract();
   labPickerBuilt = false;
   buildSymbolPicker().catch((err) => {
     $('#lab-sample-note').textContent = `watchlist unavailable: ${err.message}`;
@@ -1334,6 +1362,14 @@ function renderDataStatus(data) {
     `${data.source} · ${data.adjustment} · expected latest session ${data.expected_latest_session} · ${data.freshness_policy}. ` +
     `Manual full-history refresh uses ${data.refresh_policy.period}, a fixed ${data.refresh_policy.delay_seconds}s delay, ` +
     `and ${data.refresh_policy.retry_backoff_seconds}s rate-limit backoff. ${data.refresh_policy.note}.`;
+  $('#dataset-catalog').innerHTML = (data.datasets || []).map((dataset) =>
+    `<article class="catalog-card"><h3>${escapeHtml(dataset.name)}</h3>` +
+    `<p><b>ID:</b> ${escapeHtml(dataset.dataset_id)}</p>` +
+    `<p><b>Class:</b> ${escapeHtml(dataset.information_class)} · <b>Cadence:</b> ${escapeHtml(dataset.cadence)}</p>` +
+    `<p><b>Point in time:</b> ${escapeHtml(dataset.point_in_time)}</p>` +
+    `<p><b>Use:</b> ${escapeHtml(dataset.research_use)}</p>` +
+    `<p><b>Quality:</b> ${escapeHtml(dataset.quality_state)}</p></article>`
+  ).join('');
   document.querySelectorAll('#data-refresh-core, #data-refresh-stale, #data-refresh-all')
     .forEach((button) => { button.disabled = refresh.state === 'running'; });
   renderDataRows();
@@ -1602,7 +1638,9 @@ function renderModelDiscovery() {
 
   const strategy = activeDiscoveryTab.replace('strategy:', '');
   const run = storedModelRuns[strategy];
-  const [label, evidence] = STRATEGY_EVIDENCE[strategy] || ['Pending', 'Evidence review pending.'];
+  const meta = strategiesMeta.find((candidate) => candidate.name === strategy);
+  const label = meta?.evidence?.label || 'Pending';
+  const evidence = meta?.evidence?.summary || 'Evidence review pending.';
   if (!run) {
     $('#model-discovery-note').textContent =
       `${strategy} · ${label}. No completed full-universe snapshot has been stored. ${evidence}`;

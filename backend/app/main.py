@@ -33,6 +33,7 @@ from .signals import (
     scan,
 )
 from .strategies import STRATEGIES, STRATEGY_INFO, STRATEGY_PARAMS
+from .research_catalog import strategy_metadata
 from .universe import DEFAULT_BASKET
 from .version import APP_VERSION
 from .workspace import create_strategy_snapshot
@@ -199,7 +200,17 @@ def strategies():
             {
                 "name": name,
                 "params": STRATEGY_PARAMS[name],
+                "parameter_schema": [
+                    {
+                        "name": key,
+                        "label": key.replace("_", " "),
+                        "description": STRATEGY_INFO[name]["params"].get(key, ""),
+                        **definition,
+                    }
+                    for key, definition in STRATEGY_PARAMS[name].items()
+                ],
                 "info": STRATEGY_INFO[name],
+                **strategy_metadata(name),
             }
             for name in STRATEGIES
         ]

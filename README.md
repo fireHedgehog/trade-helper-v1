@@ -4,7 +4,7 @@ Local, long-only systematic-research workspace for testing whether a strategy ad
 
 ## Current state
 
-Version `0.29.1` records the audited research-governance checkpoint: hypothesis operationalization, benchmark suitability, corrected CTA provenance, and extensible research metadata. CTA v1 remains rejected under its historical locked test; Passive ETF-12 v1 is the default project benchmark, not a universal market portfolio. No paper trading, broker integration, unattended refresh, or deployment is enabled.
+Version `0.30.0` turns the bounded research metadata contract into product behaviour: the three data products actually used by the app have explicit provenance and research-use records, and every executable strategy exposes versioned evidence and typed parameters. CTA v1 remains rejected under its historical locked test; Passive ETF-12 v1 is the default project benchmark, not a universal market portfolio. No paper trading, broker integration, unattended refresh, or deployment is enabled.
 
 Start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint, next task, and document map.
 

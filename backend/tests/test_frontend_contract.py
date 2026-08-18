@@ -81,7 +81,7 @@ def test_symbol_research_evaluates_all_accordions_without_mixing_chart_markers()
 
 def test_classical_ta_is_identifiable_without_renaming_the_backend_contract() -> None:
     assert "Classical TA · S/R Bounce" in HTML
-    assert "Quantified support/resistance bounce with ATR-buffered stop" in HTML
+    assert "strategy.evidence?.summary" in HTML
     assert "value=\"${escapeHtml(s.name)}\"" in HTML
 
 
@@ -97,3 +97,14 @@ def test_current_model_observation_precedes_reference_rules() -> None:
 
     assert guide.index('id="guide-now"') < guide.index('id="guide-rules"')
     assert "guide-now { color: var(--green); font-weight: 650" in HTML
+
+
+def test_metadata_is_rendered_from_backend_contracts() -> None:
+    assert 'id="dataset-catalog"' in HTML
+    assert "dataset.point_in_time" in HTML
+    assert "meta.parameter_schema" in HTML
+    assert "strategy.evidence?.label" in HTML
+    assert 'id="lab-strategy-contract"' in HTML
+    assert "function renderLabStrategyContract()" in HTML
+    assert "renderLabStrategyContract();" in HTML
+    assert "const STRATEGY_EVIDENCE" not in HTML
