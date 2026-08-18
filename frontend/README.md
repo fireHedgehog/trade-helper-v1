@@ -18,6 +18,8 @@ Navigation must be read-only. Backtest, refresh, universe scan, and strategy eva
 
 `index.html` contains the single-page application. TradingView Lightweight Charts is pinned via CDN for candles, volume, markers, and price levels. Introduce a framework only if state complexity makes the current design materially unsafe to maintain.
 
+Stage 8B defines the semantic UI tokens and Today command centre. Its four permanent actions appear in dependency order—data, watchlist, discovery, portfolio—but remain independent manual triggers. Future scheduling must call the same durable pipeline described in the workspace specification.
+
 Run the backend and open <http://127.0.0.1:8000/>. The pending product contract is [workspace-redesign.md](../docs/workspace-redesign.md).
 
 [Project](../README.md) · [Checkpoint](../docs/README.md) · [Roadmap](../docs/roadmap.md)

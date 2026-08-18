@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.26.0`, Stage 8A complete.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.27.0`, Stage 8B complete.
 
 ## Completed foundation
 
@@ -27,7 +27,7 @@ Purpose: make the validated state and research workflow usable without importing
 - Read persisted state on navigation; keep refresh/run as explicit actions.
 - Version checkpoint `0.26.0`; verification `176 passed`.
 
-### 8B — Semantic visual system and Today: next
+### 8B — Semantic visual system and Today: complete
 
 - Define semantic tokens for positive, negative, warning, stale, neutral, price, date, metric, and evidence strength.
 - Replace debug labels with concise market language while preserving uncertainty.
@@ -38,7 +38,9 @@ Purpose: make the validated state and research workflow usable without importing
 
 Gate: a user can determine current data state, portfolio/watchlist state, candidate set, required action, and evidential status without reading implementation terminology.
 
-### 8C — Productise remaining surfaces
+Evidence: semantic CSS/state mapping, explicit four-step Today workflow, market-oriented table copy, responsive layout, three static contract tests, `179 passed`, and headless Playwright navigation/visual verification.
+
+### 8C — Productise remaining surfaces: next
 
 - Symbol Research: strategy accordions with summary, signal, risk, evidence, sector context, and comparable time horizons.
 - Strategy Lab: explicit hypothesis/version, configuration, benchmark, run progress, results, rejection reasons, and artifacts.
@@ -51,6 +53,8 @@ Gate: browser smoke tests cover primary workflows and every asynchronous state; 
 
 - Persist active jobs and progress across reloads.
 - Add recovery from interrupted refresh/run operations.
+- Build one dependency-aware daily pipeline: freshness check → selective refresh → validation/promotion → fingerprint-selective strategy runs → persisted snapshot.
+- Make manual completion and later scheduled invocation idempotent: current work is recorded as `skipped_current`; partial failures retry only failed dependencies.
 - Validate desktop and narrow layouts.
 - Conduct a task-based usability pass and resolve high-severity ambiguity.
 - Update screenshots and operating notes only after behaviour stabilises.
@@ -65,7 +69,7 @@ This stage is deliberately business/research work, not parameter tuning. UI plac
 
 ## Stage 10: Unattended data operation — parked
 
-Cron becomes eligible only when manual Data Management is observable, throttled, idempotent, atomic, recoverable, and trustworthy. Required design includes staging, validation, promotion, locks, retries, alerts, provider revisions, holiday policy, and audit logs.
+Scheduling becomes eligible only after the Stage 8D pipeline is proven observable, throttled, idempotent, atomic, recoverable, and trustworthy. Cron or an equivalent scheduler is then only a timed trigger over the same manual pipeline: it waits for dependencies, skips current symbols and current model fingerprints, treats non-trading days as no-work outcomes, and retries only failed work. No scheduling-specific research logic is permitted.
 
 ## Stage 11: Deployment — parked
 

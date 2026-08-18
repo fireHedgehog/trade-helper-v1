@@ -6,15 +6,16 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.26.0` |
-| Checkpoint commit | `628af02` |
-| Verification at checkpoint | `176 passed` |
-| Completed | Stage 8A: workspace state and workflow foundation |
-| Next product work | Stage 8B: semantic visual system and Today command centre |
+| Version | `0.27.0` |
+| Parent checkpoint | `1a77309` (documentation consolidation over `628af02`) |
+| Current state | Stage 8B complete |
+| Verification | `179 passed` plus headless Playwright workflow check |
+| Completed | Stage 8A state foundation; Stage 8B visual system and Today command centre |
+| Next product work | Stage 8C: productise Symbol Research, Strategy Lab, and Data Management |
 | Parked research | Stage 9: new hypothesis and statistical design |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 
-The application is functionally structured but not yet a production-quality research interface. Preserve the v0.26 state model; redesign presentation around the proven workflow of the legacy application without importing its unvalidated algorithms or vague confidence claims.
+The application now has the Stage 8B Today command centre and semantic visual language but is not yet a complete production-quality research interface. Preserve the v0.26 state model, now presented by v0.27.0, and the shared manual/scheduled pipeline contract; continue productising the remaining surfaces without importing legacy algorithms or vague confidence claims.
 
 Heavy statistical work is intentionally paused. On resumption, read the protocol, CTA result, audit, and backlog before proposing CTA v2. Do not tune CTA v1 after observing its rejection.
 

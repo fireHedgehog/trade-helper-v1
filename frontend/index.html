@@ -8,9 +8,11 @@
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4/dist/lightweight-charts.standalone.production.js"></script>
 <style>
   :root {
-    --bg: #0f1117; --panel: #161a23; --border: #242a37;
-    --text: #d1d5db; --muted: #9ca3af; --green: #26a69a; --red: #ef5350;
-    --accent: #f59e0b;
+    --bg: #0b0f16; --panel: #141a24; --panel2: #1a2230; --border: #293244;
+    --text: #e7ecf3; --muted: #98a5b7; --green: #35c6a0; --red: #ff6b6b;
+    --accent: #f6b84a; --blue: #63a8ff; --violet: #b49aff;
+    --positive-bg: #122c29; --negative-bg: #321d24; --warning-bg: #332817;
+    --info-bg: #17263a; --neutral-bg: #202938; --radius: 14px;
   }
   * { box-sizing: border-box; }
   body {
@@ -33,10 +35,10 @@
   .view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .view[hidden] { display: none; }
   .today-body, .macro-body {
-    flex: 1; overflow-y: auto; padding: 16px;
-    display: flex; flex-direction: column; gap: 16px;
+    flex: 1; overflow-y: auto; padding: 24px;
+    display: flex; flex-direction: column; gap: 20px;
   }
-  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
   .panel h2 { margin-bottom: 10px; }
   .cards { display: flex; flex-wrap: wrap; gap: 10px; }
   .card {
@@ -219,6 +221,56 @@
   .model-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
   .model-tab { background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
   .model-tab.active { color: var(--text); border-color: var(--blue); background: #17223a; }
+  .today-hero { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; }
+  .today-eyebrow { color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+  .today-title { margin: 5px 0 7px; font-size: 28px; line-height: 1.1; color: var(--text); }
+  .today-subtitle { margin: 0; max-width: 720px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+  .today-context { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .today-context select { min-width: 150px; }
+  .today-actions { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 12px; }
+  .action-card { display: flex; min-height: 142px; flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; border-radius: 12px; background: var(--panel2); border: 1px solid var(--border); }
+  .action-card .action-step { color: var(--blue); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  .action-card strong { font-size: 15px; }
+  .action-card p { color: var(--muted); font-size: 11px; line-height: 1.45; margin: 0; flex: 1; }
+  .action-card button { width: 100%; }
+  .command-status { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; }
+  .state-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 5px 9px; font-size: 11px; border: 1px solid var(--border); background: var(--neutral-bg); color: var(--muted); }
+  .state-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .state-positive { color: var(--green); background: var(--positive-bg); }
+  .state-negative { color: var(--red); background: var(--negative-bg); }
+  .state-warning { color: var(--accent); background: var(--warning-bg); }
+  .state-info { color: var(--blue); background: var(--info-bg); }
+  .state-neutral { color: var(--muted); background: var(--neutral-bg); }
+  .section-heading { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+  .section-heading h2 { color: var(--text); font-size: 16px; text-transform: none; letter-spacing: 0; margin: 0 0 4px; }
+  .section-heading p { color: var(--muted); font-size: 11px; margin: 0; line-height: 1.45; }
+  .table-wrap { overflow-x: auto; }
+  .today-table th { padding: 10px 8px; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
+  .today-table td { padding: 12px 8px; vertical-align: top; }
+  .today-table .symbol { color: var(--text); font-size: 14px; font-weight: 750; }
+  .semantic-price { color: var(--blue); font-variant-numeric: tabular-nums; }
+  .semantic-date { color: var(--violet); font-variant-numeric: tabular-nums; }
+  .semantic-positive { color: var(--green); }
+  .semantic-negative { color: var(--red); }
+  .semantic-warning { color: var(--accent); }
+  .empty-state { color: var(--muted); text-align: left !important; padding: 20px 8px !important; line-height: 1.5; }
+  .safety-banner { border-left: 3px solid var(--accent); border-bottom: 0; margin: 0 24px; border-radius: 0 0 10px 10px; }
+  @media (max-width: 1100px) {
+    .today-actions { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    body { display: block; height: auto; min-height: 100vh; }
+    aside { width: 100%; flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border); padding: 10px; }
+    aside h1, .app-version { display: none; }
+    main { min-height: calc(100vh - 58px); }
+    .today-body, .macro-body { padding: 14px; }
+    .today-hero { align-items: flex-start; flex-direction: column; }
+    .today-context { justify-content: flex-start; width: 100%; }
+    .today-context select { flex: 1; min-width: 130px; }
+    .today-actions { grid-template-columns: 1fr; }
+    .safety-banner { margin: 0 14px; }
+    .panel { padding: 16px; }
+  }
 </style>
 </head>
 <body>
@@ -296,44 +348,91 @@
   </div>
 
   <div id="view-today" class="view">
-    <div class="toolbar">
-      <select id="today-strategy"></select>
-      <select id="today-set"><option value="defaults">Params: defaults</option></select>
-      <button class="primary" id="today-refresh">Update watched status</button>
-      <span id="today-status"></span>
-      <span id="today-data-freshness"></span>
-      <span id="regime-banner"></span>
-    </div>
     <div class="safety-banner">Research only. “Entry” and “exit” describe historical rule state at the latest stored close—not an order, forecast, or permission to trade. Check freshness and failures first.</div>
     <div class="today-body">
       <section class="panel">
-        <h2>Your watched symbols <span class="badge">persistent per strategy</span></h2>
-        <table>
-          <thead><tr><th>Symbol</th><th>Status</th><th>Last entry</th><th>Last exit</th><th>Next action</th><th>Close</th><th>Stop</th><th>Data</th></tr></thead>
-          <tbody id="today-watchlist"></tbody>
-        </table>
-        <div id="today-run-note" class="sample-note">Reading the last stored run; opening this menu never starts a scan.</div>
+        <div class="today-hero">
+          <div>
+            <div class="today-eyebrow">Daily research workspace</div>
+            <h1 class="today-title">Today</h1>
+            <p class="today-subtitle">Check data first, then update model state. This page reads saved results on opening; work begins only when you choose an action.</p>
+          </div>
+          <div class="today-context">
+            <select id="today-strategy" aria-label="Selected strategy"></select>
+            <select id="today-set" aria-label="Selected parameter set"><option value="defaults">Params: defaults</option></select>
+          </div>
+        </div>
+        <div class="command-status" aria-live="polite">
+          <span id="today-data-freshness" class="state-pill state-neutral">Checking market data…</span>
+          <span id="today-status" class="state-pill state-info">Reading saved research…</span>
+          <span id="regime-banner"></span>
+        </div>
+      </section>
+
+      <section class="today-actions" aria-label="Daily workflow actions">
+        <div class="action-card">
+          <span class="action-step">Step 1 · Data</span>
+          <strong>Confirm market data</strong>
+          <p>Review expected session, coverage, provider failures, and selectively refresh missing or stale symbols.</p>
+          <button id="today-review-data">Review / refresh data</button>
+        </div>
+        <div class="action-card">
+          <span class="action-step">Step 2 · Watchlist</span>
+          <strong>Update watched status</strong>
+          <p>Evaluate only the symbols you persist for the selected strategy and save their latest lifecycle state.</p>
+          <button class="primary" id="today-refresh">Update watched status</button>
+        </div>
+        <div class="action-card">
+          <span class="action-step">Step 3 · Discovery</span>
+          <strong>Find new candidates</strong>
+          <p>Scan the complete stored universe for the selected model. Tabs continue to read the last completed snapshot.</p>
+          <button id="today-run-discovery">Run full-universe candidates</button>
+        </div>
+        <div class="action-card">
+          <span class="action-step">Step 4 · Comparison</span>
+          <strong>Compare the portfolio</strong>
+          <p>Replay the shared-capital historical portfolio against Passive ETF-12, SPY, and cash.</p>
+          <button id="today-run-portfolio">Run portfolio comparison</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div><h2>Watched symbols</h2><p>Your persistent lifecycle record for the selected strategy.</p></div>
+          <span class="state-pill state-info">User selected</span>
+        </div>
+        <div class="table-wrap">
+          <table class="today-table">
+            <thead><tr><th>Symbol</th><th>Position / signal</th><th>Last entry</th><th>Last exit</th><th>Next rule event</th><th>Close</th><th>Stop</th><th>Evaluated through</th></tr></thead>
+            <tbody id="today-watchlist"></tbody>
+          </table>
+        </div>
+        <div id="today-run-note" class="sample-note">Reading the last stored run; opening this page never starts a scan.</div>
       </section>
       <section class="panel">
-        <h2>New-entry candidates by model <span class="badge">full stored universe · no calculation on tab click</span></h2>
-        <button id="today-run-discovery">Run full-universe picks for selected model</button>
+        <div class="section-heading">
+          <div><h2>New-entry candidates by model</h2><p>Full stored universe; tab changes never calculate or replace your watchlist.</p></div>
+          <span class="state-pill state-warning">Evidence varies by model</span>
+        </div>
         <div class="model-tabs" id="model-discovery-tabs"></div>
         <div class="sample-note" id="model-discovery-note"></div>
-        <table>
-          <thead><tr><th>#</th><th>Symbol</th><th>Model(s)</th><th>State / event</th><th>Score</th><th>Explanation</th><th>Data</th></tr></thead>
+        <div class="table-wrap"><table class="today-table">
+          <thead><tr><th>#</th><th>Symbol</th><th>Model(s)</th><th>Rule event</th><th>Score</th><th>Why it appeared</th><th>Evaluated through</th></tr></thead>
           <tbody id="model-discovery-rows"></tbody>
-        </table>
+        </table></div>
       </section>
       <section class="panel">
-        <h2>Shared-capital portfolio replay <span class="badge">locked 12 ETFs · one $100k account · historical mechanics only</span></h2>
-        <button id="today-run-portfolio">Run portfolio comparison</button>
+        <div class="section-heading">
+          <div><h2>Portfolio evidence</h2><p>Locked 12 ETFs · one $100k account · historical mechanics only.</p></div>
+          <span class="state-pill state-neutral">Not live</span>
+        </div>
         <div class="portfolio-summary" id="portfolio-summary"></div>
         <div class="portfolio-summary" id="portfolio-benchmark"></div>
-        <table>
+        <div class="table-wrap"><table class="today-table">
           <thead><tr><th>Symbol</th><th>Shares</th><th>Entry date</th><th>Entry</th><th>Close</th><th>Value</th><th>Unrealized P&amp;L</th><th>Stop</th><th>Sector</th></tr></thead>
           <tbody id="portfolio-positions"></tbody>
-        </table>
-        <div class="sample-note" id="portfolio-note">Not calculated on menu open. Use the explicit button when you need the historical portfolio comparison.</div>
+        </table></div>
+        <div class="sample-note" id="portfolio-note">Not calculated on page open. Run it explicitly when you need a benchmark comparison.</div>
       </section>
     </div>
   </div>
@@ -1289,17 +1388,28 @@ function renderPortfolio(portfolio) {
     `${portfolio.benchmark_note}.${halted}`;
 }
 
+function setStatePill(target, state, text) {
+  const element = typeof target === 'string' ? $(target) : target;
+  element.classList.remove('state-positive', 'state-negative', 'state-warning', 'state-info', 'state-neutral');
+  element.classList.add(`state-${state}`);
+  element.textContent = text;
+}
+
 function renderTodayFreshness(data) {
   if (!data) {
-    $('#today-data-freshness').textContent = 'data freshness unavailable';
+    setStatePill('#today-data-freshness', 'negative', 'Market data unavailable');
     return;
   }
   const summary = data.summary;
   const concern = summary.stale + summary.aging + summary.invalid;
   const yahooSymbols = summary.symbols - summary.fred_managed;
-  $('#today-data-freshness').textContent = concern
-    ? `Yahoo data: ${summary.fresh}/${yahooSymbols} fresh · ${concern} need review · FRED ${summary.fred_managed} separate`
-    : `Yahoo data: ${summary.fresh}/${yahooSymbols} fresh · FRED ${summary.fred_managed} separate`;
+  setStatePill(
+    '#today-data-freshness',
+    concern ? 'warning' : 'positive',
+    concern
+      ? `Data needs review · ${summary.fresh}/${yahooSymbols} current · ${concern} flagged`
+      : `Data current · ${summary.fresh}/${yahooSymbols} Yahoo symbols`
+  );
   $('#today-data-freshness').classList.toggle('concern', concern > 0);
   $('#today-data-freshness').title = data.freshness_policy;
 }
@@ -1354,11 +1464,11 @@ function renderModelDiscoveryTabs() {
 function discoveryTable(rows, emptyMessage) {
   $('#model-discovery-rows').innerHTML = rows.map((row, index) => {
     const score = Number.isFinite(row.score) ? row.score.toFixed(1) : '—';
-    return `<tr><td>${index + 1}</td><td>${escapeHtml(row.symbol)}</td>` +
-      `<td>${escapeHtml(row.models.join(', '))}</td><td>${escapeHtml(row.state)}</td>` +
-      `<td>${score}</td><td>${escapeHtml(row.explanation)}</td>` +
-      `<td>${escapeHtml(row.dataAsOf || '—')}</td></tr>`;
-  }).join('') || `<tr><td colspan="7">${escapeHtml(emptyMessage)}</td></tr>`;
+    return `<tr><td>${index + 1}</td><td class="symbol">${escapeHtml(row.symbol)}</td>` +
+      `<td>${escapeHtml(row.models.join(', '))}</td><td class="semantic-positive">${escapeHtml(row.state)}</td>` +
+      `<td class="semantic-price">${score}</td><td>${escapeHtml(row.explanation)}</td>` +
+      `<td class="semantic-date">${escapeHtml(row.dataAsOf || '—')}</td></tr>`;
+  }).join('') || `<tr><td colspan="7" class="empty-state">${escapeHtml(emptyMessage)}</td></tr>`;
 }
 
 function aggregateModelRows(predicate) {
@@ -1466,11 +1576,11 @@ function renderStrategySnapshot(run, savedWatchlist = []) {
   const savedSymbols = savedWatchlist.map((item) => item.symbol || item);
   if (!run) {
     $('#today-watchlist').innerHTML = savedSymbols.map((symbol) =>
-      `<tr><td>${escapeHtml(symbol)}</td><td>not evaluated</td>` +
+      `<tr><td class="symbol">${escapeHtml(symbol)}</td><td><span class="state-pill state-neutral">Not evaluated</span></td>` +
       '<td>—</td><td>—</td><td>update watched status</td>' +
       '<td>—</td><td>—</td><td>—</td></tr>'
     ).join('') ||
-      '<tr><td colspan="8">No saved watched symbols. Select and save them in Strategy Lab first.</td></tr>';
+      '<tr><td colspan="8" class="empty-state">No watched symbols are saved for this strategy. Select and save them in Strategy Lab.</td></tr>';
     $('#today-run-note').textContent =
       'No calculation started. Opening this menu only checked SQLite for a previous run.';
     return;
@@ -1511,14 +1621,18 @@ function renderStrategySnapshot(run, savedWatchlist = []) {
       ? `${fill(lastExit)} · ${escapeHtml(lastExit.reason || '')}` +
         `${lastExit.return_pct == null ? '' : ` · ${Number(lastExit.return_pct).toFixed(1)}%`}`
       : '—';
-    return `<tr><td>${escapeHtml(row.symbol)}</td><td>${escapeHtml(status)}</td>` +
-      `<td>${fill(lastEntry)}</td><td>${exitText}</td>` +
+    const stateClass = row.state === 'long' ? 'positive' :
+      row.state === 'entry_pending' || row.state === 'exit_pending' ? 'warning' :
+      row.state === 'unavailable' ? 'negative' : 'neutral';
+    return `<tr><td class="symbol">${escapeHtml(row.symbol)}</td>` +
+      `<td><span class="state-pill state-${stateClass}">${escapeHtml(status)}</span></td>` +
+      `<td class="semantic-date">${fill(lastEntry)}</td><td class="semantic-date">${exitText}</td>` +
       `<td>${escapeHtml(nextAction)}</td>` +
-      `<td>${row.close == null ? '—' : `$${Number(row.close).toFixed(2)}`}</td>` +
-      `<td>${holding && row.stop != null ? `$${Number(row.stop).toFixed(2)}` : '—'}</td>` +
-      `<td>${escapeHtml(row.data_as_of || '—')}</td></tr>`;
+      `<td class="semantic-price">${row.close == null ? '—' : `$${Number(row.close).toFixed(2)}`}</td>` +
+      `<td class="semantic-negative">${holding && row.stop != null ? `$${Number(row.stop).toFixed(2)}` : '—'}</td>` +
+      `<td class="semantic-date">${escapeHtml(row.data_as_of || '—')}</td></tr>`;
   }).join('') ||
-    '<tr><td colspan="8">No saved watched symbols. Select and save them in Strategy Lab first.</td></tr>';
+    '<tr><td colspan="8" class="empty-state">No watched symbols are saved for this strategy. Select and save them in Strategy Lab.</td></tr>';
   const coverage = result.coverage;
   const missing = coverage.missing.length;
   const failed = coverage.failed.length;
@@ -1535,7 +1649,7 @@ function renderStrategySnapshot(run, savedWatchlist = []) {
 
 async function loadTodayStored() {
   const strategy = $('#today-strategy').value;
-  $('#today-status').textContent = 'reading stored run…';
+  setStatePill('#today-status', 'info', 'Reading saved research…');
   try {
     await refreshTodaySets(strategy);
     const set = $('#today-set').value || 'defaults';
@@ -1546,13 +1660,17 @@ async function loadTodayStored() {
     ]);
     renderStrategySnapshot(stored.run, stored.watchlist);
     renderTodayFreshness(freshnessData);
-    $('#today-status').textContent = !stored.watchlist.length
-      ? 'no saved watchlist · save symbols in Strategy Lab'
-      : stored.run
-        ? `stored run #${stored.run.id} · no calculation on menu open`
-        : 'watchlist saved · update watched status';
+    setStatePill(
+      '#today-status',
+      !stored.watchlist.length ? 'warning' : stored.run ? 'positive' : 'info',
+      !stored.watchlist.length
+        ? 'Watchlist empty · save symbols in Strategy Lab'
+        : stored.run
+          ? `Saved model state · run #${stored.run.id}`
+          : 'Watchlist ready · update required'
+    );
   } catch (err) {
-    $('#today-status').textContent = `error: ${err.message}`;
+    setStatePill('#today-status', 'negative', `Saved research unavailable · ${err.message}`);
   }
 }
 
@@ -1560,9 +1678,10 @@ async function runTodaySnapshot(scope) {
   const strategy = $('#today-strategy').value;
   const set = $('#today-set').value || 'defaults';
   const fullUniverse = scope === 'all';
-  $('#today-status').textContent = fullUniverse
-    ? 'running full-universe candidate scan…'
-    : 'updating watched status…';
+  setStatePill(
+    '#today-status', 'info',
+    fullUniverse ? 'Running full-universe candidate scan…' : 'Updating watched lifecycle…'
+  );
   loading(true, fullUniverse
     ? 'evaluating the stored universe for new entries…'
     : 'updating watched strategy states…');
@@ -1577,11 +1696,12 @@ async function runTodaySnapshot(scope) {
     );
     renderStrategySnapshot(run, watchlist.items);
     await loadModelDiscovery();
-    $('#today-status').textContent = fullUniverse
-      ? `full-universe run #${run.id} stored`
-      : `watched-status run #${run.id} stored`;
+    setStatePill(
+      '#today-status', 'positive',
+      fullUniverse ? `Candidate run #${run.id} saved` : `Watchlist run #${run.id} saved`
+    );
   } catch (err) {
-    $('#today-status').textContent = `run failed: ${err.message}`;
+    setStatePill('#today-status', 'negative', `Run failed · ${err.message}`);
   } finally {
     loading(false);
   }
@@ -1681,6 +1801,7 @@ $('#today-strategy').addEventListener('change', () => {
   loadTodayStored();
 });
 $('#today-set').addEventListener('change', loadTodayStored);
+$('#today-review-data').addEventListener('click', () => showView('data'));
 $('#today-refresh').addEventListener('click', () => runTodaySnapshot('watchlist'));
 $('#today-run-discovery').addEventListener('click', () => runTodaySnapshot('all'));
 $('#today-run-portfolio').addEventListener('click', runTodayPortfolio);

@@ -1,6 +1,6 @@
 # Workspace redesign specification
 
-Status: Stage 8A complete; 8B–8D pending. This is the authoritative UX contract.
+Status: Stages 8A–8B complete; 8C–8D pending. This is the authoritative UX contract.
 
 ## Design premise
 
@@ -19,6 +19,22 @@ The current application contains stronger research machinery but still reads lik
 | Research Record | What was specified, observed, decided, and superseded? |
 
 Navigation loads persisted state only. Network refresh and strategy evaluation require explicit labelled actions.
+
+### Shared daily pipeline
+
+Manual buttons and future scheduling must invoke one durable pipeline, never parallel implementations:
+
+`check expected session → refresh required symbols → validate/promote data → run required model versions → persist/publish snapshot`
+
+Each stage starts only after its dependency succeeds. Freshness is evaluated per symbol against the expected completed market session. Strategy currency is evaluated from the input-data fingerprint plus model/version/parameter fingerprint. Consequently:
+
+- current symbols are skipped rather than downloaded again;
+- a current strategy snapshot is skipped rather than recomputed;
+- an early manual run makes the later scheduled invocation a recorded no-op;
+- partial refresh failures block only dependent results and are individually retryable;
+- no strategy snapshot may silently combine valid and unvalidated refreshed data.
+
+The permanent controls are `Review/refresh data`, `Update watched status`, `Run full-universe candidates`, `Run portfolio comparison`, and eventually `Run daily pipeline` / `Retry failures`. The scheduler is only a Stage 10 trigger over this pipeline; it adds no business logic.
 
 ## Visual and language system
 
@@ -94,9 +110,9 @@ Every remote or long-running surface implements: `idle/not run`, `queued`, `runn
 ## Delivery slices
 
 - 8A complete: persistence, lifecycle semantics, watchlist/candidate separation, tabs/intersections, explicit actions.
-- 8B next: semantic tokens, copy mapping, spacious shell, Today redesign.
-- 8C: Symbol Research, Strategy Lab, and Data Management productisation.
-- 8D: durable jobs, responsive/usability pass, smoke/regression coverage.
+- 8B complete: semantic tokens, copy mapping, responsive spacious shell, ordered Today actions, lifecycle/candidate presentation, and regression/browser verification.
+- 8C next: Symbol Research, Strategy Lab, and Data Management productisation.
+- 8D: durable jobs; the shared dependency-aware daily pipeline; idempotent `skipped_current`, partial-failure, and retry semantics; responsive/usability pass; smoke/regression coverage.
 
 ## Acceptance tests
 
