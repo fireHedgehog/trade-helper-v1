@@ -266,7 +266,48 @@ position state, and failure conditions without relying on a tooltip.
 **Exit gate:** the application has a documented threat model and no endpoint is
 internet-exposed by default.
 
-## Stage 8 — reliable daily operation (parked; cron only after Stages 0–7)
+## Stage 8 — local strategy validation and product decision gate
+
+**Goal:** decide locally whether a strategy is useful enough to continue before
+automating or deploying it.
+
+This stage is not “fine-tuning until the strategy wins.” Every attempt starts
+with a written economic reason, fixed comparison rules, declared costs, a
+limited set of permitted choices, and pass/fail thresholds. Failed and
+uninteresting results are retained. CTA Trend v1 remains rejected and cannot be
+rescued by changing its rules after seeing its result.
+
+- [ ] Choose the product goal before judging results: a research assistant, a
+      lower-risk alternative, or a strategy intended to beat a benchmark. Do
+      not switch goals after seeing performance.
+- [ ] Define the fair portfolio benchmark, its rebalancing rule, and treatment
+      of idle cash before making any excess-return claim.
+- [ ] Select one next hypothesis for an economic reason and write its rules and
+      rejection criteria before running it.
+- [ ] Freeze the investment universe, research periods, trading costs,
+      execution assumptions, portfolio limits, and permitted parameter choices.
+- [ ] Run repeatable local walk-forward experiments and retain every attempted
+      setup and outcome, including failures.
+- [ ] Judge net excess return, drawdown and recovery, capital use, turnover,
+      number of independent trades, and stability across periods and assets—not
+      headline return alone.
+- [ ] Stress higher costs, worse fills, gaps, and small changes in assumptions;
+      reject an advantage that disappears under reasonable conditions.
+- [ ] Compare with buy-and-hold, cash yield, and the accepted portfolio
+      benchmark on the same dates and capital basis.
+- [ ] Record a `reject`, `revise`, or `continue` decision using the thresholds
+      written before the result was known.
+- [ ] Confirm that a non-programmer can understand the data used, the decision
+      rule, the assumed trade timing, the risk taken, and why no action may be
+      the correct result.
+- [ ] If a candidate passes development, lock it for later observation on
+      genuinely unseen data. Do not begin paper or live trading in this stage.
+
+**Exit gate:** an independently readable decision record either rejects the
+hypothesis or locks exactly one candidate for future unseen-data observation.
+Working software or an attractive historical chart is not enough to pass.
+
+## Stage 9 — reliable daily operation (parked; cron only after Stages 0–8)
 
 **Goal:** make an unattended update observable, idempotent, and recoverable.
 
@@ -288,7 +329,7 @@ staging, locks, persistent run history, alerts, and recovery controls below.
 **Exit gate:** repeated scheduled runs cannot corrupt or silently partially
 publish the dataset, and a failed run produces a visible alert.
 
-## Stage 9 — AWS deployment (last)
+## Stage 10 — AWS deployment (last)
 
 **Goal:** deploy a validated research application, not move unresolved risk to
 the cloud.
@@ -316,9 +357,14 @@ Work one small slice at a time:
 4. Correct/rename confidence and benchmark statistics.
 5. Build the walk-forward research notebook and protocol.
 6. Add portfolio/risk semantics.
-7. Complete UX and security gates.
-8. Revisit cron only after the earlier gates pass.
-9. Revisit AWS only after cron is demonstrably reliable.
+7. Complete the local safety work needed for honest experimentation; keep the
+   broader external-use UX and security requirements recorded.
+8. Run one hypothesis at a time through the local strategy-validation and
+   product decision gate.
+9. Complete every external-use UX and security gate, then revisit cron only if
+   unattended operation still has a clear product purpose.
+10. Revisit AWS only after cron is demonstrably reliable and deployment has a
+    justified user need.
 
 Adding new strategies, machine learning, broker integration, cron automation,
 and AWS deployment is intentionally paused until the relevant gates above pass.

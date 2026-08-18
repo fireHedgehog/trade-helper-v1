@@ -4,8 +4,9 @@
 
 ## Start here
 
-- [Validation roadmap](roadmap.md) — completed work, current stage, remaining
-  gates, and why cron/AWS are deliberately postponed.
+- [Validation roadmap](roadmap.md) — completed work, the local business
+  validation gate, remaining safety work, and why cron/AWS are deliberately
+  postponed.
 - [Product and research design](product.md) — user-facing views, trading ground
   rules, recorded design decisions, and limitations.
 - [Out-of-sample research protocol](research-protocol.md) — preregistered CTA

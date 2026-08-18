@@ -49,6 +49,15 @@ data freshness, manual refresh control, and safety clarity.
   exits without fetching. AWS, machine learning, and brokerage integration also
   remain paused until their prerequisite gates pass.
 
+The remaining work is **not only cron and deployment**. The next product
+priority is the local strategy-validation gate: define what useful means,
+compare each hypothesis fairly with buy-and-hold and cash after costs, test
+whether any apparent advantage is stable, and record an honest
+reject/revise/continue decision. This is disciplined validation, not repeated
+parameter tuning until a backtest looks attractive. Scheduled operation and AWS
+remain parked until that business gate—and the safety gates for external
+operation—have passed.
+
 The honest baseline is poor as an “edge”: full-history SPY CTA returned roughly
 276.5% net versus roughly 3,119.6% buy-and-hold. Lower drawdown does not by itself
 prove that the strategy adds value.
@@ -139,7 +148,7 @@ scripts/                 operational scripts; unattended scheduling is paused
 | Document | Purpose |
 | --- | --- |
 | [Documentation index](docs/README.md) | Navigation for all project documents |
-| [Validation roadmap](docs/roadmap.md) | Stages 0–9, exit gates, and current work |
+| [Validation roadmap](docs/roadmap.md) | Stages 0–10, exit gates, and current work |
 | [Product and research design](docs/product.md) | Views, trading rules, and design notes |
 | [Research protocol](docs/research-protocol.md) | Locked Stage 4 hypothesis and methodology |
 | [Architecture decisions](docs/README.md#architecture-decisions) | Execution, data, and statistics contracts |

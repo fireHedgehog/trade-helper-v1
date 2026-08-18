@@ -2,6 +2,18 @@
 
 # Changelog
 
+## v0.24.0 — 2026-08-18
+
+- Clarified that the remaining work is not merely cron and deployment. Added a
+  local strategy-validation and product decision gate before either operation.
+- Defined the business questions for that gate: a fixed product purpose, a fair
+  portfolio benchmark, after-cost value, capital efficiency, robustness, and a
+  predeclared `reject`, `revise`, or `continue` decision.
+- Explicitly separated disciplined hypothesis testing from retrospective
+  “fine-tuning” that searches until a historical result looks attractive.
+- Renumbered reliable daily operation to Stage 9 and AWS deployment to Stage 10;
+  both remain parked until the preceding value and safety gates pass.
+
 ## v0.23.0 — 2026-08-18
 
 - Added a Data Management view with a searchable 554-series inventory, provider,
