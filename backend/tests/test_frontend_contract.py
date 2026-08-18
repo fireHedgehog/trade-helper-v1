@@ -54,3 +54,46 @@ def test_today_navigation_is_read_only_until_an_action_is_clicked() -> None:
     assert "$('#today-review-data').addEventListener('click', () => showView('data'))" in HTML
     assert "$('#today-refresh').addEventListener('click', () => runTodaySnapshot('watchlist'))" in HTML
     assert "$('#today-run-discovery').addEventListener('click', () => runTodaySnapshot('all'))" in HTML
+
+
+def test_data_refresh_distinguishes_resume_from_forced_scopes() -> None:
+    assert "Resume / refresh needed" in HTML
+    assert "Force refresh core" in HTML
+    assert "Force refresh all Yahoo" in HTML
+    assert "skips symbols already current" in HTML
+    assert "server restart loses this progress display, not published rows" in HTML
+
+
+def test_watchlist_snapshot_is_recoverable_and_empty_save_is_explicit() -> None:
+    assert "Restore snapshot symbols" in HTML
+    assert "showing ${snapshotSymbols.length} recoverable symbols" in HTML
+    assert "Historical run snapshots remain recoverable" in HTML
+    assert "if (!symbols.length && !window.confirm" in HTML
+
+
+def test_symbol_research_evaluates_all_accordions_without_mixing_chart_markers() -> None:
+    assert "async function loadResearchAccordions(symbol)" in HTML
+    assert "Evaluating latest state for every model" in HTML
+    assert "Uses the parameter values shown above" in HTML
+    assert "chart markers remain limited to the selected model" in HTML
+    assert "loadResearchAccordions(symbol)" in HTML
+
+
+def test_classical_ta_is_identifiable_without_renaming_the_backend_contract() -> None:
+    assert "Classical TA · S/R Bounce" in HTML
+    assert "Quantified support/resistance bounce with ATR-buffered stop" in HTML
+    assert "value=\"${escapeHtml(s.name)}\"" in HTML
+
+
+def test_symbol_research_guide_and_dossier_are_not_cramped() -> None:
+    assert "width: 380px" in HTML
+    assert "height: 96px; min-height: 96px" in HTML
+    assert ".guide-title { font-size: 15px" in HTML
+    assert ".research-accordion p { font-size: 12px" in HTML
+
+
+def test_current_model_observation_precedes_reference_rules() -> None:
+    guide = HTML[HTML.index('<div class="guide" id="guide">'):HTML.index('</div>', HTML.index('<div class="guide-chart"'))]
+
+    assert guide.index('id="guide-now"') < guide.index('id="guide-rules"')
+    assert "guide-now { color: var(--green); font-weight: 650" in HTML

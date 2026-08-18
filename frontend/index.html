@@ -167,8 +167,8 @@
   .zoom button { border: 1px solid var(--border); background: #1f2634; width: 30px; text-align: center; }
   #chart { flex: 1; min-width: 0; }
   .rail {
-    width: 320px; border-left: 1px solid var(--border); overflow-y: auto;
-    padding: 14px; display: flex; flex-direction: column; gap: 14px;
+    width: 380px; border-left: 1px solid var(--border); overflow-y: auto;
+    padding: 18px; display: flex; flex-direction: column; gap: 18px;
   }
   .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .metric {
@@ -207,17 +207,18 @@
   #equity { height: 150px; }
   .guide {
     border-top: 1px solid var(--border); background: var(--panel);
-    padding: 10px 14px; font-size: 12px; color: var(--text);
-    max-height: 170px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+    padding: 12px 18px; font-size: 13px; color: var(--text);
+    height: 96px; min-height: 96px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 6px;
   }
-  .guide-title { font-weight: 600; color: var(--accent); }
-  .guide-rules div, .guide-chart, .guide-now { line-height: 1.5; }
+  .guide-title { font-size: 15px; font-weight: 650; color: var(--accent); }
+  .guide-rules div, .guide-chart, .guide-now { line-height: 1.65; }
   .guide .rule { color: var(--text); }
   .guide .rule b { color: var(--muted); }
-  .guide-now { color: var(--green); }
-  .research-accordion details { border: 1px solid var(--border); border-radius: 8px; margin: 6px 0; padding: 8px; background: var(--panel); }
-  .research-accordion summary { cursor: pointer; font-size: 12px; font-weight: 600; }
-  .research-accordion p { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .guide-now { color: var(--green); font-weight: 650; }
+  .research-accordion details { border: 1px solid var(--border); border-radius: 10px; margin: 8px 0; padding: 11px; background: var(--panel); }
+  .research-accordion summary { cursor: pointer; font-size: 13px; font-weight: 600; line-height: 1.5; }
+  .research-accordion p { font-size: 12px; color: var(--muted); line-height: 1.65; margin: 10px 0; }
   .model-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
   .model-tab { background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
   .model-tab.active { color: var(--text); border-color: var(--blue); background: #17223a; }
@@ -257,6 +258,8 @@
   .safety-banner { border-left: 3px solid var(--accent); border-bottom: 0; margin: 0 24px; border-radius: 0 0 10px 10px; }
   @media (max-width: 1100px) {
     .today-actions { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+    .rail { width: 340px; }
+    .guide { height: 88px; min-height: 88px; }
   }
   @media (max-width: 760px) {
     body { display: block; height: auto; min-height: 100vh; }
@@ -307,9 +310,9 @@
       <div id="chart"></div>
       <div class="guide" id="guide">
         <div class="guide-title" id="guide-title">—</div>
+        <div class="guide-now" id="guide-now"></div>
         <div class="guide-rules" id="guide-rules"></div>
         <div class="guide-chart" id="guide-chart"></div>
-        <div class="guide-now" id="guide-now"></div>
       </div>
     </div>
     <div class="rail">
@@ -399,7 +402,7 @@
       <section class="panel">
         <div class="section-heading">
           <div><h2>Watched symbols</h2><p>Your persistent lifecycle record for the selected strategy.</p></div>
-          <span class="state-pill state-info">User selected</span>
+          <div><span class="state-pill state-info">User selected</span> <button id="today-restore-watchlist" hidden>Restore snapshot symbols</button></div>
         </div>
         <div class="table-wrap">
           <table class="today-table">
@@ -493,9 +496,9 @@
         <option value="provider_managed">FRED-managed</option>
       </select>
       <button id="data-reload">Check status</button>
-      <button class="primary" id="data-refresh-core">Refresh core</button>
-      <button id="data-refresh-stale">Refresh aging/stale</button>
-      <button class="danger" id="data-refresh-all">Refresh all Yahoo</button>
+      <button class="primary" id="data-refresh-stale" title="Rechecks freshness and skips symbols already current">Resume / refresh needed</button>
+      <button id="data-refresh-core" title="Downloads the complete core basket even when already current">Force refresh core</button>
+      <button class="danger" id="data-refresh-all" title="Downloads every Yahoo symbol even when already current">Force refresh all Yahoo</button>
       <span id="data-status">loading…</span>
     </div>
     <div class="macro-body">
@@ -503,7 +506,7 @@
         <h2>Market-data inventory <span class="badge">manual only · local SQLite</span></h2>
         <div class="data-summary" id="data-summary"></div>
         <div class="progress-track"><div class="progress-fill" id="data-progress"></div></div>
-        <div id="data-job-note" class="sample-note">No refresh running.</div>
+        <div id="data-job-note" class="sample-note">No refresh running. Published symbols survive interruption; Resume / refresh needed skips symbols already current.</div>
         <div id="data-policy" class="sample-note"></div>
       </section>
       <section class="panel">
@@ -766,7 +769,7 @@ async function renderGuide(symbol, strategy) {
   const meta = strategiesMeta.find((s) => s.name === strategy);
   if (!meta || !meta.info) return;
   const info = meta.info;
-  $('#guide-title').textContent = `${strategy} — ${info.tagline}`;
+  $('#guide-title').textContent = `${strategyDisplayName(strategy)} — ${info.tagline}`;
   $('#guide-rules').innerHTML =
     `<div class="rule"><b>Entry:</b> ${info.entry}</div>` +
     `<div class="rule"><b>Exit:</b> ${info.exit}</div>`;
@@ -792,11 +795,15 @@ const STRATEGY_EVIDENCE = {
   'CTA Trend': ['Rejected v1', 'Insufficient validated excess-return evidence; retained for study, not recommendation.'],
   'SMA Cross': ['Baseline only', 'Learning control; no accepted portfolio edge claim.'],
   'Donchian Trend': ['Unvalidated', 'Canonical mechanics exist; preregistered evidence gate pending.'],
-  'S/R Bounce': ['Exploratory', 'Classic-TA implementation; no durable-edge claim.'],
+  'S/R Bounce': ['Exploratory classical TA', 'Quantified support/resistance bounce with ATR-buffered stop; no durable-edge claim.'],
   'Fib Retrace': ['Exploratory poor result', 'Historical SPY result materially trailed buy-and-hold.'],
   'Wave Pull': ['Unvalidated', 'Mechanics exist; independent research evidence pending.'],
   'RSI Reversion': ['Unvalidated', 'No protective-stop portfolio contract or accepted validation.'],
 };
+
+function strategyDisplayName(name) {
+  return name === 'S/R Bounce' ? 'Classical TA · S/R Bounce' : name;
+}
 
 async function loadSymbols() {
   const { symbols } = await api('/api/symbols');
@@ -810,27 +817,83 @@ async function loadStrategies() {
   const { strategies } = await api('/api/strategies');
   strategiesMeta = strategies;
   $('#strategy').innerHTML = strategies.map((s, i) =>
-    `<option ${i === 0 ? 'selected' : ''}>${s.name}</option>`).join('');
+    `<option value="${escapeHtml(s.name)}" ${i === 0 ? 'selected' : ''}>${escapeHtml(strategyDisplayName(s.name))}</option>`).join('');
   $('#today-strategy').innerHTML = strategies.map((s, i) =>
-    `<option ${i === 0 ? 'selected' : ''}>${s.name}</option>`).join('');
+    `<option value="${escapeHtml(s.name)}" ${i === 0 ? 'selected' : ''}>${escapeHtml(strategyDisplayName(s.name))}</option>`).join('');
   $('#lab-watch-strategy').innerHTML = strategies.map((s, i) =>
-    `<option ${i === 0 ? 'selected' : ''}>${s.name}</option>`).join('');
+    `<option value="${escapeHtml(s.name)}" ${i === 0 ? 'selected' : ''}>${escapeHtml(strategyDisplayName(s.name))}</option>`).join('');
   resetParams();
   renderParams();
   renderResearchAccordions();
   loadParamSets();
 }
 
-function renderResearchAccordions() {
+function signalStateLabel(signal) {
+  if (!signal) return 'Not evaluated';
+  if (signal.error) return 'Unavailable';
+  if (signal.state === 'entry_pending') return 'New entry pending';
+  if (signal.state === 'long') return 'Holding';
+  if (signal.state === 'exit_pending') return 'Exit pending';
+  if (signal.state === 'flat') return 'No entry signal';
+  return signal.state || 'Evaluated';
+}
+
+function renderResearchAccordions(signals = {}, symbol = null) {
   $('#research-accordions').innerHTML = strategiesMeta.map((strategy) => {
     const [label, evidence] = STRATEGY_EVIDENCE[strategy.name] || ['Pending', 'Evidence review pending.'];
     const selected = strategy.name === $('#strategy').value ? ' open' : '';
-    return `<details${selected}><summary>${escapeHtml(strategy.name)} · ${escapeHtml(label)}</summary>` +
+    const signal = signals[strategy.name];
+    const stateLabel = signalStateLabel(signal);
+    const stateClass = signal?.state === 'long' ? 'state-positive' :
+      ['entry_pending', 'exit_pending'].includes(signal?.state) ? 'state-warning' :
+      signal?.error ? 'state-negative' : 'state-neutral';
+    const indicators = signal && !signal.error
+      ? Object.entries(signal.indicators || {}).map(([key, value]) =>
+          `${escapeHtml(key)} <span class="semantic-price">${escapeHtml(value)}</span>`
+        ).join(' · ') || 'No model indicators returned.'
+      : 'Run a backtest to evaluate this model for the selected symbol.';
+    const observation = signal?.error
+      ? `Not evaluable: ${escapeHtml(signal.error)}`
+      : signal
+        ? `${escapeHtml(signal.note || 'No model note returned.')} Close <span class="semantic-price">$${Number(signal.close).toFixed(2)}</span>`
+        : `No ${symbol ? escapeHtml(symbol) : 'symbol'} evaluation loaded.`;
+    const lifecycle = signal && !signal.error
+      ? [
+          signal.entry_date ? `Last entry ${escapeHtml(signal.entry_date)} @ $${Number(signal.entry_price).toFixed(2)}` : '',
+          signal.event && signal.event !== 'none' ? `Latest event: ${escapeHtml(signal.event)}` : 'No new rule event at the latest close',
+          `Heuristic rank ${Number(signal.rank).toFixed(1)} (${escapeHtml(signal.rank_note)})`,
+        ].filter(Boolean).join(' · ')
+      : '—';
+    const paramsNote = strategy.name === $('#strategy').value
+      ? 'Uses the parameter values shown above.'
+      : 'Uses this model’s default parameters; chart markers remain limited to the selected model.';
+    return `<details${selected}><summary>${escapeHtml(strategyDisplayName(strategy.name))} · ${escapeHtml(label)} · ` +
+      `<span class="state-pill ${stateClass}">${escapeHtml(stateLabel)}</span></summary>` +
+      `<p><b>${symbol ? escapeHtml(symbol) : 'Current symbol'}:</b> ${observation}</p>` +
+      `<p><b>Model levels:</b> ${indicators}</p>` +
+      `<p><b>Lifecycle:</b> ${lifecycle}</p>` +
+      `<p><b>Parameters:</b> ${escapeHtml(paramsNote)}</p>` +
       `<p><b>Evidence:</b> ${escapeHtml(evidence)}</p>` +
       `<p><b>Rules:</b> ${escapeHtml(strategy.info.entry)} ${escapeHtml(strategy.info.exit)}</p>` +
       `<p><b>Risk:</b> Historical daily-bar model; gaps, costs, sample size, and selection bias remain relevant.</p>` +
       `<p><b>Sector relevance:</b> Pending explicit research. No sector suitability is inferred from a backtest.</p></details>`;
   }).join('');
+}
+
+async function loadResearchAccordions(symbol) {
+  $('#research-accordions').innerHTML = '<div class="sample-note">Evaluating latest state for every model…</div>';
+  const entries = await Promise.all(strategiesMeta.map(async (strategy) => {
+    const query = new URLSearchParams({ strategy: strategy.name });
+    if (strategy.name === $('#strategy').value) {
+      Object.entries(currentParams).forEach(([key, value]) => query.set(key, value));
+    }
+    try {
+      return [strategy.name, await api(`/api/signal/${symbol}?${query.toString()}`)];
+    } catch (error) {
+      return [strategy.name, { error: error.message }];
+    }
+  }));
+  renderResearchAccordions(Object.fromEntries(entries), symbol);
 }
 
 function currentMeta() {
@@ -998,7 +1061,10 @@ async function run() {
     renderMetrics(backtest.metrics, backtest.assumptions);
     renderTrades(backtest.trades);
     renderEquity(backtest.equity);
-    renderGuide(symbol, strategy);
+    await Promise.all([
+      renderGuide(symbol, strategy),
+      loadResearchAccordions(symbol),
+    ]);
     $('#status').textContent =
       `${backtest.trades.length} closed trades${backtest.open_position ? ' · open position' : ''} · ${symbol} · ${strategy} · ${label} · data through ${bars.at(-1)?.date || 'unknown'}`;
   } catch (err) {
@@ -1092,6 +1158,9 @@ async function saveLabWatchlist() {
   const strategy = $('#lab-watch-strategy').value;
   const symbols = [...document.querySelectorAll('#lab-symbols input:checked')]
     .map((element) => element.value);
+  if (!symbols.length && !window.confirm(
+    `Clear every watched symbol for ${strategy}? This replaces the persistent list. Historical run snapshots remain recoverable.`
+  )) return;
   await api(`/api/strategy-watchlist?strategy=${encodeURIComponent(strategy)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -1258,9 +1327,9 @@ function renderDataStatus(data) {
     ? `${finished}/${refresh.total} · ${refresh.current_symbol || 'starting'}`
     : `${refresh.state} · checked ${new Date(data.checked_at).toLocaleTimeString()}`;
   $('#data-job-note').textContent = refresh.state === 'idle'
-    ? 'No refresh has run in this server process.'
+    ? 'No refresh has run in this server process. Published SQLite rows survive a restart; Resume / refresh needed recalculates freshness and skips symbols already current.'
     : `${refresh.state}: ${refresh.completed} published, ${refresh.failed} failed, ${refresh.total} total. ` +
-      'Progress memory is lost if the server restarts; already published SQLite rows remain.';
+      'A server restart loses this progress display, not published rows. Resume / refresh needed then selects only symbols still aging, stale, or invalid.';
   $('#data-policy').textContent =
     `${data.source} · ${data.adjustment} · expected latest session ${data.expected_latest_session} · ${data.freshness_policy}. ` +
     `Manual full-history refresh uses ${data.refresh_policy.period}, a fixed ${data.refresh_policy.delay_seconds}s delay, ` +
@@ -1293,7 +1362,7 @@ async function startDataRefresh(scope) {
     `Refresh ${concernCount} aging/stale Yahoo symbols? Full adjusted histories are fetched for consistency. This is a long provider job and may be rate-limited.`
   )) return;
   if (scope === 'all' && !window.confirm(
-    'Refresh every Yahoo-managed symbol? At the fixed 2-second delay, 500 symbols require at least about 17 minutes, plus full-history download time and retries. FRED series are excluded.'
+    'Force-refresh every Yahoo-managed symbol, including symbols already current? At the fixed 2-second delay, 500 symbols require at least about 17 minutes, plus full-history download time and retries. Use Resume / refresh needed after an interruption. FRED series are excluded.'
   )) return;
   $('#data-status').textContent = `starting ${scope} refresh…`;
   try {
@@ -1435,7 +1504,7 @@ function modelDiscoveryTabs() {
     { id: 'new-breakouts', label: 'New Breakouts' },
     ...strategiesMeta.map((strategy) => ({
       id: `strategy:${strategy.name}`,
-      label: strategy.name,
+      label: strategyDisplayName(strategy.name),
     })),
   ];
 }
@@ -1572,8 +1641,12 @@ async function loadModelDiscovery() {
   renderModelDiscovery();
 }
 
+let recoverableWatchlist = [];
+
 function renderStrategySnapshot(run, savedWatchlist = []) {
   const savedSymbols = savedWatchlist.map((item) => item.symbol || item);
+  recoverableWatchlist = [];
+  $('#today-restore-watchlist').hidden = true;
   if (!run) {
     $('#today-watchlist').innerHTML = savedSymbols.map((symbol) =>
       `<tr><td class="symbol">${escapeHtml(symbol)}</td><td><span class="state-pill state-neutral">Not evaluated</span></td>` +
@@ -1589,7 +1662,14 @@ function renderStrategySnapshot(run, savedWatchlist = []) {
   const snapshotBySymbol = new Map(
     (result.watchlist || []).map((row) => [row.symbol, row])
   );
-  const displayRows = savedSymbols.map((symbol) => snapshotBySymbol.get(symbol) || {
+  const snapshotSymbols = [...snapshotBySymbol.keys()];
+  const usingSnapshotFallback = !savedSymbols.length && snapshotSymbols.length > 0;
+  const effectiveSymbols = usingSnapshotFallback ? snapshotSymbols : savedSymbols;
+  if (usingSnapshotFallback) {
+    recoverableWatchlist = snapshotSymbols;
+    $('#today-restore-watchlist').hidden = false;
+  }
+  const displayRows = effectiveSymbols.map((symbol) => snapshotBySymbol.get(symbol) || {
     symbol,
     state: 'unavailable',
     status: 'not in stored run',
@@ -1637,7 +1717,10 @@ function renderStrategySnapshot(run, savedWatchlist = []) {
   const missing = coverage.missing.length;
   const failed = coverage.failed.length;
   $('#today-run-note').textContent =
-    `Stored run #${run.id} · created ${run.created_at} · data as of ${run.data_as_of || 'unknown'} · ` +
+    (usingSnapshotFallback
+      ? `Current persistent watchlist is empty; showing ${snapshotSymbols.length} recoverable symbols from stored run #${run.id}. `
+      : `Stored run #${run.id} · `) +
+    `created ${run.created_at} · data as of ${run.data_as_of || 'unknown'} · ` +
     `${coverage.processed}/${coverage.requested} processed · ${missing} missing · ${failed} failed. ` +
     `${result.ranking_warning}` +
     (legacyLifecycle
@@ -1663,8 +1746,10 @@ async function loadTodayStored() {
     setStatePill(
       '#today-status',
       !stored.watchlist.length ? 'warning' : stored.run ? 'positive' : 'info',
-      !stored.watchlist.length
-        ? 'Watchlist empty · save symbols in Strategy Lab'
+      !stored.watchlist.length && stored.run?.result?.watchlist?.length
+        ? `Watchlist empty · showing run #${stored.run.id} snapshot`
+        : !stored.watchlist.length
+          ? 'Watchlist empty · save symbols in Strategy Lab'
         : stored.run
           ? `Saved model state · run #${stored.run.id}`
           : 'Watchlist ready · update required'
@@ -1802,6 +1887,22 @@ $('#today-strategy').addEventListener('change', () => {
 });
 $('#today-set').addEventListener('change', loadTodayStored);
 $('#today-review-data').addEventListener('click', () => showView('data'));
+$('#today-restore-watchlist').addEventListener('click', async () => {
+  const strategy = $('#today-strategy').value;
+  if (!recoverableWatchlist.length) return;
+  const symbolsToRestore = [...recoverableWatchlist];
+  try {
+    await api(`/api/strategy-watchlist?strategy=${encodeURIComponent(strategy)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbols: symbolsToRestore }),
+    });
+    await loadTodayStored();
+    setStatePill('#today-status', 'positive', `Restored ${symbolsToRestore.length} watched symbols`);
+  } catch (err) {
+    setStatePill('#today-status', 'negative', `Restore failed · ${err.message}`);
+  }
+});
 $('#today-refresh').addEventListener('click', () => runTodaySnapshot('watchlist'));
 $('#today-run-discovery').addEventListener('click', () => runTodaySnapshot('all'));
 $('#today-run-portfolio').addEventListener('click', runTodayPortfolio);

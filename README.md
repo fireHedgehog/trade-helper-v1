@@ -4,7 +4,7 @@ Local, long-only systematic-research workspace for testing whether a strategy ad
 
 ## Current state
 
-Version `0.27.0` adds the semantic visual system and Today command centre to the durable research workspace: historical backtests, portfolio simulation, data management, persistent watchlists, lifecycle signals, and full-universe candidate views. CTA v1 was rejected under its preregistered test; Passive ETF-12 v1 is the primary benchmark. No paper trading, broker integration, unattended refresh, or deployment is enabled.
+Version `0.28.0` improves refresh recovery, watchlist recovery, and multi-model Symbol Research while preserving the durable research workspace. CTA v1 was rejected under its preregistered test; Passive ETF-12 v1 is the primary benchmark. No paper trading, broker integration, unattended refresh, or deployment is enabled.
 
 Start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint, next task, and document map.
 

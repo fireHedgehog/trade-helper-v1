@@ -6,16 +6,16 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.27.0` |
-| Parent checkpoint | `1a77309` (documentation consolidation over `628af02`) |
-| Current state | Stage 8B complete |
-| Verification | `179 passed` plus headless Playwright workflow check |
+| Version | `0.28.0` |
+| Parent release | `8d9c346` (`0.27.0` Today command centre) |
+| Current state | Stage 8C in progress: Symbol Research and Data Management slices completed |
+| Verification | `187 passed` plus headless Playwright workflow checks |
 | Completed | Stage 8A state foundation; Stage 8B visual system and Today command centre |
-| Next product work | Stage 8C: productise Symbol Research, Strategy Lab, and Data Management |
+| Next product work | Continue Stage 8C with Strategy Lab and remaining Data Management productisation |
 | Parked research | Stage 9: new hypothesis and statistical design |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 
-The application now has the Stage 8B Today command centre and semantic visual language but is not yet a complete production-quality research interface. Preserve the v0.26 state model, now presented by v0.27.0, and the shared manual/scheduled pipeline contract; continue productising the remaining surfaces without importing legacy algorithms or vague confidence claims.
+The application now has the Stage 8B Today command centre plus Stage 8C improvements to Symbol Research, refresh recovery, and watchlist recovery. Preserve the v0.26 state model, now presented by v0.28.0, and the shared manual/scheduled pipeline contract; continue productising the remaining surfaces without importing legacy algorithms or vague confidence claims.
 
 Heavy statistical work is intentionally paused. On resumption, read the protocol, CTA result, audit, and backlog before proposing CTA v2. Do not tune CTA v1 after observing its rejection.
 
@@ -40,6 +40,7 @@ Heavy statistical work is intentionally paused. On resumption, read the protocol
 | How was CTA v1 tested? | [Research protocol](research-protocol.md) |
 | What did CTA v1 show? | [Result](research-results/cta-trend-wf-v1.md) and [audit](research-results/cta-trend-wf-v1-audit.md) |
 | What research may follow? | [Research backlog](research-backlog.md) |
+| What is the drafted consolidation study? | [Daily Consolidation Zone v1](research-hypotheses/daily-consolidation-zone-v1.md) |
 | Why are contracts fixed this way? | [ADRs](adr/) |
 | What changed by version? | [Changelog](../CHANGELOG.md) |
 

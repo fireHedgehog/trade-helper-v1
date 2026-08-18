@@ -299,15 +299,22 @@ def run_strategy_snapshot(request: StrategyRunRequest):
 
 
 @app.get("/api/signal/{symbol}")
-def signal_now(symbol: str, strategy: str = "CTA Trend"):
+def signal_now(request: Request, symbol: str, strategy: str = "CTA Trend"):
     if strategy not in STRATEGIES:
         raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
     bars = store.load_bars(symbol)
     if bars.empty:
         raise HTTPException(status_code=404, detail=f"no bars for {symbol}")
+    overrides = {
+        key: value
+        for key, value in request.query_params.items()
+        if key != "strategy"
+    }
+    parsed = _validated_strategy_params(strategy, overrides)
     params = {
         key: value["default"] for key, value in STRATEGY_PARAMS[strategy].items()
     }
+    params.update(parsed)
     result = compute_stateful_signal(bars, strategy, params)
     if result is None:
         raise HTTPException(status_code=404, detail="not enough bars")

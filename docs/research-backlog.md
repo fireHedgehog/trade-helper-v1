@@ -8,6 +8,8 @@ Before proposing another model, read [the CTA v1 protocol](research-protocol.md)
 
 ## Candidate research programmes
 
+The current next-design candidate is [Daily Consolidation Zone v1](research-hypotheses/daily-consolidation-zone-v1.md). It remains a draft and does not supersede the Stage 9 pause.
+
 ### CTA v2
 
 Define a new economic hypothesis before choosing parameters. Candidate changes may include diversified trend horizons, volatility scaling, cross-asset allocation, alternative exits, or explicit regime conditioning. For every change specify causal rationale, expected failure mode, benchmark, estimand, search budget, multiplicity control, stability tests, and untouched confirmation data.
@@ -15,6 +17,21 @@ Define a new economic hypothesis before choosing parameters. Candidate changes m
 ### SMA cross, breakout, and momentum horizons
 
 These are product placeholders, not validated strategies. Each requires an independent protocol. Momentum may compare short/mid/long horizons; breakout may study channel definitions and volatility filters; SMA cross must distinguish exposure reduction from excess-return claims. UI availability must never imply statistical approval.
+
+### Classical TA series
+
+`S/R Bounce` is the existing quantified classical-TA prototype: prior rolling support/resistance, support-test recovery entry, resistance target, and ATR-buffered stop. It may be charted and backtested but has no accepted edge claim.
+
+`TA Breakout v1` is a parked, distinct hypothesis for a short local resistance zone followed by a completed-close breakout and next-available-open entry. Before implementation, lock:
+
+- resistance/support construction: rolling extremes versus confirmed pivots/zones, including pivot confirmation delay so no future bars leak into the signal;
+- horizon and zone tolerance;
+- breakout qualification: close penetration, time acceptance, volume/relative-strength filters, or none;
+- initial stop: failed-breakout close, breakout-zone buffer, confirmed swing support, or ATR distance;
+- trailing/target/timeout exit and gap treatment;
+- parameter-search budget, benchmark, costs, multiplicity control, and untouched confirmation data.
+
+No `NDO entry` marker is permitted until these choices define an executable rule. Descriptive support/resistance lines may be shown as chart context but must be labelled non-signal.
 
 ### Model selection and machine learning
 

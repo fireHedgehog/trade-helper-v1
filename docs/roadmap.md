@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.27.0`, Stage 8B complete.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.28.0`, Stage 8C in progress.
 
 ## Completed foundation
 
@@ -46,6 +46,8 @@ Evidence: semantic CSS/state mapping, explicit four-step Today workflow, market-
 - Strategy Lab: explicit hypothesis/version, configuration, benchmark, run progress, results, rejection reasons, and artifacts.
 - Data Management: coverage/freshness table, selected refresh, hard-coded provider delay, durable progress, retryable failures, and last successful update.
 - Preserve empty placeholders for CTA, SMA cross, breakout, and momentum until each has an executed valid protocol.
+
+Completed slices in `0.28.0`: multi-model Symbol Research accordions with selected-model-only markers; readable guide/dossier hierarchy; explicit refresh resume versus forced scopes; immutable watchlist-snapshot recovery. Remaining: Strategy Lab hierarchy and durable Data Management job presentation.
 
 Gate: browser smoke tests cover primary workflows and every asynchronous state; no page load triggers data or strategy computation.
 

@@ -20,6 +20,8 @@ FRED series are non-tradable context: they are excluded from Yahoo refresh, stra
 
 Manual refresh may request full history and must expose symbol-level progress, throttling, failures, row counts, first/last session, and final freshness. Navigation never starts a refresh.
 
+Publication is atomic per symbol. If the browser reloads, the in-process worker continues. If the server restarts, volatile job progress is lost but published SQLite rows remain. The normal resume action must recompute freshness and select only aging, stale, or invalid symbols; forced core/all actions may deliberately re-download current symbols. Therefore “job restarted” and “data restarted from zero” are not equivalent.
+
 Before unattended operation, add staged downloads, schema validation, atomic promotion, provenance, holiday/calendar policy, retry/backoff, and provider-revision comparison.
 
 ## Consequences

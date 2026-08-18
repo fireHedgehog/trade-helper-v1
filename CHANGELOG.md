@@ -2,6 +2,15 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.28.0
+
+- Clarified interrupted data refresh: successful per-symbol publications survive server restart; the primary resume action skips current symbols, while core/all refreshes are explicitly labelled as forced operations.
+- Prevented silent empty-watchlist replacement and added explicit recovery from the latest immutable strategy-run snapshot.
+- Populated every Symbol Research model accordion after an explicit run while keeping chart overlays and markers exclusive to the selected model.
+- Identified the existing S/R Bounce model as the classical-TA prototype and parked a separately specified local-resistance breakout hypothesis rather than inventing untested next-open markers or stops.
+- Rebalanced the Symbol Research layout: a wider dossier rail and readable typography remain, while the selected-model guide uses a compact 96px scroll area so the chart retains focus.
+- Moved the selected model’s green `Now` observation directly below the guide heading; rules and chart legend remain secondary scroll references.
+
 ## 0.27.0
 
 - Defined the shared dependency-aware manual/scheduled pipeline contract; scheduling remains parked until the durable pipeline passes Stage 8D.

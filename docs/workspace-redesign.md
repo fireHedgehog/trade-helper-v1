@@ -76,6 +76,8 @@ Required fields: symbol, strategy, position (`Holding` or `Flat`), current signa
 
 User additions/removals persist. Rankings and candidate runs never replace this list.
 
+Saving zero selected symbols is a destructive replacement and requires confirmation. If the current list is empty but an immutable strategy run contains a prior watchlist snapshot, Today displays those rows as recoverable historical state and offers an explicit restore action; it must not silently repopulate user-owned state.
+
 ### Candidate tabs
 
 Tabs represent model outputs over the entire configured universe: CTA, SMA cross, breakout, momentum horizons, future versioned models, and intersections. After a completed run, show every eligible new-entry candidate, with deterministic ordering and model-specific reason fields. Before a valid run, show an explicit placeholder or `not run`; never manufacture candidates.
@@ -89,7 +91,11 @@ The header presents symbol, current price/session, freshness, watched status, an
 - collapsed summary: current state, concise signal phrase, evidence label, and key risk;
 - expanded content: rationale, relevant levels/horizons, lifecycle history, benchmark comparison, uncertainty, model version, and data provenance.
 
+An explicit backtest run evaluates the latest state for every available model and populates every accordion, including an explicit `No entry signal` or `Not evaluable` result. Only the selected model may draw chart overlays and trade markers. Its accordion uses the visible edited parameters; other accordions use their labelled defaults. This preserves chart interpretability without hiding cross-model state.
+
 Use the application’s own versioned models only. Sector and macro context may be descriptive but cannot masquerade as causal evidence. Accordions with no validated implementation remain honest placeholders.
+
+The interface labels `S/R Bounce` as `Classical TA · S/R Bounce` while retaining its stable backend identifier. A future `TA Breakout v1` may add confirmed local resistance/support zones, but chart context is not an entry signal: no next-open marker or stop is displayed until the rule contract in the research backlog is preregistered and implemented without look-ahead.
 
 ## Strategy Lab
 
@@ -100,6 +106,8 @@ Results lead with the decision (`rejected`, `revise`, `continue research`, or `n
 ## Data Management
 
 Provide a symbol-level table containing provider, rows, first/last session, expected latest session, freshness, last successful refresh, current job state, and failure message. Support selected or all-symbol refresh with a hard-coded provider delay, visible queue/progress, cancellation only when safe, retry of failures, and atomic promotion of valid data.
+
+The primary recovery control is `Resume / refresh needed`: it recomputes per-symbol freshness and skips current symbols, including symbols published before an interruption. `Force refresh core` and `Force refresh all Yahoo` intentionally ignore freshness and must be visually secondary/destructive. Until Stage 8D persists jobs, a server restart may erase progress display but never already published per-symbol data.
 
 Freshness is a comparison between the latest valid local session and the expected market session, not wall-clock age alone. A 404 or transport failure is a failure state, not an infinite loader.
 

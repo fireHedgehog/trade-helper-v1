@@ -29,7 +29,7 @@ def clear_portfolio_cache():
 async def test_health(client) -> None:
     assert (await client.get("/api/health")).json() == {
         "status": "ok",
-        "version": "0.27.0",
+        "version": "0.28.0",
     }
 
 
@@ -135,6 +135,41 @@ async def test_backtest_rejects_unknown_strategy(client) -> None:
     response = await client.get("/api/backtest/SPY", params={"strategy": "Magic"})
     assert response.status_code == 400
     assert response.json()["detail"] == "unknown strategy: Magic"
+
+
+async def test_signal_accepts_validated_parameter_overrides(
+    client, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        main.store,
+        "load_bars",
+        lambda _symbol: pd.DataFrame([{"date": "2026-08-17"}]),
+    )
+    captured = {}
+
+    def fake_signal(_bars, strategy, params):
+        captured.update(strategy=strategy, params=params)
+        return {"state": "flat", "event": "none", "indicators": {}}
+
+    monkeypatch.setattr(main, "compute_stateful_signal", fake_signal)
+    response = await client.get(
+        "/api/signal/SPY",
+        params={"strategy": "CTA Trend", "n_entry": 120},
+    )
+
+    assert response.status_code == 200
+    assert captured["params"]["n_entry"] == 120
+    assert captured["params"]["n_exit"] == 40
+
+
+async def test_signal_rejects_unknown_parameter(client) -> None:
+    response = await client.get(
+        "/api/signal/SPY",
+        params={"strategy": "CTA Trend", "secret_alpha": 1},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "unknown parameter: secret_alpha"
 
 
 async def test_backtest_rejects_out_of_range_parameter(client) -> None:
