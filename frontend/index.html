@@ -401,6 +401,14 @@
 
       <section class="panel">
         <div class="section-heading">
+          <div><h2>Daily pipeline preflight</h2><p>Read-only dependency plan; it does not refresh data or run models.</p></div>
+          <button id="today-plan-pipeline">Preview daily pipeline</button>
+        </div>
+        <div id="today-pipeline-plan" class="sample-note">Not planned. Preview checks freshness and stored input/model fingerprints only.</div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
           <div><h2>Watched symbols</h2><p>Your persistent lifecycle record for the selected strategy.</p></div>
           <div><span class="state-pill state-info">User selected</span> <button id="today-restore-watchlist" hidden>Restore snapshot symbols</button></div>
         </div>
@@ -1892,6 +1900,23 @@ async function runTodayPortfolio() {
   }
 }
 
+async function previewDailyPipeline() {
+  $('#today-pipeline-plan').textContent = 'Planning dependencies…';
+  try {
+    const plan = await api('/api/daily-pipeline/plan');
+    const refresh = plan.refresh;
+    const summary = plan.summary;
+    $('#today-pipeline-plan').innerHTML =
+      `<b>Expected session ${escapeHtml(plan.expected_session)} · ${escapeHtml(plan.status)}</b><br>` +
+      `Data: ${escapeHtml(refresh.status)}${refresh.count ? ` · ${refresh.count} symbols require refresh` : ''}. ` +
+      `Model jobs: ${summary.ready} ready · ${summary.blocked_data} blocked by data · ` +
+      `${summary.skipped_current} skipped current · ${summary.skipped_empty} skipped empty.<br>` +
+      `This is a read-only plan. Use existing manual actions until the durable executor is implemented.`;
+  } catch (err) {
+    $('#today-pipeline-plan').textContent = `Pipeline plan failed · ${err.message}`;
+  }
+}
+
 function renderConfidence(c) {
   const a = c.selected_window || c.all_time, r = c.recent_3y || c.last_3y, b = c.baseline || {};
   $('#confidence-title').textContent = `Historical post-signal statistics — ${c.strategy} (${c.horizon_days}-day forward)`;
@@ -1990,6 +2015,7 @@ $('#today-restore-watchlist').addEventListener('click', async () => {
 $('#today-refresh').addEventListener('click', () => runTodaySnapshot('watchlist'));
 $('#today-run-discovery').addEventListener('click', () => runTodaySnapshot('all'));
 $('#today-run-portfolio').addEventListener('click', runTodayPortfolio);
+$('#today-plan-pipeline').addEventListener('click', previewDailyPipeline);
 
 /* ---------- range + zoom controls ---------- */
 const RANGES = [

@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.34.0`, Stage 8C complete; one Stage 8D durability slice was completed early.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.35.0`, Stage 8D in progress.
 
 ## Completed foundation
 
@@ -55,6 +55,8 @@ Completed slices: `0.28.0` added multi-model Symbol Research accordions, readabl
 Gate: browser smoke tests cover primary workflows and every asynchronous state; no page load triggers data or strategy computation.
 
 ### 8D — Durable local staging
+
+Completed in `0.35.0`: read-only dependency preflight; deterministic input/model/scope fingerprints on explicit snapshots; visible `refresh_required`, `blocked_data`, `ready`, `skipped_current`, and `skipped_empty` decisions. This planner performs no work and is the required contract for the pending executor.
 
 - Persist active jobs and progress across reloads.
 - Add recovery from interrupted refresh/run operations.

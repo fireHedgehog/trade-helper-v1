@@ -2,6 +2,17 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.35.0
+
+First Stage 8D daily-pipeline slice; planning only, with no executor or scheduler.
+
+- Added deterministic SHA-256 fingerprints over strategy identity/version, defaults, scope, symbols, and exact stored-data coverage.
+- Attached the fingerprint to every new explicit strategy snapshot so unchanged work can later be identified without recalculation.
+- Added a read-only dependency planner reporting refresh requirements plus `blocked_data`, `ready`, `skipped_current`, and `skipped_empty` model jobs.
+- Added an explicit Today preflight preview; navigation remains read-only and the preview performs no refresh or strategy calculation.
+- Preserved the yield-shock discussion as a minimal non-evidential brainstorm containing only tentative hypotheses/equation/questions.
+- Added planner/fingerprint/API/frontend coverage; verification is `202 passed` plus a live Playwright preflight check with zero console errors.
+
 ## 0.34.0
 
 Stage 8C productisation gate closure; no strategy, data, or research result changed.

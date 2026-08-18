@@ -12,6 +12,8 @@ FastAPI is the sole server. It owns local data access, deterministic research lo
 
 Core modules include `execution.py`, `rules.py`, `engine.py`, `portfolio*.py`, `workspace.py`, `data_management.py`, `research_catalog.py`, `store.py`, and `main.py`. The catalog describes only data products and executable strategies that really exist; it is not a speculative universal schema. SQLite and generated candidate caches live under ignored `data/`; reviewable evidence lives under `output/research/`.
 
+`daily_pipeline.py` is currently a read-only planner. `/api/daily-pipeline/plan` compares freshness and deterministic snapshot fingerprints but cannot execute work. The future manual executor must consume the same decisions; scheduling remains out of scope.
+
 ## Commands
 
 From the repository root:

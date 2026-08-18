@@ -6,16 +6,16 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.34.0` |
-| Parent release | `0.33.0` (ADR 0006 Macro presentation) |
-| Current state | Stage 8C complete; Stage 8D durable local staging is next |
-| Verification | `198 passed` plus deterministic `scripts/browser-smoke.sh` |
+| Version | `0.35.0` |
+| Parent release | `0.34.0` (Stage 8C gate closure) |
+| Current state | Stage 8D in progress: dependency/fingerprint preflight complete; executor pending |
+| Verification | `202 passed` plus headless Playwright preflight check |
 | Completed | Stage 8A state foundation; Stage 8B visual system and Today command centre |
-| Next product work | Stage 8D: design and implement the shared dependency-aware daily pipeline without scheduling it |
+| Next product work | Stage 8D: persist pipeline runs and execute the reviewed plan with dependency waits and failure-only retry |
 | Parked research | Stage 9A: acceptance standard and candidate priority; then 9B locked experiment |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 
-Stage 8C is complete across Symbol Research, research metadata, Strategy Lab, Data Management, and Macro. Version 0.34.0 adds a repeatable Playwright CLI smoke suite covering read-only navigation, not-run/empty states, running/interrupted/partial-failure Data Management states, Macro’s display boundary, and explicit transport failure without provider writes or strategy computation. The next gate is Stage 8D local reliability: a shared dependency-aware daily pipeline with durable identity, idempotent `skipped_current`, and partial retry semantics. Scheduling remains parked until that same manual pipeline is proven.
+Stage 8C is complete. Version 0.35.0 begins Stage 8D with a deterministic, read-only pipeline preflight. Explicit snapshots now store a SHA-256 fingerprint over strategy ID/version, parameters, scope, selected symbols, dataset IDs, row counts, and latest stored dates. The planner reports `refresh_required`, `blocked_data`, `ready`, `skipped_current`, and `skipped_empty` and is visible on Today only after an explicit preview click. It performs no refresh or model work. Next, a durable executor must consume this exact plan, wait for dependencies, persist outcomes, and retry only failed work. Cron remains parked.
 
 Heavy statistical work is intentionally paused. On resumption, first operationalize candidate theses, audit benchmark/universe suitability, and only then apply the model acceptance scorecard. Read the protocol, CTA result, audit, and backlog before experiment design. Do not tune CTA v1 after observing its rejection.
 

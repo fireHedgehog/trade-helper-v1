@@ -29,7 +29,7 @@ def clear_portfolio_cache():
 async def test_health(client) -> None:
     assert (await client.get("/api/health")).json() == {
         "status": "ok",
-        "version": "0.34.0",
+        "version": "0.35.0",
     }
 
 
@@ -175,6 +175,39 @@ async def test_data_refresh_rejects_overlapping_job(client, monkeypatch) -> None
 
     assert response.status_code == 409
     assert response.json()["detail"] == "a data refresh is already running"
+
+
+async def test_daily_pipeline_plan_is_read_only_and_dependency_aware(
+    client, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        main,
+        "inventory_payload",
+        lambda: {
+            "expected_latest_session": "2026-08-18",
+            "symbols": [
+                {
+                    "symbol": "SPY",
+                    "provider": "yahoo",
+                    "dataset_id": "yahoo-adjusted-daily-ohlcv-v1",
+                    "rows": 100,
+                    "latest_date": "2026-08-17",
+                    "freshness": "aging",
+                }
+            ],
+        },
+    )
+    monkeypatch.setattr(main.store, "list_strategy_watchlist", lambda *_: [])
+    monkeypatch.setattr(main.store, "latest_strategy_run", lambda *_: None)
+
+    response = await client.get("/api/daily-pipeline/plan")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "refresh_required"
+    assert payload["refresh"]["symbols"] == ["SPY"]
+    assert payload["summary"]["blocked_data"] == len(main.STRATEGIES)
+    assert payload["summary"]["skipped_empty"] == len(main.STRATEGIES)
 
 
 async def test_backtest_rejects_unknown_strategy(client) -> None:

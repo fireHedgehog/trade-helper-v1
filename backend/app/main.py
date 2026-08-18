@@ -22,6 +22,7 @@ from .data_management import (
     inventory_payload,
     select_refresh_symbols,
 )
+from .daily_pipeline import plan_daily_pipeline, strategy_input_fingerprint
 from .engine import backtest_payload
 from .fred import MANAGED_SERIES as FRED_MANAGED_SERIES
 from .portfolio_api import portfolio_payload
@@ -301,6 +302,16 @@ def run_strategy_snapshot(request: StrategyRunRequest):
         watch_symbols=watch,
         discovery_symbols=discovery,
     )
+    inventory = inventory_payload()["symbols"]
+    metadata = strategy_metadata(request.strategy)
+    result["pipeline_fingerprint"] = strategy_input_fingerprint(
+        strategy_id=metadata["strategy_id"],
+        strategy_version=metadata["version"],
+        params=params,
+        scope=request.scope,
+        symbols=list(dict.fromkeys(watch + discovery)),
+        inventory=inventory,
+    )
     run_id = store.save_strategy_run(
         request.strategy,
         request.set,
@@ -311,6 +322,40 @@ def run_strategy_snapshot(request: StrategyRunRequest):
         result,
     )
     return store.get_strategy_run(run_id)
+
+
+@app.get("/api/daily-pipeline/plan")
+def daily_pipeline_plan():
+    status = inventory_payload()
+    inventory = status["symbols"]
+    all_symbols = [
+        row["symbol"] for row in inventory if row.get("provider") == "yahoo"
+    ]
+    specs = []
+    for strategy in STRATEGIES:
+        metadata = strategy_metadata(strategy)
+        params = _resolved_params(strategy, "defaults")
+        watch = [
+            row["symbol"] for row in store.list_strategy_watchlist(strategy)
+        ]
+        for scope, symbols in (("watchlist", watch), ("all", all_symbols)):
+            specs.append(
+                {
+                    "strategy": strategy,
+                    "metadata": metadata,
+                    "params": params,
+                    "scope": scope,
+                    "symbols": symbols,
+                    "latest_run": store.latest_strategy_run(
+                        strategy, "defaults", scope
+                    ),
+                }
+            )
+    return plan_daily_pipeline(
+        expected_session=status["expected_latest_session"],
+        inventory=inventory,
+        strategy_specs=specs,
+    )
 
 
 @app.get("/api/signal/{symbol}")
