@@ -47,11 +47,15 @@
 
 ## Design notes
 
-- **Saved params ("tuned models"):** ✅ built v0.7.1 — the Lab saves a tuned param set (name, params, date) into SQLite and Explorer applies saved sets from a dropdown. Next slice: let the Today scan use a saved set too.
+- **Saved params ("tuned models"):** ✅ built v0.7.1 — the Lab saves a named
+  parameter set with its date in SQLite; Explorer and Today can replay it. A
+  saved set records inputs, not evidence that they are optimal or validated.
 - **Daily signal state machine:** ✅ canonical engine completed v0.15.0 — the
   product uses `flat → entry_pending → long → exit_pending`, completed-close
-  signals, and next-available-open fills. Today, Explorer, chart markers, and
-  the 100-share ledger consume the same replay. Flat rows retain their last exit.
+  signals, and next-available-open fills. Today signals, Explorer, chart markers,
+  and the legacy diagnostic ledger consume the same single-symbol replay. The
+  shared-account simulator reuses those rules and execution decisions while
+  applying portfolio cash and risk constraints.
 - **Rule-based ranking & post-signal statistics:** ✅ corrected in v0.17.0 — rule
   rank = momentum + trend + volatility score; the separate research panel reports
   non-overlapping 20-day forward outcomes for the selected window, sample dates,
@@ -60,18 +64,22 @@
 - **CTA Trend (managed-futures style):** ✅ built v0.12.0 — breakout above an N-day high confirmed by a trend average; exits: M-day low (trend changed), trailing ATR stop, optional ATR TP. Defaults tuned on a 15-symbol curated basket (14 configs): `100/40/100, 5×ATR, no TP` → median PF 2.53, Sharpe 0.36, +228% all-time; SPY +286% / −20% maxDD. Honest caveat: trails 30-year buy & hold total return on this survivorship-biased basket — the value is drawdown control (~41% exposure) and positive expectancy, not beating the index. Backtest first, believe later.
 - **Classic TA validity lab:** ✅ S/R Bounce, Fib Retrace, Wave Pull built (v0.8.0–v0.9.0), each with params and an on-chart explanation. First honest measurement: Fib Retrace +6.7% vs +3,109% buy & hold on SPY over 33 years — the classic levels do not add value as implemented. Backtest first, believe later.
 - **Macro beat/miss:** last actuals come from FRED, next dates + forecasts from Trading Economics. Each event also gets a **Read** interpretation (good/bad for equities + why, per-event direction semantics) — a rule-of-thumb, not a forecast. Consensus history for past releases (needed for beat/miss badges) still needs a source — pending.
-- **Model simulation ledger (sector ETFs)** — built v0.9.0, last-exit tracking added v0.11.2, renamed v0.12.2:
-  - Replaces the "Holding" section and moves to the top of the Today view, above Entries/Exits.
-  - One simulated position per symbol per strategy, fixed size **100 shares**.
-  - Entry: next open after an entry signal. Exit: the strategy rule, configured
-    close-based stop, or configured take-profit becomes pending at the close and
-    fills at the following available open.
-  - Columns: Symbol | Entry date | Entry px | Now | P&L % | P&L $ (100 sh) | ATR stop | Take profit | Note.
-  - ATR stop/target settings come from the selected strategy parameters. Initial
-    levels use ATR known on the signal bar, never the not-yet-complete fill bar.
-  - Flat rows show the **last exit** (date, price, `stop`/`target`, realized P&L) so an empty section always explains itself.
-  - Default scope dropdown: SPY, QQQ, MAGS, SOXX, IGV, then all XLs in that order; "All symbols" option.
-  - For the core watchlist, position state is computed from full history (entry never lost); for "All symbols", from the 300-bar lookback.
+- **Shared-capital portfolio replay** — ✅ replaced the active fixed-share view in
+  v0.22.0:
+  - One historical $100,000 account covers a locked 12-ETF universe on one exact
+    common calendar; it never treats independent symbols as separately funded.
+  - Completed-close signals fill at the next shared-calendar open. Whole-share
+    sizing, costs, cash, sector/cluster caps, settlement, rejected orders, and a
+    15% drawdown kill switch follow [ADR 0004](adr/0004-portfolio-risk-contract.md).
+  - Today displays account equity, return, drawdown, exposure, turnover, trade
+    and rejection counts, plus actual open-position value and dollar P&L.
+  - The API deliberately makes no portfolio benchmark claim until benchmark
+    composition and rebalancing are specified.
+  - SMA Cross and RSI Reversion are unavailable in this view because they have
+    no explicit protective stop. The product refuses them rather than inventing
+    a risk rule after seeing results.
+  - The older `/api/positions` fixed-share response remains a compatibility and
+    signal-parity diagnostic; the Today UI does not render it.
 
 ---
 

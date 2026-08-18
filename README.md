@@ -14,12 +14,14 @@ passive benchmarks.
 
 ## Current status
 
-Stages 0–4 of the [validation roadmap](docs/roadmap.md) are complete. Stage 5,
-the portfolio and risk model, is in progress.
+Stages 0–3 and the Stage 5 engineering gate of the
+[validation roadmap](docs/roadmap.md) are complete. The Stage 4 CTA v1
+experiment is complete and rejected, while genuinely untouched confirmation
+data remains an open research gate. Stage 6, UX and safety clarity, is next.
 
 - One canonical state machine drives backtests, signals, chart markers, and the
   simulated ledger: completed-close signal → next-available-open fill.
-- The deterministic test suite currently contains 137 passing tests.
+- The deterministic test suite currently contains 148 passing tests.
 - Trading costs, spread, slippage, gaps, idle-cash yield, uncertainty intervals,
   and benchmark limitations are explicit.
 - The CTA walk-forward experiment is preregistered with a 12-ETF universe and
@@ -31,8 +33,10 @@ the portfolio and risk model, is in progress.
   explicit rejection reasons. A 15% close-based drawdown now halts entries and
   creates next-open liquidation orders without hiding further gap losses.
   Account-level return, risk, exposure, concentration, turnover, and trade
-  metrics are implemented without an undefined benchmark claim. API/UI
-  integration remains pending.
+  metrics are exposed through a locked-universe API and the Today view without
+  inventing an undefined benchmark. The active UI no longer displays fictional
+  fixed-100-share dollar P&L. Strategies without a protective stop are refused
+  explicitly instead of receiving an invented fallback.
 - Existing historical SPY results are exploratory and contaminated by prior
   inspection. Valid confirmation requires genuinely unseen future or otherwise
   uninspected point-in-time data.

@@ -15,6 +15,7 @@ from . import store
 from .calendar import macro_events
 from .confidence import compute_confidence
 from .engine import backtest_payload
+from .portfolio_api import portfolio_payload
 from .signals import (
     CORE_WATCHLIST,
     advance_positions,
@@ -36,6 +37,7 @@ MACRO_SYMBOLS = {
 }
 
 _today_cache: dict = {}
+_portfolio_cache: dict = {}
 
 app = FastAPI(title="trade-helper-v1")
 
@@ -219,6 +221,57 @@ def backtest(
         raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
     except RuntimeError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+
+
+@app.get("/api/portfolio")
+def portfolio(
+    request: Request,
+    strategy: str = "CTA Trend",
+    set: str = "defaults",
+    refresh: bool = False,
+):
+    """Historical shared-account replay for the locked ETF universe."""
+    unknown = (
+        {*request.query_params}
+        - {"strategy", "set", "refresh"}
+        - {*STRATEGY_PARAMS.get(strategy, {})}
+    )
+    if unknown:
+        raise HTTPException(
+            status_code=400, detail=f"unknown parameter: {sorted(unknown)[0]}"
+        )
+    raw = {
+        key: value
+        for key, value in request.query_params.items()
+        if key not in {"strategy", "set", "refresh"}
+    }
+    parsed = _validated_strategy_params(strategy, raw)
+    params = {
+        key: value["default"] for key, value in STRATEGY_PARAMS[strategy].items()
+    }
+    if set != "defaults":
+        if parsed:
+            raise HTTPException(
+                status_code=400,
+                detail="saved set cannot be combined with parameter overrides",
+            )
+        saved = store.list_param_sets(strategy)
+        chosen = next((row for row in saved if row["name"] == set), None)
+        if chosen is None:
+            raise HTTPException(status_code=404, detail=f"unknown param set: {set}")
+        params.update(chosen["params"])
+    params.update(parsed)
+    cache_key = (strategy, set, tuple(sorted(params.items())))
+    cached = _portfolio_cache.get(cache_key)
+    if not refresh and cached and time.time() - cached["at"] < 60:
+        return cached["data"]
+    try:
+        result = portfolio_payload(strategy, params)
+        result["param_set"] = set
+        _portfolio_cache[cache_key] = {"at": time.time(), "data": result}
+        return result
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
 
 
 @app.get("/api/today")

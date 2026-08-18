@@ -154,17 +154,22 @@ still requires genuinely unseen future or uninspected point-in-time data.
 
 **Goal:** stop presenting independent fixed-share trades as a portfolio.
 
-**Current checkpoint (v0.21.4):** the pure multi-symbol replay now uses one shared
+**Current checkpoint (v0.22.0):** the multi-symbol replay now uses one shared
 cash ledger and exact shared calendar. It processes completed-close signals at
 the next open, rechecks sizing and every cap after gaps, charges canonical costs,
 holds sale proceeds until the next session, marks common-close equity and
 concentration, and preserves final pending orders. The 15% drawdown kill switch
 now records its trigger, blocks entries, and submits next-open liquidations while
 retaining any gap loss. Daily account return, risk, concentration, turnover,
-trade, rejection, and pending-state metrics are now calculated without inventing
-an undefined multi-asset benchmark. Forty-three focused portfolio tests pass.
-API/UI integration remains pending; the existing 100-share view is still a
-signal replay, not a portfolio.
+trade, rejection, and pending-state metrics are calculated without inventing an
+undefined multi-asset benchmark. `/api/portfolio` locks the replay to 12 declared
+ETFs and their operational sector/cluster labels, fails closed on missing or
+mismatched calendars, and exposes the account contract. The Today view now shows
+actual shared-account equity, risk metrics, positions, and dollar P&L. SMA Cross
+and RSI Reversion are explicitly unavailable because they do not define the
+protective stop required by risk sizing; no fallback stop is invented. The full
+deterministic suite has 148 tests, and supported/refusal UI paths pass a headless
+browser smoke check with no console errors.
 
 - [x] Add explicit $100k account state and conservative validated defaults.
 - [x] Add cost-aware stop-risk and maximum-notional entry sizing.
@@ -177,19 +182,26 @@ signal replay, not a portfolio.
 - [x] Trigger and execute next-open drawdown kill-switch liquidations, including
       final-bar pending state and gap-loss evidence.
 - [x] Calculate portfolio-level return, volatility, turnover, and risk metrics.
-- [ ] Integrate tested portfolio results into the API and UI.
+- [x] Integrate tested portfolio results into the API and UI.
 
-- [ ] Replace the fixed 100-share convention with explicit capital and sizing.
+- [x] Replace the active UI's fixed 100-share convention with explicit capital
+      and sizing. The legacy `/api/positions` route remains diagnostic only and
+      is not rendered.
 - [x] Add maximum position, sector, correlated-asset, and portfolio exposure.
 - [x] Model concurrent signals, available cash, turnover, and rejected orders.
 - [x] Separate per-trade stop distance from portfolio risk limits.
 - [x] Add portfolio equity, drawdown, concentration, and daily return history.
 - [x] Add a hard kill switch and maximum-loss controls for any future paper/live
       integration.
-- [ ] Keep paper and live data stores physically and visually distinct.
+- [x] Keep this historical replay explicitly separate from future paper/live
+      state: there is no broker connection or paper/live store, and the API/UI
+      state that the replay does not authorize either.
 
 **Exit gate:** no displayed dollar P&L can imply capital that the portfolio did
 not actually have.
+
+**Gate status:** passed for the active Today view at v0.22.0. Stage 5 does not
+claim a validated edge and does not authorize paper or live trading.
 
 ## Stage 6 — UX, accessibility, and safety language
 

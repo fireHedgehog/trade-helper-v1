@@ -2,7 +2,7 @@
 
 # ADR 0004: Portfolio capital and risk contract
 
-- Status: accepted; Stage 5 implementation in progress
+- Status: accepted; Stage 5 implementation complete
 - Date: 2026-08-18
 
 ## Context
@@ -79,16 +79,25 @@ a rejected strategy result.
 
 ## Implementation status
 
-Checkpoint v0.21.4 adds `backend/app/portfolio_execution.py` to the v0.21.1
-strategy-independent foundation. The replay now processes multi-symbol entry and
-exit signals through one cash ledger, rechecks every limit at the actual open,
-charges canonical costs, tracks T+1 sale settlements, preserves final pending
-orders, and marks equity/exposure/concentration/drawdown at each shared close. A
-15% completed-close drawdown records an explicit risk event, halts entries, and
-creates next-open liquidation orders; a final-bar liquidation remains pending.
-`backend/app/portfolio_metrics.py` reports daily and cumulative return, CAGR,
-volatility, estimable risk ratios, drawdown duration, exposure/concentration,
-turnover, trade outcomes, rejections, risk events, and final pending state.
-Forty-three focused portfolio tests cover the combined contracts.
+Checkpoint v0.22.0 completes the Stage 5 implementation. The replay processes
+multi-symbol entry and exit signals through one cash ledger, rechecks every limit
+at the actual open, charges canonical costs, tracks T+1 sale settlements,
+preserves final pending orders, and marks equity/exposure/concentration/drawdown
+at each shared close. A 15% completed-close drawdown records an explicit risk
+event, halts entries, and creates next-open liquidation orders; a final-bar
+liquidation remains pending. `backend/app/portfolio_metrics.py` reports account
+return, risk, exposure, concentration, turnover, trade outcomes, rejections,
+risk events, and final pending state.
 
-API/UI integration and paper/live connections remain unimplemented.
+`backend/app/portfolio_universe.py` declares the immutable 12-ETF manifest and
+operational risk classifications. `backend/app/portfolio_api.py` fails closed on
+missing data or calendar differences and exposes the historical replay through
+`/api/portfolio`; a short cache avoids repeating the same expensive local replay.
+The Today view now consumes that account instead of displaying fixed-100-share
+dollar P&L. Strategies without an explicit protective stop return an
+`unsupported` result, so no post-hoc risk rule is invented. The complete suite
+has 148 passing deterministic tests, and headless checks cover both a supported
+CTA result and the explicit SMA refusal path.
+
+No paper/live store or broker connection exists. The endpoint and UI label this
+as historical mechanics only, not prospective evidence or trading authorization.

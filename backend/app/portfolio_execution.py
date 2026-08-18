@@ -2,8 +2,8 @@
 
 Signals use completed closes and fill at the following shared-calendar open.
 Sale proceeds settle on the next recorded session and cannot finance same-day
-entries. The module is deterministic, performs no I/O, and does not yet trigger
-the portfolio drawdown kill switch.
+entries. The module is deterministic, performs no I/O, and triggers the declared
+portfolio drawdown kill switch from completed-close account equity.
 """
 
 from __future__ import annotations

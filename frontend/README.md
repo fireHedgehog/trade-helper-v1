@@ -6,12 +6,15 @@ Static web UI for trade-helper-v1. Served by the backend — **no build step, no
 
 ## What it does
 
-Three views behind a sidebar nav:
+Four views behind a sidebar nav:
 
-- **Today** — strategy tabs → pick cards (planned).
+- **Today** ✅ — historical post-signal statistics, locked shared-capital
+  portfolio replay, current entry/exit cards, and regime state. The portfolio
+  panel shows actual account-sized positions and refuses strategies without a
+  protective stop.
 - **Symbol Explorer** ✅ — searchable symbol picker (typeahead), Lightweight Charts: candles, volume, per-strategy overlays (SMA / Donchian + ATR stop), entry/exit markers, 3M–10Y/ALL range buttons + zoom controls, range-aware metrics, equity curve, trades table, editable strategy params with reset.
-- **Strategy Lab** — pick strategy, edit params, run (planned).
-- **Macro** — event calendar + macro cards + regime filter (planned).
+- **Strategy Lab** ✅ — compare strategies and edit/save parameter sets.
+- **Macro** ✅ — event calendar, macro cards, and regime filter.
 
 ## Tech choices (keep it lean)
 
@@ -33,7 +36,7 @@ The backend computes everything; the frontend only draws. A backtest returns JSO
 
     frontend/
     ├── README.md
-    └── index.html     # single page: nav + Explorer view (chart, metrics, trades) ✅
+    └── index.html     # single page: Today, Explorer, Lab, and Macro ✅
 
 ## How it's served
 

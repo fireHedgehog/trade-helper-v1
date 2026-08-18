@@ -2,6 +2,29 @@
 
 # Changelog
 
+## v0.22.0 — 2026-08-18
+
+- Added `/api/portfolio`, a JSON contract over the deterministic shared-cash
+  replay with a 60-second parameter-keyed cache, explicit assumptions, sampled
+  equity, account state, open positions, trades, rejections, and risk events.
+- Locked the first product portfolio to 12 declared long-lived ETFs and explicit
+  operational sector/cluster classifications. Missing data, a missing common
+  start, or any calendar mismatch fails closed.
+- Replaced the Today view's fictional fixed-100-share dollar P&L with the actual
+  $100,000 shared-account result, account risk metrics, sized positions, and
+  prominent historical-only/benchmark limitations.
+- Refused SMA Cross and RSI Reversion in the shared-account view because they do
+  not define the protective stop required for risk sizing. No fallback stop is
+  invented; the UI explains the unsupported state without hiding other results.
+- Fixed Today parameter-set loading order so a strategy change cannot start with
+  a stale set from the previous strategy.
+- Added portfolio manifest, fail-closed data, payload, and API parameter/cache
+  contract tests. All 148 deterministic tests pass; JavaScript syntax and
+  supported/refusal Today paths pass headless browser checks with zero console
+  errors.
+- Stage 5's displayed-capital gate is complete. This remains an educational
+  historical replay with no validated edge, paper/live store, or broker link.
+
 ## v0.21.4 — 2026-08-18
 
 - Added daily returns to every common-close portfolio snapshot and validation

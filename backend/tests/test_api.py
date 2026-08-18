@@ -19,6 +19,13 @@ async def client():
         yield value
 
 
+@pytest.fixture(autouse=True)
+def clear_portfolio_cache():
+    main._portfolio_cache.clear()
+    yield
+    main._portfolio_cache.clear()
+
+
 async def test_health(client) -> None:
     assert (await client.get("/api/health")).json() == {"status": "ok"}
 
@@ -109,3 +116,86 @@ async def test_backtest_rejects_impossible_cost_assumption(client) -> None:
     response = await client.get("/api/backtest/SPY", params={"slippage": -0.1})
     assert response.status_code == 400
     assert "slippage must be between" in response.json()["detail"]
+
+
+async def test_portfolio_endpoint_validates_and_resolves_params(
+    client, monkeypatch
+) -> None:
+    captured = {}
+
+    def fake_payload(strategy: str, params: dict) -> dict:
+        captured.update(strategy=strategy, params=params)
+        return {"status": "complete"}
+
+    monkeypatch.setattr(main, "portfolio_payload", fake_payload)
+    response = await client.get(
+        "/api/portfolio", params={"strategy": "CTA Trend", "atr_mult": 4.5}
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "complete", "param_set": "defaults"}
+    assert captured["strategy"] == "CTA Trend"
+    assert captured["params"]["atr_mult"] == 4.5
+    assert captured["params"]["n_entry"] == 100
+
+
+async def test_portfolio_endpoint_rejects_unknown_parameter(client) -> None:
+    response = await client.get("/api/portfolio", params={"secret_alpha": 1})
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "unknown parameter: secret_alpha"
+
+
+async def test_portfolio_endpoint_reports_unavailable_data(
+    client, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        main,
+        "portfolio_payload",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("missing")),
+    )
+
+    response = await client.get("/api/portfolio")
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "missing"
+
+
+async def test_portfolio_endpoint_resolves_saved_set(client, monkeypatch) -> None:
+    monkeypatch.setattr(
+        main.store,
+        "list_param_sets",
+        lambda _strategy: [{"name": "locked", "params": {"atr_mult": 4.0}}],
+    )
+    monkeypatch.setattr(
+        main,
+        "portfolio_payload",
+        lambda _strategy, params: {"atr_mult": params["atr_mult"]},
+    )
+
+    response = await client.get("/api/portfolio", params={"set": "locked"})
+
+    assert response.status_code == 200
+    assert response.json() == {"atr_mult": 4.0, "param_set": "locked"}
+
+
+async def test_portfolio_endpoint_caches_identical_request_until_refresh(
+    client, monkeypatch
+) -> None:
+    calls = 0
+
+    def fake_payload(_strategy: str, _params: dict) -> dict:
+        nonlocal calls
+        calls += 1
+        return {"generation": calls}
+
+    monkeypatch.setattr(main, "portfolio_payload", fake_payload)
+
+    first = await client.get("/api/portfolio")
+    cached = await client.get("/api/portfolio")
+    refreshed = await client.get("/api/portfolio", params={"refresh": True})
+
+    assert first.json()["generation"] == 1
+    assert cached.json()["generation"] == 1
+    assert refreshed.json()["generation"] == 2
+    assert calls == 2
