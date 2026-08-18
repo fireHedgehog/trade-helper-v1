@@ -22,7 +22,12 @@ from .data_management import (
     inventory_payload,
     select_refresh_symbols,
 )
-from .daily_pipeline import plan_daily_pipeline, strategy_input_fingerprint
+from .daily_pipeline import (
+    DailyPipelineManager,
+    PipelineAlreadyRunning,
+    plan_daily_pipeline,
+    strategy_input_fingerprint,
+)
 from .engine import backtest_payload
 from .fred import MANAGED_SERIES as FRED_MANAGED_SERIES
 from .portfolio_api import portfolio_payload
@@ -80,6 +85,10 @@ class StrategyRunRequest(BaseModel):
     strategy: str = "CTA Trend"
     set: str = "defaults"
     scope: Literal["watchlist", "watchlist_core", "all"] = "watchlist_core"
+
+
+class DailyPipelineRequest(BaseModel):
+    confirm: bool = False
 
 
 def _validated_strategy_params(strategy: str, raw: dict) -> dict:
@@ -273,20 +282,19 @@ def latest_strategy_run(
     }
 
 
-@app.post("/api/strategy-runs", status_code=201)
-def run_strategy_snapshot(request: StrategyRunRequest):
-    params = _resolved_params(request.strategy, request.set)
+def _execute_strategy_snapshot(strategy: str, set_name: str, scope: str) -> dict:
+    params = _resolved_params(strategy, set_name)
     watch = [
-        row["symbol"] for row in store.list_strategy_watchlist(request.strategy)
+        row["symbol"] for row in store.list_strategy_watchlist(strategy)
     ]
-    if request.scope == "watchlist":
+    if scope == "watchlist":
         if not watch:
             raise HTTPException(
                 status_code=400,
                 detail="strategy watchlist is empty; save symbols in Strategy Lab first",
             )
         discovery = []
-    elif request.scope == "watchlist_core":
+    elif scope == "watchlist_core":
         if not watch:
             watch = list(CORE_WATCHLIST)
         discovery = list(CORE_WATCHLIST)
@@ -297,25 +305,25 @@ def run_strategy_snapshot(request: StrategyRunRequest):
             if symbol not in FRED_MANAGED_SERIES
         ]
     result = create_strategy_snapshot(
-        request.strategy,
+        strategy,
         params,
         watch_symbols=watch,
         discovery_symbols=discovery,
     )
     inventory = inventory_payload()["symbols"]
-    metadata = strategy_metadata(request.strategy)
+    metadata = strategy_metadata(strategy)
     result["pipeline_fingerprint"] = strategy_input_fingerprint(
         strategy_id=metadata["strategy_id"],
         strategy_version=metadata["version"],
         params=params,
-        scope=request.scope,
+        scope=scope,
         symbols=list(dict.fromkeys(watch + discovery)),
         inventory=inventory,
     )
     run_id = store.save_strategy_run(
-        request.strategy,
-        request.set,
-        request.scope,
+        strategy,
+        set_name,
+        scope,
         "complete",
         result["data_as_of"],
         params,
@@ -324,8 +332,12 @@ def run_strategy_snapshot(request: StrategyRunRequest):
     return store.get_strategy_run(run_id)
 
 
-@app.get("/api/daily-pipeline/plan")
-def daily_pipeline_plan():
+@app.post("/api/strategy-runs", status_code=201)
+def run_strategy_snapshot(request: StrategyRunRequest):
+    return _execute_strategy_snapshot(request.strategy, request.set, request.scope)
+
+
+def _build_daily_pipeline_plan() -> dict:
     status = inventory_payload()
     inventory = status["symbols"]
     all_symbols = [
@@ -356,6 +368,48 @@ def daily_pipeline_plan():
         inventory=inventory,
         strategy_specs=specs,
     )
+
+
+_daily_pipeline_manager: DailyPipelineManager | None = None
+
+
+def _get_daily_pipeline_manager() -> DailyPipelineManager:
+    global _daily_pipeline_manager
+    if _daily_pipeline_manager is None:
+        _daily_pipeline_manager = DailyPipelineManager(
+            planner=_build_daily_pipeline_plan,
+            start_refresh=_data_refresh_manager.start,
+            refresh_snapshot=_data_refresh_manager.snapshot,
+            run_strategy=lambda job: _execute_strategy_snapshot(
+                job["strategy"], job["set"], job["scope"]
+            ),
+            load_job=store.load_daily_pipeline_state,
+            save_job=store.save_daily_pipeline_state,
+        )
+    return _daily_pipeline_manager
+
+
+@app.get("/api/daily-pipeline/plan")
+def daily_pipeline_plan():
+    return _build_daily_pipeline_plan()
+
+
+@app.get("/api/daily-pipeline/status")
+def daily_pipeline_status():
+    return _get_daily_pipeline_manager().snapshot()
+
+
+@app.post("/api/daily-pipeline", status_code=202)
+def start_daily_pipeline(request: DailyPipelineRequest):
+    if not request.confirm:
+        raise HTTPException(
+            status_code=400,
+            detail="set confirm=true after reviewing /api/daily-pipeline/plan",
+        )
+    try:
+        return _get_daily_pipeline_manager().start()
+    except PipelineAlreadyRunning as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
 
 
 @app.get("/api/signal/{symbol}")

@@ -87,6 +87,12 @@ CREATE TABLE IF NOT EXISTS data_refresh_state (
     payload      TEXT NOT NULL,
     updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS daily_pipeline_state (
+    singleton_id INTEGER PRIMARY KEY CHECK (singleton_id = 1),
+    payload      TEXT NOT NULL,
+    updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
 """
 
 
@@ -225,6 +231,26 @@ def load_data_refresh_state() -> dict | None:
     with connect() as conn:
         row = conn.execute(
             "SELECT payload FROM data_refresh_state WHERE singleton_id = 1"
+        ).fetchone()
+    return json.loads(row[0]) if row else None
+
+
+def save_daily_pipeline_state(payload: dict) -> None:
+    """Persist the latest observable pipeline as a replaceable singleton."""
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO daily_pipeline_state(singleton_id, payload, updated_at) "
+            "VALUES (1, ?, datetime('now')) "
+            "ON CONFLICT(singleton_id) DO UPDATE SET "
+            "payload = excluded.payload, updated_at = datetime('now')",
+            (json.dumps(payload, sort_keys=True),),
+        )
+
+
+def load_daily_pipeline_state() -> dict | None:
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT payload FROM daily_pipeline_state WHERE singleton_id = 1"
         ).fetchone()
     return json.loads(row[0]) if row else None
 

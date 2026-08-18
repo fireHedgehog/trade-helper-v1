@@ -1,13 +1,19 @@
-"""Deterministic planning contract for the future shared daily pipeline.
-
-This module is read-only: it decides dependencies and currency but performs no
-refresh or strategy work. A later executor must consume this same plan.
-"""
+"""Deterministic planning and durable execution for the daily pipeline."""
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
+import threading
+import time
+import uuid
+from datetime import datetime, timezone
+from typing import Callable
+
+
+class PipelineAlreadyRunning(RuntimeError):
+    pass
 
 
 def strategy_input_fingerprint(
@@ -116,3 +122,148 @@ def plan_daily_pipeline(
             "skipped_empty": sum(job["status"] == "skipped_empty" for job in jobs),
         },
     }
+
+
+class DailyPipelineManager:
+    """Run one dependency-aware pipeline; retries always re-plan current state."""
+
+    def __init__(
+        self,
+        *,
+        planner: Callable[[], dict],
+        start_refresh: Callable[[list[str]], dict],
+        refresh_snapshot: Callable[[], dict],
+        run_strategy: Callable[[dict], dict],
+        load_job: Callable[[], dict | None] | None = None,
+        save_job: Callable[[dict], None] | None = None,
+        sleeper: Callable[[float], None] = time.sleep,
+        poll_seconds: float = 0.25,
+    ) -> None:
+        self._planner = planner
+        self._start_refresh = start_refresh
+        self._refresh_snapshot = refresh_snapshot
+        self._run_strategy = run_strategy
+        self._save_job = save_job
+        self._sleeper = sleeper
+        self._poll_seconds = poll_seconds
+        self._lock = threading.Lock()
+        self._job = load_job() if load_job else None
+        if self._job and self._job.get("state") == "running":
+            self._job["state"] = "interrupted"
+            self._job["finished_at"] = datetime.now(timezone.utc).isoformat()
+            self._job["message"] = "server stopped before the pipeline completed"
+            for item in self._job.get("strategy_jobs", []):
+                if item.get("state") in {"pending", "running"}:
+                    item["state"] = "interrupted"
+            self._persist_locked()
+
+    def _persist_locked(self) -> None:
+        if self._save_job and self._job is not None:
+            self._save_job(copy.deepcopy(self._job))
+
+    def snapshot(self) -> dict:
+        with self._lock:
+            return copy.deepcopy(self._job) if self._job else {
+                "state": "idle", "job_id": None, "strategy_jobs": []
+            }
+
+    def _update(self, **changes) -> None:
+        with self._lock:
+            assert self._job is not None
+            self._job.update(changes)
+            self._persist_locked()
+
+    def start(self) -> dict:
+        plan = self._planner()
+        with self._lock:
+            if self._job and self._job.get("state") == "running":
+                raise PipelineAlreadyRunning("a daily pipeline is already running")
+            now = datetime.now(timezone.utc).isoformat()
+            self._job = {
+                "state": "running",
+                "job_id": uuid.uuid4().hex,
+                "started_at": now,
+                "finished_at": None,
+                "message": "starting reviewed pipeline",
+                "expected_session": plan["expected_session"],
+                "initial_plan": plan,
+                "refresh": {"state": "pending", "count": plan["refresh"]["count"]},
+                "strategy_jobs": [],
+            }
+            self._persist_locked()
+            snapshot = copy.deepcopy(self._job)
+        threading.Thread(
+            target=self._run,
+            args=(plan,),
+            name=f"daily-pipeline-{snapshot['job_id'][:8]}",
+            daemon=True,
+        ).start()
+        return snapshot
+
+    def _run(self, initial_plan: dict) -> None:
+        errors = 0
+        try:
+            refresh_plan = initial_plan["refresh"]
+            if refresh_plan["status"] == "ready":
+                self._update(
+                    refresh={"state": "running", "count": refresh_plan["count"]},
+                    message="refreshing market data",
+                )
+                self._start_refresh(refresh_plan["symbols"])
+                while True:
+                    refresh = self._refresh_snapshot()
+                    if refresh.get("state") != "running":
+                        break
+                    self._sleeper(self._poll_seconds)
+                errors += int(refresh.get("failed", 0))
+                self._update(
+                    refresh={
+                        "state": refresh.get("state", "failed"),
+                        "count": refresh_plan["count"],
+                        "failed": refresh.get("failed", 0),
+                    }
+                )
+            else:
+                self._update(refresh={"state": "skipped_current", "count": 0})
+
+            # Refresh can partially succeed. Re-planning lets independent jobs run
+            # while jobs whose own inputs remain stale stay explicitly blocked.
+            plan = self._planner()
+            jobs = [{**job, "state": "pending"} for job in plan["strategy_jobs"]]
+            self._update(strategy_jobs=jobs, message="running current strategy jobs")
+            for index, job in enumerate(jobs):
+                if job["status"] != "ready":
+                    state = job["status"]
+                    if state == "blocked_data":
+                        errors += 1
+                    with self._lock:
+                        self._job["strategy_jobs"][index]["state"] = state
+                        self._persist_locked()
+                    continue
+                with self._lock:
+                    self._job["strategy_jobs"][index]["state"] = "running"
+                    self._persist_locked()
+                try:
+                    result = self._run_strategy(job)
+                    changes = {"state": "complete", "run_id": result.get("id")}
+                except Exception as exc:
+                    errors += 1
+                    changes = {
+                        "state": "failed",
+                        "error": f"{type(exc).__name__}: {exc}"[:300],
+                    }
+                with self._lock:
+                    self._job["strategy_jobs"][index].update(changes)
+                    self._persist_locked()
+            final = "complete_with_errors" if errors else "complete"
+            self._update(
+                state=final,
+                finished_at=datetime.now(timezone.utc).isoformat(),
+                message="pipeline finished",
+            )
+        except Exception as exc:
+            self._update(
+                state="failed",
+                finished_at=datetime.now(timezone.utc).isoformat(),
+                message=f"{type(exc).__name__}: {exc}"[:300],
+            )

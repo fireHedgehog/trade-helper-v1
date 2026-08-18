@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.35.0`, Stage 8D in progress.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.36.0`, Stage 8D exit work in progress.
 
 ## Completed foundation
 
@@ -56,15 +56,13 @@ Gate: browser smoke tests cover primary workflows and every asynchronous state; 
 
 ### 8D — Durable local staging
 
-Completed in `0.35.0`: read-only dependency preflight; deterministic input/model/scope fingerprints on explicit snapshots; visible `refresh_required`, `blocked_data`, `ready`, `skipped_current`, and `skipped_empty` decisions. This planner performs no work and is the required contract for the pending executor.
+Completed in `0.35.0`: read-only dependency preflight and deterministic input/model/scope fingerprints. Completed in `0.36.0`: confirmed durable execution through the existing refresh/snapshot paths, dependency re-planning after partial publication, persisted restart-visible state, and idempotent retry-by-replanning.
 
-- Persist active jobs and progress across reloads.
-- Add recovery from interrupted refresh/run operations.
-- Build one dependency-aware daily pipeline: freshness check → selective refresh → validation/promotion → fingerprint-selective strategy runs → persisted snapshot.
-- Make manual completion and later scheduled invocation idempotent: current work is recorded as `skipped_current`; partial failures retry only failed dependencies.
 - Validate desktop and narrow layouts.
 - Conduct a task-based usability pass and resolve high-severity ambiguity.
 - Update screenshots and operating notes only after behaviour stabilises.
+
+Anti-toy exit rule: after the layout/usability and smoke-test items above, stop Stage 8 infrastructure work and enter Stage 9A. Do not add dashboards, schedulers, providers, or strategy decoration merely because the pipeline can support them.
 
 Gate: the local product is reliable enough for repeated daily research use, with no implication of live readiness.
 

@@ -401,8 +401,8 @@
 
       <section class="panel">
         <div class="section-heading">
-          <div><h2>Daily pipeline preflight</h2><p>Read-only dependency plan; it does not refresh data or run models.</p></div>
-          <button id="today-plan-pipeline">Preview daily pipeline</button>
+          <div><h2>Daily pipeline</h2><p>Review dependencies first. Execution is explicit, sequential, durable, and safe to retry.</p></div>
+          <div><button id="today-plan-pipeline">Preview</button> <button class="primary" id="today-run-pipeline" disabled>Run reviewed pipeline</button></div>
         </div>
         <div id="today-pipeline-plan" class="sample-note">Not planned. Preview checks freshness and stored input/model fingerprints only.</div>
       </section>
@@ -1828,13 +1828,16 @@ async function loadTodayStored() {
   try {
     await refreshTodaySets(strategy);
     const set = $('#today-set').value || 'defaults';
-    const [stored, freshnessData] = await Promise.all([
+    const [stored, freshnessData, , pipelineStatus] = await Promise.all([
       api(`/api/strategy-runs/latest?strategy=${encodeURIComponent(strategy)}&set=${encodeURIComponent(set)}`),
       api('/api/data/status?details=false').catch(() => null),
       loadModelDiscovery(),
+      api('/api/daily-pipeline/status').catch(() => null),
     ]);
     renderStrategySnapshot(stored.run, stored.watchlist);
     renderTodayFreshness(freshnessData);
+    renderPipelineStatus(pipelineStatus);
+    if (pipelineStatus?.state === 'running') pollPipelineStatus();
     setStatePill(
       '#today-status',
       !stored.watchlist.length ? 'warning' : stored.run ? 'positive' : 'info',
@@ -1904,6 +1907,8 @@ async function previewDailyPipeline() {
   $('#today-pipeline-plan').textContent = 'Planning dependencies…';
   try {
     const plan = await api('/api/daily-pipeline/plan');
+    reviewedPipelinePlan = plan;
+    $('#today-run-pipeline').disabled = false;
     const refresh = plan.refresh;
     const summary = plan.summary;
     $('#today-pipeline-plan').innerHTML =
@@ -1911,9 +1916,58 @@ async function previewDailyPipeline() {
       `Data: ${escapeHtml(refresh.status)}${refresh.count ? ` · ${refresh.count} symbols require refresh` : ''}. ` +
       `Model jobs: ${summary.ready} ready · ${summary.blocked_data} blocked by data · ` +
       `${summary.skipped_current} skipped current · ${summary.skipped_empty} skipped empty.<br>` +
-      `This is a read-only plan. Use existing manual actions until the durable executor is implemented.`;
+      `Execution refreshes first, re-plans after publication, then runs only changed jobs.`;
   } catch (err) {
     $('#today-pipeline-plan').textContent = `Pipeline plan failed · ${err.message}`;
+  }
+}
+
+let reviewedPipelinePlan = null;
+let pipelinePoll = null;
+
+function renderPipelineStatus(job) {
+  if (!job || job.state === 'idle') return;
+  const jobs = job.strategy_jobs || [];
+  const complete = jobs.filter(row => row.state === 'complete').length;
+  const failed = jobs.filter(row => ['failed', 'blocked_data'].includes(row.state)).length;
+  const skipped = jobs.filter(row => String(row.state).startsWith('skipped_')).length;
+  $('#today-pipeline-plan').innerHTML =
+    `<b>Pipeline ${escapeHtml(job.state)} · session ${escapeHtml(job.expected_session || '—')}</b><br>` +
+    `Data: ${escapeHtml(job.refresh?.state || 'pending')} · model jobs: ${complete} complete · ${failed} failed/blocked · ${skipped} current/empty.<br>` +
+    `${escapeHtml(job.message || '')}`;
+  $('#today-run-pipeline').textContent = job.state === 'running' ? 'Pipeline running…' : 'Retry incomplete / changed';
+  $('#today-run-pipeline').disabled = job.state === 'running';
+}
+
+async function pollPipelineStatus() {
+  try {
+    const job = await api('/api/daily-pipeline/status');
+    renderPipelineStatus(job);
+    if (job.state === 'running') {
+      clearTimeout(pipelinePoll);
+      pipelinePoll = setTimeout(pollPipelineStatus, 1000);
+    }
+  } catch (err) {
+    $('#today-pipeline-plan').textContent = `Pipeline status unavailable · ${err.message}`;
+  }
+}
+
+async function runDailyPipeline() {
+  if (!reviewedPipelinePlan) return;
+  const refreshCount = reviewedPipelinePlan.refresh.count;
+  const ready = reviewedPipelinePlan.summary.ready;
+  if (!confirm(`Run the reviewed pipeline? It may refresh ${refreshCount} symbols, then re-plan and run ${ready} currently-ready model jobs. Existing current work will be skipped.`)) return;
+  $('#today-run-pipeline').disabled = true;
+  try {
+    const job = await api('/api/daily-pipeline', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirm: true }),
+    });
+    renderPipelineStatus(job);
+    pipelinePoll = setTimeout(pollPipelineStatus, 500);
+  } catch (err) {
+    $('#today-pipeline-plan').textContent = `Pipeline start failed · ${err.message}`;
+    $('#today-run-pipeline').disabled = false;
   }
 }
 
@@ -2016,6 +2070,7 @@ $('#today-refresh').addEventListener('click', () => runTodaySnapshot('watchlist'
 $('#today-run-discovery').addEventListener('click', () => runTodaySnapshot('all'));
 $('#today-run-portfolio').addEventListener('click', runTodayPortfolio);
 $('#today-plan-pipeline').addEventListener('click', previewDailyPipeline);
+$('#today-run-pipeline').addEventListener('click', runDailyPipeline);
 
 /* ---------- range + zoom controls ---------- */
 const RANGES = [

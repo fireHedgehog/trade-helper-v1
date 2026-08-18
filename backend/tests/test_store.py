@@ -57,6 +57,16 @@ def test_data_refresh_state_round_trips_as_a_single_durable_record(isolated_stor
     assert isolated_store.load_data_refresh_state() == second
 
 
+def test_daily_pipeline_state_round_trips_as_single_record(isolated_store) -> None:
+    first = {"job_id": "one", "state": "running", "strategy_jobs": []}
+    second = {"job_id": "two", "state": "complete", "strategy_jobs": []}
+    assert isolated_store.load_daily_pipeline_state() is None
+    isolated_store.save_daily_pipeline_state(first)
+    assert isolated_store.load_daily_pipeline_state() == first
+    isolated_store.save_daily_pipeline_state(second)
+    assert isolated_store.load_daily_pipeline_state() == second
+
+
 @pytest.mark.parametrize(
     ("column", "value", "message"),
     [

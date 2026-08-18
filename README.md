@@ -4,7 +4,7 @@ Local, long-only systematic-research workspace for testing whether a strategy ad
 
 ## Current state
 
-Version `0.35.0` begins Stage 8D with a read-only dependency planner and deterministic input/model fingerprints. It identifies refresh requirements, data-blocked jobs, ready work, empty scopes, and genuinely current snapshots before any action runs; the executor is not yet enabled. CTA v1 remains rejected under its historical locked test; Passive ETF-12 v1 is the default project benchmark, not a universal market portfolio. No paper trading, broker integration, unattended refresh, or deployment is enabled.
+Version `0.36.0` adds the explicit durable daily-pipeline executor. A reviewed run refreshes required data, re-plans after publication, executes only changed strategy snapshots, persists every transition, and makes retry idempotent. CTA v1 remains rejected; automation does not validate a model. No paper trading, broker integration, unattended refresh, or deployment is enabled.
 
 Start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint, next task, and document map.
 

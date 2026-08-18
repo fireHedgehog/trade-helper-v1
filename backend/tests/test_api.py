@@ -29,7 +29,7 @@ def clear_portfolio_cache():
 async def test_health(client) -> None:
     assert (await client.get("/api/health")).json() == {
         "status": "ok",
-        "version": "0.35.0",
+        "version": "0.36.0",
     }
 
 
@@ -208,6 +208,12 @@ async def test_daily_pipeline_plan_is_read_only_and_dependency_aware(
     assert payload["refresh"]["symbols"] == ["SPY"]
     assert payload["summary"]["blocked_data"] == len(main.STRATEGIES)
     assert payload["summary"]["skipped_empty"] == len(main.STRATEGIES)
+
+
+async def test_daily_pipeline_requires_explicit_confirmation(client) -> None:
+    response = await client.post("/api/daily-pipeline", json={"confirm": False})
+    assert response.status_code == 400
+    assert "reviewing /api/daily-pipeline/plan" in response.json()["detail"]
 
 
 async def test_backtest_rejects_unknown_strategy(client) -> None:
