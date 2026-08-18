@@ -23,7 +23,8 @@ The primary user is a technically capable individual researcher who needs to ans
 | Symbol Research | Human-readable multi-strategy assessment for one symbol, with evidence and risk context |
 | Strategy Lab | Configure, run, compare, and inspect versioned historical experiments |
 | Data Management | Inspect coverage/freshness and explicitly refresh selected data with throttling and progress |
-| Research Record | Preserve protocols, artifacts, decisions, and rejection reasons |
+| Macro | Descriptive, non-tradable economic context under [ADR 0006](adr/0006-macro-data-contract.md): release-based freshness; never a signal or candidate source |
+| Research Record | Immutable protocols, artifacts, decisions, and rejection reasons in `docs/` and `output/research/` (documentation surface; no separate UI page) |
 
 Detailed interaction and presentation rules live in [workspace-redesign.md](workspace-redesign.md).
 
@@ -57,6 +58,7 @@ Navigation reads persisted results and must not trigger network work. Users expl
 - Adjusted Yahoo OHLCV cannot be mixed with unadjusted prices in one run.
 - The primary portfolio benchmark is Passive ETF-12 v1, defined in [ADR 0005](adr/0005-product-objective-and-portfolio-benchmark.md).
 - Statistical claims follow [ADR 0003](adr/0003-research-statistics.md) and the active preregistration.
+- Macro series are non-tradable context under [ADR 0006](adr/0006-macro-data-contract.md); release alignment governs their use, never the reference period.
 - Failed hypotheses remain failed; new factors or parameters require a new versioned hypothesis.
 
 ## Out of scope
@@ -65,6 +67,7 @@ Navigation reads persisted results and must not trigger network work. Users expl
 - Claims of profitability, suitability, or production readiness.
 - Cron refresh before the visible manual workflow is reliable.
 - Cloud deployment before research and product gates pass.
+- Macro-derived entry signals or candidates before [ADR 0006](adr/0006-macro-data-contract.md) point-in-time data and a preregistered hypothesis exist.
 
 ## Release gates
 

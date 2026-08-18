@@ -2,6 +2,8 @@
 
 Status: locked, executed, and rejected. This document describes the experiment as specified before evaluation; results are in [cta-trend-wf-v1.md](research-results/cta-trend-wf-v1.md).
 
+> **Erratum (2026-08-18).** The locked universe listed in this document was superseded before execution. The executed-of-record universe is `research/experiments/cta-trend-v1.json` and `backend/app/portfolio_universe.py` (`locked-etf-12-v1`): `SPY, QQQ, IWM, EFA, EEM, TLT, IEF, GLD, DBC, XLK, XLF, XLE`. The fingerprint `40a79707811b6d13f92fa88a87a9e5251a72d0d5ffa58a2709e027f7bbc0bafd`, all cache artifacts, the result, and the audit are bound to the spec.json universe. Relative to this document, the executed universe replaces `VNQ` with `IEF`, `LQD` with `XLK`, `HYG` with `XLF`, and `USO` with `XLE`. This record is not rewritten in place; the universe line below is superseded by the spec.
+
 ## Hypothesis and estimand
 
 Test whether a long-only CTA parameter family produces positive out-of-sample value over constant exposure across a broad, long-lived ETF universe after costs.
@@ -11,7 +13,7 @@ Primary fold statistic: median across eligible symbols of OOS strategy return mi
 ## Data and universe
 
 - Adjusted Yahoo daily OHLCV under [ADR 0002](adr/0002-market-data-contract.md).
-- Locked ETFs: `SPY, QQQ, IWM, EFA, EEM, VNQ, GLD, TLT, LQD, HYG, DBC, USO`.
+- Locked ETFs (superseded — see erratum above): `SPY, QQQ, IWM, EFA, EEM, VNQ, GLD, TLT, LQD, HYG, DBC, USO`.
 - Common calendar begins `2006-02-06`.
 - A candidate is eligible only when at least `8/12` symbols have valid common observations.
 - Data/specification SHA-256 identifies each cache artifact; writes are atomic.
@@ -61,3 +63,26 @@ Any failure rejects CTA v1. Costs are commission `10 bp/side`, quoted spread `2 
 ## Interpretation boundary
 
 The protocol tests this universe, parameter family, selection rule, costs, and period. It neither validates nor rejects trend following in general. Post-result factor addition, deletion, or tuning is a new hypothesis and requires a new preregistration.
+
+---
+
+## Preregistration template — mandatory fields for any new hypothesis
+
+This template is normative for every hypothesis protocol written after CTA v1. It enumerates the fields fixed before comparative results are observed, consistent with [model-acceptance-standard.md](model-acceptance-standard.md) and [ADR 0006](adr/0006-macro-data-contract.md). A protocol that omits a mandatory field is `not evaluable`.
+
+| Field | Requirement |
+|---|---|
+| Hypothesis and mechanism | State the economic/behavioural/structural persistence mechanism and the expected failure mode. |
+| Estimand | Define the estimand in symbols (e.g. median OOS excess return over constant exposure). For macro, declare surprise vs level per ADR 0006 clause 5. |
+| Universe and provenance | Point-in-time universe; survivorship policy; cite the governing data contract (ADR 0002 and/or ADR 0006). |
+| Benchmark | Primary: Passive ETF-12 v1. Secondary references: SPY, cash. |
+| Parameter/search budget | Locked grid or family; candidate serialization is part of the fingerprint. |
+| Trial-count budget | $N_{\text{trials}}$ registered in `research/attempts.jsonl`; deflation applied per the acceptance standard. |
+| Power | Minimum detectable effect $\delta$ and target power $1-\beta$; outcome is `not evaluable` if unattainable. |
+| Costs and stress | Locked cost model (ADR 0003); break-even cost $c^*$ reported. |
+| Validation topology | Walk-forward and/or CSCV; multiplicity policy; dependence treatment. |
+| Alpha decomposition | Active return, tracking error, information ratio, residual alpha. |
+| Regime stability | Sub-sample and structural-break plan (Chow; Bai–Perron). |
+| Acceptance thresholds | Model-specific, justified by objective, payoff distribution, power, and implementation burden. |
+| Confirmation data | Untouched holdout or future point-in-time data, protected from inspection. |
+| Fingerprint | SHA-256 of the immutable specification; atomic artifact writes. |
