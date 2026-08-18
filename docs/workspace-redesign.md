@@ -119,7 +119,7 @@ Every remote or long-running surface implements: `idle/not run`, `queued`, `runn
 
 - 8A complete: persistence, lifecycle semantics, watchlist/candidate separation, tabs/intersections, explicit actions.
 - 8B complete: semantic tokens, copy mapping, responsive spacious shell, ordered Today actions, lifecycle/candidate presentation, and regression/browser verification.
-- 8C next: Symbol Research, Strategy Lab, and Data Management productisation.
+- 8C complete: Symbol Research, Strategy Lab, Data Management, Macro presentation, metadata, and deterministic browser-state coverage.
 - 8D: durable jobs; the shared dependency-aware daily pipeline; idempotent `skipped_current`, partial-failure, and retry semantics; responsive/usability pass; smoke/regression coverage.
 
 ## Acceptance tests

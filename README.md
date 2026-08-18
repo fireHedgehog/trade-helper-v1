@@ -4,7 +4,7 @@ Local, long-only systematic-research workspace for testing whether a strategy ad
 
 ## Current state
 
-Version `0.33.0` brings Macro presentation into ADR 0006 compliance: final-revised FRED observations, Yahoo context, incomplete schedule metadata, and missing point-in-time capabilities are distinguished explicitly; no macro regime, surprise, signal, or equity-direction inference is produced. CTA v1 remains rejected under its historical locked test; Passive ETF-12 v1 is the default project benchmark, not a universal market portfolio. No paper trading, broker integration, unattended refresh, or deployment is enabled.
+Version `0.34.0` closes the Stage 8C productisation gate with deterministic browser coverage of read-only navigation and explicit asynchronous UI states. Final-revised macro context, durable manual refresh state, and exploratory Strategy Lab calculations remain bounded by their documented evidence contracts. CTA v1 remains rejected under its historical locked test; Passive ETF-12 v1 is the default project benchmark, not a universal market portfolio. No paper trading, broker integration, unattended refresh, or deployment is enabled.
 
 Start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint, next task, and document map.
 
@@ -24,6 +24,14 @@ Run verification from the repository root:
 source .venv/bin/activate
 pytest -q
 ```
+
+With the backend running, execute the deterministic browser smoke suite:
+
+```bash
+scripts/browser-smoke.sh
+```
+
+It uses local/injected API states and never starts data refresh or strategy computation.
 
 ## Repository
 

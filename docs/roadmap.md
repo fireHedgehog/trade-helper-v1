@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.33.0`, Stage 8C feature slices complete with one Stage 8D durability slice completed early; browser-state coverage remains.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.34.0`, Stage 8C complete; one Stage 8D durability slice was completed early.
 
 ## Completed foundation
 
@@ -50,7 +50,7 @@ Evidence: semantic CSS/state mapping, explicit four-step Today workflow, market-
 - Bring Macro presentation into ADR 0006 compliance: label current FRED observations as final-revised/display-only, distinguish observation from release time, remove causal `good/bad for equities` styling, and expose point-in-time capability as unavailable until implemented.
 - Preserve empty placeholders for CTA, SMA cross, breakout, and momentum until each has an executed valid protocol.
 
-Completed slices: `0.28.0` added multi-model Symbol Research accordions, readable guide/dossier hierarchy, explicit refresh semantics, and watchlist-snapshot recovery; `0.30.0` added bounded dataset and strategy metadata; `0.31.0` separated Strategy Lab evidence from its non-durable descriptive calculation; `0.32.0` persisted Data Management refresh identity/progress/outcomes; `0.33.0` made Macro display-only under ADR 0006, removed causal equity interpretations, and exposed missing point-in-time/release/forecast capabilities. Remaining: full asynchronous browser-state coverage.
+Completed slices: `0.28.0` added multi-model Symbol Research accordions, readable guide/dossier hierarchy, explicit refresh semantics, and watchlist-snapshot recovery; `0.30.0` added bounded dataset and strategy metadata; `0.31.0` separated Strategy Lab evidence from its non-durable descriptive calculation; `0.32.0` persisted Data Management refresh identity/progress/outcomes; `0.33.0` made Macro display-only under ADR 0006; `0.34.0` added deterministic browser coverage of primary read-only and asynchronous states without external mutations. Stage 8C gate: complete.
 
 Gate: browser smoke tests cover primary workflows and every asynchronous state; no page load triggers data or strategy computation.
 

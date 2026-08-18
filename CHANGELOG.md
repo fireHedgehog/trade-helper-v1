@@ -2,6 +2,17 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.34.0
+
+Stage 8C productisation gate closure; no strategy, data, or research result changed.
+
+- Added a repeatable Playwright CLI smoke command requiring only a running local backend and the installed Playwright skill wrapper.
+- Covered Today read-only loading, Symbol Research and Strategy Lab not-run states, empty calculation refusal, and Macro’s display-only/no-equity-direction boundary.
+- Injected deterministic Data Management running, interrupted, complete-with-errors, and transport-failure states in the browser; asserted disabled controls, recovery guidance, failure counts, unknown freshness, and cleared loaders.
+- Kept browser verification network-independent: the suite never starts provider refresh, full-universe scans, backtests, or Strategy Lab computation.
+- Documented the command in the root and frontend operating notes. Verification is `198 passed` plus `scripts/browser-smoke.sh`.
+- Closed Stage 8C; the next gate is the unscheduled, shared durable daily pipeline in Stage 8D.
+
 ## 0.33.0
 
 ADR 0006 Macro presentation slice; no macro signal or new ingestion capability was added.

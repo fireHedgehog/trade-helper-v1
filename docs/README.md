@@ -6,16 +6,16 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.33.0` |
-| Parent release | `0.32.0` (durable Data Management refresh state) |
-| Current state | Stage 8C feature slices complete; asynchronous browser coverage remains before the gate closes |
-| Verification | `198 passed` plus headless Playwright workflow checks |
+| Version | `0.34.0` |
+| Parent release | `0.33.0` (ADR 0006 Macro presentation) |
+| Current state | Stage 8C complete; Stage 8D durable local staging is next |
+| Verification | `198 passed` plus deterministic `scripts/browser-smoke.sh` |
 | Completed | Stage 8A state foundation; Stage 8B visual system and Today command centre |
-| Next product work | Complete Stage 8C asynchronous browser coverage and close the productisation gate |
+| Next product work | Stage 8D: design and implement the shared dependency-aware daily pipeline without scheduling it |
 | Parked research | Stage 9A: acceptance standard and candidate priority; then 9B locked experiment |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 
-The application has the Stage 8B Today command centre plus Stage 8C improvements across Symbol Research, research metadata, Strategy Lab, Data Management, and Macro. Version 0.33.0 implements ADR 0006’s display boundary: the UI distinguishes Yahoo market context from final-revised FRED observations, labels unavailable release/vintage/forecast history, and removes causal equity-direction and regime claims. Macro remains display-only and cannot generate candidates. The ALFRED/release-history upgrade path is not implemented. Stage 8C still requires systematic asynchronous browser-state coverage before its gate closes.
+Stage 8C is complete across Symbol Research, research metadata, Strategy Lab, Data Management, and Macro. Version 0.34.0 adds a repeatable Playwright CLI smoke suite covering read-only navigation, not-run/empty states, running/interrupted/partial-failure Data Management states, Macro’s display boundary, and explicit transport failure without provider writes or strategy computation. The next gate is Stage 8D local reliability: a shared dependency-aware daily pipeline with durable identity, idempotent `skipped_current`, and partial retry semantics. Scheduling remains parked until that same manual pipeline is proven.
 
 Heavy statistical work is intentionally paused. On resumption, first operationalize candidate theses, audit benchmark/universe suitability, and only then apply the model acceptance scorecard. Read the protocol, CTA result, audit, and backlog before experiment design. Do not tune CTA v1 after observing its rejection.
 

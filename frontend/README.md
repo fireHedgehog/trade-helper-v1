@@ -24,4 +24,6 @@ Stage 8B defines the semantic UI tokens and Today command centre. Its four perma
 
 Run the backend and open <http://127.0.0.1:8000/>. The pending product contract is [workspace-redesign.md](../docs/workspace-redesign.md).
 
+Run `scripts/browser-smoke.sh` from the repository root while the backend is running. It exercises navigation and deterministic not-run, empty, running, interrupted, partial-failure, and failed states without provider writes or strategy computation.
+
 [Project](../README.md) · [Checkpoint](../docs/README.md) · [Roadmap](../docs/roadmap.md)
