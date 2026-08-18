@@ -67,8 +67,10 @@ calculation and validation follow the independent CTA v1 experiment audit.
 
 Possible CTA v2 changes and machine learning are parked in the
 [research backlog](docs/research-backlog.md). Because CTA v1's complete failure
-was surprising, an independent audit of its experiment plumbing now comes before
-either implementing CTA v2 or treating the rejection as unquestionable.
+was surprising, its experiment plumbing received an
+[independent audit](docs/research-results/cta-trend-wf-v1-audit.md). No material
+defect was found, so the rejection remains valid under its locked rules. Passive
+ETF-12 benchmark implementation is now next; CTA v2 remains parked.
 
 The honest baseline is poor as an “edge”: full-history SPY CTA returned roughly
 276.5% net versus roughly 3,119.6% buy-and-hold. Lower drawdown does not by itself

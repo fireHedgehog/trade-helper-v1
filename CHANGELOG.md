@@ -2,6 +2,23 @@
 
 # Changelog
 
+## v0.24.3 — 2026-08-18
+
+- Completed the independent CTA Trend v1 implementation audit. The current data
+  fingerprint matches, all 756 candidate/fold caches are present, and a complete
+  rerun reproduced the committed evidence byte-for-byte.
+- Reconstructed fold 14's strongest raw candidate outside the experiment runner;
+  252 dates, daily excess returns, median symbol result, and trades matched
+  exactly.
+- Independently reproduced its block-bootstrap p-value and all fold-14 Holm
+  adjustments. No material defect was found in boundaries, direction, return
+  alignment, costs, family completeness, or correction.
+- Documented why the conclusion remains “insufficient validated evidence,” not
+  “trend following has no effect,” including sparse trades, correlated ETFs,
+  limited exposure, narrow long-only design, and conservative testing.
+- Kept CTA v2 and ML parked. Passive ETF-12 benchmark implementation is now the
+  next priority.
+
 ## v0.24.2 — 2026-08-18
 
 - Added a durable parked research backlog so a restarted agent can recover the

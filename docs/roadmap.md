@@ -284,10 +284,11 @@ rescued by changing its rules after seeing its result.
 - [x] Define the fair portfolio benchmark, its rebalancing rule, and treatment
       of idle cash before making any excess-return claim. Passive ETF-12 v1 is
       the primary comparator; SPY and cash are secondary references.
-- [ ] Independently audit the surprising CTA v1 experiment result before using
+- [x] Independently audit the surprising CTA v1 experiment result before using
       it to design CTA v2. Reconcile one fold outside the runner and verify data
       boundaries, returns, costs, statistical direction, correction, and power
-      ([parked research backlog](research-backlog.md)).
+      ([audit result](research-results/cta-trend-wf-v1-audit.md)). No material
+      defect was found; the rejection remains valid under its locked rules.
 - [ ] Select one next hypothesis for an economic reason and write its rules and
       rejection criteria before running it.
 - [ ] Freeze the investment universe, research periods, trading costs,

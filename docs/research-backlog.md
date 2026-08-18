@@ -7,7 +7,7 @@ approved experiment, a parameter grid, or evidence that any proposed change will
 work. A new model may begin only after the current priority gates are complete
 and its hypothesis and rejection rules are preregistered.
 
-## First priority: audit the surprising CTA v1 result
+## Completed: audit the surprising CTA v1 result
 
 CTA Trend v1 remains rejected under its locked rules, but rejection assumes the
 experiment implementation is correct. Before designing CTA v2, independently
@@ -24,6 +24,11 @@ audit the complete path from stored bars to the final decision:
   not only adjusted p-values;
 - distinguish “no measurable effect” from “too little statistical power”; and
 - record any defect as a corrected v1 result without silently rewriting history.
+
+**Status:** completed with no material defect found. The original rejection
+remains valid under its locked rules. See the
+[implementation audit](research-results/cta-trend-wf-v1-audit.md). Passive
+ETF-12 v1 is now the next implementation priority; CTA v2 remains parked.
 
 An audit that finds no defect increases confidence in the rejection but does not
 prove the strategy has zero value. An audit that finds a material defect

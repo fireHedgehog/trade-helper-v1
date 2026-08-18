@@ -13,6 +13,8 @@
   hypothesis, partitions, acceptance gates, and contamination disclosure.
 - [CTA Trend walk-forward v1 result](research-results/cta-trend-wf-v1.md) —
   rejected development hypothesis and exact gate outcomes.
+- [CTA Trend v1 implementation audit](research-results/cta-trend-wf-v1-audit.md) —
+  independent fold/statistics reconciliation and interpretation limits.
 - [Parked research backlog](research-backlog.md) — CTA v1 audit checklist,
   possible CTA v2 structural questions, and restart instructions.
 - [Changelog](../CHANGELOG.md) — complete version history.
