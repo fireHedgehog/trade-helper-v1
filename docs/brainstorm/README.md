@@ -13,3 +13,4 @@ Template: `YYYY-MM-DD-topic.md`, first line:
 | Date | Topic | File |
 |---|---|---|
 | 2026-08-18 | Governance, β framework, data policy | [2026-08-18-governance-beta-data.md](2026-08-18-governance-beta-data.md) |
+| 2026-08-19 | Strategy taxonomy, benchmark questions, research tracks | [2026-08-19-strategy-taxonomy-benchmark-research-tracks.md](2026-08-19-strategy-taxonomy-benchmark-research-tracks.md) |
