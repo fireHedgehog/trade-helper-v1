@@ -44,6 +44,7 @@ Heavy statistical work is intentionally paused. On resumption, apply the model a
 | What research may follow? | [Research backlog](research-backlog.md) |
 | How is a candidate selected and allowed to advance? | [Model acceptance standard](model-acceptance-standard.md) |
 | How is candidate search governed? | [Exploration protocol](exploration-protocol.md) |
+| Where do non-contract brainstorm notes live? | [Brainstorm index](brainstorm/README.md) |
 | How is macro data governed? | [Macro data contract](adr/0006-macro-data-contract.md) |
 | What is the drafted consolidation study? | [Daily Consolidation Zone v1](research-hypotheses/daily-consolidation-zone-v1.md) |
 | Why are contracts fixed this way? | [ADRs](adr/) |
