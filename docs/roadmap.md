@@ -203,21 +203,41 @@ not actually have.
 **Gate status:** passed for the active Today view at v0.22.0. Stage 5 does not
 claim a validated edge and does not authorize paper or live trading.
 
-## Stage 6 — UX, accessibility, and safety language
+## Stage 6 — operator clarity and safety language
 
-**Goal:** make uncertainty and system state obvious to a beginner.
+**Goal:** make uncertainty, data state, and failures obvious before a user
+interprets any research output.
 
-- [ ] Show `data as of`, market timezone, fetch status, and stale/missing symbols
+**Current checkpoint (v0.23.0):** Data Management lists all 554 stored series
+with explicit Yahoo/FRED ownership, coverage dates, row counts, expected latest
+completed US weekday, and per-symbol freshness. Manual Yahoo refreshes run one
+observable in-process job at a time, publish each validated symbol
+transactionally, refresh full adjusted history, apply a non-configurable
+two-second inter-symbol delay plus existing retry backoff, and expose progress
+and failures. FRED series cannot enter Yahoo jobs. Today, Explorer, Lab, and
+Macro now show freshness/date context, while Today distinguishes no signal from
+coverage failures and carries a research-only warning. Symbol Explorer already
+uses typeahead; Strategy Lab and Data Management now filter 500+ symbols by
+typing. No real provider refresh was started during implementation or testing.
+
+- [x] Show `data as of`, expected US session, fetch status, and stale/missing symbols
       beside every decision-oriented view.
-- [ ] Distinguish `no signal`, `not enough history`, `stale data`, and
+- [x] Distinguish `no signal`, `not enough history`, `stale data`, and
       `calculation failed`.
 - [ ] Show signal time, intended order time, assumed fill time, and actual
       simulation fill as separate fields.
-- [ ] Put the research-only warning and key bias/cost assumptions beside results,
+- [x] Put the research-only warning and key bias/cost assumptions beside results,
       not only in documentation.
-- [ ] Replace hover-only explanations with keyboard/touch-accessible disclosures.
-- [ ] Add labels/ARIA, visible focus states, responsive layouts, and accessible
-      table/card alternatives.
+- [x] Add an explicit Data Management view with provider-separated inventory,
+      manual refresh controls, progress, and per-symbol outcomes.
+- [x] Add typeahead/filtering for large symbol collections instead of requiring
+      users to scan hundreds of names.
+- [ ] Replace hover-only explanations with keyboard/touch-accessible disclosures
+      (parked behind the current data-integrity work).
+- [ ] Add labels/ARIA, visible focus states, and accessible table/card alternatives
+      (parked; still required before any broader external use).
+- [ ] Complete the broad responsive-layout pass (parked; targeted overflow and
+      large-list usability are handled in the current slice).
 - [ ] Confirm destructive actions such as deleting saved parameter sets.
 - [ ] Break the single frontend file into testable modules when doing so reduces
       risk rather than merely changing technology.
@@ -246,9 +266,13 @@ position state, and failure conditions without relying on a tooltip.
 **Exit gate:** the application has a documented threat model and no endpoint is
 internet-exposed by default.
 
-## Stage 8 — reliable daily operation (cron only after Stages 0–7)
+## Stage 8 — reliable daily operation (parked; cron only after Stages 0–7)
 
 **Goal:** make an unattended update observable, idempotent, and recoverable.
+
+**Current status:** no crontab is installed for this user and `scripts/daily.sh`
+is a guarded parked stub. Manual Data Management is not a substitute for the
+staging, locks, persistent run history, alerts, and recovery controls below.
 
 - [ ] Fetch into a staging transaction and validate before publishing new bars.
 - [ ] Handle market holidays, early closes, timezones, partial downloads, revised

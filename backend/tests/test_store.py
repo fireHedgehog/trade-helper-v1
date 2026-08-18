@@ -33,6 +33,19 @@ def test_upsert_is_idempotent(isolated_store) -> None:
     assert isolated_store.row_count("TEST") == 2
 
 
+def test_bar_inventory_reports_compact_symbol_coverage(isolated_store) -> None:
+    isolated_store.upsert_bars(_valid_rows())
+
+    assert isolated_store.bar_inventory() == [
+        {
+            "symbol": "TEST",
+            "rows": 2,
+            "first_date": "2024-01-02",
+            "latest_date": "2024-01-03",
+        }
+    ]
+
+
 @pytest.mark.parametrize(
     ("column", "value", "message"),
     [

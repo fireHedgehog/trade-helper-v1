@@ -143,6 +143,24 @@ def list_symbols() -> list[str]:
     return [row[0] for row in rows]
 
 
+def bar_inventory() -> list[dict]:
+    """Return one compact coverage row per stored symbol."""
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT symbol, COUNT(*), MIN(date), MAX(date) "
+            "FROM bars GROUP BY symbol ORDER BY symbol"
+        ).fetchall()
+    return [
+        {
+            "symbol": row[0],
+            "rows": row[1],
+            "first_date": row[2],
+            "latest_date": row[3],
+        }
+        for row in rows
+    ]
+
+
 def row_count(symbol: str) -> int:
     with connect() as conn:
         (count,) = conn.execute(

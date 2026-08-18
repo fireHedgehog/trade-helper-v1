@@ -33,6 +33,22 @@
 - **Global regime filter:** blunt veto conditions (e.g. US10Y > 5% → no new trades). Applied on top of the whole app: Today picks are flagged/suppressed, Lab runs show the filter state.
 - Keep filters few and blunt — event-day-level filtering tends to whipsaw backtests.
 
+## E. Data Management
+
+- Inventory every stored series with provider ownership, first/latest dates,
+  row count, expected completed US weekday, and a visible freshness state.
+- Keep Yahoo securities and FRED economic series separate. FRED identifiers must
+  never appear in strategy selectors or Yahoo refresh jobs.
+- Refresh manually from the local UI: core, aging/stale, or all Yahoo-managed
+  symbols. Only one job may run at once.
+- Fetch full adjusted Yahoo history so an incremental update cannot mix old and
+  new adjustment bases. Apply a fixed two-second delay between symbols and retry
+  backoff. These controls reduce pressure; they cannot guarantee provider access.
+- Show job progress and each symbol's published/failed result. Published SQLite
+  rows survive a server restart, but the in-memory progress record does not.
+- Unattended cron remains parked until persistent run records, staging,
+  exchange-calendar handling, alerts, backup/restore, and recovery are tested.
+
 ## Trading ground rules
 
 - **No lookahead bias:** signals at close execute next open — backtest and live must agree.

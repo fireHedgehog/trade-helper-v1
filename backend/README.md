@@ -6,10 +6,13 @@ Python FastAPI app — the only server component of trade-helper-v1.
 
 ## What it does
 
-- **Daily fetch** — pull US stock daily closing prices from Yahoo Finance via `yfinance`.
+- **Manual fetch** — pull adjusted daily histories from Yahoo Finance via
+  `yfinance`; unattended scheduling is parked.
 - **Store** — write fetched bars into SQLite under `../data/`.
 - **REST API** — endpoints for symbols, price history, signal scans, single-symbol
   backtests, research statistics, and the locked shared-account replay.
+- **Data operations** — inventory provider ownership/freshness and run one
+  observable, rate-limited manual Yahoo refresh at a time.
 - **Serve the frontend** — static files from `../frontend/`.
 
 ## Tech choices (keep it lean)
@@ -30,7 +33,8 @@ Python FastAPI app — the only server component of trade-helper-v1.
     └── app/
         ├── __init__.py
         ├── main.py          # FastAPI entrypoint + REST API ✅
-        ├── fetch.py         # daily yfinance fetch, idempotent upsert ✅
+        ├── fetch.py         # manual yfinance fetch, idempotent upsert ✅
+        ├── data_management.py # freshness + manual background refresh ✅
         ├── store.py         # SQLite bars, PK (symbol, date), adjusted closes ✅
         ├── universe.py      # SP500 ∪ NDX ∪ XL ETFs from Wikipedia ✅
         ├── strategies.py    # SMA Cross + Donchian Trend + RSI Reversion ✅
@@ -52,7 +56,7 @@ pytest                                      # deterministic, no network/data fet
 python -m app.fetch SPY              # daily fetch (idempotent), full history
 python -m app.fetch SPY GC=F CL=F    # more symbols
 python -m app.universe               # build/refresh the watch universe
-python -m app.fetch --universe       # batched fetch, 1s delay, retry on 429
+python -m app.fetch --universe       # batched fetch, enforced 2s+ delay, retry
 python -m app.engine SPY             # backtest SMA Cross on local bars
 python -m app.run_experiment         # resumable preregistered CTA experiment
 uvicorn app.main:app --reload        # serve API + UI at http://127.0.0.1:8000
@@ -61,3 +65,9 @@ uvicorn app.main:app --reload        # serve API + UI at http://127.0.0.1:8000
 Experiment candidate caches are fingerprinted and written under ignored
 `../data/`; the reviewable evidence record is written under `../output/research/`.
 It remains exploratory development research, not prospective confirmation.
+
+The local Data Management page is the normal refresh surface. It fetches full
+adjusted histories because partial adjusted downloads can otherwise create an
+inconsistent adjustment boundary. The fixed delay and backoff reduce Yahoo
+request pressure but cannot guarantee access. `scripts/daily.sh` is intentionally
+parked and exits without fetching.

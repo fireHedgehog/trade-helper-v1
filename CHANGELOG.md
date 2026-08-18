@@ -2,6 +2,34 @@
 
 # Changelog
 
+## v0.23.0 — 2026-08-18
+
+- Added a Data Management view with a searchable 554-series inventory, provider,
+  first/latest date, row count, expected completed US weekday, session lag, and
+  explicit fresh/aging/stale state.
+- Separated nine known FRED economic series from Yahoo securities. FRED IDs no
+  longer appear in strategy symbol selectors and cannot enter Yahoo refresh jobs.
+- Added manual core, aging/stale, and all-Yahoo refresh controls. A single
+  in-process worker fetches full adjusted histories, validates and publishes one
+  symbol at a time, invalidates derived caches, enforces a fixed two-second
+  inter-symbol delay, and exposes progress and per-symbol failures.
+- Disclosed operational limits: holiday handling is still approximate, progress
+  memory is lost on server restart, and delay/backoff cannot guarantee Yahoo
+  access. No real provider refresh was started during development verification.
+- Added type-to-filter selection to Strategy Lab and improved Explorer typeahead
+  to prioritize prefix matches and choose a real stored symbol. Data Management
+  also filters hundreds of rows instantly.
+- Added data-date/freshness context to Today, Explorer, Lab, and Macro; clarified
+  no-entry/no-exit states and placed the research-only warning beside Today
+  results.
+- Explicitly parked cron: this user has no installed crontab and
+  `scripts/daily.sh` now exits without fetching. Broader accessibility and
+  responsive-layout work remain recorded but no longer block data operations.
+- Added inventory, provider separation, expected-session, refresh progress,
+  concurrency, cache-summary, and API contract tests. All 164 deterministic
+  tests pass; headless Data Management and large-symbol filtering checks have no
+  browser console errors.
+
 ## v0.22.0 — 2026-08-18
 
 - Added `/api/portfolio`, a JSON contract over the deterministic shared-cash

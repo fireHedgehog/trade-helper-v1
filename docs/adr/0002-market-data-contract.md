@@ -35,6 +35,11 @@ FRED values are stored in the same table for convenience but are economic series
 not tradable OHLC instruments. They must never be passed into strategy or
 portfolio performance calculations as if they were executable securities.
 
+Operational ownership is explicit at the application boundary: the known FRED
+series are excluded from security selectors and Yahoo refresh jobs. Yahoo manual
+refreshes fetch and upsert the full adjusted history rather than mixing a recent
+adjusted slice with an older adjustment basis.
+
 ## Consequences
 
 - Storage rejects the entire malformed batch before writing any row.
@@ -44,3 +49,6 @@ portfolio performance calculations as if they were executable securities.
 - Data-source, adjustment mode, fetch timestamp, and revision provenance still
   need explicit metadata; this ADR documents the current contract, not completion
   of data lineage.
+- v0.23.0 adds a holiday-unaware expected-US-weekday freshness classification,
+  provider-separated inventory, and observable manual refresh progress. Exchange
+  holidays, persistent run history, staging, and revision diffs remain Stage 8.

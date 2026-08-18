@@ -17,11 +17,12 @@ passive benchmarks.
 Stages 0–3 and the Stage 5 engineering gate of the
 [validation roadmap](docs/roadmap.md) are complete. The Stage 4 CTA v1
 experiment is complete and rejected, while genuinely untouched confirmation
-data remains an open research gate. Stage 6, UX and safety clarity, is next.
+data remains an open research gate. Stage 6 is now focused first on observable
+data freshness, manual refresh control, and safety clarity.
 
 - One canonical state machine drives backtests, signals, chart markers, and the
   simulated ledger: completed-close signal → next-available-open fill.
-- The deterministic test suite currently contains 148 passing tests.
+- The deterministic test suite currently contains 164 passing tests.
 - Trading costs, spread, slippage, gaps, idle-cash yield, uncertainty intervals,
   and benchmark limitations are explicit.
 - The CTA walk-forward experiment is preregistered with a 12-ETF universe and
@@ -37,11 +38,16 @@ data remains an open research gate. Stage 6, UX and safety clarity, is next.
   inventing an undefined benchmark. The active UI no longer displays fictional
   fixed-100-share dollar P&L. Strategies without a protective stop are refused
   explicitly instead of receiving an invented fallback.
+- A local Data Management view now reports per-symbol provider, coverage,
+  expected completed US session, freshness, and refresh progress. Yahoo updates
+  are manual, single-job, full-history refreshes with a fixed two-second
+  inter-symbol delay and retry backoff. FRED series are kept out of Yahoo jobs.
 - Existing historical SPY results are exploratory and contaminated by prior
   inspection. Valid confirmation requires genuinely unseen future or otherwise
   uninspected point-in-time data.
-- Cron, AWS, machine learning, and brokerage integration remain paused until
-  their prerequisite gates pass.
+- Cron is explicitly parked: no user crontab is installed and `scripts/daily.sh`
+  exits without fetching. AWS, machine learning, and brokerage integration also
+  remain paused until their prerequisite gates pass.
 
 The honest baseline is poor as an “edge”: full-history SPY CTA returned roughly
 276.5% net versus roughly 3,119.6% buy-and-hold. Lower drawdown does not by itself
@@ -62,7 +68,8 @@ pip install -r backend/requirements-dev.txt
 pytest
 ```
 
-Fetch local adjusted daily bars:
+Fetch one local adjusted history from the CLI (the Data Management page is the
+normal manual refresh surface):
 
 ```bash
 cd backend

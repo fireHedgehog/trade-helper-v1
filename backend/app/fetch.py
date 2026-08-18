@@ -5,8 +5,8 @@ Usage (from backend/):
     python -m app.fetch SPY GC=F CL=F    # more symbols
     python -m app.fetch SPY --period 5y  # limit history
 
-Idempotent: re-running upserts the same (symbol, date) rows, so it is safe
-for a daily cron job or a manual re-fetch.
+Idempotent: re-running upserts the same (symbol, date) rows. Operational refresh
+is manual until the observable scheduling gate in the roadmap is complete.
 """
 import argparse
 import sys
@@ -22,6 +22,7 @@ DEFAULT_SYMBOLS = ["SPY"]
 DEFAULT_PERIOD = "max"
 RATE_LIMIT_RETRIES = 3
 RATE_LIMIT_BACKOFF_S = 30
+MIN_MULTI_SYMBOL_DELAY_S = 2.0
 
 
 def fetch_symbol(symbol: str, period: str) -> pd.DataFrame:
@@ -75,8 +76,11 @@ def main() -> int:
     parser.add_argument(
         "--delay",
         type=float,
-        default=0.0,
-        help="seconds between symbols (be polite: 1.0+ for large runs)",
+        default=MIN_MULTI_SYMBOL_DELAY_S,
+        help=(
+            "seconds between symbols; multi-symbol runs enforce a minimum "
+            f"of {MIN_MULTI_SYMBOL_DELAY_S:.1f}s"
+        ),
     )
     parser.add_argument(
         "--missing-only",
@@ -87,10 +91,11 @@ def main() -> int:
 
     if args.universe:
         symbols = load_universe(refresh=args.refresh_universe)
-        if args.delay == 0.0:
-            args.delay = 1.0  # large runs should be polite by default
     else:
         symbols = args.symbols
+
+    if len(symbols) > 1:
+        args.delay = max(args.delay, MIN_MULTI_SYMBOL_DELAY_S)
 
     if args.missing_only:
         existing = set(list_symbols())

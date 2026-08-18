@@ -32,6 +32,11 @@ DEFAULT_SAMPLE_DAYS = 252  # one trading year
 _cache: dict = {}
 
 
+def clear_cache() -> None:
+    """Discard derived statistics after underlying market data changes."""
+    _cache.clear()
+
+
 def _summarize(returns: list[float]) -> dict:
     if not returns:
         return {"samples": 0, "hit_rate": None, "avg_return": None,

@@ -7,14 +7,23 @@ import time
 import math
 from datetime import date
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
-from . import store
+from . import confidence as confidence_module, store
 from .calendar import macro_events
 from .confidence import compute_confidence
+from .data_management import (
+    DataRefreshManager,
+    RefreshAlreadyRunning,
+    inventory_payload,
+    select_refresh_symbols,
+)
 from .engine import backtest_payload
+from .fred import MANAGED_SERIES as FRED_MANAGED_SERIES
 from .portfolio_api import portfolio_payload
 from .signals import (
     CORE_WATCHLIST,
@@ -39,7 +48,20 @@ MACRO_SYMBOLS = {
 _today_cache: dict = {}
 _portfolio_cache: dict = {}
 
+
+def _invalidate_derived_caches() -> None:
+    _today_cache.clear()
+    _portfolio_cache.clear()
+    confidence_module.clear_cache()
+
+
+_data_refresh_manager = DataRefreshManager(on_publish=_invalidate_derived_caches)
+
 app = FastAPI(title="trade-helper-v1")
+
+
+class DataRefreshRequest(BaseModel):
+    scope: Literal["core", "stale", "all"] = "core"
 
 
 def _validated_strategy_params(strategy: str, raw: dict) -> dict:
@@ -91,7 +113,44 @@ def health():
 
 @app.get("/api/symbols")
 def symbols():
-    return {"symbols": store.list_symbols(), "default_basket": DEFAULT_BASKET}
+    stored = store.list_symbols()
+    return {
+        "symbols": [symbol for symbol in stored if symbol not in FRED_MANAGED_SERIES],
+        "data_series": [symbol for symbol in stored if symbol in FRED_MANAGED_SERIES],
+        "default_basket": DEFAULT_BASKET,
+    }
+
+
+@app.get("/api/data/status")
+def data_status(details: bool = True):
+    result = inventory_payload()
+    result["refresh"] = _data_refresh_manager.snapshot()
+    if not details:
+        result.pop("symbols", None)
+        result["refresh"].pop("items", None)
+    return result
+
+
+@app.post("/api/data/refresh", status_code=202)
+def start_data_refresh(request: DataRefreshRequest):
+    status = inventory_payload()
+    selected = select_refresh_symbols(
+        request.scope, status["symbols"], CORE_WATCHLIST
+    )
+    if not selected:
+        raise HTTPException(
+            status_code=400,
+            detail=f"no stored symbols need the {request.scope} refresh",
+        )
+    try:
+        refresh = _data_refresh_manager.start(selected)
+    except RefreshAlreadyRunning as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    return {
+        "scope": request.scope,
+        "refresh": refresh,
+        "warning": status["refresh_policy"]["note"],
+    }
 
 
 @app.get("/api/bars/{symbol}")
@@ -387,6 +446,7 @@ def macro():
             {
                 "symbol": symbol,
                 "label": label,
+                "date": str(last["date"]),
                 "close": round(float(last["close"]), 2),
                 "change_pct": round(float(last["close"] / prev["close"] - 1) * 100, 2),
             }

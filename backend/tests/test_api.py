@@ -30,6 +30,104 @@ async def test_health(client) -> None:
     assert (await client.get("/api/health")).json() == {"status": "ok"}
 
 
+async def test_symbol_selector_excludes_fred_macro_series(client, monkeypatch) -> None:
+    monkeypatch.setattr(main.store, "list_symbols", lambda: ["DGS2", "SPY", "AAPL"])
+
+    response = await client.get("/api/symbols")
+
+    assert response.status_code == 200
+    assert response.json()["symbols"] == ["SPY", "AAPL"]
+    assert response.json()["data_series"] == ["DGS2"]
+
+
+async def test_data_status_includes_inventory_and_refresh_state(
+    client, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        main,
+        "inventory_payload",
+        lambda: {"symbols": [{"symbol": "SPY"}], "summary": {"symbols": 1}},
+    )
+    monkeypatch.setattr(
+        main._data_refresh_manager,
+        "snapshot",
+        lambda: {"state": "idle", "total": 0},
+    )
+
+    response = await client.get("/api/data/status")
+
+    assert response.status_code == 200
+    assert response.json()["summary"]["symbols"] == 1
+    assert response.json()["refresh"]["state"] == "idle"
+
+    summary = await client.get("/api/data/status", params={"details": False})
+    assert summary.status_code == 200
+    assert "symbols" not in summary.json()
+    assert "items" not in summary.json()["refresh"]
+
+
+async def test_data_refresh_selects_stored_core_symbols(client, monkeypatch) -> None:
+    captured = []
+    monkeypatch.setattr(
+        main,
+        "inventory_payload",
+        lambda: {
+            "symbols": [{"symbol": "SPY", "freshness": "fresh"}],
+            "refresh_policy": {"note": "rate limit warning"},
+        },
+    )
+    monkeypatch.setattr(
+        main._data_refresh_manager,
+        "start",
+        lambda symbols: captured.extend(symbols) or {"state": "running", "total": 1},
+    )
+
+    response = await client.post("/api/data/refresh", json={"scope": "core"})
+
+    assert response.status_code == 202
+    assert captured == ["SPY"]
+    assert response.json()["refresh"]["state"] == "running"
+
+
+async def test_data_refresh_rejects_empty_scope(client, monkeypatch) -> None:
+    monkeypatch.setattr(
+        main,
+        "inventory_payload",
+        lambda: {
+            "symbols": [{"symbol": "SPY", "freshness": "fresh"}],
+            "refresh_policy": {"note": "warning"},
+        },
+    )
+
+    response = await client.post("/api/data/refresh", json={"scope": "stale"})
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "no stored symbols need the stale refresh"
+
+
+async def test_data_refresh_rejects_overlapping_job(client, monkeypatch) -> None:
+    monkeypatch.setattr(
+        main,
+        "inventory_payload",
+        lambda: {
+            "symbols": [{"symbol": "SPY", "freshness": "fresh"}],
+            "refresh_policy": {"note": "warning"},
+        },
+    )
+    monkeypatch.setattr(
+        main._data_refresh_manager,
+        "start",
+        lambda _symbols: (_ for _ in ()).throw(
+            main.RefreshAlreadyRunning("a data refresh is already running")
+        ),
+    )
+
+    response = await client.post("/api/data/refresh", json={"scope": "core"})
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "a data refresh is already running"
+
+
 async def test_backtest_rejects_unknown_strategy(client) -> None:
     response = await client.get("/api/backtest/SPY", params={"strategy": "Magic"})
     assert response.status_code == 400

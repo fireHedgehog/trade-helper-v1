@@ -75,6 +75,21 @@
   .conf-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 2px; }
   .portfolio-summary { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
   .portfolio-alert { color: var(--red); font-weight: 600; }
+  .data-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .freshness { font-weight: 600; text-transform: uppercase; font-size: 10px; }
+  .freshness.fresh { color: var(--green); }
+  .freshness.aging { color: var(--accent); }
+  .freshness.stale, .freshness.invalid, .freshness.failed { color: var(--red); }
+  .freshness.provider_managed { color: #93c5fd; }
+  .progress-track { height: 10px; overflow: hidden; background: var(--bg); border: 1px solid var(--border); border-radius: 999px; margin: 8px 0; }
+  .progress-fill { height: 100%; width: 0; background: var(--green); transition: width .2s ease; }
+  .data-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .data-controls input { min-width: 220px; }
+  .data-table-wrap { overflow: auto; max-height: calc(100vh - 330px); }
+  .data-table-wrap th { position: sticky; top: 0; background: var(--panel); z-index: 1; }
+  #today-data-freshness { font-size: 11px; color: var(--muted); }
+  #today-data-freshness.concern { color: var(--red); font-weight: 600; }
+  .safety-banner { padding: 9px 16px; background: #2f281b; color: #fbbf24; border-bottom: 1px solid #4a3b20; font-size: 12px; }
   .stat { background: #1f2634; border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; text-align: center; min-width: 84px; }
   .stat .k { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
   .stat .v { font-size: 14px; font-weight: 600; }
@@ -113,6 +128,11 @@
   }
   button.primary { background: #234; color: #fff; border-color: #3b4a63; }
   button.primary:hover { background: #2c3a52; }
+  button.danger { border-color: #3a2222; color: var(--red); }
+  .data-controls input, #lab-symbol-search {
+    background: #1f2634; color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 13px;
+  }
   .symbol-box { position: relative; min-width: 180px; }
   #symbol-input {
     width: 100%; background: #1f2634; color: var(--text);
@@ -201,6 +221,7 @@
   <div class="nav-item" data-view="explorer">Symbol Explorer</div>
   <div class="nav-item" data-view="lab">Strategy Lab</div>
   <div class="nav-item" data-view="macro">Macro</div>
+  <div class="nav-item" data-view="data">Data Management</div>
 </aside>
 <main>
   <div id="view-explorer" class="view" hidden>
@@ -272,8 +293,10 @@
       <select id="today-set"><option value="defaults">Params: defaults</option></select>
       <button class="primary" id="today-refresh">Refresh scan</button>
       <span id="today-status"></span>
+      <span id="today-data-freshness"></span>
       <span id="regime-banner"></span>
     </div>
+    <div class="safety-banner">Research only. “Entry” and “exit” describe historical rule state at the latest stored close—not an order, forecast, or permission to trade. Check freshness and failures first.</div>
     <div class="today-body">
       <section class="panel">
         <h2 id="confidence-title">Historical post-signal statistics</h2>
@@ -314,6 +337,8 @@
         <button id="lab-default">Default</button>
         <button id="lab-clear">Clear</button>
         <button class="primary" id="lab-compute">Compute / refresh</button>
+        <input id="lab-symbol-search" type="search" placeholder="Filter 500+ symbols…" autocomplete="off" spellcheck="false">
+        <span id="lab-data-freshness" class="sample-note"></span>
         <div class="symbol-picker" id="lab-symbols"></div>
         <div class="sample-note" id="lab-sample-note"></div>
         <table style="margin-top:10px">
@@ -338,6 +363,44 @@
       </section>
     </div>
   </div>
+
+  <div id="view-data" class="view" hidden>
+    <div class="toolbar data-controls">
+      <input id="data-search" type="search" placeholder="Type a symbol, e.g. SPY…" autocomplete="off" spellcheck="false">
+      <select id="data-filter">
+        <option value="all">All freshness states</option>
+        <option value="fresh">Fresh</option>
+        <option value="aging">Aging</option>
+        <option value="stale">Stale</option>
+        <option value="invalid">Invalid</option>
+        <option value="provider_managed">FRED-managed</option>
+      </select>
+      <button id="data-reload">Check status</button>
+      <button class="primary" id="data-refresh-core">Refresh core</button>
+      <button id="data-refresh-stale">Refresh aging/stale</button>
+      <button class="danger" id="data-refresh-all">Refresh all Yahoo</button>
+      <span id="data-status">loading…</span>
+    </div>
+    <div class="macro-body">
+      <section class="panel">
+        <h2>Market-data inventory <span class="badge">manual only · local SQLite</span></h2>
+        <div class="data-summary" id="data-summary"></div>
+        <div class="progress-track"><div class="progress-fill" id="data-progress"></div></div>
+        <div id="data-job-note" class="sample-note">No refresh running.</div>
+        <div id="data-policy" class="sample-note"></div>
+      </section>
+      <section class="panel">
+        <h2>Per-symbol coverage</h2>
+        <div class="data-table-wrap">
+          <table>
+            <thead><tr><th>Symbol</th><th>Provider</th><th>Freshness</th><th>Latest</th><th>Session lag</th><th>First</th><th>Rows</th><th>Refresh</th><th>Detail</th></tr></thead>
+            <tbody id="data-symbols"></tbody>
+          </table>
+        </div>
+        <div id="data-result-count" class="sample-note"></div>
+      </section>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -347,6 +410,15 @@ async function api(path, options = {}) {
   const res = await fetch(path, options);
   if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
   return res.json();
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 /* Loading dimmer: prevents double-clicks that spin up the laptop. */
@@ -686,11 +758,16 @@ $('#delete-param-set').addEventListener('click', async () => {
 
 function renderMenu(query) {
   const q = query.trim().toUpperCase();
-  const matches = q ? symbolList.filter((s) => s.toUpperCase().includes(q)) : symbolList;
+  const matches = q
+    ? symbolList.filter((s) => s.toUpperCase().includes(q)).sort((a, b) => {
+        const prefixDifference = Number(!a.startsWith(q)) - Number(!b.startsWith(q));
+        return prefixDifference || a.localeCompare(b);
+      })
+    : symbolList;
   highlightIndex = -1;
-  $('#symbol-menu').innerHTML = matches.slice(0, 200).map((s) =>
+  $('#symbol-menu').innerHTML = matches.slice(0, 100).map((s) =>
     `<div class="symbol-item ${s === selectedSymbol ? 'highlighted' : ''}" data-symbol="${s}">${s}</div>`
-  ).join('');
+  ).join('') || '<div class="symbol-item">No stored symbol matches.</div>';
   $('#symbol-menu').classList.add('open');
 }
 
@@ -720,9 +797,10 @@ symbolInput.addEventListener('keydown', (e) => {
   } else if (e.key === 'Enter') {
     e.preventDefault();
     const active = items.find((it) => it.classList.contains('highlighted'));
+    const exact = items.find((it) => it.dataset.symbol === symbolInput.value.trim().toUpperCase());
     if (active) chooseSymbol(active.dataset.symbol);
-    else if (items.length === 1) chooseSymbol(items[0].dataset.symbol);
-    else { selectedSymbol = symbolInput.value; closeMenu(); run(); }
+    else if (exact) chooseSymbol(exact.dataset.symbol);
+    else if (items[0]?.dataset.symbol) chooseSymbol(items[0].dataset.symbol);
   } else if (e.key === 'Escape') {
     closeMenu();
   }
@@ -768,7 +846,7 @@ async function run() {
     renderEquity(backtest.equity);
     renderGuide(symbol, strategy);
     $('#status').textContent =
-      `${backtest.trades.length} closed trades${backtest.open_position ? ' · open position' : ''} · ${symbol} · ${strategy} · ${label}`;
+      `${backtest.trades.length} closed trades${backtest.open_position ? ' · open position' : ''} · ${symbol} · ${strategy} · ${label} · data through ${bars.at(-1)?.date || 'unknown'}`;
   } catch (err) {
     $('#status').textContent = `error: ${err.message}`;
   } finally {
@@ -792,7 +870,7 @@ document.querySelectorAll('.nav-item').forEach((item) => {
 });
 
 /* ---------- view routing (URL hash reflects the active view) ---------- */
-const VIEWS = ['today', 'explorer', 'lab', 'macro'];
+const VIEWS = ['today', 'explorer', 'lab', 'macro', 'data'];
 let currentView = null;
 let explorerLoaded = false;
 
@@ -805,6 +883,7 @@ function applyView(name) {
   });
   if (name === 'today') loadToday();
   if (name === 'macro') loadMacro();
+  if (name === 'data') loadData();
   if (name === 'lab') {
     const ready = labPickerBuilt ? Promise.resolve() : buildSymbolPicker();
     ready.then(() => loadLab());
@@ -830,13 +909,33 @@ let labPickerBuilt = false;
 let defaultBasket = [];
 
 async function buildSymbolPicker() {
-  const { symbols, default_basket } = await api('/api/symbols');
+  const [{ symbols, default_basket }, freshnessData] = await Promise.all([
+    api('/api/symbols'),
+    api('/api/data/status?details=false').catch(() => null),
+  ]);
   defaultBasket = default_basket || [];
   const dflt = new Set(defaultBasket);
   $('#lab-symbols').innerHTML = symbols.map((s) =>
     `<label><input type="checkbox" value="${s}" ${dflt.has(s) ? 'checked' : ''}> ${s}</label>`
   ).join('');
   labPickerBuilt = true;
+  filterLabSymbols();
+  if (freshnessData) {
+    const summary = freshnessData.summary;
+    const yahooSymbols = summary.symbols - summary.fred_managed;
+    $('#lab-data-freshness').textContent =
+      `Yahoo freshness: ${summary.fresh}/${yahooSymbols} current for expected session ${freshnessData.expected_latest_session}; review Data Management before interpreting results.`;
+  } else {
+    $('#lab-data-freshness').textContent = 'Data freshness unavailable; do not assume current coverage.';
+  }
+}
+
+function filterLabSymbols() {
+  const query = $('#lab-symbol-search').value.trim().toUpperCase();
+  document.querySelectorAll('#lab-symbols label').forEach((label) => {
+    const symbol = label.querySelector('input').value.toUpperCase();
+    label.hidden = query && !symbol.includes(query);
+  });
 }
 
 function labNote() {
@@ -918,6 +1017,121 @@ $('#lab-clear').addEventListener('click', () => {
   labNote();
 });
 $('#lab-symbols').addEventListener('change', labNote);
+$('#lab-symbol-search').addEventListener('input', filterLabSymbols);
+
+/* ---------- Data Management ---------- */
+let dataInventory = null;
+let dataPollTimer = null;
+
+function renderDataRows() {
+  if (!dataInventory) return;
+  const query = $('#data-search').value.trim().toUpperCase();
+  const filter = $('#data-filter').value;
+  const refreshItems = new Map(
+    (dataInventory.refresh?.items || []).map((item) => [item.symbol, item])
+  );
+  const rows = dataInventory.symbols.filter((row) =>
+    (!query || row.symbol.includes(query)) &&
+    (filter === 'all' || row.freshness === filter)
+  );
+  $('#data-symbols').innerHTML = rows.map((row) => {
+    const item = refreshItems.get(row.symbol);
+    const refreshState = item?.state || '—';
+    const detail = item
+      ? [
+          item.message,
+          item.rows_received != null ? `${item.rows_received.toLocaleString()} received` : '',
+          item.total_rows != null ? `${item.total_rows.toLocaleString()} stored` : '',
+          item.latest_date ? `through ${item.latest_date}` : '',
+        ].filter(Boolean).join(' · ')
+      : '';
+    const freshnessLabel = row.freshness === 'provider_managed'
+      ? 'managed separately'
+      : row.freshness;
+    return `<tr><td>${escapeHtml(row.symbol)}</td><td>${escapeHtml(row.provider)}</td>` +
+      `<td><span class="freshness ${row.freshness}">${freshnessLabel}</span></td>` +
+      `<td>${escapeHtml(row.latest_date)}</td><td>${row.session_lag == null ? 'schedule varies' : row.session_lag}</td>` +
+      `<td>${escapeHtml(row.first_date)}</td><td>${row.rows.toLocaleString()}</td>` +
+      `<td>${escapeHtml(refreshState)}</td><td>${escapeHtml(detail)}</td></tr>`;
+  }).join('') || '<tr><td colspan="9">No symbols match this filter.</td></tr>';
+  $('#data-result-count').textContent =
+    `showing ${rows.length} of ${dataInventory.symbols.length} stored symbols`;
+}
+
+function renderDataStatus(data) {
+  dataInventory = data;
+  const summary = data.summary;
+  const refresh = data.refresh;
+  const finished = refresh.completed + refresh.failed;
+  const percent = refresh.total ? finished / refresh.total * 100 : 0;
+  $('#data-summary').innerHTML =
+    `<div class="stat"><span class="k">Tracked</span><span class="v">${summary.symbols}</span></div>` +
+    `<div class="stat"><span class="k">Fresh</span><span class="v pos">${summary.fresh}</span></div>` +
+    `<div class="stat"><span class="k">Aging</span><span class="v freshness aging">${summary.aging}</span></div>` +
+    `<div class="stat"><span class="k">Stale</span><span class="v neg">${summary.stale}</span></div>` +
+    `<div class="stat"><span class="k">Invalid</span><span class="v neg">${summary.invalid}</span></div>` +
+    `<div class="stat"><span class="k">FRED-managed</span><span class="v">${summary.fred_managed}</span></div>`;
+  $('#data-progress').style.width = `${percent}%`;
+  $('#data-status').textContent = refresh.state === 'running'
+    ? `${finished}/${refresh.total} · ${refresh.current_symbol || 'starting'}`
+    : `${refresh.state} · checked ${new Date(data.checked_at).toLocaleTimeString()}`;
+  $('#data-job-note').textContent = refresh.state === 'idle'
+    ? 'No refresh has run in this server process.'
+    : `${refresh.state}: ${refresh.completed} published, ${refresh.failed} failed, ${refresh.total} total. ` +
+      'Progress memory is lost if the server restarts; already published SQLite rows remain.';
+  $('#data-policy').textContent =
+    `${data.source} · ${data.adjustment} · expected latest session ${data.expected_latest_session} · ${data.freshness_policy}. ` +
+    `Manual full-history refresh uses ${data.refresh_policy.period}, a fixed ${data.refresh_policy.delay_seconds}s delay, ` +
+    `and ${data.refresh_policy.retry_backoff_seconds}s rate-limit backoff. ${data.refresh_policy.note}.`;
+  document.querySelectorAll('#data-refresh-core, #data-refresh-stale, #data-refresh-all')
+    .forEach((button) => { button.disabled = refresh.state === 'running'; });
+  renderDataRows();
+}
+
+async function loadData() {
+  clearTimeout(dataPollTimer);
+  try {
+    const data = await api('/api/data/status');
+    renderDataStatus(data);
+    if (data.refresh.state === 'running' && currentView === 'data') {
+      dataPollTimer = setTimeout(loadData, 1000);
+    }
+  } catch (err) {
+    $('#data-status').textContent = `status failed: ${err.message}`;
+    $('#data-job-note').textContent =
+      'Freshness is unknown. Do not treat an empty or failed status as fresh data.';
+  }
+}
+
+async function startDataRefresh(scope) {
+  const concernCount = dataInventory
+    ? dataInventory.summary.aging + dataInventory.summary.stale + dataInventory.summary.invalid
+    : 0;
+  if (scope === 'stale' && concernCount > 40 && !window.confirm(
+    `Refresh ${concernCount} aging/stale Yahoo symbols? Full adjusted histories are fetched for consistency. This is a long provider job and may be rate-limited.`
+  )) return;
+  if (scope === 'all' && !window.confirm(
+    'Refresh every Yahoo-managed symbol? At the fixed 2-second delay, 500 symbols require at least about 17 minutes, plus full-history download time and retries. FRED series are excluded.'
+  )) return;
+  $('#data-status').textContent = `starting ${scope} refresh…`;
+  try {
+    await api('/api/data/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scope }),
+    });
+    await loadData();
+  } catch (err) {
+    $('#data-status').textContent = `refresh not started: ${err.message}`;
+  }
+}
+
+$('#data-search').addEventListener('input', renderDataRows);
+$('#data-filter').addEventListener('change', renderDataRows);
+$('#data-reload').addEventListener('click', loadData);
+$('#data-refresh-core').addEventListener('click', () => startDataRefresh('core'));
+$('#data-refresh-stale').addEventListener('click', () => startDataRefresh('stale'));
+$('#data-refresh-all').addEventListener('click', () => startDataRefresh('all'));
 
 /* ---------- Today + Macro views (raw) ---------- */
 async function refreshTodaySets(strategy) {
@@ -979,6 +1193,21 @@ function renderPortfolio(portfolio) {
     `${portfolio.benchmark_note}.${halted}`;
 }
 
+function renderTodayFreshness(data) {
+  if (!data) {
+    $('#today-data-freshness').textContent = 'data freshness unavailable';
+    return;
+  }
+  const summary = data.summary;
+  const concern = summary.stale + summary.aging + summary.invalid;
+  const yahooSymbols = summary.symbols - summary.fred_managed;
+  $('#today-data-freshness').textContent = concern
+    ? `Yahoo data: ${summary.fresh}/${yahooSymbols} fresh · ${concern} need review · FRED ${summary.fred_managed} separate`
+    : `Yahoo data: ${summary.fresh}/${yahooSymbols} fresh · FRED ${summary.fred_managed} separate`;
+  $('#today-data-freshness').classList.toggle('concern', concern > 0);
+  $('#today-data-freshness').title = data.freshness_policy;
+}
+
 async function loadToday(refresh = false) {
   const strategy = $('#today-strategy').value;
   const scope = $('#today-scope').value;
@@ -989,21 +1218,27 @@ async function loadToday(refresh = false) {
     const set = $('#today-set').value || 'defaults';
     const query = `/api/today?strategy=${encodeURIComponent(strategy)}&scope=${scope}&set=${encodeURIComponent(set)}${refresh ? '&refresh=1' : ''}`;
     const portfolioQuery = `/api/portfolio?strategy=${encodeURIComponent(strategy)}&set=${encodeURIComponent(set)}${refresh ? '&refresh=1' : ''}`;
-    const [data, macro, portfolioData, confidence] = await Promise.all([
+    const [data, macro, portfolioData, confidence, freshnessData] = await Promise.all([
       api(query),
       api('/api/macro'),
       api(portfolioQuery),
       api(`/api/confidence?strategy=${encodeURIComponent(strategy)}`),
+      api('/api/data/status?details=false').catch(() => null),
     ]);
-    const pickCards = (list, chip, chipCls) => list.map((r) =>
+    const pickCards = (list, chip, chipCls, emptyMessage) => list.map((r) =>
       `<div class="pick-card ${chipCls}">` +
       `<span class="sym">${r.symbol}</span><span class="chip ${chipCls}">${chipCls === 'entry' ? '▲' : '▼'} ${chip}</span>` +
       `<div class="reason">${r.note}</div>` +
       `<div class="rank ${r.rank >= 0 ? 'pos' : 'neg'}" title="${r.rank_note || ''}">rank ${r.rank} — ${r.rank_note || ''}</div>` +
-      `</div>`).join('') || '<div class="sample-note">none</div>';
+      `</div>`).join('') || `<div class="sample-note">${emptyMessage}</div>`;
     renderPortfolio(portfolioData);
-    $('#today-entries').innerHTML = pickCards(data.entries, 'ENTRY', 'entry');
-    $('#today-exits').innerHTML = pickCards(data.exits, 'EXIT', 'exit');
+    renderTodayFreshness(freshnessData);
+    $('#today-entries').innerHTML = pickCards(
+      data.entries, 'ENTRY', 'entry', 'No entry signal at the latest completed stored close.'
+    );
+    $('#today-exits').innerHTML = pickCards(
+      data.exits, 'EXIT', 'exit', 'No exit signal at the latest completed stored close.'
+    );
     renderConfidence(confidence);
     if (!macro.regime.ok) {
       $('#today-entries').innerHTML =
@@ -1013,6 +1248,12 @@ async function loadToday(refresh = false) {
     $('#today-status').textContent = `scanned ${coverage.processed}/${coverage.requested}` +
       (coverage.missing.length ? ` · missing ${coverage.missing.length}` : '') +
       (coverage.failed.length ? ` · FAILED ${coverage.failed.length}` : '');
+    $('#today-status').title = [
+      coverage.missing.length ? `missing: ${coverage.missing.join(', ')}` : '',
+      coverage.failed.length
+        ? `failed: ${coverage.failed.map((row) => `${row.symbol}: ${row.error}`).join(' | ')}`
+        : '',
+    ].filter(Boolean).join(' · ');
     const regime = macro.regime;
     const banner = $('#regime-banner');
     if (regime.ok) {
@@ -1062,7 +1303,8 @@ async function loadMacro() {
     $('#macro-cards').innerHTML = macro.cards.map((c) =>
       `<div class="card"><div class="label">${c.label} (${c.symbol})</div>` +
       `<div class="price">${c.close}</div>` +
-      `<div class="chg ${c.change_pct >= 0 ? 'pos' : 'neg'}">${c.change_pct >= 0 ? '+' : ''}${c.change_pct.toFixed(2)}%</div></div>`
+      `<div class="chg ${c.change_pct >= 0 ? 'pos' : 'neg'}">${c.change_pct >= 0 ? '+' : ''}${c.change_pct.toFixed(2)}%</div>` +
+      `<div class="sample-note">data through ${c.date}</div></div>`
     ).join('');
     $('#macro-events').innerHTML = renderEvents(macro.events);
   } catch (err) {

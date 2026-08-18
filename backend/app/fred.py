@@ -15,6 +15,20 @@ import requests
 from .store import upsert_bars
 
 URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={}"
+MANAGED_SERIES = frozenset(
+    {
+        "DGS2",
+        "DGS10",
+        "DFEDTARU",
+        "CPIAUCSL",
+        "PCEPILFE",
+        "PAYEMS",
+        "UNRATE",
+        "ICSA",
+        "A191RL1Q225SBEA",
+        "RSXFSN",
+    }
+)
 
 
 def fetch_series(series_id: str) -> pd.DataFrame:
