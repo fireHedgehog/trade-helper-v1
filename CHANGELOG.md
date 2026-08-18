@@ -2,6 +2,18 @@
 
 # Changelog
 
+## v0.21.4 — 2026-08-18
+
+- Added daily returns to every common-close portfolio snapshot and validation
+  that the return series exactly reconciles to recorded equity.
+- Added account-level total return, CAGR, volatility, Sharpe/Sortino when
+  estimable, maximum drawdown duration, exposure/concentration, annual turnover,
+  trade outcome, rejection, risk-event, and final-state metrics.
+- Deliberately omitted benchmark and excess-return fields until a multi-asset
+  portfolio benchmark and rebalancing contract are accepted.
+- Added four focused metrics tests; all 137 deterministic tests pass. The Stage 5
+  backend is ready for an API contract, but the fixed-100-share UI is unchanged.
+
 ## v0.21.3 — 2026-08-18
 
 - Implemented the configured 15% portfolio drawdown kill switch from

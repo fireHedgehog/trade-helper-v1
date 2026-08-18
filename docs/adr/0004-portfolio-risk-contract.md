@@ -73,17 +73,22 @@ a rejected strategy result.
   impact, taxes, settlement rules, or losses inside an overnight gap.
 - A kill switch limits modeled continuation risk but cannot cap realized loss at
   exactly 15% because liquidation still occurs at the following available open.
+- Account return, risk, concentration, trade, and turnover metrics do not include
+  a benchmark-relative claim until portfolio benchmark composition and
+  rebalancing are separately specified.
 
 ## Implementation status
 
-Checkpoint v0.21.3 adds `backend/app/portfolio_execution.py` to the v0.21.1
+Checkpoint v0.21.4 adds `backend/app/portfolio_execution.py` to the v0.21.1
 strategy-independent foundation. The replay now processes multi-symbol entry and
 exit signals through one cash ledger, rechecks every limit at the actual open,
 charges canonical costs, tracks T+1 sale settlements, preserves final pending
 orders, and marks equity/exposure/concentration/drawdown at each shared close. A
 15% completed-close drawdown records an explicit risk event, halts entries, and
 creates next-open liquidation orders; a final-bar liquidation remains pending.
-Thirty-nine focused portfolio tests cover the combined contracts.
+`backend/app/portfolio_metrics.py` reports daily and cumulative return, CAGR,
+volatility, estimable risk ratios, drawdown duration, exposure/concentration,
+turnover, trade outcomes, rejections, risk events, and final pending state.
+Forty-three focused portfolio tests cover the combined contracts.
 
-Portfolio performance metrics, API/UI integration, and paper/live connections
-remain unimplemented.
+API/UI integration and paper/live connections remain unimplemented.

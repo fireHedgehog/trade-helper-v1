@@ -154,15 +154,17 @@ still requires genuinely unseen future or uninspected point-in-time data.
 
 **Goal:** stop presenting independent fixed-share trades as a portfolio.
 
-**Current checkpoint (v0.21.3):** the pure multi-symbol replay now uses one shared
+**Current checkpoint (v0.21.4):** the pure multi-symbol replay now uses one shared
 cash ledger and exact shared calendar. It processes completed-close signals at
 the next open, rechecks sizing and every cap after gaps, charges canonical costs,
 holds sale proceeds until the next session, marks common-close equity and
 concentration, and preserves final pending orders. The 15% drawdown kill switch
 now records its trigger, blocks entries, and submits next-open liquidations while
-retaining any gap loss. Thirty-nine focused portfolio tests pass. Portfolio
-metrics and API/UI integration remain pending; the existing 100-share view is
-still a signal replay, not a portfolio.
+retaining any gap loss. Daily account return, risk, concentration, turnover,
+trade, rejection, and pending-state metrics are now calculated without inventing
+an undefined multi-asset benchmark. Forty-three focused portfolio tests pass.
+API/UI integration remains pending; the existing 100-share view is still a
+signal replay, not a portfolio.
 
 - [x] Add explicit $100k account state and conservative validated defaults.
 - [x] Add cost-aware stop-risk and maximum-notional entry sizing.
@@ -174,15 +176,15 @@ still a signal replay, not a portfolio.
 - [x] Keep sale proceeds unavailable until the next shared-calendar session.
 - [x] Trigger and execute next-open drawdown kill-switch liquidations, including
       final-bar pending state and gap-loss evidence.
-- [ ] Calculate portfolio-level return, volatility, turnover, and risk metrics.
+- [x] Calculate portfolio-level return, volatility, turnover, and risk metrics.
 - [ ] Integrate tested portfolio results into the API and UI.
 
 - [ ] Replace the fixed 100-share convention with explicit capital and sizing.
-- [ ] Add maximum position, sector, correlated-asset, and portfolio exposure.
-- [ ] Model concurrent signals, available cash, turnover, and rejected orders.
-- [ ] Separate per-trade stop distance from portfolio risk limits.
-- [ ] Add portfolio equity, drawdown, concentration, and daily return history.
-- [ ] Add a hard kill switch and maximum-loss controls for any future paper/live
+- [x] Add maximum position, sector, correlated-asset, and portfolio exposure.
+- [x] Model concurrent signals, available cash, turnover, and rejected orders.
+- [x] Separate per-trade stop distance from portfolio risk limits.
+- [x] Add portfolio equity, drawdown, concentration, and daily return history.
+- [x] Add a hard kill switch and maximum-loss controls for any future paper/live
       integration.
 - [ ] Keep paper and live data stores physically and visually distinct.
 

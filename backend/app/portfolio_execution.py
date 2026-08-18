@@ -72,6 +72,7 @@ class PortfolioSnapshot:
     equity: float
     peak_equity: float
     drawdown: float
+    daily_return: float | None
     gross_exposure: float
     position_count: int
     sector_values: dict[str, float]
@@ -166,6 +167,7 @@ def _snapshot(
     settlements: list[CashSettlement],
     positions: dict[str, PortfolioPosition],
     previous_peak: float,
+    previous_equity: float | None,
 ) -> PortfolioSnapshot:
     unsettled = sum(item.amount for item in settlements)
     market_value = sum(position.market_value for position in positions.values())
@@ -185,6 +187,7 @@ def _snapshot(
         equity=equity,
         peak_equity=peak,
         drawdown=drawdown,
+        daily_return=equity / previous_equity - 1 if previous_equity else None,
         gross_exposure=market_value / equity if equity > 0 else 0.0,
         position_count=len(positions),
         sector_values=sectors,
@@ -433,6 +436,7 @@ def simulate_portfolio(
             settlements=settlements,
             positions=positions,
             previous_peak=state.peak_equity,
+            previous_equity=snapshots[-1].equity if snapshots else None,
         )
         snapshots.append(snapshot)
 
