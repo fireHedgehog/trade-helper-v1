@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.28.1`, Stage 8C in progress.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.29.1`, Stage 8C in progress.
 
 ## Completed foundation
 
@@ -45,6 +45,9 @@ Evidence: semantic CSS/state mapping, explicit four-step Today workflow, market-
 - Symbol Research: strategy accordions with summary, signal, risk, evidence, sector context, and comparable time horizons.
 - Strategy Lab: explicit hypothesis/version, configuration, benchmark, run progress, results, rejection reasons, and artifacts.
 - Data Management: coverage/freshness table, selected refresh, hard-coded provider delay, durable progress, retryable failures, and last successful update.
+- Replace fixed data assumptions with the product-contract dataset registry: provenance, information class, schema, cadence, point-in-time/revision status, coverage, freshness, licence, quality, lineage, and fingerprint.
+- Represent strategy families and typed parameters through versioned metadata rather than adding one UI column per future factor.
+- Bring Macro presentation into ADR 0006 compliance: label current FRED observations as final-revised/display-only, distinguish observation from release time, remove causal `good/bad for equities` styling, and expose point-in-time capability as unavailable until implemented.
 - Preserve empty placeholders for CTA, SMA cross, breakout, and momentum until each has an executed valid protocol.
 
 Completed slices in `0.28.0`: multi-model Symbol Research accordions with selected-model-only markers; readable guide/dossier hierarchy; explicit refresh resume versus forced scopes; immutable watchlist-snapshot recovery. Remaining: Strategy Lab hierarchy and durable Data Management job presentation.
@@ -69,7 +72,7 @@ Resume only by explicit decision after Stage 8.
 
 ### 9A — Acceptance standard and candidate priority
 
-Before selecting a strategy, apply the [model acceptance and candidate-priority standard](model-acceptance-standard.md). Score all serious candidates before viewing comparative results, preserve the complete selection record, and preregister model-specific evidence thresholds. Consolidation, CTA v2, momentum, breakout, SMA cross, and future ideas compete under the same process; none is the default next model.
+Before selecting a strategy, operationalize each thesis under [hypothesis engineering](hypothesis-engineering.md), audit benchmark/universe suitability under ADR 0005, then apply the [model acceptance and candidate-priority standard](model-acceptance-standard.md). Score all serious candidates before viewing comparative results, preserve the complete selection record, and preregister model-specific evidence thresholds. Consolidation, CTA v2, momentum, breakout, SMA cross, and future ideas compete under the same process; none is the default next model.
 
 Candidate search and promotion follow the [exploration protocol](exploration-protocol.md): search is non-evidential, logged in `research/attempts.jsonl`, and only promoted survivors enter 9A scoring. Macro candidates additionally require [ADR 0006](adr/0006-macro-data-contract.md) point-in-time data before scoring.
 
@@ -77,7 +80,7 @@ Gate: one candidate has earned priority on rationale, product relevance, distinc
 
 ### 9B — Locked experiment and confirmation
 
-Only after 9A, implement the finite experiment. Apply the primary benchmark, estimand, universe, search budget, multiplicity control, validation topology, cost/risk stress, stability tests, and untouched confirmation data. Passing means eligible for the next validation stage, not safe or approved for trading. See [research-backlog.md](research-backlog.md).
+Only after 9A, implement the finite experiment. Apply the preregistered suitable benchmark, estimand, universe, search budget, multiplicity control, validation topology, cost/risk stress, stability tests, and untouched confirmation data. Passing means eligible for the next validation stage, not safe or approved for trading. See [research-backlog.md](research-backlog.md).
 
 This stage is deliberately business/research work, not parameter tuning. UI placeholders do not authorize model development.
 

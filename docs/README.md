@@ -6,8 +6,8 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.29.0` |
-| Parent release | `0.28.1` (Stage 9A acceptance checkpoint) |
+| Version | `0.29.1` |
+| Parent release | `0.29.0` (research-governance hardening) |
 | Current state | Stage 8C in progress: Symbol Research and Data Management slices completed |
 | Verification | `187 passed` plus headless Playwright workflow checks |
 | Completed | Stage 8A state foundation; Stage 8B visual system and Today command centre |
@@ -15,14 +15,14 @@ This file is the authoritative entry point for a new agent or work session. Do n
 | Parked research | Stage 9A: acceptance standard and candidate priority; then 9B locked experiment |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 
-The application has the Stage 8B Today command centre plus Stage 8C improvements to Symbol Research, refresh recovery, and watchlist recovery. Version 0.28.1 adds the Stage 9A acceptance checkpoint without changing runtime behaviour. Version 0.29.0 hardens research governance without changing runtime behaviour: the macro data contract (ADR 0006), institutional verification layers in the acceptance standard, and the exploration protocol defining the non-evidential search layer. Preserve the v0.26 state model and shared manual/scheduled pipeline contract; continue productising the remaining surfaces without importing legacy algorithms or vague confidence claims.
+The application has the Stage 8B Today command centre plus Stage 8C improvements to Symbol Research, refresh recovery, and watchlist recovery. Version 0.29.1 audits the pulled governance work without changing runtime behaviour: it corrects CTA provenance, adds hypothesis engineering and benchmark suitability gates, makes statistical diagnostics design-dependent, and specifies extensible dataset/strategy metadata. Preserve the v0.26 state model and shared manual/scheduled pipeline contract; continue productising the remaining surfaces without importing legacy algorithms or vague confidence claims.
 
-Heavy statistical work is intentionally paused. On resumption, apply the model acceptance standard before selecting CTA v2, consolidation, momentum, or any other candidate. Then read the protocol, CTA result, audit, and backlog. Do not tune CTA v1 after observing its rejection.
+Heavy statistical work is intentionally paused. On resumption, first operationalize candidate theses, audit benchmark/universe suitability, and only then apply the model acceptance scorecard. Read the protocol, CTA result, audit, and backlog before experiment design. Do not tune CTA v1 after observing its rejection.
 
 ## Non-negotiable state
 
 - Product purpose: decide `reject`, `revise`, or `continue research`; never imply validated profit.
-- Primary benchmark: Passive ETF-12 v1; secondary references: SPY buy-and-hold and cash.
+- Default project benchmark: Passive ETF-12 v1; every new protocol audits suitability; SPY and cash remain references.
 - CTA v1: rejected under its locked protocol; this does not reject trend following generally.
 - Execution: signal on completed close `N`, fill at next available open `N+1`.
 - Watchlists: user-selected symbols persist per strategy and show lifecycle state.
@@ -42,6 +42,7 @@ Heavy statistical work is intentionally paused. On resumption, apply the model a
 | How was CTA v1 tested? | [Research protocol](research-protocol.md) |
 | What did CTA v1 show? | [Result](research-results/cta-trend-wf-v1.md) and [audit](research-results/cta-trend-wf-v1-audit.md) |
 | What research may follow? | [Research backlog](research-backlog.md) |
+| How does a narrative become a measurable hypothesis? | [Hypothesis engineering](hypothesis-engineering.md) |
 | How is a candidate selected and allowed to advance? | [Model acceptance standard](model-acceptance-standard.md) |
 | How is candidate search governed? | [Exploration protocol](exploration-protocol.md) |
 | Where do non-contract brainstorm notes live? | [Brainstorm index](brainstorm/README.md) |
@@ -55,7 +56,7 @@ Component notes: [backend](../backend/README.md), [frontend](../frontend/README.
 ## Resume sequence
 
 1. Confirm `git status`, current version, and tests.
-2. Read the [product identity](identity.md) and this checkpoint; then the document for the active stage.
+2. Read this checkpoint, then [product identity](identity.md), then the document for the active stage.
 3. Preserve locked contracts unless creating a versioned ADR/protocol amendment.
 4. Implement one bounded stage slice; update tests, roadmap, checkpoint, and changelog together.
 5. Record research evidence as immutable results, not rewritten narrative.

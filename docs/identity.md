@@ -1,6 +1,6 @@
 # Product identity
 
-Status: v1 — canonical, distilled identity statement. Load first on every work session before any other document. Full contracts: [product.md](product.md), [model-acceptance-standard.md](model-acceptance-standard.md), [exploration-protocol.md](exploration-protocol.md), [research-protocol.md](research-protocol.md), [ADRs](adr/). Edits require a version bump; the statement must stay precise and non-redundant.
+Status: v2 — canonical, distilled identity statement. Read immediately after the authoritative [resume checkpoint](README.md). Full contracts: [product.md](product.md), [hypothesis-engineering.md](hypothesis-engineering.md), [model-acceptance-standard.md](model-acceptance-standard.md), [exploration-protocol.md](exploration-protocol.md), [research-protocol.md](research-protocol.md), [ADRs](adr/). Edits require a version bump; the statement must stay precise and non-redundant.
 
 ## What we run (one line)
 
@@ -12,7 +12,7 @@ A systematic, preregistered, falsifiable research process that adjudicates tradi
 |---|---|---|
 | Method | Systematic | Rules + code + data, reproducible. No discretionary call is a claim. |
 | Discipline | Preregistered / confirmatory | Protocol locked before results; post-hoc tuning is contamination. |
-| Statistical core | Multiple-testing control + backtest-overfitting defense | Implemented: multiplicity (Holm) + bootstrap, locked costs, passive benchmark. Contracted for Stage 9B, not yet in the engine: trial-count deflation, CSCV/PBO, power pre-commitment, break-even cost, alpha decomposition. The evidence bar rises with the number of trials. |
+| Statistical core | Multiple-testing control + backtest-overfitting defense | Implemented for CTA v1: Holm + block bootstrap, locked costs, passive comparisons. Stage 9B methods are hypothesis-specific: trial inventory, prospective precision/power, cost stress, exposure decomposition, overfitting diagnostics, and confirmation. The evidence bar rises with search freedom. |
 | Product | Research decision aid | Outputs only evidence decisions; never "alpha", never an order. |
 
 Implemented = running in the engine today. Contracted = mandatory reporting for Stage 9B candidates; documented, not yet code.
@@ -36,11 +36,11 @@ Implemented = running in the engine today. Contracted = mandatory reporting for 
 ## Immutable anchors
 
 - Execution: signal on close `N`, fill at next available open `N+1` (ADR 0001).
-- Primary benchmark: Passive ETF-12 v1 (ADR 0005).
+- Default project benchmark: Passive ETF-12 v1, subject to candidate-specific suitability audit (ADR 0005).
 - CTA v1: rejected under its locked protocol; trend following in general is not thereby rejected.
 - Macro: non-tradable context until ADR 0006 point-in-time data and a preregistered hypothesis exist.
-- New hypotheses (any origin, including ML): search (exploration-protocol) → 9A scoring → preregistration → 9B locked experiment.
+- New hypotheses (any origin, including ML): operationalize thesis → bounded search → 9A scoring and benchmark audit → preregistration → 9B locked experiment.
 
 ## What institutions do (why this shape)
 
-Serious quant firms do not publish Registered Reports, but they enforce the same substance internally: protocol-before-results, untouched holdouts, multiple-testing discipline, and an independent validation gate before capital. This file is the single-researcher version of that research-governance layer, made explicit so the process survives any number of session restarts.
+The project adopts defensible research-governance principles—separation of search and confirmation, recorded trials, point-in-time data, explicit costs, and independent review—without claiming that every institution uses one identical process. This file keeps those local rules recoverable across session restarts.

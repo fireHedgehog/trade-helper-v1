@@ -4,7 +4,7 @@ Local, long-only systematic-research workspace for testing whether a strategy ad
 
 ## Current state
 
-Version `0.28.1` adds the mandatory Stage 9A candidate-priority and model-acceptance checkpoint while preserving the `0.28.0` research workspace. CTA v1 was rejected under its preregistered test; Passive ETF-12 v1 is the primary benchmark. No paper trading, broker integration, unattended refresh, or deployment is enabled.
+Version `0.29.1` records the audited research-governance checkpoint: hypothesis operationalization, benchmark suitability, corrected CTA provenance, and extensible research metadata. CTA v1 remains rejected under its historical locked test; Passive ETF-12 v1 is the default project benchmark, not a universal market portfolio. No paper trading, broker integration, unattended refresh, or deployment is enabled.
 
 Start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint, next task, and document map.
 
@@ -48,6 +48,7 @@ pytest -q
 - [Product contract](docs/product.md)
 - [Workspace redesign](docs/workspace-redesign.md)
 - [Research protocol](docs/research-protocol.md)
+- [Hypothesis engineering](docs/hypothesis-engineering.md)
 - [Model acceptance and candidate priority](docs/model-acceptance-standard.md)
 - [Roadmap](docs/roadmap.md)
 - [Decision records](docs/adr/)

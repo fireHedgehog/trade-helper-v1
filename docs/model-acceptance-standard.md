@@ -8,12 +8,12 @@ No strategy is selected because it is familiar, recently discussed, popular, or 
 
 ## Candidate scorecard
 
-Record each item as `0` weak, `1` plausible, or `2` strong, with a short justification and cited evidence. Score before implementation.
+First complete the [hypothesis-engineering record](hypothesis-engineering.md). Then record each item as `0` weak, `1` plausible, or `2` strong, with a short justification and cited evidence. Score before implementation and comparative performance inspection.
 
 | Dimension | Required question |
 |---|---|
 | Rationale | What behavioural, structural, or risk-premium mechanism could persist? |
-| Product relevance | How could it improve Passive ETF-12 v1 after costs and risk? |
+| Product relevance | Which passive alternative matches the business objective, and how could the candidate improve it after costs and risk? |
 | Distinct information | What does it add beyond previously tested signals? |
 | Data readiness | Is point-in-time, bias-controlled data available at the required resolution? |
 | Implementability | Are timing, liquidity, turnover, costs, capacity, and portfolio constraints credible? |
@@ -25,7 +25,7 @@ Reject candidates with unavailable point-in-time data, an unfalsifiable rational
 
 ## Required preregistration
 
-Before computing comparative results, lock the hypothesis and failure mechanism; universe and provenance; primary benchmark and estimand; signal, fill, holding, and portfolio rules; parameter/search budget; trial-count budget $N_{\text{trials}}$; minimum detectable effect $\delta$ and target power $1-\beta$; costs and stress levels; walk-forward topology; dependence treatment; multiplicity policy; minimum information requirement; acceptance thresholds; and untouched confirmation data. Publish a fingerprint of the immutable specification.
+Before computing comparative results, lock the hypothesis and failure mechanism; universe and provenance; suitable primary benchmark and estimand; signal, fill, holding, and portfolio rules; parameter/search inventory; minimum detectable effect $\delta$ and target power $1-\beta$ where estimable; costs and stress levels; validation topology; dependence treatment; multiplicity policy; minimum information requirement; acceptance thresholds; and untouched confirmation data. Publish a fingerprint of the immutable specification.
 
 Thresholds are model-specific and must be justified by the objective, expected payoff distribution, sample power, and implementation burden. There is no universal minimum Sharpe ratio, win rate, p-value, or maximum drawdown that validates every strategy.
 
@@ -43,7 +43,7 @@ Any material failure invalidates the experiment; attractive performance cannot r
 ### Economic and implementation validity
 
 - Net performance includes locked costs and adverse cost/slippage stress.
-- Comparison uses Passive ETF-12 v1; SPY and cash remain diagnostic references.
+- Comparison uses a preregistered benchmark that passes the ADR 0005 suitability audit. Passive ETF-12 v1, SPY, and cash remain diagnostic references when comparable.
 - Effect size is economically material, not merely statistically detectable.
 - Results are not dominated by one asset, period, regime, or trade.
 - Nearby admissible parameters and walk-forward folds show acceptable stability.
@@ -59,49 +59,43 @@ Report total return, CAGR, volatility, Sharpe, Sortino, maximum drawdown, recove
 - a p-value is not the probability that a strategy is true;
 - backtest significance is not permission to trade.
 
-## Institutional verification layers
+## Verification risks and method selection
 
-Mandatory reporting for any candidate reaching Stage 9B. Each layer removes one mechanism by which a false edge can survive a naive backtest.
+Stage 9B must address each risk below, but the protocol chooses methods appropriate to its estimand, sample, and selection process. A method is not mandatory merely because it is sophisticated; justify use or non-use before results.
 
 ### Trial-count deflation
 
-The attempts ledger (`research/attempts.jsonl`) is the authoritative trial count $N_{\text{trials}}$ for a hypothesis family. Because the maximum observed statistic grows with the number of trials, apply selection-bias correction (Bailey & López de Prado, 2014). Under $N$ independent trials the expected maximum Sharpe is approximately
+The attempts ledger (`research/attempts.jsonl`) is the provenance index, not automatically the numerical trial count. Each attempt must record the number of variants, selection stages, shared data, and dependence group; amendments and audits are records but are not independent strategy trials. Construct a conservative trial inventory before choosing a correction.
 
-$$E[\max \widehat{SR}] \approx \sqrt{2 \ln N},$$
-
-and the Deflated Sharpe Ratio is
-
-$$\mathrm{DSR} = \Phi\!\left(\frac{(\widehat{SR} - SR_0)\sqrt{n-1}}{\sqrt{1 - \gamma_3\,\widehat{SR} + \frac{\gamma_4 - 1}{4}\,\widehat{SR}^2}}\right),$$
-
-with $SR_0 = E[\max \widehat{SR}]$, and $\gamma_3$, $\gamma_4$ the skewness and excess kurtosis of the return series. Every logged variant must be counted; deleting or editing ledger entries to improve a statistic is contamination. When $N_{\text{trials}}$ is unreported, the result cannot claim adjusted significance. Treat $t < 3$ as weak (Harvey, Liu & Zhu, 2016); for many or correlated candidates prefer FDR control (Benjamini & Hochberg, 1995) or dependence-valid stepwise methods (Romano & Wolf, 2005).
+Selection bias grows with the effective number and dispersion of tried strategies. Where Sharpe selection is the relevant process, estimate the Deflated Sharpe Ratio using the published Bailey–López de Prado procedure and the observed distribution/dependence of trials; do not substitute the rough independent-normal extreme-value mnemonic $\sqrt{2\ln N}$ as the binding null Sharpe. For hypothesis tests, use preregistered family-wise, false-discovery, or dependence-valid stepwise control appropriate to the family. Unreported searches preclude an adjusted-significance claim.
 
 ### Backtest-overfitting diagnostics
 
-Report the probability of backtest overfitting via combinatorially symmetric cross-validation (CSCV) over the walk-forward folds (Bailey, Borwein, López de Prado & Zhu, 2017), using the logit performance-degradation measure $\lambda$. A PBO estimate above the preregistered ceiling is grounds for `revise` regardless of headline performance.
+Use CSCV/PBO only when comparable strategy variants produce a suitable performance matrix and the recombination assumptions fit the design. Otherwise use nested or purged time-series validation, parameter-stability analysis, and an untouched confirmation set. The protocol must state which overfitting mechanism is being tested and why the selected diagnostic is valid; CSCV cannot be mechanically applied “over walk-forward folds.”
 
 ### Power pre-commitment
 
-Before evaluation, declare the minimum detectable effect $\delta$ and target power $1-\beta$ for the primary estimand. If the sample cannot deliver the declared power at the declared effect size, the preregistered outcome is `not evaluable` — never `reject` or `continue`. A "cash fallback / zero trades" outcome is `insufficient evidence`, not evidence of absence.
+Before evaluation, declare the minimum economically relevant effect and assess prospective precision or power where a defensible sampling model exists. If the data cannot distinguish that effect, the outcome is `not evaluable` or `insufficient evidence`, never evidence of absence. A cash fallback/zero-trade path reports failure of the selection rule plus insufficient OOS performance information. CTA v1 retains its historical `reject` label because that consequence was locked before evaluation; future protocols use this clarified taxonomy.
 
 ### Cost and capacity realism
 
-Report gross-of-cost and net-of-cost performance, the break-even cost
+Report gross-of-cost and net-of-cost performance and, where turnover is well defined, the break-even cost
 
 $$c^* = \frac{\bar\alpha_{\text{gross}}}{\bar\tau},$$
 
-where $\bar\alpha_{\text{gross}}$ is mean gross excess return and $\bar\tau$ is mean annual one-way turnover, and the capacity ceiling at which market impact erodes net edge to zero. The strategy is not institutionally viable if $c^*$ is below the locked cost model (ADR 0003) or if the capacity ceiling is below the intended research scale.
+where $\bar\alpha_{\text{gross}}$ is mean gross excess return and $\bar\tau$ is mean annual one-way turnover. Estimate capacity only when volume, participation, instrument, and impact assumptions support it; otherwise report capacity as unmeasured and restrict the claim to the intended small research scale.
 
 ### Alpha decomposition
 
-Report against the primary benchmark (Passive ETF-12 v1): active return, tracking error, and information ratio
+Report against the preregistered primary benchmark: active return, tracking error, and information ratio
 
 $$\mathrm{IR} = \frac{\bar{r}_{\text{active}}}{\sigma(r_{\text{active}})},$$
 
-plus the residual alpha $\hat\alpha$ from a factor regression of strategy excess returns on the benchmark and, where applicable, common factors. An edge claim requires residual alpha distinct from factor beta; outperformance fully explained by benchmark or factor exposure is not independent edge.
+plus exposure decomposition appropriate to the candidate. Factor regression is diagnostic when factors and sample size are defensible; it is not a universal proof of “true alpha.” Outperformance explained by an intended exposure may still be useful, but must not be described as independent alpha.
 
 ### Regime and sub-sample stability
 
-Report the primary statistic split by regime (e.g. bull/bear, rate cycle, volatility regime) and by sub-sample, with a structural-break check (Chow, 1960; Bai–Perron, 1998). A result concentrated in one regime or unstable across sub-samples is `revise` or `reject` territory.
+Report chronological and economically justified sub-samples without inventing regimes after observing results. Apply formal break tests only when their model, breakpoint treatment, and sample size are suitable. Concentration in one regime limits the claim; it does not automatically reject a strategy whose hypothesis was explicitly regime-conditional.
 
 ### Exploratory (non-evidential) tier
 

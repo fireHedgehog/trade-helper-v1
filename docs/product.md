@@ -28,6 +28,10 @@ The primary user is a technically capable individual researcher who needs to ans
 
 Detailed interaction and presentation rules live in [workspace-redesign.md](workspace-redesign.md).
 
+Data Management must evolve into a dataset registry rather than a fixed price-download list. Each dataset records identifier, information class, provider/licence, schema version, cadence, timezone, publication/revision semantics, point-in-time capability, coverage, freshness rule, transformation lineage, quality state, and fingerprint. Adding a research idea may add a dataset type without changing existing market-bar contracts.
+
+Strategy definitions use a versioned schema: strategy/family identifier, information profile, hypothesis record, parameter definitions (name, type, units, bounds/default, research status), required datasets, signal/execution state, benchmark, validation status, and artifact fingerprint. Parameters are rows/objects, not new hard-coded table columns. “Orthogonal” is measured relative to an existing information set or portfolio and is not a strategy type.
+
 ## Domain model
 
 ### Watchlist lifecycle
@@ -56,7 +60,7 @@ Navigation reads persisted results and must not trigger network work. Users expl
 - Completed daily bar `N` creates a pending order; execution occurs at next available open `N+1`.
 - Portfolio tests use whole shares, explicit costs, cash accounting, settlement, capacity constraints, and drawdown policy.
 - Adjusted Yahoo OHLCV cannot be mixed with unadjusted prices in one run.
-- The primary portfolio benchmark is Passive ETF-12 v1, defined in [ADR 0005](adr/0005-product-objective-and-portfolio-benchmark.md).
+- Passive ETF-12 v1 is the default project benchmark under [ADR 0005](adr/0005-product-objective-and-portfolio-benchmark.md); every new protocol must audit its suitability and may preregister a better-matched versioned benchmark.
 - Statistical claims follow [ADR 0003](adr/0003-research-statistics.md) and the active preregistration.
 - Macro series are non-tradable context under [ADR 0006](adr/0006-macro-data-contract.md); release alignment governs their use, never the reference period.
 - Failed hypotheses remain failed; new factors or parameters require a new versioned hypothesis.

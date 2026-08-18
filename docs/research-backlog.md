@@ -4,7 +4,7 @@ Status: parked until Stage 8 product work is complete and the user explicitly re
 
 ## Resume gate
 
-Before proposing another model, read [the model acceptance standard](model-acceptance-standard.md), [CTA v1 protocol](research-protocol.md), [result](research-results/cta-trend-wf-v1.md), [audit](research-results/cta-trend-wf-v1-audit.md), and [benchmark ADR](adr/0005-product-objective-and-portfolio-benchmark.md). CTA v1 is closed; do not optimize it retrospectively.
+Before proposing another model, read [hypothesis engineering](hypothesis-engineering.md), [the model acceptance standard](model-acceptance-standard.md), [CTA v1 protocol](research-protocol.md), [result](research-results/cta-trend-wf-v1.md), [audit](research-results/cta-trend-wf-v1-audit.md), and [benchmark ADR](adr/0005-product-objective-and-portfolio-benchmark.md). Audit benchmark/universe suitability before scoring. CTA v1 is closed; do not optimize it retrospectively.
 
 ## Candidate research programmes
 

@@ -34,12 +34,12 @@ The current ingestion path (`fred.py`) retrieves `fredgraph.csv`, the **final-re
 
 5. **Estimand declaration (surprise vs level).** A macro "edge" is a claim about $\mathbb{E}[R_{t+1} \mid \mathcal{I}_t]$, the conditional expectation of a forward return given the vintage. Because efficient pricing conditions on expectations, a level-based claim (predictability from $x_i^{(k)}$ alone) is the stronger, less plausible claim; a surprise-based claim requires a consensus-forecast history $\{f_i\}$. Every macro protocol must declare which estimand it tests and either supply the corresponding data or state that the estimand is unmeasurable with available data. An unmeasurable estimand is not a research result.
 
-6. **Small-sample discipline.** Macro observations are not independent: they are regime-dependent. The effective sample is the number of independent regime episodes $N_{\text{ep}}$, not the number of monthly observations $n$. Required:
+6. **Small-sample discipline.** Macro observations are serially dependent and may cluster within a small number of regimes or release episodes. Neither the row count $n$ nor a subjective regime count is automatically the effective sample size. Required:
 
-   - report $N_{\text{ep}}$ for the conditioning regime;
-   - require $N_{\text{ep}} \ge$ the preregistered minimum for the relevant regime;
+   - define events/regimes without using future outcomes and report their counts and durations;
+   - preregister the minimum information requirement for the estimand;
    - use dependence-consistent standard errors (e.g. Newey–West HAC, stationary or block bootstrap);
-   - set acceptance thresholds above those used for daily-frequency strategies, reflecting $n_{\text{eff}} \le n$.
+   - report the resulting precision and limitations instead of assuming monthly rows are independent.
 
 7. **Non-stationarity.** Macro relationships are regime-dependent. Any macro inference must include sub-sample stability by regime and a structural-break check (e.g. Chow test; Bai–Perron multiple-break estimation). No stability claim is admissible without breakpoint-aware evidence.
 
@@ -56,15 +56,7 @@ The current ingestion path (`fred.py`) retrieves `fredgraph.csv`, the **final-re
 
 **Look-ahead bias condition.** A statistic $\hat\theta$ is contaminated iff $\exists\, x_i^{(k)}$ used in computing $\hat\theta$ such that $\tau_i + \Delta_i^{(k)} > t$ while a decision is made at $t$.
 
-**Trial-count deflation.** The total number of macro trials $N_{\text{trials}}$ inflates the best observed statistic. Apply selection-bias correction (Bailey & López de Prado, 2014): under $N_{\text{trials}}$ independent draws, the expected maximum Sharpe ratio is approximately
-
-$$E[\max \widehat{SR}] \approx \sqrt{2 \ln N_{\text{trials}}},$$
-
-and the Deflated Sharpe Ratio is
-
-$$\mathrm{DSR} = \Phi\!\left(\frac{(\widehat{SR} - SR_0)\sqrt{n-1}}{\sqrt{1 - \gamma_3\,\widehat{SR} + \frac{\gamma_4 - 1}{4}\,\widehat{SR}^2}}\right),$$
-
-where $SR_0 = E[\max \widehat{SR}]$, and $\gamma_3$, $\gamma_4$ are the skewness and excess kurtosis of the return series. The formula assumes independent trials; correlated candidates mis-deflate it, so pair it with dependence-valid stepwise control (Romano & Wolf, 2005).
+**Search and multiplicity.** Macro trials follow the same conservative trial-inventory rule as [the model acceptance standard](../model-acceptance-standard.md). The adjustment must match the selected statistic and dependence structure. DSR may be appropriate for Sharpe-selected families; event-study or regression claims require their own preregistered multiplicity treatment. Do not treat ledger rows or $\sqrt{2\ln N}$ as a universal correction.
 
 **Dependence-consistent variance.** Newey–West (1987) HAC estimator with Bartlett kernel:
 
@@ -72,7 +64,7 @@ $$\hat\sigma^2_{\mathrm{HAC}} = \hat\gamma_0 + 2\sum_{j=1}^{L} \left(1 - \frac{j
 
 where $\hat\gamma_j$ is the $j$-th sample autocovariance and $L$ is the lag length chosen by bandwidth rule.
 
-**Estimation refinements.** The raw estimators remain valid; institutional practice applies data-driven calibration rather than replacement. HAC: automatic bandwidth (Newey & West, 1994) or quadratic-spectral kernel (Andrews, 1991), prewhitening (Andrews & Monahan, 1992), fixed-b critical values in finite samples (Kiefer & Vogelsang, 2005). Bootstrap: data-driven block length (Politis & White, 2004). Breaks: unknown-breakpoint tests (Andrews, 1993; Bai & Perron, 2003).
+**Possible estimation refinements.** Select only when justified by the estimand and sample. HAC: automatic bandwidth (Newey & West, 1994) or quadratic-spectral kernel (Andrews, 1991), prewhitening (Andrews & Monahan, 1992), fixed-b critical values in finite samples (Kiefer & Vogelsang, 2005). Bootstrap: data-driven block length (Politis & White, 2004). Breaks: unknown-breakpoint tests (Andrews, 1993; Bai & Perron, 2003).
 
 ## Consequences
 

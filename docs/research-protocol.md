@@ -2,7 +2,7 @@
 
 Status: locked, executed, and rejected. This document describes the experiment as specified before evaluation; results are in [cta-trend-wf-v1.md](research-results/cta-trend-wf-v1.md).
 
-> **Erratum (2026-08-18).** The locked universe listed in this document was superseded before execution. The executed-of-record universe is `research/experiments/cta-trend-v1.json` and `backend/app/portfolio_universe.py` (`locked-etf-12-v1`): `SPY, QQQ, IWM, EFA, EEM, TLT, IEF, GLD, DBC, XLK, XLF, XLE`. The fingerprint `40a79707811b6d13f92fa88a87a9e5251a72d0d5ffa58a2709e027f7bbc0bafd`, all cache artifacts, the result, and the audit are bound to the spec.json universe. Relative to this document, the executed universe replaces `VNQ` with `IEF`, `LQD` with `XLK`, `HYG` with `XLF`, and `USO` with `XLE`. This record is not rewritten in place; the universe line below is superseded by the spec.
+> **Documentation erratum (2026-08-19).** Git history shows that `research/experiments/cta-trend-v1.json` was created on 2026-08-17 with the executed universe `SPY, QQQ, IWM, EFA, EEM, TLT, IEF, GLD, DBC, XLK, XLF, XLE`, before the evaluation runner and result. The conflicting list below was introduced after execution by documentation consolidation commit `1a77309`; it was never the machine preregistration and did not govern the experiment. The fingerprint `40a79707811b6d13f92fa88a87a9e5251a72d0d5ffa58a2709e027f7bbc0bafd`, cache, output, result, and audit all reproduce from the original machine spec. The incorrect line remains visible only to preserve the provenance of the documentation defect.
 
 ## Hypothesis and estimand
 
@@ -13,7 +13,7 @@ Primary fold statistic: median across eligible symbols of OOS strategy return mi
 ## Data and universe
 
 - Adjusted Yahoo daily OHLCV under [ADR 0002](adr/0002-market-data-contract.md).
-- Locked ETFs (superseded — see erratum above): `SPY, QQQ, IWM, EFA, EEM, VNQ, GLD, TLT, LQD, HYG, DBC, USO`.
+- Incorrect post-result documentation list (never executed; see erratum): `SPY, QQQ, IWM, EFA, EEM, VNQ, GLD, TLT, LQD, HYG, DBC, USO`.
 - Common calendar begins `2006-02-06`.
 - A candidate is eligible only when at least `8/12` symbols have valid common observations.
 - Data/specification SHA-256 identifies each cache artifact; writes are atomic.
@@ -69,6 +69,8 @@ The protocol tests this universe, parameter family, selection rule, costs, and p
 ## Preregistration template — mandatory fields for any new hypothesis
 
 This template is normative for every hypothesis protocol written after CTA v1. It enumerates the fields fixed before comparative results are observed, consistent with [model-acceptance-standard.md](model-acceptance-standard.md) and [ADR 0006](adr/0006-macro-data-contract.md). A protocol that omits a mandatory field is `not evaluable`.
+
+The candidate must first satisfy the [hypothesis-engineering contract](hypothesis-engineering.md). This prospective template does not retroactively change CTA v1's locked decision rule.
 
 | Field | Requirement |
 |---|---|
