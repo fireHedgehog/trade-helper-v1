@@ -115,3 +115,14 @@ def test_metadata_is_rendered_from_backend_contracts() -> None:
     assert "Select at least one symbol before calculating." in HTML
     assert "Complete with failures" in HTML
     assert "const STRATEGY_EVIDENCE" not in HTML
+
+
+def test_macro_is_display_only_and_has_no_equity_direction_claim() -> None:
+    assert 'id="macro-contract"' in HTML
+    assert "Point-in-time vintages: unavailable" in HTML
+    assert "provenance per card" in HTML
+    assert "revision_status" in HTML
+    assert "not signal eligible" in HTML
+    assert "No macro surprise, regime, or equity-direction claim is computed." in HTML
+    assert "good for equities" not in HTML
+    assert "bad for equities" not in HTML

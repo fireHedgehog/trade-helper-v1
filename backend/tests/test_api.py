@@ -29,7 +29,7 @@ def clear_portfolio_cache():
 async def test_health(client) -> None:
     assert (await client.get("/api/health")).json() == {
         "status": "ok",
-        "version": "0.32.0",
+        "version": "0.33.0",
     }
 
 
@@ -85,6 +85,34 @@ async def test_strategy_catalog_exposes_typed_params_and_evidence(client) -> Non
     sr = next(row for row in response.json()["strategies"] if row["name"] == "S/R Bounce")
     assert sr["evidence"]["status"] == "exploratory"
     assert "support/resistance" in sr["evidence"]["summary"]
+
+
+async def test_macro_contract_forbids_signal_inference(client, monkeypatch) -> None:
+    bars = pd.DataFrame(
+        [
+            {"date": "2026-07-01", "close": 4.1},
+            {"date": "2026-08-01", "close": 4.2},
+        ]
+    )
+    monkeypatch.setattr(
+        main.store,
+        "load_bars",
+        lambda symbol: bars if symbol == "DGS2" else pd.DataFrame(),
+    )
+    monkeypatch.setattr(main, "macro_events", lambda: [])
+
+    response = await client.get("/api/macro")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["contract"]["status"] == "display_only"
+    assert payload["contract"]["signal_eligible"] is False
+    assert payload["contract"]["point_in_time_available"] is False
+    assert "regime" not in payload
+    assert payload["cards"][0]["observation_date"] == "2026-08-01"
+    assert payload["cards"][0]["release_datetime"] is None
+    assert payload["cards"][0]["revision_status"] == "final_revised_current_FRED"
+    assert payload["cards"][0]["signal_eligible"] is False
 
 
 async def test_data_refresh_selects_stored_core_symbols(client, monkeypatch) -> None:

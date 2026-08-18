@@ -6,16 +6,16 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.32.0` |
-| Parent release | `0.31.0` (Strategy Lab evidence hierarchy) |
-| Current state | Stage 8C in progress; durable Data Management refresh state completed early from Stage 8D |
-| Verification | `195 passed` plus headless Playwright workflow checks |
+| Version | `0.33.0` |
+| Parent release | `0.32.0` (durable Data Management refresh state) |
+| Current state | Stage 8C feature slices complete; asynchronous browser coverage remains before the gate closes |
+| Verification | `198 passed` plus headless Playwright workflow checks |
 | Completed | Stage 8A state foundation; Stage 8B visual system and Today command centre |
-| Next product work | Complete Stage 8C Macro presentation under ADR 0006, then full asynchronous browser coverage |
+| Next product work | Complete Stage 8C asynchronous browser coverage and close the productisation gate |
 | Parked research | Stage 9A: acceptance standard and candidate priority; then 9B locked experiment |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 
-The application has the Stage 8B Today command centre plus Stage 8C improvements to Symbol Research, research metadata, Strategy Lab, and Data Management. Version 0.32.0 persists the latest manual refresh job as a SQLite singleton: job identity, timestamps, counters, and item outcomes survive restart; formerly running items recover as `interrupted`; per-symbol bar publication remains atomic. Resume still recalculates freshness rather than blindly replaying a queue. This is durable operational state, not cron, and does not make Strategy Lab calculations durable experiments. Preserve the bounded metadata model and shared manual/scheduled pipeline contract.
+The application has the Stage 8B Today command centre plus Stage 8C improvements across Symbol Research, research metadata, Strategy Lab, Data Management, and Macro. Version 0.33.0 implements ADR 0006’s display boundary: the UI distinguishes Yahoo market context from final-revised FRED observations, labels unavailable release/vintage/forecast history, and removes causal equity-direction and regime claims. Macro remains display-only and cannot generate candidates. The ALFRED/release-history upgrade path is not implemented. Stage 8C still requires systematic asynchronous browser-state coverage before its gate closes.
 
 Heavy statistical work is intentionally paused. On resumption, first operationalize candidate theses, audit benchmark/universe suitability, and only then apply the model acceptance scorecard. Read the protocol, CTA result, audit, and backlog before experiment design. Do not tune CTA v1 after observing its rejection.
 

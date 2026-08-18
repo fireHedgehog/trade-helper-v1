@@ -9,7 +9,7 @@ Static HTML, CSS, and vanilla JavaScript served by FastAPI; no build step or sep
 | Today | Freshness/actions, watched lifecycle, full-universe candidates, intersections, warnings |
 | Symbol Research | Typeahead symbol selection, chart, model accordions, signal/risk/evidence context |
 | Strategy Lab | Versioned definitions, watchlists, evidence boundaries, and explicitly exploratory session comparisons |
-| Macro | Descriptive economic context; not tradable strategy data |
+| Macro | ADR 0006 display-only context with explicit provenance and unavailable point-in-time capabilities |
 | Data Management | Coverage, expected-session freshness, selected refresh, progress, failures |
 
 Navigation must be read-only. Backtest, refresh, universe scan, and strategy evaluation each require a distinct action. Empty, not-run, stale, running, failed, and completed-with-no-candidates are different states.

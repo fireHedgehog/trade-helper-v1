@@ -4,7 +4,7 @@ Local, long-only systematic-research workspace for testing whether a strategy ad
 
 ## Current state
 
-Version `0.32.0` makes manual market-data refresh observable across server restarts: job identity, timestamps, counters, and per-symbol outcomes persist in SQLite, while unfinished work is marked `interrupted` and safely resumed through a new freshness check. CTA v1 remains rejected under its historical locked test; Passive ETF-12 v1 is the default project benchmark, not a universal market portfolio. No paper trading, broker integration, unattended refresh, or deployment is enabled.
+Version `0.33.0` brings Macro presentation into ADR 0006 compliance: final-revised FRED observations, Yahoo context, incomplete schedule metadata, and missing point-in-time capabilities are distinguished explicitly; no macro regime, surprise, signal, or equity-direction inference is produced. CTA v1 remains rejected under its historical locked test; Passive ETF-12 v1 is the default project benchmark, not a universal market portfolio. No paper trading, broker integration, unattended refresh, or deployment is enabled.
 
 Start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint, next task, and document map.
 

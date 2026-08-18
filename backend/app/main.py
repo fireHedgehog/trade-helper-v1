@@ -583,26 +583,42 @@ def macro():
             continue
         last = frame.iloc[-1]
         prev = frame.iloc[-2] if len(frame) > 1 else last
+        is_fred = symbol in FRED_MANAGED_SERIES
         cards.append(
             {
                 "symbol": symbol,
                 "label": label,
                 "date": str(last["date"]),
+                "observation_date": str(last["date"]),
+                "release_datetime": None,
+                "dataset_id": (
+                    "fred-final-revised-display-v1"
+                    if is_fred else "yahoo-adjusted-daily-ohlcv-v1"
+                ),
+                "provider": "FRED" if is_fred else "Yahoo Finance",
+                "revision_status": (
+                    "final_revised_current_FRED"
+                    if is_fred else "current_adjusted_market_snapshot"
+                ),
+                "point_in_time": not is_fred,
+                "signal_eligible": False,
                 "close": round(float(last["close"]), 2),
                 "change_pct": round(float(last["close"] / prev["close"] - 1) * 100, 2),
             }
         )
-    us10y = next(
-        (c for c in cards if c["symbol"] in ("DGS10", "^TNX")), None
-    )
     return {
+        "contract": {
+            "dataset_id": "fred-final-revised-display-v1",
+            "status": "display_only",
+            "point_in_time_available": False,
+            "release_datetime_available": False,
+            "forecast_history_available": False,
+            "signal_eligible": False,
+            "permitted_use": "this page is descriptive context only; FRED values are prohibited from inference and signals",
+            "upgrade_requires": "ALFRED vintages, canonical release datetimes, forecast history when testing surprise, and a preregistered ADR 0006 protocol",
+        },
         "cards": cards,
         "events": macro_events(),
-        "regime": {
-            "us10y": us10y["close"] if us10y else None,
-            "threshold": 5.0,
-            "ok": us10y is None or us10y["close"] < 5.0,
-        },
     }
 
 

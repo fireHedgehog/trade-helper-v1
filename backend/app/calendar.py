@@ -1,6 +1,6 @@
 """US macro events — event-driven calendar.
 
-A curated catalog of US releases that matter for equities. For each event:
+A curated catalog of US releases shown as descriptive context. For each event:
 - next: upcoming release date/time + market forecast (Trading Economics)
 - last: latest released actual + previous (FRED series stored in the bars DB)
 - beat/miss vs consensus: NOT available yet (no free forecast-history source);
@@ -26,28 +26,17 @@ TE_HEADERS = {
 }
 CACHE_TTL = 6 * 3600
 
-# (key, display name, category, TE keywords, FRED series, value mode,
-#  good_when, why) — good_when: which direction of the change is good for
-#  equities. A rule-of-thumb interpretation, NOT a forecast.
+# (key, display name, category, TE keywords, FRED series, value mode).
 CATALOG = [
-    ("fomc", "FOMC Rate Decision", "Fed", ("fed rate decision",), "DFEDTARU", "level",
-     "down", "rate cuts loosen financial conditions"),
-    ("cpi", "CPI Inflation (YoY)", "Inflation", ("inflation rate",), "CPIAUCSL", "yoy_monthly",
-     "down", "cooling inflation supports valuations"),
-    ("pce", "Core PCE Price Index (YoY)", "Inflation", ("core pce",), "PCEPILFE", "yoy_monthly",
-     "down", "cooling inflation supports valuations"),
-    ("nfp", "Nonfarm Payrolls", "Labor", ("non farm payrolls",), "PAYEMS", "mom",
-     "up", "job growth supports earnings (watch for overheating)"),
-    ("unemp", "Unemployment Rate", "Labor", ("unemployment rate",), "UNRATE", "level",
-     "down", "falling unemployment = stronger consumer"),
-    ("claims", "Initial Jobless Claims", "Labor", ("jobless claims",), "ICSA", "level",
-     "down", "fewer layoffs = healthier labor market"),
-    ("gdp", "GDP Growth (annualized)", "Growth", ("gdp growth",), "A191RL1Q225SBEA", "level",
-     "up", "growth supports earnings"),
-    ("retail", "Retail Sales (MoM)", "Consumption", ("retail sales",), "RSXFSN", "mom",
-     "up", "consumer strength supports revenue"),
-    ("ism", "ISM Manufacturing PMI", "Activity", ("ism manufacturing",), None, "none",
-     "up", "expanding manufacturing supports cyclicals"),
+    ("fomc", "FOMC Rate Decision", "Fed", ("fed rate decision",), "DFEDTARU", "level"),
+    ("cpi", "CPI Inflation (YoY)", "Inflation", ("inflation rate",), "CPIAUCSL", "yoy_monthly"),
+    ("pce", "Core PCE Price Index (YoY)", "Inflation", ("core pce",), "PCEPILFE", "yoy_monthly"),
+    ("nfp", "Nonfarm Payrolls", "Labor", ("non farm payrolls",), "PAYEMS", "mom"),
+    ("unemp", "Unemployment Rate", "Labor", ("unemployment rate",), "UNRATE", "level"),
+    ("claims", "Initial Jobless Claims", "Labor", ("jobless claims",), "ICSA", "level"),
+    ("gdp", "GDP Growth (annualized)", "Growth", ("gdp growth",), "A191RL1Q225SBEA", "level"),
+    ("retail", "Retail Sales (MoM)", "Consumption", ("retail sales",), "RSXFSN", "mom"),
+    ("ism", "ISM Manufacturing PMI", "Activity", ("ism manufacturing",), None, "none"),
 ]
 
 _cache: dict = {"at": 0.0, "events": []}
@@ -113,22 +102,15 @@ def _fred_last(series: str, mode: str) -> dict | None:
         return None
     return {
         "date": str(bars["date"].iloc[-1]),
+        "observation_date": str(bars["date"].iloc[-1]),
+        "release_datetime": None,
+        "revision_status": "final_revised_current_FRED",
+        "point_in_time": False,
         "actual": round(actual, 2) if actual is not None else None,
         "previous": round(previous, 2) if previous is not None else None,
         "change": change,
         "consensus": None,  # forecast history not yet sourced — honest n/a
     }
-
-
-def _equity_read(change: float | None, good_when: str, why: str) -> dict | None:
-    """Interpret the latest change for equities: good or bad direction."""
-    if change is None or good_when == "none":
-        return None
-    if change == 0:
-        return {"good": True, "why": "unchanged — neutral"}
-    up = change > 0
-    good = (good_when == "up" and up) or (good_when == "down" and not up)
-    return {"good": good, "why": why}
 
 
 def macro_events(force: bool = False) -> list[dict]:
@@ -139,7 +121,7 @@ def macro_events(force: bool = False) -> list[dict]:
     except Exception:
         te_rows = []
     events = []
-    for key, name, category, keywords, fred, mode, good_when, why in CATALOG:
+    for key, name, category, keywords, fred, mode in CATALOG:
         match = next(
             (r for r in te_rows if any(k in r["name"].lower() for k in keywords)),
             None,
@@ -151,6 +133,9 @@ def macro_events(force: bool = False) -> list[dict]:
                 "date": match["date"],
                 "time": match["time"],
                 "forecast": forecast,
+                "timezone": None,
+                "canonical_release_datetime": None,
+                "forecast_history_available": False,
             }
         last_info = _fred_last(fred, mode) if fred else None
         events.append(
@@ -160,12 +145,13 @@ def macro_events(force: bool = False) -> list[dict]:
                 "category": category,
                 "next": next_info,
                 "last": last_info,
-                "read": _equity_read(
-                    last_info["change"] if last_info else None, good_when, why
+                "signal_eligible": False,
+                "availability_note": (
+                    "current schedule display and final-revised observation; "
+                    "not a point-in-time release record"
                 ),
             }
         )
     _cache["at"] = time.time()
     _cache["events"] = events
     return events
-

@@ -1,6 +1,6 @@
 # ADR 0006: Macro data contract
 
-Status: accepted (contract); implementation pending.
+Status: accepted; display-only presentation implemented in `0.33.0`; point-in-time research upgrade pending.
 
 ## Context
 

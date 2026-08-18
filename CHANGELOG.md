@@ -2,6 +2,17 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.33.0
+
+ADR 0006 Macro presentation slice; no macro signal or new ingestion capability was added.
+
+- Added an API-level display-only contract declaring point-in-time vintages, canonical release datetimes, and historical forecast series unavailable and macro signals prohibited.
+- Distinguished Yahoo adjusted market-context cards from final-revised FRED observations with per-card provider, dataset, revision, date, and eligibility metadata.
+- Added observation/release/revision availability fields to calendar events and marked current schedules and forecasts as non-historical display data.
+- Removed the backend equity-direction heuristic, the `good/bad for equities` UI, and the unused threshold-based macro regime payload/banner.
+- Added neutral Macro hierarchy and explicit ALFRED/preregistration upgrade requirements.
+- Added API, calendar, and frontend contract coverage; verification is `198 passed` plus fresh-server browser checks confirming display-only copy, no equity-direction claim, and zero console errors.
+
 ## 0.32.0
 
 Durable manual-refresh state slice; scheduling remains parked and no data-provider policy changed.

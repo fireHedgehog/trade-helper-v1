@@ -105,9 +105,6 @@
   .plan-legend .target { color: var(--green); }
   tr.muted td { opacity: .55; }
   .sample-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
-  #regime-banner { font-size: 12px; padding: 6px 10px; border-radius: 8px; }
-  #regime-banner.ok { background: #1f3a37; color: var(--green); }
-  #regime-banner.caution { background: #3a2222; color: var(--red); }
   .dimmer {
     position: fixed; inset: 0; background: rgba(10, 12, 18, .65); z-index: 50;
     display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center;
@@ -372,7 +369,6 @@
         <div class="command-status" aria-live="polite">
           <span id="today-data-freshness" class="state-pill state-neutral">Checking market data…</span>
           <span id="today-status" class="state-pill state-info">Reading saved research…</span>
-          <span id="regime-banner"></span>
         </div>
       </section>
 
@@ -481,13 +477,20 @@
   <div id="view-macro" class="view" hidden>
     <div class="macro-body">
       <section class="panel">
-        <h2>Macro cards</h2>
+        <div class="section-heading">
+          <div><h2>Macro context</h2><p>Economic observations and schedules, not a trading model.</p></div>
+          <span class="state-pill state-warning" id="macro-contract-state">Display only</span>
+        </div>
+        <div id="macro-contract" class="sample-note">Loading data-availability contract…</div>
+      </section>
+      <section class="panel">
+        <h2>Latest stored context <span class="badge">provenance per card</span></h2>
         <div class="cards" id="macro-cards"></div>
       </section>
       <section class="panel">
-        <h2>Event calendar</h2>
+        <h2>Upcoming schedule and latest observations</h2>
         <div id="macro-events"></div>
-        <div class="sample-note">Sourced from Trading Economics (US macro only). Verify before acting on any date.</div>
+        <div class="sample-note">Upcoming display: Trading Economics (US). Observation values: current FRED history. Neither source is stored here as a canonical point-in-time release record.</div>
       </section>
     </div>
   </div>
@@ -1919,12 +1922,18 @@ function renderConfidence(c) {
 async function loadMacro() {
   try {
     const macro = await api('/api/macro');
+    const contract = macro.contract || {};
+    $('#macro-contract').innerHTML =
+      `<b>${escapeHtml(contract.status || 'display only')}:</b> ${escapeHtml(contract.permitted_use || '')}<br>` +
+      `Point-in-time vintages: unavailable · canonical release datetime: unavailable · historical consensus forecasts: unavailable.<br>` +
+      `<b>Upgrade gate:</b> ${escapeHtml(contract.upgrade_requires || 'ADR 0006 requirements are not implemented.')}`;
     $('#macro-cards').innerHTML = macro.cards.map((c) =>
       `<div class="card"><div class="label">${c.label} (${c.symbol})</div>` +
       `<div class="price">${c.close}</div>` +
-      `<div class="chg ${c.change_pct >= 0 ? 'pos' : 'neg'}">${c.change_pct >= 0 ? '+' : ''}${c.change_pct.toFixed(2)}%</div>` +
-      `<div class="sample-note">data through ${c.date}</div></div>`
-    ).join('');
+      `<div class="chg">${c.change_pct >= 0 ? '+' : ''}${c.change_pct.toFixed(2)}% vs prior stored observation</div>` +
+      `<div class="sample-note">${escapeHtml(c.provider)} · ${escapeHtml(c.dataset_id)} · date ${c.observation_date} · ` +
+      `${escapeHtml(c.revision_status)} · ${c.release_datetime ? 'release ' + escapeHtml(c.release_datetime) : 'release time unavailable'} · not signal eligible</div></div>`
+    ).join('') || '<div class="empty-state">No stored macro observations.</div>';
     $('#macro-events').innerHTML = renderEvents(macro.events);
   } catch (err) {
     $('#macro-events').textContent = `error: ${err.message}`;
@@ -1942,25 +1951,19 @@ function renderEvents(events) {
     }
     let last = '—';
     if (e.last && e.last.actual != null) {
-      const cls = e.last.change == null ? '' : e.last.change > 0 ? 'pos' : e.last.change < 0 ? 'neg' : '';
-      last = `<span class="${cls}">${e.last.actual}</span>` +
+      last = `<span>${e.last.actual}</span>` +
         (e.last.previous != null ? `<span class="ev-prev"> (prev ${e.last.previous})</span>` : '');
-      if (e.last.consensus == null) last += '<span class="sample-note"> · consensus n/a</span>';
-    }
-    let read = '—';
-    if (e.read) {
-      read = `<span class="${e.read.good ? 'pos' : 'neg'}">${e.read.good ? 'good' : 'bad'} for equities</span>` +
-        `<span class="ev-why"> · ${e.read.why}</span>`;
+      last += `<span class="sample-note"> · observation ${e.last.observation_date} · final revised · release time n/a · consensus history n/a</span>`;
     }
     return `<div class="event-row">
       <span class="ev-name">${CAT_ICONS[e.category] || '●'} ${e.name}</span>
-      <span class="ev-cell">Next: ${next}</span>
-      <span class="ev-cell">Last: ${last}</span>
-      <span class="ev-cell">Read: ${read}</span>
+      <span class="ev-cell">Schedule display: ${next}</span>
+      <span class="ev-cell">Latest observation: ${last}</span>
+      <span class="ev-cell">Research status: display only · not signal eligible</span>
     </div>`;
   }).join('');
   return rows +
-    '<div class="sample-note">Next dates & forecasts: Trading Economics (US) · Last actuals: FRED · Read is a rule-of-thumb interpretation of the latest change, not a forecast.</div>';
+    '<div class="sample-note">A scheduled date is not a canonical release timestamp. A current forecast is not historical forecast evidence. No macro surprise, regime, or equity-direction claim is computed.</div>';
 }
 
 $('#today-strategy').addEventListener('change', () => {
