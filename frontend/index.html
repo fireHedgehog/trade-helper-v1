@@ -447,7 +447,8 @@
   <div id="view-lab" class="view" hidden>
     <div class="macro-body">
       <section class="panel">
-        <h2>Strategy scoreboard — historical post-signal statistics</h2>
+        <h2>Strategy Lab</h2>
+        <p class="sample-note">Definition and result inspection are separate. This screen does not create, validate, or overwrite a locked experiment.</p>
         <select id="lab-years" style="margin-right:8px">
           <option value="252" selected>1 year</option>
           <option value="756">3 years</option>
@@ -461,13 +462,15 @@
         <select id="lab-watch-strategy"></select>
         <button id="lab-save-watchlist">Save as strategy watchlist</button>
         <button class="primary" id="lab-compute">Compute / refresh</button>
-        <div id="lab-strategy-contract" class="sample-note"></div>
+        <div id="lab-strategy-contract" class="dataset-catalog"></div>
         <input id="lab-symbol-search" type="search" placeholder="Filter 500+ symbols…" autocomplete="off" spellcheck="false">
         <span id="lab-data-freshness" class="sample-note"></span>
         <div class="symbol-picker" id="lab-symbols"></div>
         <div class="sample-note" id="lab-sample-note"></div>
+        <h3>Session calculation <span class="badge" id="lab-run-state">Not run</span></h3>
+        <p class="sample-note">Exploratory, in-memory comparison using defaults. It is not the durable, fingerprinted research artifact and cannot change the documented decision.</p>
         <table style="margin-top:10px">
-          <thead><tr><th>Strategy</th><th>All-time win</th><th>Mkt base</th><th>Avg 20d</th><th>Samples</th><th>3Y win</th><th>3Y samples</th><th>Ret med</th><th>B&H med</th></tr></thead>
+          <thead><tr><th>Strategy</th><th>Evidence decision</th><th>All-time win</th><th>Mkt base</th><th>Avg 20d</th><th>Samples</th><th>3Y win</th><th>3Y samples</th><th>Ret med</th><th>B&amp;H med</th></tr></thead>
           <tbody id="scoreboard"></tbody>
         </table>
         <div class="sample-note">Opening Strategy Lab does not compute. Save controls what remains visible on Today for this strategy; Compute explicitly runs historical statistics. Measured past performance is not a prediction.</div>
@@ -915,13 +918,30 @@ function renderLabStrategyContract() {
       ? '' : `, ${parameter.min}–${parameter.max}`;
     return `${parameter.label}: ${parameter.type}, default ${parameter.default}${bounds}`;
   }).join(' · ');
+  const research = meta.research_contract || {};
+  const decisionClass = research.decision === 'rejected' ? 'state-negative' : 'state-neutral';
   $('#lab-strategy-contract').innerHTML =
-    `<b>Selected watchlist strategy contract:</b> ${escapeHtml(meta.version)} · ${escapeHtml(meta.family)} · ` +
-    `${escapeHtml(meta.evidence?.label || 'Pending')}<br>` +
-    `${escapeHtml(meta.evidence?.summary || 'Evidence review pending.')} ` +
-    `Information: ${escapeHtml((meta.information_profile || []).join(', '))}. ` +
-    `Datasets: ${escapeHtml((meta.required_datasets || []).join(', '))}.<br>` +
-    `<span>Parameters: ${escapeHtml(parameters || 'none')}</span>`;
+    `<article class="dataset-card"><h3>Definition <span class="state-pill ${decisionClass}">${escapeHtml(research.decision || 'not evaluable')}</span></h3>` +
+    `<p><b>${escapeHtml(meta.version)}</b> · ${escapeHtml(meta.family)} · ${escapeHtml(meta.evidence?.label || 'Pending')}</p>` +
+    `<p><b>Hypothesis:</b> ${escapeHtml(research.hypothesis || 'Not recorded.')}</p>` +
+    `<p><b>Information:</b> ${escapeHtml((meta.information_profile || []).join(', '))}<br>` +
+    `<b>Datasets:</b> ${escapeHtml((meta.required_datasets || []).join(', '))}</p></article>` +
+    `<article class="dataset-card"><h3>Configuration</h3><p>${escapeHtml(parameters || 'No parameters.')}</p>` +
+    `<p><b>Execution:</b> ${escapeHtml(research.execution || 'Not recorded.')}</p>` +
+    `<p><b>Selected session sample:</b> <span id="lab-contract-sample"></span></p></article>` +
+    `<article class="dataset-card"><h3>Evidence boundary</h3>` +
+    `<p><b>Interactive benchmark:</b> ${escapeHtml(research.scoreboard_benchmark || 'Not recorded.')}</p>` +
+    `<p><b>Validation:</b> ${escapeHtml(research.validation_design || 'Not recorded.')}</p>` +
+    `<p><b>Research record:</b> ${escapeHtml(research.artifact || 'none — protocol and result pending')}</p></article>`;
+  renderLabContractSample();
+}
+
+function renderLabContractSample() {
+  const target = $('#lab-contract-sample');
+  if (!target) return;
+  const count = document.querySelectorAll('#lab-symbols input:checked').length;
+  const days = Number($('#lab-years').value);
+  target.textContent = `${count} symbols · ${days ? days + ' bars' : 'all stored history'} · defaults`;
 }
 
 function resetParams() {
@@ -1213,26 +1233,40 @@ function labNote() {
     : (checked > 40 || days === 0)
       ? `⚠ ${checked} symbols × ${days ? days + ' bars' : 'full history'} — heavy compute, cloud recommended (fan may spin)`
       : `sample: ${checked} symbols × ${days ? days + ' bars' : 'full history'} — laptop-safe`;
+  renderLabContractSample();
 }
 
 async function loadLab(force = false) {
   const days = Number($('#lab-years').value);
   const checked = [...document.querySelectorAll('#lab-symbols input:checked')].map((el) => el.value);
   labNote();
+  if (!checked.length) {
+    $('#lab-run-state').textContent = 'Not run · no symbols selected';
+    $('#scoreboard').innerHTML = '<tr><td colspan="10">Select at least one symbol before calculating.</td></tr>';
+    return;
+  }
   const { strategies } = await api('/api/strategies');
   $('#scoreboard').innerHTML = strategies.map((s) =>
-    `<tr data-strategy="${s.name}"><td>${s.name}</td><td colspan="8" class="muted">…</td></tr>`
+    `<tr data-strategy="${s.name}"><td>${s.name}</td><td>${escapeHtml(s.research_contract?.decision || 'not evaluable')}</td><td colspan="8" class="muted">…</td></tr>`
   ).join('');
+  $('#lab-run-state').textContent = 'Running';
   loading(true, 'computing confidence…');
   try {
     // 3-way pool: keeps the CPU load laptop-safe while all rows compute.
     const queue = [...strategies];
+    let failures = 0;
     const workers = Array.from({ length: Math.min(3, queue.length) }, async () => {
-      while (queue.length) await loadScore(queue.shift().name, force, checked, days);
+      while (queue.length) {
+        if (!await loadScore(queue.shift().name, force, checked, days)) failures += 1;
+      }
     });
     await Promise.all(workers);
+    $('#lab-run-state').textContent = failures
+      ? `Complete with failures · ${failures}/${strategies.length}`
+      : `Complete · ${new Date().toLocaleTimeString()}`;
   } catch (err) {
-    $('#scoreboard').innerHTML = `<tr><td colspan="8">error: ${err.message}</td></tr>`;
+    $('#scoreboard').innerHTML = `<tr><td colspan="10">error: ${escapeHtml(err.message)}</td></tr>`;
+    $('#lab-run-state').textContent = 'Failed';
   } finally {
     loading(false);
   }
@@ -1256,6 +1290,7 @@ async function loadScore(name, force, syms, days) {
       ? (ret.ret_med >= ret.bh_med ? 'pos' : 'neg') : '';
     row.innerHTML =
       `<td>${name}</td>` +
+      `<td>${escapeHtml(strategiesMeta.find((strategy) => strategy.name === name)?.research_contract?.decision || 'not evaluable')}</td>` +
       `<td class="${a.hit_rate != null && a.hit_rate >= 50 ? 'pos' : 'neg'}">${win(a)} ${noise}</td>` +
       `<td>${win(b)}</td>` +
       `<td>${a.avg_return ?? '—'}%</td>` +
@@ -1264,8 +1299,10 @@ async function loadScore(name, force, syms, days) {
       `<td>${r.samples}</td>` +
       `<td class="${rCls}" title="median strategy return across the selected symbols">${ret.ret_med ?? '—'}%</td>` +
       `<td title="median buy & hold return across the selected symbols">${ret.bh_med ?? '—'}%</td>`;
+    return true;
   } catch (err) {
-    row.innerHTML = `<td>${name}</td><td colspan="8">error: ${err.message}</td>`;
+    row.innerHTML = `<td>${name}</td><td colspan="9">error: ${escapeHtml(err.message)}</td>`;
+    return false;
   }
 }
 
@@ -1296,6 +1333,7 @@ $('#lab-clear').addEventListener('click', () => {
   labNote();
 });
 $('#lab-symbols').addEventListener('change', labNote);
+$('#lab-years').addEventListener('change', labNote);
 $('#lab-symbol-search').addEventListener('input', filterLabSymbols);
 
 /* ---------- Data Management ---------- */

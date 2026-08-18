@@ -107,4 +107,10 @@ def test_metadata_is_rendered_from_backend_contracts() -> None:
     assert 'id="lab-strategy-contract"' in HTML
     assert "function renderLabStrategyContract()" in HTML
     assert "renderLabStrategyContract();" in HTML
+    assert "Definition and result inspection are separate" in HTML
+    assert 'id="lab-run-state"' in HTML
+    assert "interactive scoreboard is not that experiment" not in HTML
+    assert "research_contract?.decision" in HTML
+    assert "Select at least one symbol before calculating." in HTML
+    assert "Complete with failures" in HTML
     assert "const STRATEGY_EVIDENCE" not in HTML

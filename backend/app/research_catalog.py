@@ -143,6 +143,35 @@ STRATEGIES = {
 }
 
 
+HYPOTHESES = {
+    "CTA Trend": "A long-only breakout with a trend filter and volatility-scaled exit may improve benchmark-relative risk-adjusted outcomes after costs.",
+    "SMA Cross": "A fast/slow moving-average state may provide a simple trend-following learning control.",
+    "Donchian Trend": "A long-only channel breakout with channel and ATR exits may capture persistent trends.",
+    "S/R Bounce": "A prior rolling support test followed by a close back above support may identify a repeatable next-open long entry.",
+    "Fib Retrace": "A quantified retracement after an impulse may identify a repeatable next-open long entry.",
+    "Wave Pull": "A quantified impulse and pullback sequence may identify a repeatable next-open long entry.",
+    "RSI Reversion": "An oversold RSI state may identify a repeatable short-horizon long mean-reversion entry.",
+}
+
+
+for _name, _metadata in STRATEGIES.items():
+    _is_locked_cta = _name == "CTA Trend"
+    _metadata["research_contract"] = {
+        "hypothesis": HYPOTHESES[_name],
+        "execution": "completed close N signal; next available open N+1 fill",
+        "scoreboard_benchmark": "same-symbol buy-and-hold median; descriptive comparison only",
+        "validation_design": (
+            "Locked CTA v1 walk-forward record; the interactive scoreboard is not that experiment"
+            if _is_locked_cta
+            else "No preregistered validation experiment; interactive scoreboard is exploratory only"
+        ),
+        "decision": "rejected" if _is_locked_cta else "not evaluable",
+        "artifact": (
+            "docs/research-results/cta-trend-wf-v1.md" if _is_locked_cta else None
+        ),
+    }
+
+
 def dataset_for_provider(provider: str) -> str:
     if provider == "fred":
         return "fred-final-revised-display-v1"

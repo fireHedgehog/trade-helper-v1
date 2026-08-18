@@ -2,6 +2,17 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.31.0
+
+Stage 8C Strategy Lab evidence-hierarchy slice; no strategy mechanics or research conclusions changed.
+
+- Separated selected strategy definition, default configuration, execution/data contract, evidence boundary, documented decision, and artifact path from the interactive result table.
+- Preserved CTA v1 as `rejected` with its immutable research artifact; all unvalidated prototypes are explicitly `not evaluable`.
+- Labelled the scoreboard as an exploratory in-memory calculation using same-symbol buy-and-hold medians, not a durable fingerprinted experiment or the formal Passive ETF-12 protocol result.
+- Added visible not-run, running, complete, partial-failure, and failed states.
+- Prevented an empty symbol selection from silently calculating the default basket.
+- Added metadata and frontend contract coverage; verification is `193 passed` plus headless browser checks of the evidence hierarchy and empty-selection refusal.
+
 ## 0.30.0
 
 Bounded Stage 8C research-metadata product slice; no strategy mechanics or historical conclusions changed.
