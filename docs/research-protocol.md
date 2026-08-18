@@ -94,12 +94,13 @@ their daily arithmetic difference use identical dates. Regression tests prove
 that modifying later bars cannot change an earlier window. Candidate ranking and
 fold-local parameter selection were initially disabled at that checkpoint.
 
-The selection layer is now implemented but has only run on deterministic test
-inputs. It reports every excluded locked symbol, refuses to proceed below the
+The selection layer is implemented and has run on the locked development data.
+It reports every excluded locked symbol, refuses to proceed below the
 eight-symbol coverage gate, requires the complete declared candidate family,
 aligns eligible symbols on their common dates, applies the bootstrap/Holm gate,
 and executes the locked tie breakers. An empty survivor set returns an explicit
-cash decision. The real 54-candidate development run has not started.
+cash decision. In the completed run, no candidate survived any validation fold;
+the version was rejected and all following test folds held cash.
 
 A pre-run coverage check found that only five locked ETFs were stored locally;
 the seven missing preregistered histories were fetched without substitution.
@@ -116,10 +117,9 @@ incomplete. The runner itself was checkpointed before execution.
 
 ## Current boundary
 
-The checked-in notebook creates a candidate-tail partition and walk-forward
-manifest only. It intentionally does not evaluate returns or select a winner.
-The finite grid, attempt ledger, and multiple-testing treatment are now locked.
-The next implementation slice must implement and test the block bootstrap,
-fold-local selection, stability report, and immutable result record. Even after
-that work, the historical SPY tail remains exploratory because prior inspection
-cannot be undone.
+The development experiment and immutable result record are complete; see the
+[CTA Trend v1 result](research-results/cta-trend-wf-v1.md). The historical SPY
+tail remains contaminated because prior inspection cannot be undone. Because
+the all-cash selection was surprising, the next research task is the independent
+implementation audit recorded in the [research backlog](research-backlog.md),
+not a new parameter search.

@@ -2,6 +2,18 @@
 
 # Changelog
 
+## v0.24.2 — 2026-08-18
+
+- Added a durable parked research backlog so a restarted agent can recover the
+  possible CTA v2 structural directions without treating them as approved work.
+- Made an independent audit of the surprising CTA v1 result the next research
+  priority: manually reconcile a fold, data boundaries, returns, costs,
+  bootstrap direction, multiple-testing correction, and statistical power.
+- Parked machine learning behind the audit, benchmark implementation, and a new
+  economically justified preregistration.
+- Corrected stale protocol text that still described the completed 54-candidate
+  development run as pending.
+
 ## v0.24.1 — 2026-08-18
 
 - Fixed the initial product objective as a local research decision assistant

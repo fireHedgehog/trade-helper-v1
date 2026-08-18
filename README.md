@@ -63,7 +63,12 @@ that makes unsupported strategies easier to reject. Portfolio experiments will
 use the same-universe Passive ETF-12 v1 as their primary benchmark, with SPY and
 cash shown as secondary references. The complete decision is recorded in
 [ADR 0005](docs/adr/0005-product-objective-and-portfolio-benchmark.md); benchmark
-calculation and validation are the next implementation slice.
+calculation and validation follow the independent CTA v1 experiment audit.
+
+Possible CTA v2 changes and machine learning are parked in the
+[research backlog](docs/research-backlog.md). Because CTA v1's complete failure
+was surprising, an independent audit of its experiment plumbing now comes before
+either implementing CTA v2 or treating the rejection as unquestionable.
 
 The honest baseline is poor as an “edge”: full-history SPY CTA returned roughly
 276.5% net versus roughly 3,119.6% buy-and-hold. Lower drawdown does not by itself
