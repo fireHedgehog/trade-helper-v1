@@ -6,16 +6,16 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.31.0` |
-| Parent release | `0.30.0` (bounded research metadata) |
-| Current state | Stage 8C in progress: Strategy Lab evidence hierarchy productised |
-| Verification | `193 passed` plus headless Playwright workflow checks |
+| Version | `0.32.0` |
+| Parent release | `0.31.0` (Strategy Lab evidence hierarchy) |
+| Current state | Stage 8C in progress; durable Data Management refresh state completed early from Stage 8D |
+| Verification | `195 passed` plus headless Playwright workflow checks |
 | Completed | Stage 8A state foundation; Stage 8B visual system and Today command centre |
-| Next product work | Continue Stage 8C with durable Data Management job presentation, then Macro ADR 0006 presentation |
+| Next product work | Complete Stage 8C Macro presentation under ADR 0006, then full asynchronous browser coverage |
 | Parked research | Stage 9A: acceptance standard and candidate priority; then 9B locked experiment |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 
-The application has the Stage 8B Today command centre plus Stage 8C improvements to Symbol Research, refresh/watchlist recovery, research metadata, and Strategy Lab. Version 0.31.0 separates each strategy’s definition/configuration/evidence boundary from the temporary descriptive scoreboard: only CTA v1 carries its locked rejected decision and artifact, while prototypes are `not evaluable`. Session calculations expose not-run/running/complete/partial-failure states and refuse an empty selection instead of silently substituting the default basket. These calculations are not durable experiments and cannot revise documented evidence. Preserve the bounded metadata model and shared manual/scheduled pipeline contract.
+The application has the Stage 8B Today command centre plus Stage 8C improvements to Symbol Research, research metadata, Strategy Lab, and Data Management. Version 0.32.0 persists the latest manual refresh job as a SQLite singleton: job identity, timestamps, counters, and item outcomes survive restart; formerly running items recover as `interrupted`; per-symbol bar publication remains atomic. Resume still recalculates freshness rather than blindly replaying a queue. This is durable operational state, not cron, and does not make Strategy Lab calculations durable experiments. Preserve the bounded metadata model and shared manual/scheduled pipeline contract.
 
 Heavy statistical work is intentionally paused. On resumption, first operationalize candidate theses, audit benchmark/universe suitability, and only then apply the model acceptance scorecard. Read the protocol, CTA result, audit, and backlog before experiment design. Do not tune CTA v1 after observing its rejection.
 

@@ -1392,10 +1392,15 @@ function renderDataStatus(data) {
   $('#data-status').textContent = refresh.state === 'running'
     ? `${finished}/${refresh.total} · ${refresh.current_symbol || 'starting'}`
     : `${refresh.state} · checked ${new Date(data.checked_at).toLocaleTimeString()}`;
+  const started = refresh.started_at ? new Date(refresh.started_at).toLocaleString() : 'unknown';
+  const finishedAt = refresh.finished_at ? new Date(refresh.finished_at).toLocaleString() : 'not finished';
   $('#data-job-note').textContent = refresh.state === 'idle'
-    ? 'No refresh has run in this server process. Published SQLite rows survive a restart; Resume / refresh needed recalculates freshness and skips symbols already current.'
-    : `${refresh.state}: ${refresh.completed} published, ${refresh.failed} failed, ${refresh.total} total. ` +
-      'A server restart loses this progress display, not published rows. Resume / refresh needed then selects only symbols still aging, stale, or invalid.';
+    ? 'No stored refresh job. Resume / refresh needed recalculates freshness and selects only symbols still requiring data.'
+    : `${refresh.state}: job ${refresh.job_id || 'unknown'} · started ${started} · finished ${finishedAt} · ` +
+      `${refresh.completed} published, ${refresh.failed} failed, ${refresh.total} total. ` +
+      (refresh.state === 'interrupted'
+        ? 'The server stopped before completion. Published rows and this job record survived; Resume / refresh needed safely selects remaining non-current symbols.'
+        : 'Job identity, item outcomes, and timestamps are stored in SQLite and remain visible after restart.');
   $('#data-policy').textContent =
     `${data.source} · ${data.adjustment} · expected latest session ${data.expected_latest_session} · ${data.freshness_policy}. ` +
     `Manual full-history refresh uses ${data.refresh_policy.period}, a fixed ${data.refresh_policy.delay_seconds}s delay, ` +

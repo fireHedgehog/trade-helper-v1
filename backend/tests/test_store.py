@@ -46,6 +46,17 @@ def test_bar_inventory_reports_compact_symbol_coverage(isolated_store) -> None:
     ]
 
 
+def test_data_refresh_state_round_trips_as_a_single_durable_record(isolated_store) -> None:
+    first = {"job_id": "one", "state": "running", "items": [{"symbol": "SPY"}]}
+    second = {"job_id": "one", "state": "complete", "items": [{"symbol": "SPY"}]}
+
+    assert isolated_store.load_data_refresh_state() is None
+    isolated_store.save_data_refresh_state(first)
+    assert isolated_store.load_data_refresh_state() == first
+    isolated_store.save_data_refresh_state(second)
+    assert isolated_store.load_data_refresh_state() == second
+
+
 @pytest.mark.parametrize(
     ("column", "value", "message"),
     [

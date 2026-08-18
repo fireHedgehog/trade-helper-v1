@@ -2,6 +2,17 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.32.0
+
+Durable manual-refresh state slice; scheduling remains parked and no data-provider policy changed.
+
+- Added a SQLite singleton for the latest refresh job, including identity, timestamps, counters, current item, and per-symbol outcomes.
+- Persisted state at job creation and each atomic item transition; bar publication remains independently transactional.
+- On server startup, recovered formerly running work as `interrupted`, preserving completed/failed outcomes and marking unfinished items honestly instead of implying a worker still exists.
+- Updated Data Management to display durable job identity and recovery guidance; Resume still recalculates freshness and skips current symbols.
+- Corrected the workspace and market-data contracts that previously described refresh progress as volatile.
+- Added manager-recovery, SQLite round-trip, and frontend contract coverage; verification is `195 passed` plus a fresh-server headless browser check.
+
 ## 0.31.0
 
 Stage 8C Strategy Lab evidence-hierarchy slice; no strategy mechanics or research conclusions changed.

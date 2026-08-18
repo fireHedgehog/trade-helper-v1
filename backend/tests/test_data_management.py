@@ -217,3 +217,38 @@ def test_refresh_manager_rejects_concurrent_job(
         manager.start(["QQQ"])
     release.set()
     assert _wait(manager)["state"] == "complete"
+
+
+def test_refresh_manager_persists_progress_and_recovers_interrupted_job() -> None:
+    saved = []
+    running = {
+        "state": "running",
+        "job_id": "job-1",
+        "started_at": "2026-08-19T00:00:00+00:00",
+        "finished_at": None,
+        "completed": 1,
+        "failed": 0,
+        "total": 3,
+        "current_symbol": "QQQ",
+        "items": [
+            {"symbol": "SPY", "state": "complete", "message": "published"},
+            {"symbol": "QQQ", "state": "fetching", "message": "requesting"},
+            {"symbol": "IWM", "state": "pending", "message": "waiting"},
+        ],
+    }
+
+    manager = data_management.DataRefreshManager(
+        load_job=lambda: running,
+        save_job=saved.append,
+    )
+    recovered = manager.snapshot()
+
+    assert recovered["state"] == "interrupted"
+    assert recovered["current_symbol"] is None
+    assert recovered["items"][0]["state"] == "complete"
+    assert [row["state"] for row in recovered["items"][1:]] == [
+        "interrupted",
+        "interrupted",
+    ]
+    assert recovered["finished_at"]
+    assert saved[-1] == recovered

@@ -58,7 +58,11 @@ def _invalidate_derived_caches() -> None:
     confidence_module.clear_cache()
 
 
-_data_refresh_manager = DataRefreshManager(on_publish=_invalidate_derived_caches)
+_data_refresh_manager = DataRefreshManager(
+    on_publish=_invalidate_derived_caches,
+    load_job=store.load_data_refresh_state,
+    save_job=store.save_data_refresh_state,
+)
 
 app = FastAPI(title="trade-helper-v1", version=APP_VERSION)
 

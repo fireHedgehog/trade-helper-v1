@@ -107,7 +107,7 @@ Results lead with the decision (`rejected`, `revise`, `continue research`, or `n
 
 Provide a symbol-level table containing provider, rows, first/last session, expected latest session, freshness, last successful refresh, current job state, and failure message. Support selected or all-symbol refresh with a hard-coded provider delay, visible queue/progress, cancellation only when safe, retry of failures, and atomic promotion of valid data.
 
-The primary recovery control is `Resume / refresh needed`: it recomputes per-symbol freshness and skips current symbols, including symbols published before an interruption. `Force refresh core` and `Force refresh all Yahoo` intentionally ignore freshness and must be visually secondary/destructive. Until Stage 8D persists jobs, a server restart may erase progress display but never already published per-symbol data.
+The primary recovery control is `Resume / refresh needed`: it recomputes per-symbol freshness and skips current symbols, including symbols published before an interruption. `Force refresh core` and `Force refresh all Yahoo` intentionally ignore freshness and must be visually secondary/destructive. Refresh job identity, timestamps, counters, and item outcomes persist in SQLite. A server restart marks unfinished items `interrupted`; it does not restart the worker or discard already published per-symbol data.
 
 Freshness is a comparison between the latest valid local session and the expected market session, not wall-clock age alone. A 404 or transport failure is a failure state, not an infinite loader.
 

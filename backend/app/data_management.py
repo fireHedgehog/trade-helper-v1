@@ -2,8 +2,8 @@
 
 The refresh worker is deliberately local and in-process. It updates full Yahoo
 adjusted histories one symbol at a time with a non-configurable inter-request
-delay. Process restart loses job progress, but published SQLite bars remain
-transactional and idempotent.
+delay. Job identity and item outcomes persist in SQLite; a server restart marks
+unfinished items interrupted. Published bars remain transactional and idempotent.
 """
 
 from __future__ import annotations
@@ -169,12 +169,28 @@ class DataRefreshManager:
         fetcher: Callable[[str, str], pd.DataFrame] = fetch.fetch_with_retry,
         sleeper: Callable[[float], None] = time.sleep,
         on_publish: Callable[[], None] | None = None,
+        load_job: Callable[[], dict | None] | None = None,
+        save_job: Callable[[dict], None] | None = None,
     ) -> None:
         self._fetcher = fetcher
         self._sleeper = sleeper
         self._on_publish = on_publish or (lambda: None)
+        self._save_job = save_job
         self._lock = threading.Lock()
-        self._job: dict | None = None
+        self._job: dict | None = load_job() if load_job else None
+        if self._job and self._job.get("state") == "running":
+            self._job["state"] = "interrupted"
+            self._job["current_symbol"] = None
+            self._job["finished_at"] = datetime.now(timezone.utc).isoformat()
+            for item in self._job.get("items", []):
+                if item.get("state") in {"pending", "fetching"}:
+                    item["state"] = "interrupted"
+                    item["message"] = "server stopped before this item completed"
+            self._persist_locked()
+
+    def _persist_locked(self) -> None:
+        if self._save_job and self._job is not None:
+            self._save_job(copy.deepcopy(self._job))
 
     def snapshot(self) -> dict:
         with self._lock:
@@ -219,6 +235,7 @@ class DataRefreshManager:
                     for symbol in ordered
                 ],
             }
+            self._persist_locked()
             snapshot = copy.deepcopy(self._job)
         threading.Thread(
             target=self._run,
@@ -228,16 +245,23 @@ class DataRefreshManager:
         ).start()
         return snapshot
 
-    def _update_item(self, index: int, **changes) -> None:
+    def _update_item(
+        self, index: int, *, completed_delta: int = 0, failed_delta: int = 0,
+        **changes,
+    ) -> None:
         with self._lock:
             assert self._job is not None
             self._job["items"][index].update(changes)
+            self._job["completed"] += completed_delta
+            self._job["failed"] += failed_delta
+            self._persist_locked()
 
     def _run(self, symbols: list[str]) -> None:
         for index, symbol in enumerate(symbols):
             with self._lock:
                 assert self._job is not None
                 self._job["current_symbol"] = symbol
+                self._persist_locked()
             self._update_item(
                 index,
                 state="fetching",
@@ -254,19 +278,15 @@ class DataRefreshManager:
                     rows_received=len(frame),
                     total_rows=store.row_count(symbol),
                     latest_date=str(frame["date"].iloc[-1]),
+                    completed_delta=1,
                 )
-                with self._lock:
-                    assert self._job is not None
-                    self._job["completed"] += 1
             except Exception as exc:
                 self._update_item(
                     index,
                     state="failed",
                     message=f"{type(exc).__name__}: {exc}"[:300],
+                    failed_delta=1,
                 )
-                with self._lock:
-                    assert self._job is not None
-                    self._job["failed"] += 1
             if index < len(symbols) - 1:
                 self._sleeper(REQUEST_DELAY_SECONDS)
 
@@ -277,3 +297,4 @@ class DataRefreshManager:
             )
             self._job["current_symbol"] = None
             self._job["finished_at"] = datetime.now(timezone.utc).isoformat()
+            self._persist_locked()

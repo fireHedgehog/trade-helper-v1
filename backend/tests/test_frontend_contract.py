@@ -61,7 +61,8 @@ def test_data_refresh_distinguishes_resume_from_forced_scopes() -> None:
     assert "Force refresh core" in HTML
     assert "Force refresh all Yahoo" in HTML
     assert "skips symbols already current" in HTML
-    assert "server restart loses this progress display, not published rows" in HTML
+    assert "Job identity, item outcomes, and timestamps are stored in SQLite" in HTML
+    assert "Published rows and this job record survived" in HTML
 
 
 def test_watchlist_snapshot_is_recoverable_and_empty_save_is_explicit() -> None:
