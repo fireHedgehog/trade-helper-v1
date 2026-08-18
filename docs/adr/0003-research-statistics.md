@@ -1,59 +1,28 @@
-[Home](../../README.md) · [Docs index](../README.md) · [Roadmap](../roadmap.md) · [Research protocol](../research-protocol.md) · [Changelog](../../CHANGELOG.md)
+# ADR 0003: Research statistics
 
-# ADR 0003: Research statistics and benchmark contract
+Status: accepted; CTA v1 adds the stricter preregistration in [research-protocol.md](../research-protocol.md).
 
-- Status: accepted for the research prototype
-- Date: 2026-08-17
+## Separate estimands
 
-## Context
+1. Trade performance: realized next-open strategy trades after costs.
+2. Post-signal outcome: fixed 20-bar forward return after a signal.
 
-A backtest is one realized historical path, not a probability forecast. A high
-win rate can coexist with poor expectancy, and a strategy return can look good
-until it is compared with passive market exposure or realistic trading costs.
-Twenty-day forward outcomes also overlap unless sampling explicitly prevents it,
-while signals across different symbols can be driven by the same market move.
+These answer different questions and must not be pooled.
 
-## Decision
+## Fixed assumptions
 
-The product separates two different analyses:
+- Commission: `10 bp` per side.
+- Quoted spread: `2 bp`; half-spread applied per fill.
+- Slippage: `5 bp` per fill.
+- Cash yield: `0` unless a versioned contract changes it.
+- Reference exposure: constant exposure to the same adjusted asset series.
 
-- **trade performance** replays the complete strategy with the canonical
-  completed-close signal and next-available-open fill model; and
-- **historical post-signal statistics** measure the close-to-close return 20
-  trading bars after selected entry signals. They exclude execution costs and
-  are descriptive statistics, not calibrated probabilities or strategy P&L.
+## Post-signal inference
 
-Trade performance reports the exact start/end window, capital, exposure, net
-return, CAGR, annualized volatility, downside deviation, Sortino, Calmar,
-drawdown magnitude and duration, expectancy, turnover, and closed-trade count.
-It includes configurable commission, quoted spread, adverse fill slippage, and
-idle-cash yield. Default assumptions are 10 basis points commission per side,
-2 basis points quoted spread, 5 basis points adverse slippage per fill, and zero
-cash yield. Overnight gaps are naturally included because orders fill at the
-following available open.
+Select observations at least 20 bars apart per symbol. Use `1,000` deterministic resamples clustered by calendar month. With fewer than three month clusters, report Wilson/normal approximations and a limitation. Flag `n < 30` as insufficient precision.
 
-The comparisons are adjusted-price buy-and-hold and a constant-exposure blend:
-the asset's daily adjusted-price return receives the strategy's average exposure
-weight and cash receives the remainder. This is a simple exposure control, not a
-tradable replication of the strategy's entry/exit timing.
+Report sample size, hit rate with interval, mean and median forward return, uncertainty method, and dependence limitations. Do not translate a p-value into the probability that a strategy is true.
 
-Post-signal observations are at least 20 trading bars apart within each symbol.
-Uncertainty is estimated with a deterministic 1,000-resample calendar-month
-cluster bootstrap, keeping contemporaneous symbol outcomes together. With fewer
-than three month clusters, Wilson hit-rate and normal-mean intervals are shown as
-a fallback. Fewer than 30 observations always receives a low-sample warning.
+## Consequences
 
-## Consequences and limitations
-
-- Every displayed result states its window, sample or trade count, benchmark,
-  execution-cost assumptions, and whether it is a point estimate.
-- Cluster bootstrapping reduces the false independence assumption for signals
-  occurring in the same month. Dependence across adjacent months can remain,
-  especially because the outcome horizon is 20 trading days.
-- Neither confidence intervals nor more metrics repair selection bias,
-  survivorship bias, parameter overfitting, or multiple testing.
-- The adjusted-price buy-and-hold comparison is total-return-like; the strategy
-  uses the same adjusted OHLC series but does not currently model taxes, borrow,
-  partial fills, market impact, or volume constraints.
-- Stage 4 must use a preregistered, out-of-sample walk-forward protocol. Until
-  that gate passes, no result in this application is evidence of a durable edge.
+Claims are conditional on timing, costs, universe, sampling, and dependence assumptions. Multiple candidate tests require an explicit family-wise error policy; CTA v1 uses Holm adjustment.

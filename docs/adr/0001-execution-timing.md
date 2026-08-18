@@ -1,42 +1,24 @@
-[Home](../../README.md) · [Docs index](../README.md) · [Roadmap](../roadmap.md) · [Research protocol](../research-protocol.md) · [Changelog](../../CHANGELOG.md)
+# ADR 0001: Execution timing
 
-# ADR 0001: Daily signal and execution timing
-
-- Status: accepted and implemented across canonical single-symbol and portfolio
-  replay
-- Date: 2026-08-17
+Status: accepted and implemented.
 
 ## Context
 
-Strategies use completed daily bars. A rule that depends on today's closing
-price cannot be acted on at that same closing price without an auction-specific
-order model and earlier information. Treating it as a same-close fill would
-introduce lookahead bias.
+A close-derived signal cannot execute at that same close without look-ahead. Missing sessions and gaps must remain observable rather than synthesized.
 
 ## Decision
 
-The canonical convention is:
+- Evaluate signals only after completed daily bar `N`.
+- Create `entry_pending` or `exit_pending` at `N` close.
+- Fill at the next available real bar open, `N+1`, including the observed gap.
+- If no later bar exists, retain the pending order; do not invent a fill.
+- Do not synthesize missing sessions.
+- Evaluate stops from completed closes until an explicit intraday-ordering model exists.
 
-1. Indicators and signals are calculated after daily bar `N` is complete.
-2. An entry or ordinary close-based exit becomes pending after bar `N`.
-3. The assumed fill is bar `N+1`'s open.
-4. Overnight gaps are accepted at the actual `N+1` open; the model must not fill
-   at the prior close or at a stop level that the market skipped through.
-5. If there is no next bar, the order remains pending and is not counted as a
-   completed trade.
-6. Missing calendar sessions do not create synthetic bars; execution occurs at
-   the next available recorded session and the data gap is reported separately.
+State machine:
 
-Intraday stop execution is out of scope until the project defines an OHLC-based
-ordering assumption for bars that touch multiple levels. Until then, stops are
-close-based signals that fill at the following open.
+`flat → entry_pending → long → exit_pending → flat`
 
 ## Consequences
 
-- Backtest, Today, chart, and simulated-ledger code must use the same four states:
-  `flat`, `entry_pending`, `long`, and `exit_pending`.
-- Same-close ledger exits are known defects until Stage 1 is complete.
-- Forced final-bar liquidation must not be presented as an ordinary strategy
-  exit in headline performance.
-- Tests must include overnight gaps, missing sessions, and a signal on the final
-  available bar.
+Backtests, portfolio simulation, persisted lifecycle state, tables, and tests must use the same transition semantics. A close-to-close research statistic is not an executable P&L series unless explicitly labelled as such.

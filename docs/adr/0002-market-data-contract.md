@@ -1,54 +1,27 @@
-[Home](../../README.md) · [Docs index](../README.md) · [Roadmap](../roadmap.md) · [Research protocol](../research-protocol.md) · [Changelog](../../CHANGELOG.md)
+# ADR 0002: Market-data contract
 
-# ADR 0002: Daily market-data contract
+Status: accepted and implemented for local research.
 
-- Status: accepted for the research prototype
-- Date: 2026-08-17
+## Valid bar series
 
-## Context
+For each symbol, bars must be non-empty, unique by session, and strictly increasing. Every OHLC value is finite and positive; volume is finite and non-negative. For each bar:
 
-A backtest can return convincing numbers even when its input contains duplicate
-dates, impossible candles, partial downloads, or mixed adjustment conventions.
-Rejecting malformed input is safer than silently dropping rows and publishing a
-partial history.
+`high ≥ max(open, close)` and `low ≤ min(open, close)`.
 
-## Decision
+Invalid series fail explicitly; they are not silently repaired.
 
-Each stored bar must have:
+## Price basis
 
-- a non-empty symbol and a unique, increasing `YYYY-MM-DD` date per symbol;
-- finite, strictly positive open, high, low, and close values;
-- `high >= max(open, close)`, `low <= min(open, close)`, and `low <= high`;
-- finite, non-negative volume (zero is allowed for macro/yield series);
-- one consistent daily frequency with missing sessions left absent rather than
-  synthetically filled.
+Yahoo downloads use `auto_adjust=True`. OHLC therefore behaves as a split/dividend-adjusted, total-return-like research series. One run may not mix adjusted and unadjusted prices. Provider revisions can alter historical results and must be captured by data fingerprints.
 
-Equity and ETF OHLC data fetched from Yahoo uses `auto_adjust=True`, so historical
-prices are adjusted for splits and cash distributions. Consequently:
+FRED series are non-tradable context: they are excluded from Yahoo refresh, strategy bars, and execution assumptions.
 
-- the buy-and-hold comparison is a total-return-like adjusted-price comparison;
-- raw historical execution prices are not available from this stored series;
-- adjusted OHLC must not be mixed with unadjusted OHLC in one symbol history;
-- provider revisions can change old bars and therefore change later results.
+## Refresh policy
 
-FRED values are stored in the same table for convenience but are economic series,
-not tradable OHLC instruments. They must never be passed into strategy or
-portfolio performance calculations as if they were executable securities.
+Manual refresh may request full history and must expose symbol-level progress, throttling, failures, row counts, first/last session, and final freshness. Navigation never starts a refresh.
 
-Operational ownership is explicit at the application boundary: the known FRED
-series are excluded from security selectors and Yahoo refresh jobs. Yahoo manual
-refreshes fetch and upsert the full adjusted history rather than mixing a recent
-adjusted slice with an older adjustment basis.
+Before unattended operation, add staged downloads, schema validation, atomic promotion, provenance, holiday/calendar policy, retry/backoff, and provider-revision comparison.
 
 ## Consequences
 
-- Storage rejects the entire malformed batch before writing any row.
-- Fetch adapters are responsible for provider-specific cleaning before storage.
-- Stage 10 must add staging, coverage thresholds, revision detection, and atomic
-  publication before unattended updates are enabled.
-- Data-source, adjustment mode, fetch timestamp, and revision provenance still
-  need explicit metadata; this ADR documents the current contract, not completion
-  of data lineage.
-- v0.23.0 adds a holiday-unaware expected-US-weekday freshness classification,
-  provider-separated inventory, and observable manual refresh progress. Exchange
-  holidays, persistent run history, staging, and revision diffs remain Stage 10.
+Every experiment identity includes the effective specification and input OHLCV fingerprint. Data coverage and freshness are evidence, not merely UI metadata.

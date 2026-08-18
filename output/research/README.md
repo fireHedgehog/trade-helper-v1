@@ -1,10 +1,7 @@
-# Research evidence
+# Research artifacts
 
-[Project home](../../README.md) · [Docs](../../docs/README.md) · [Protocol](../../docs/research-protocol.md) · [Changelog](../../CHANGELOG.md)
+Compact, reviewable outputs from locked experiments. Large resumable candidate caches remain under ignored `data/`.
 
-Files in this directory are compact, reviewable outputs from preregistered
-experiments. Large resumable candidate caches remain under ignored `data/`.
+`cta-trend-wf-v1.json` contains complete 14-fold development evidence, including specification/data fingerprint and raw/Holm-adjusted validation p-values. It is historical development evidence, not prospective confirmation.
 
-- `cta-trend-wf-v1.json` — complete 14-fold development evidence, including the
-  specification/data fingerprint and every raw and Holm-adjusted validation
-  p-value. It is exploratory historical evidence, not prospective confirmation.
+[Protocol](../../docs/research-protocol.md) · [Result](../../docs/research-results/cta-trend-wf-v1.md) · [Audit](../../docs/research-results/cta-trend-wf-v1-audit.md)

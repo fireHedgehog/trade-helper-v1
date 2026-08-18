@@ -1,13 +1,5 @@
-[Project home](../README.md) · [Docs](../docs/README.md) · [Roadmap](../docs/roadmap.md) · [Changelog](../CHANGELOG.md)
+# Local data
 
-# data/
+This directory is Git-ignored except for this file. It contains SQLite databases and resumable research caches; never commit market data or generated caches.
 
-Local market-data store. **Gitignored — never commit files in this folder.**
-
-- SQLite database(s) with daily bars live here.
-- Updated through explicit CLI commands or the local Data Management page.
-- Data Management separates Yahoo securities from FRED economic series, shows
-  coverage/freshness, and reports each manual refresh result.
-- Unattended cron is parked. The database remains local and a refresh job's
-  in-memory progress does not survive a server restart.
-- This README exists only so the folder shows up in the repo; the data itself does not.
+Update data through explicit CLI commands or Data Management. Yahoo securities and non-tradable FRED context remain separate. Unattended refresh is parked, and current in-memory refresh progress does not survive server restart. See [the data contract](../docs/adr/0002-market-data-contract.md).

@@ -1,66 +1,32 @@
-[Home](../README.md) · [Docs index](README.md) · [Roadmap](roadmap.md) · [CTA v1 result](research-results/cta-trend-wf-v1.md)
+# Research backlog
 
-# Parked research backlog
+Status: parked until Stage 8 product work is complete and the user explicitly resumes heavy statistical research.
 
-This file preserves research questions for a future session. It is not an
-approved experiment, a parameter grid, or evidence that any proposed change will
-work. A new model may begin only after the current priority gates are complete
-and its hypothesis and rejection rules are preregistered.
+## Resume gate
 
-## Completed: audit the surprising CTA v1 result
+Before proposing another model, read [the CTA v1 protocol](research-protocol.md), [result](research-results/cta-trend-wf-v1.md), [audit](research-results/cta-trend-wf-v1-audit.md), and [benchmark ADR](adr/0005-product-objective-and-portfolio-benchmark.md). CTA v1 is closed; do not optimize it retrospectively.
 
-CTA Trend v1 remains rejected under its locked rules, but rejection assumes the
-experiment implementation is correct. Before designing CTA v2, independently
-audit the complete path from stored bars to the final decision:
+## Candidate research programmes
 
-- reproduce at least one candidate and fold outside the experiment runner;
-- verify training, validation, test, warm-up, and contaminated-tail boundaries;
-- prove that validation selection cannot read test or later bars;
-- reconcile strategy and constant-exposure benchmark daily returns by date;
-- verify commission, spread, slippage, cash yield, and open-trade treatment;
-- check bootstrap centering, block construction, one-sided p-value direction,
-  Holm correction, candidate-family completeness, and deterministic seeds;
-- inspect raw effect sizes, trade counts, exposure, and symbol-level dispersion,
-  not only adjusted p-values;
-- distinguish “no measurable effect” from “too little statistical power”; and
-- record any defect as a corrected v1 result without silently rewriting history.
+### CTA v2
 
-**Status:** completed with no material defect found. The original rejection
-remains valid under its locked rules. See the
-[implementation audit](research-results/cta-trend-wf-v1-audit.md). Passive
-ETF-12 v1 is now implemented; CTA v2 remains parked.
+Define a new economic hypothesis before choosing parameters. Candidate changes may include diversified trend horizons, volatility scaling, cross-asset allocation, alternative exits, or explicit regime conditioning. For every change specify causal rationale, expected failure mode, benchmark, estimand, search budget, multiplicity control, stability tests, and untouched confirmation data.
 
-An audit that finds no defect increases confidence in the rejection but does not
-prove the strategy has zero value. An audit that finds a material defect
-invalidates the reported result and requires a versioned rerun under the original
-rules.
+### SMA cross, breakout, and momentum horizons
 
-## Possible CTA v2 research directions — parked
+These are product placeholders, not validated strategies. Each requires an independent protocol. Momentum may compare short/mid/long horizons; breakout may study channel definitions and volatility filters; SMA cross must distinguish exposure reduction from excess-return claims. UI availability must never imply statistical approval.
 
-These are structural questions, not instructions to search until a backtest
-wins:
+### Model selection and machine learning
 
-- long/short trend exposure so persistent declines can be captured;
-- volatility-scaled positions rather than equal nominal exposure;
-- a broader set of genuinely different futures or forward markets, subject to
-  reliable point-in-time data and contract-roll modeling;
-- a small combination of predeclared fast, medium, and slow trend horizons;
-- simpler signals or removal of filters that only reduce sample size;
-- portfolio correlation and risk-budget allocation rather than overlapping ETF
-  signals; and
-- explicit comparison of absolute return, crisis behavior, and diversification
-  objectives instead of changing the objective after results are seen.
+ML is justified only if the sample, target, leakage controls, turnover/cost model, nested validation, feature stability, and interpretability constraints are specified first. It is not a substitute for an economic hypothesis, and unrestricted feature search increases false discovery risk.
 
-Machine learning is parked further back. Daily data across 12 correlated ETFs
-does not provide a large independent sample, while features, labels, model
-classes, hyperparameters, and thresholds multiply researcher choices. ML should
-not be introduced unless a later hypothesis explains why it is necessary, uses
-appropriate point-in-time data, and budgets for the additional overfitting risk.
+## Required outputs for any new hypothesis
 
-## Restart instructions
-
-A future agent should not tune or implement CTA v2 immediately. Read the CTA v1
-protocol and result, complete the independent v1 audit, implement the accepted
-Passive ETF-12 benchmark, and then ask whether one of the parked structural
-questions deserves a new preregistered experiment. CTA v1 remains a recorded
-failed attempt; it must never be relabeled as successful by changing its gates.
+- immutable specification and fingerprint;
+- point-in-time universe and data provenance;
+- executable timing and portfolio contract;
+- passive benchmark and decision threshold;
+- train/validation/test separation with multiplicity control;
+- sensitivity, regime, and cost stress tests;
+- explicit `reject`, `revise`, or `continue` decision;
+- durable artifact sufficient for independent reproduction.

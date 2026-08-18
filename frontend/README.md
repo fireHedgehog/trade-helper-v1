@@ -1,53 +1,23 @@
-[Project home](../README.md) · [Docs](../docs/README.md) · [Roadmap](../docs/roadmap.md) · [Changelog](../CHANGELOG.md)
+# Frontend
 
-# frontend/
+Static HTML, CSS, and vanilla JavaScript served by FastAPI; no build step or separate development server. The backend computes research results, while the browser presents persisted state and starts only explicit user actions.
 
-Static web UI for trade-helper-v1. Served by the backend — **no build step, no framework yet**.
+## Views
 
-## What it does
+| View | Responsibility |
+|---|---|
+| Today | Freshness/actions, watched lifecycle, full-universe candidates, intersections, warnings |
+| Symbol Research | Typeahead symbol selection, chart, model accordions, signal/risk/evidence context |
+| Strategy Lab | Versioned hypotheses, watchlists, parameters, runs, benchmark-relative results |
+| Macro | Descriptive economic context; not tradable strategy data |
+| Data Management | Coverage, expected-session freshness, selected refresh, progress, failures |
 
-Five views behind a sidebar nav:
+Navigation must be read-only. Backtest, refresh, universe scan, and strategy evaluation each require a distinct action. Empty, not-run, stale, running, failed, and completed-with-no-candidates are different states.
 
-- **Today** ✅ — immediately reads the last stored strategy snapshot and keeps
-  persistent watched lifecycle separate from full-universe entry discovery.
-  The discovery board has Intersections, Momentum, New Breakouts, and one tab
-  per algorithm; each populated model tab represents a completed all-security
-  scan and shows every entry-pending candidate. Watch updates, universe scans,
-  and portfolio comparisons have separate explicit run buttons.
-- **Symbol Research** ✅ — searchable symbol picker (typeahead), Lightweight
-  Charts, strategy overlays, markers, range controls, metrics, equity, trades,
-  editable parameters, and evidence-status strategy dossiers. Only Run Backtest
-  calculates; selection and navigation are read-only.
-- **Strategy Lab** ✅ — select/save a per-strategy watchlist, compare strategies,
-  and edit/save parameter sets. Only Compute / refresh runs the scoreboard.
-- **Macro** ✅ — event calendar, macro cards, and regime filter.
-- **Data Management** ✅ — provider-separated inventory, expected-session
-  freshness, type-to-filter coverage table, manual Yahoo refresh controls, and
-  live per-symbol progress/failures.
+## Implementation
 
-## Tech choices (keep it lean)
+`index.html` contains the single-page application. TradingView Lightweight Charts is pinned via CDN for candles, volume, markers, and price levels. Introduce a framework only if state complexity makes the current design materially unsafe to maintain.
 
-- **Plain HTML + CSS + vanilla JS** first. Single `index.html`.
-- **Charting: TradingView Lightweight Charts** (pinned version, via CDN — no bundler).
-- **Upgrade to React/Vite only if** the UI grows beyond a few pages — do not preemptively.
+Run the backend and open <http://127.0.0.1:8000/>. The pending product contract is [workspace-redesign.md](../docs/workspace-redesign.md).
 
-## Charting (how backtest visuals map to the library)
-
-The backend computes everything; the frontend only draws. A backtest returns JSON:
-
-- candles → `CandlestickSeries`
-- volume → `HistogramSeries`
-- entry/exit events → `setMarkers()` (arrows with text, e.g. `LONG @ 189.40`)
-- ATR exit / support / resistance levels → `createPriceLine()` (algorithm-drawn, never user-drawn)
-- custom shapes (if ever needed) → v5 custom primitives
-
-## Layout
-
-    frontend/
-    ├── README.md
-        └── index.html     # single page: Today, Research, Lab, Macro, and Data ✅
-
-## How it's served
-
-The backend mounts this folder as static files, so locally the UI lives at
-`http://localhost:8000/` — no separate dev server needed.
+[Project](../README.md) · [Checkpoint](../docs/README.md) · [Roadmap](../docs/roadmap.md)

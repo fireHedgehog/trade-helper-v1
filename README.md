@@ -1,192 +1,53 @@
-# trade-helper-v1
+# Trade Research
 
-An educational, local-first quantitative research application for daily US
-market data, reproducible strategy simulation, and honest comparison with
-passive benchmarks.
+Local, long-only systematic-research workspace for testing whether a strategy adds value over explicit passive benchmarks after costs. It is a research decision aid, not an execution system or investment recommendation.
 
-[Documentation](docs/README.md) · [Roadmap](docs/roadmap.md) · [Product](docs/product.md) · [Research protocol](docs/research-protocol.md) · [Changelog](CHANGELOG.md)
+## Current state
 
-Current checkpoint: **v0.26.0 — research-workspace state foundation**. The
-visual productization and usability gates remain open; this is not a
-production-ready trading interface.
+Version `0.26.0` establishes the durable research workspace: historical backtests, portfolio simulation, data management, persistent watchlists, lifecycle signals, and full-universe candidate views. CTA v1 was rejected under its preregistered test; Passive ETF-12 v1 is the primary benchmark. No paper trading, broker integration, unattended refresh, or deployment is enabled.
 
-> [!WARNING]
-> **Research prototype—not ready for live trading.** This is not investment
-> advice or a brokerage system. Backtests can be wrong because of defects,
-> biased data, overfitting, unrealistic execution assumptions, and regime
-> changes. Do not risk real money based on this application.
+Start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint, next task, and document map.
 
-## Current status
-
-Stages 0–3 and the Stage 5 engineering gate of the
-[validation roadmap](docs/roadmap.md) are complete. The Stage 4 CTA v1
-experiment is complete and rejected, while genuinely untouched confirmation
-data remains an open research gate. Stage 8 now provides the first usable local
-research-workspace slice: menus read stored state, while expensive research runs
-only after an explicit action.
-
-- One canonical state machine drives backtests, signals, chart markers, and the
-  simulated ledger: completed-close signal → next-available-open fill.
-- The deterministic test suite currently contains 176 passing tests.
-- Trading costs, spread, slippage, gaps, idle-cash yield, uncertainty intervals,
-  and benchmark limitations are explicit.
-- The CTA walk-forward experiment is preregistered with a 12-ETF universe and
-  54 parameter candidates. The completed development run rejected v1: no
-  candidate survived validation in any of 14 folds, so every test fold held cash.
-- The portfolio engine now replays multiple symbols on one shared-cash account,
-  with cost-aware sizing, gap-time limit checks, deterministic concurrent orders,
-  concentration caps, next-session sale settlement, common-close equity, and
-  explicit rejection reasons. A 15% close-based drawdown now halts entries and
-  creates next-open liquidation orders without hiding further gap losses.
-  Account-level return, risk, exposure, concentration, turnover, and trade
-  metrics are exposed through a locked-universe API and the Today view. Passive
-  ETF-12 v1 now provides the same-universe, same-capital primary comparison,
-  with SPY and cash kept as secondary references. The active UI no longer displays fictional
-  fixed-100-share dollar P&L. Strategies without a protective stop are refused
-  explicitly instead of receiving an invented fallback.
-- A local Data Management view now reports per-symbol provider, coverage,
-  expected completed US session, freshness, and refresh progress. Yahoo updates
-  are manual, single-job, full-history refreshes with a fixed two-second
-  inter-symbol delay and retry backoff. FRED series are kept out of Yahoo jobs.
-- Per-strategy observation lists and immutable completed-run snapshots now live
-  in SQLite. Today keeps user-watched symbols visible after exit and separates
-  their holding/entry/exit lifecycle from full-universe new-entry candidates.
-  Strategy Lab, Symbol Research, Today, and portfolio calculations all require
-  their own explicit run button; opening or changing a menu does not calculate.
-- Existing historical SPY results are exploratory and contaminated by prior
-  inspection. Valid confirmation requires genuinely unseen future or otherwise
-  uninspected point-in-time data.
-- Cron is explicitly parked: no user crontab is installed and `scripts/daily.sh`
-  exits without fetching. AWS, machine learning, and brokerage integration also
-  remain paused until their prerequisite gates pass.
-
-The remaining work is **not only cron and deployment**. The current product
-priority is to finish the local workspace persistence/usability gate. The next
-research priority is the local strategy-validation gate: define what useful means,
-compare each hypothesis fairly with buy-and-hold and cash after costs, test
-whether any apparent advantage is stable, and record an honest
-reject/revise/continue decision. This is disciplined validation, not repeated
-parameter tuning until a backtest looks attractive. Scheduled operation and AWS
-remain parked until that business gate—and the safety gates for external
-operation—have passed.
-
-That product objective is now fixed: build a local research decision assistant
-that makes unsupported strategies easier to reject. Portfolio experiments will
-use the same-universe Passive ETF-12 v1 as their primary benchmark, with SPY and
-cash shown as secondary references. The complete decision is recorded in
-[ADR 0005](docs/adr/0005-product-objective-and-portfolio-benchmark.md). Its
-calculation and validation are now implemented following the independent CTA v1
-experiment audit.
-
-Possible CTA v2 changes and machine learning are parked in the
-[research backlog](docs/research-backlog.md). Because CTA v1's complete failure
-was surprising, its experiment plumbing received an
-[independent audit](docs/research-results/cta-trend-wf-v1-audit.md). No material
-defect was found, so the rejection remains valid under its locked rules. CTA v2
-and ML remain parked. After the Stage 8 workspace gate, the preserved next
-research task is to select one economically justified hypothesis and write its
-numeric rejection criteria before running it.
-
-The honest baseline is poor as an “edge”: full-history SPY CTA returned roughly
-276.5% net versus roughly 3,119.6% buy-and-hold. Lower drawdown does not by itself
-prove that the strategy adds value.
-
-The stricter [walk-forward result](docs/research-results/cta-trend-wf-v1.md) is
-more negative: after costs and multiple-testing correction, CTA Trend v1 produced
-no validated candidate and is rejected for insufficient evidence.
-
-## Quick start
-
-Requires Python 3.12.3.
+## Run locally
 
 ```bash
-python3 -m venv .venv
 source .venv/bin/activate
-pip install -r backend/requirements-dev.txt
-pytest
-```
-
-Fetch one local adjusted history from the CLI (the Data Management page is the
-normal manual refresh surface):
-
-```bash
 cd backend
-python -m app.fetch SPY
+python -m uvicorn app.main:app --reload
 ```
 
-Run the application:
+Open <http://127.0.0.1:8000>. If port `8000` is occupied, stop the existing process or use `--port 8001` and open that port.
+
+Run verification from the repository root:
 
 ```bash
-cd backend
-uvicorn app.main:app --reload
+source .venv/bin/activate
+pytest -q
 ```
 
-Open <http://127.0.0.1:8000>.
+## Repository
 
-Run a command-line backtest:
+| Path | Responsibility |
+|---|---|
+| `backend/app/` | FastAPI routes, research engines, persistence, portfolio simulation |
+| `frontend/` | Browser application served by the backend |
+| `data/` | Local market data and metadata |
+| `docs/` | Product, research, decisions, roadmap, and evidence |
+| `output/research/` | Generated experiment artifacts; not source-of-truth prose |
 
-```bash
-cd backend
-python -m app.engine SPY --strategy "CTA Trend"
-```
+## Safety boundary
 
-Run the test suite without downloading market data:
-
-```bash
-pytest
-```
-
-> [!CAUTION]
-> Full-universe historical scans are intentionally opt-in and can be expensive
-> on a laptop. The default post-signal calculation is limited to 16 symbols and
-> approximately one trading year.
-
-## Architecture
-
-```text
-yfinance / FRED
-       │ validated daily fetch
-       ▼
-FastAPI backend ──────► SQLite local store
-       │                       │
-       ├── canonical engine ◄──┘
-       ├── research statistics
-       └── static browser UI
-```
-
-- Backend: Python, FastAPI, pandas, SQLite.
-- Frontend: static HTML/CSS/JavaScript with TradingView Lightweight Charts.
-- Data: adjusted Yahoo OHLC for securities; FRED macro series are context only
-  and never treated as executable instruments.
-- Deployment: local only. AWS is the final roadmap stage, not the current goal.
-
-## Repository map
-
-```text
-backend/                 API, storage, strategies, execution, research primitives
-frontend/                static user interface
-data/                    local database and generated data (not committed)
-docs/                    roadmap, product design, protocol, and ADRs
-research/                experiment specifications and attempt ledger
-output/jupyter-notebook/ reproducible research notebooks
-scripts/                 operational scripts; unattended scheduling is paused
-```
+- Historical and local only; no order routing or broker credentials.
+- Adjusted Yahoo OHLCV is suitable for research, not execution-grade accounting.
+- A backtest result is conditional on its data, universe, costs, timing, and statistical design.
+- Strategy changes require a new preregistered hypothesis; retrospective tuning cannot rehabilitate CTA v1.
 
 ## Documentation
 
-| Document | Purpose |
-| --- | --- |
-| [Documentation index](docs/README.md) | Navigation for all project documents |
-| [Validation roadmap](docs/roadmap.md) | Stages 0–11, exit gates, and current work |
-| [Product and research design](docs/product.md) | Views, trading rules, and design notes |
-| [Research protocol](docs/research-protocol.md) | Locked Stage 4 hypothesis and methodology |
-| [Architecture decisions](docs/README.md#architecture-decisions) | Execution, data, and statistics contracts |
-| [Changelog](CHANGELOG.md) | Full version history |
-
-Component-specific commands and responsibilities are documented in
-[backend/README.md](backend/README.md), [frontend/README.md](frontend/README.md),
-and [data/README.md](data/README.md).
-
-## License
-
-See [LICENSE](LICENSE).
+- [Resume checkpoint and index](docs/README.md)
+- [Product contract](docs/product.md)
+- [Workspace redesign](docs/workspace-redesign.md)
+- [Research protocol](docs/research-protocol.md)
+- [Roadmap](docs/roadmap.md)
+- [Decision records](docs/adr/)
+- [Version ledger](CHANGELOG.md)
