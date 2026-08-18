@@ -43,6 +43,7 @@ Python FastAPI app — the only server component of trade-helper-v1.
         ├── portfolio.py     # capital, sizing, and entry-allocation contracts ✅
         ├── portfolio_execution.py # shared-cash multi-symbol daily replay ✅
         ├── portfolio_metrics.py # account-level return and risk metrics ✅
+        ├── portfolio_benchmark.py # Passive ETF-12, SPY, and cash controls ✅
         ├── portfolio_universe.py # locked ETF/risk-classification manifest ✅
         ├── portfolio_api.py # validated JSON adapter for /api/portfolio ✅
         └── engine.py        # API/CLI payloads + marked-to-market metrics ✅

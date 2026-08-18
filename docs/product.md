@@ -101,9 +101,10 @@ fixed in [ADR 0005](adr/0005-product-objective-and-portfolio-benchmark.md).
     15% drawdown kill switch follow [ADR 0004](adr/0004-portfolio-risk-contract.md).
   - Today displays account equity, return, drawdown, exposure, turnover, trade
     and rejection counts, plus actual open-position value and dollar P&L.
-  - Passive ETF-12 v1 composition and annual rebalancing are now specified in
-    ADR 0005. The API correctly continues to make no benchmark claim until that
-    contract is implemented and tested.
+  - Passive ETF-12 v1 is implemented under ADR 0005: equal-weight locked ETFs,
+    annual rebalancing, whole shares, canonical costs, residual cash, and T+1
+    settlement. Today also shows SPY and cash as secondary references and warns
+    that historical differences do not establish a durable edge.
   - SMA Cross and RSI Reversion are unavailable in this view because they have
     no explicit protective stop. The product refuses them rather than inventing
     a risk rule after seeing results.

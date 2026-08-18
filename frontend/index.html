@@ -305,6 +305,7 @@
       <section class="panel">
         <h2>Shared-capital portfolio replay <span class="badge">locked 12 ETFs · one $100k account · historical mechanics only</span></h2>
         <div class="portfolio-summary" id="portfolio-summary"></div>
+        <div class="portfolio-summary" id="portfolio-benchmark"></div>
         <table>
           <thead><tr><th>Symbol</th><th>Shares</th><th>Entry date</th><th>Entry</th><th>Close</th><th>Value</th><th>Unrealized P&amp;L</th><th>Stop</th><th>Sector</th></tr></thead>
           <tbody id="portfolio-positions"></tbody>
@@ -1153,6 +1154,7 @@ function renderPortfolio(portfolio) {
     `<div class="stat"><span class="k">${label}</span><span class="v ${cls}">${value}</span></div>`;
   if (portfolio.status === 'unsupported') {
     $('#portfolio-summary').innerHTML = metric('State', 'unavailable', 'neg');
+    $('#portfolio-benchmark').innerHTML = '';
     $('#portfolio-positions').innerHTML =
       `<tr><td colspan="9">${portfolio.reason}.</td></tr>`;
     $('#portfolio-note').textContent =
@@ -1162,6 +1164,11 @@ function renderPortfolio(portfolio) {
   }
   const m = portfolio.metrics;
   const account = portfolio.account;
+  const benchmark = portfolio.benchmark;
+  const primary = benchmark.primary.metrics;
+  const spy = benchmark.secondary.spy_buy_and_hold.metrics;
+  const cash = benchmark.secondary.cash;
+  const comparison = benchmark.comparison;
   $('#portfolio-summary').innerHTML =
     metric('Equity', money(account.equity)) +
     metric('Return', pct(m.total_return), m.total_return >= 0 ? 'pos' : 'neg') +
@@ -1172,6 +1179,13 @@ function renderPortfolio(portfolio) {
     metric('Closed trades', m.trade_count) +
     metric('Rejected orders', portfolio.rejection_count) +
     metric('State', account.halted ? 'HALTED' : 'active', account.halted ? 'neg' : '');
+  $('#portfolio-benchmark').innerHTML =
+    metric('ETF-12 return', pct(primary.total_return), primary.total_return >= 0 ? 'pos' : 'neg') +
+    metric('Strategy − ETF-12', pct(comparison.total_return_difference), comparison.total_return_difference >= 0 ? 'pos' : 'neg') +
+    metric('ETF-12 max DD', pct(primary.max_drawdown), 'neg') +
+    metric('Drawdown improvement', pct(comparison.max_drawdown_improvement), comparison.max_drawdown_improvement >= 0 ? 'pos' : 'neg') +
+    metric('SPY return', pct(spy.total_return), spy.total_return >= 0 ? 'pos' : 'neg') +
+    metric('Cash return', pct(cash.total_return), cash.total_return >= 0 ? 'pos' : 'neg');
 
   $('#portfolio-positions').innerHTML = portfolio.positions.map((position) => {
     const pnlClass = position.unrealized_pnl >= 0 ? 'pos' : 'neg';

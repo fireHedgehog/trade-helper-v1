@@ -203,6 +203,14 @@ not actually have.
 **Gate status:** passed for the active Today view at v0.22.0. Stage 5 does not
 claim a validated edge and does not authorize paper or live trading.
 
+**Benchmark checkpoint (v0.25.0):** Passive ETF-12 v1 now invests the same
+$100,000 across the locked 12 ETFs with equal weights, whole shares, canonical
+costs, annual rebalancing, residual cash, and T+1 sale settlement. SPY and cash
+remain secondary references. API/UI comparisons include return and drawdown
+differences but explicitly do not claim a durable edge. Five benchmark-accounting
+tests bring the deterministic suite to 169; the Today browser smoke check has no
+console errors.
+
 ## Stage 6 — operator clarity and safety language
 
 **Goal:** make uncertainty, data state, and failures obvious before a user
@@ -300,7 +308,7 @@ rescued by changing its rules after seeing its result.
       headline return alone.
 - [ ] Stress higher costs, worse fills, gaps, and small changes in assumptions;
       reject an advantage that disappears under reasonable conditions.
-- [ ] Compare with buy-and-hold, cash yield, and the accepted portfolio
+- [x] Compare with buy-and-hold, cash yield, and the accepted portfolio
       benchmark on the same dates and capital basis.
 - [ ] Record a `reject`, `revise`, or `continue` decision using the thresholds
       written before the result was known.

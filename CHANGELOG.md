@@ -2,6 +2,28 @@
 
 # Changelog
 
+## v0.25.0 — 2026-08-18
+
+- Implemented Passive ETF-12 v1 under ADR 0005: equal-weight whole-share entry
+  at the first common open, canonical costs, residual cash, annual rebalancing,
+  and no reuse of sale proceeds before the following shared session.
+- Added same-period SPY buy-and-hold and declared cash-yield references. They
+  remain secondary comparisons and cannot replace the primary benchmark after
+  results are observed.
+- Added benchmark return, CAGR, volatility, downside risk, drawdown, Calmar,
+  exposure, turnover, fees, and explicit strategy-relative differences to the
+  portfolio API.
+- Added the comparisons to Today with explicit language that historical
+  differences do not establish a durable edge. On current local data, CTA shows
+  materially lower drawdown but gives up substantial return versus both ETF-12
+  and SPY.
+- Added five deterministic benchmark-accounting tests; all 169 tests pass.
+  Current-server Playwright verification shows the benchmark cards with zero
+  browser console errors.
+- Diagnosed the user's Data Management 404 as an older Uvicorn process whose
+  OpenAPI contract predates the data and portfolio routes; no hardcoded browser
+  data or application route repair is required.
+
 ## v0.24.3 — 2026-08-18
 
 - Completed the independent CTA Trend v1 implementation audit. The current data

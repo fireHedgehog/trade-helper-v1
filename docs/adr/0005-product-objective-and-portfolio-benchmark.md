@@ -2,7 +2,7 @@
 
 # ADR 0005: Product objective and portfolio benchmark
 
-- Status: accepted for local research; benchmark implementation pending
+- Status: accepted and implemented for local research
 - Date: 2026-08-18
 
 ## Context
@@ -48,7 +48,9 @@ version of the same locked opportunity set:
 - entry: buy at the first common open; the strategy does not receive credit for
   avoiding its indicator warm-up while the passive alternative is artificially
   left in cash;
-- rebalancing: annually, at the first common trading open of each calendar year;
+- rebalancing: begins annually at the first common trading open of each calendar
+  year; sales occur there and purchases requiring those proceeds occur at the
+  following common open after T+1 settlement;
 - execution: whole shares and the same commission, quoted spread, adverse
   slippage, adjusted-price data, and next-open convention as the strategy;
 - cash: residual and settlement cash receives the same declared yield as the
@@ -101,11 +103,23 @@ must be written before that experiment is executed.
 
 ## Consequences
 
-- The benchmark must be implemented and tested before the portfolio UI makes an
-  excess-return or benchmark-beating claim.
-- Existing portfolio results remain mechanics demonstrations with
-  `benchmark: null`; this ADR does not retroactively validate CTA Trend v1.
+- The benchmark is implemented and tested before the portfolio UI makes an
+  excess-return comparison. The UI labels it historical evidence and does not
+  convert positive relative performance into a validated-edge claim.
+- Existing portfolio results remain mechanics demonstrations; adding the
+  benchmark does not retroactively validate CTA Trend v1.
 - Cron and AWS have no business justification until the local assistant can
   produce a complete, reproducible decision record under this contract.
 - A future change from research assistant to advisory or trading product would
   require a separate product, regulatory, security, and operational decision.
+
+## Implementation status
+
+Checkpoint v0.25.0 implements Passive ETF-12 v1, SPY buy-and-hold, and declared
+cash yield in `backend/app/portfolio_benchmark.py`. The primary benchmark buys
+equal-weight whole shares at the first common open, charges canonical entry and
+exit costs, retains residual cash, rebalances annually, and prevents sale
+proceeds from funding purchases before the following shared session. The
+portfolio API reports return, CAGR, drawdown, Calmar, exposure, turnover, fees,
+and explicit strategy differences. The Today view shows the three comparisons
+beside the strategy without claiming statistical significance or durable edge.

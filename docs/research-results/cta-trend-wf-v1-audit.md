@@ -117,7 +117,7 @@ underperform.
 
 ## Next decision
 
-CTA v2 and machine learning remain parked. The next implementation priority is
-Passive ETF-12 v1 so later portfolio research has the accepted investable
+CTA v2 and machine learning remain parked. Passive ETF-12 v1 was implemented in
+the following checkpoint so later portfolio research has the accepted investable
 benchmark. Any future CTA v2 requires a new economic hypothesis and experiment
 record; it cannot retroactively repair CTA v1.

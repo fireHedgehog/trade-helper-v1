@@ -28,7 +28,7 @@ audit the complete path from stored bars to the final decision:
 **Status:** completed with no material defect found. The original rejection
 remains valid under its locked rules. See the
 [implementation audit](research-results/cta-trend-wf-v1-audit.md). Passive
-ETF-12 v1 is now the next implementation priority; CTA v2 remains parked.
+ETF-12 v1 is now implemented; CTA v2 remains parked.
 
 An audit that finds no defect increases confidence in the rejection but does not
 prove the strategy has zero value. An audit that finds a material defect

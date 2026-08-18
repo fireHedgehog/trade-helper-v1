@@ -22,7 +22,7 @@ data freshness, manual refresh control, and safety clarity.
 
 - One canonical state machine drives backtests, signals, chart markers, and the
   simulated ledger: completed-close signal → next-available-open fill.
-- The deterministic test suite currently contains 164 passing tests.
+- The deterministic test suite currently contains 169 passing tests.
 - Trading costs, spread, slippage, gaps, idle-cash yield, uncertainty intervals,
   and benchmark limitations are explicit.
 - The CTA walk-forward experiment is preregistered with a 12-ETF universe and
@@ -34,8 +34,9 @@ data freshness, manual refresh control, and safety clarity.
   explicit rejection reasons. A 15% close-based drawdown now halts entries and
   creates next-open liquidation orders without hiding further gap losses.
   Account-level return, risk, exposure, concentration, turnover, and trade
-  metrics are exposed through a locked-universe API and the Today view without
-  inventing an undefined benchmark. The active UI no longer displays fictional
+  metrics are exposed through a locked-universe API and the Today view. Passive
+  ETF-12 v1 now provides the same-universe, same-capital primary comparison,
+  with SPY and cash kept as secondary references. The active UI no longer displays fictional
   fixed-100-share dollar P&L. Strategies without a protective stop are refused
   explicitly instead of receiving an invented fallback.
 - A local Data Management view now reports per-symbol provider, coverage,
@@ -62,15 +63,16 @@ That product objective is now fixed: build a local research decision assistant
 that makes unsupported strategies easier to reject. Portfolio experiments will
 use the same-universe Passive ETF-12 v1 as their primary benchmark, with SPY and
 cash shown as secondary references. The complete decision is recorded in
-[ADR 0005](docs/adr/0005-product-objective-and-portfolio-benchmark.md); benchmark
-calculation and validation follow the independent CTA v1 experiment audit.
+[ADR 0005](docs/adr/0005-product-objective-and-portfolio-benchmark.md). Its
+calculation and validation are now implemented following the independent CTA v1
+experiment audit.
 
 Possible CTA v2 changes and machine learning are parked in the
 [research backlog](docs/research-backlog.md). Because CTA v1's complete failure
 was surprising, its experiment plumbing received an
 [independent audit](docs/research-results/cta-trend-wf-v1-audit.md). No material
-defect was found, so the rejection remains valid under its locked rules. Passive
-ETF-12 benchmark implementation is now next; CTA v2 remains parked.
+defect was found, so the rejection remains valid under its locked rules. CTA v2
+remains parked while the next business hypothesis is defined.
 
 The honest baseline is poor as an “edge”: full-history SPY CTA returned roughly
 276.5% net versus roughly 3,119.6% buy-and-hold. Lower drawdown does not by itself

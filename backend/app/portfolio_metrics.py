@@ -1,8 +1,8 @@
 """Account-level metrics for a completed portfolio replay.
 
-These metrics describe the simulated account. They deliberately do not attach a
-buy-and-hold or excess-return claim because a multi-asset benchmark composition
-and rebalancing contract has not yet been accepted.
+These metrics describe the simulated account. Benchmark-relative comparisons
+are attached by the API only after the separately tested ADR 0005 benchmark is
+calculated on the same common calendar.
 """
 
 from __future__ import annotations
@@ -30,6 +30,7 @@ class PortfolioMetrics:
     sortino: float | None
     max_drawdown: float
     max_drawdown_bars: int
+    calmar: float | None
     average_gross_exposure: float
     max_gross_exposure: float
     max_sector_concentration: float
@@ -132,6 +133,7 @@ def portfolio_metrics(replay: PortfolioReplay) -> PortfolioMetrics:
     losses = [value for value in pnls if value < 0]
     profit_factor = sum(wins) / abs(sum(losses)) if losses else None
 
+    max_drawdown = min(snapshot.drawdown for snapshot in snapshots)
     return PortfolioMetrics(
         start_date=snapshots[0].date,
         end_date=snapshots[-1].date,
@@ -144,8 +146,9 @@ def portfolio_metrics(replay: PortfolioReplay) -> PortfolioMetrics:
         sharpe=sharpe,
         downside_deviation=downside_deviation,
         sortino=sortino,
-        max_drawdown=min(snapshot.drawdown for snapshot in snapshots),
+        max_drawdown=max_drawdown,
         max_drawdown_bars=max_drawdown_bars,
+        calmar=cagr / abs(max_drawdown) if max_drawdown < 0 else None,
         average_gross_exposure=statistics.fmean(
             snapshot.gross_exposure for snapshot in snapshots
         ),

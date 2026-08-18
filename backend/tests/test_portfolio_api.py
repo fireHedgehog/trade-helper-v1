@@ -95,7 +95,7 @@ def test_common_loader_fails_closed_on_mismatched_calendar(
         portfolio_api._load_common_bars()
 
 
-def test_payload_exposes_account_contract_without_benchmark_claim(
+def test_payload_exposes_account_and_benchmark_contract(
     research_bars: pd.DataFrame, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     common = _common_bars(research_bars)
@@ -112,7 +112,14 @@ def test_payload_exposes_account_contract_without_benchmark_claim(
     payload = portfolio_api.portfolio_payload("CTA Trend", params)
 
     assert payload["claim"].startswith("historical mechanics replay")
-    assert payload["benchmark"] is None
+    benchmark = payload["benchmark"]
+    assert benchmark["contract"] == "ADR 0005"
+    assert benchmark["primary"]["name"] == "Passive ETF-12 v1"
+    assert benchmark["primary"]["rebalance"] == "annual"
+    assert benchmark["primary"]["symbols"] == sorted(PORTFOLIO_SYMBOLS)
+    assert benchmark["secondary"]["spy_buy_and_hold"]["symbols"] == ["SPY"]
+    assert benchmark["secondary"]["cash"]["annual_cash_yield"] == 0.0
+    assert "total_return_difference" in benchmark["comparison"]
     assert payload["universe"]["id"] == PORTFOLIO_UNIVERSE_ID
     assert payload["universe"]["symbols"] == list(PORTFOLIO_SYMBOLS)
     assert payload["universe"]["bars"] == len(common)

@@ -8,6 +8,7 @@ import pandas as pd
 
 from . import store
 from .portfolio import PortfolioConfig
+from .portfolio_benchmark import cash_benchmark, simulate_passive_benchmark
 from .portfolio_execution import simulate_portfolio
 from .portfolio_metrics import portfolio_metrics
 from .portfolio_universe import (
@@ -104,6 +105,23 @@ def portfolio_payload(strategy: str, params: dict) -> dict:
         config=config,
     )
     metrics = portfolio_metrics(replay)
+    primary_benchmark = simulate_passive_benchmark(
+        bars,
+        name="Passive ETF-12 v1",
+        annual_rebalance=True,
+        config=config,
+    )
+    spy_benchmark = simulate_passive_benchmark(
+        {"SPY": bars["SPY"]},
+        name="SPY buy-and-hold",
+        annual_rebalance=False,
+        config=config,
+    )
+    cash_reference = cash_benchmark(
+        tuple(str(value) for value in bars["SPY"]["date"]),
+        initial_cash=config.initial_cash,
+        annual_cash_yield=0.0,
+    )
     final = replay.equity[-1]
     positions = [
         {
@@ -139,10 +157,35 @@ def portfolio_payload(strategy: str, params: dict) -> dict:
             "fill_timing": "next shared-calendar open",
             "sale_settlement": "next shared-calendar session (T+1 approximation)",
             "priority": "equal locked score, then symbol ascending",
+            "annual_cash_yield": 0.0,
         },
-        "benchmark": None,
+        "benchmark": {
+            "contract": "ADR 0005",
+            "primary": primary_benchmark.summary(),
+            "secondary": {
+                "spy_buy_and_hold": spy_benchmark.summary(),
+                "cash": cash_reference,
+            },
+            "comparison": {
+                "total_return_difference": (
+                    metrics.total_return - primary_benchmark.metrics.total_return
+                ),
+                "cagr_difference": metrics.cagr - primary_benchmark.metrics.cagr,
+                "max_drawdown_improvement": (
+                    metrics.max_drawdown - primary_benchmark.metrics.max_drawdown
+                ),
+                "calmar_difference": (
+                    metrics.calmar - primary_benchmark.metrics.calmar
+                    if metrics.calmar is not None
+                    and primary_benchmark.metrics.calmar is not None
+                    else None
+                ),
+            },
+        },
         "benchmark_note": (
-            "portfolio benchmark composition and rebalancing are not yet specified"
+            "Passive ETF-12 v1 is the primary same-universe comparison; SPY and "
+            "cash answer different questions. Historical differences do not "
+            "establish a durable edge"
         ),
         "metrics": asdict(metrics),
         "account": {
