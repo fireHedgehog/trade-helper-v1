@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.28.0`, Stage 8C in progress.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.28.1`, Stage 8C in progress.
 
 ## Completed foundation
 
@@ -65,7 +65,17 @@ Gate: the local product is reliable enough for repeated daily research use, with
 
 ## Stage 9: New strategy research — parked
 
-Resume only by explicit decision after Stage 8. First define the economic hypothesis, primary benchmark, estimand, universe, search space, multiplicity control, validation topology, cost/risk stress, and true confirmation data. Then implement the experiment. See [research-backlog.md](research-backlog.md).
+Resume only by explicit decision after Stage 8.
+
+### 9A — Acceptance standard and candidate priority
+
+Before selecting a strategy, apply the [model acceptance and candidate-priority standard](model-acceptance-standard.md). Score all serious candidates before viewing comparative results, preserve the complete selection record, and preregister model-specific evidence thresholds. Consolidation, CTA v2, momentum, breakout, SMA cross, and future ideas compete under the same process; none is the default next model.
+
+Gate: one candidate has earned priority on rationale, product relevance, distinct information, data readiness, implementability, falsifiability, research restraint, and diversification; its immutable protocol defines what will cause `reject`, `revise`, or `continue research`.
+
+### 9B — Locked experiment and confirmation
+
+Only after 9A, implement the finite experiment. Apply the primary benchmark, estimand, universe, search budget, multiplicity control, validation topology, cost/risk stress, stability tests, and untouched confirmation data. Passing means eligible for the next validation stage, not safe or approved for trading. See [research-backlog.md](research-backlog.md).
 
 This stage is deliberately business/research work, not parameter tuning. UI placeholders do not authorize model development.
 

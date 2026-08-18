@@ -4,7 +4,7 @@ Local, long-only systematic-research workspace for testing whether a strategy ad
 
 ## Current state
 
-Version `0.28.0` improves refresh recovery, watchlist recovery, and multi-model Symbol Research while preserving the durable research workspace. CTA v1 was rejected under its preregistered test; Passive ETF-12 v1 is the primary benchmark. No paper trading, broker integration, unattended refresh, or deployment is enabled.
+Version `0.28.1` adds the mandatory Stage 9A candidate-priority and model-acceptance checkpoint while preserving the `0.28.0` research workspace. CTA v1 was rejected under its preregistered test; Passive ETF-12 v1 is the primary benchmark. No paper trading, broker integration, unattended refresh, or deployment is enabled.
 
 Start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint, next task, and document map.
 
@@ -48,6 +48,7 @@ pytest -q
 - [Product contract](docs/product.md)
 - [Workspace redesign](docs/workspace-redesign.md)
 - [Research protocol](docs/research-protocol.md)
+- [Model acceptance and candidate priority](docs/model-acceptance-standard.md)
 - [Roadmap](docs/roadmap.md)
 - [Decision records](docs/adr/)
 - [Version ledger](CHANGELOG.md)

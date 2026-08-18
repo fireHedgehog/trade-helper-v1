@@ -6,18 +6,18 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.28.0` |
-| Parent release | `8d9c346` (`0.27.0` Today command centre) |
+| Version | `0.28.1` |
+| Parent release | `c38bfcc` (`0.28.0` research workflow and recovery UX) |
 | Current state | Stage 8C in progress: Symbol Research and Data Management slices completed |
 | Verification | `187 passed` plus headless Playwright workflow checks |
 | Completed | Stage 8A state foundation; Stage 8B visual system and Today command centre |
 | Next product work | Continue Stage 8C with Strategy Lab and remaining Data Management productisation |
-| Parked research | Stage 9: new hypothesis and statistical design |
+| Parked research | Stage 9A: acceptance standard and candidate priority; then 9B locked experiment |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 
-The application now has the Stage 8B Today command centre plus Stage 8C improvements to Symbol Research, refresh recovery, and watchlist recovery. Preserve the v0.26 state model, now presented by v0.28.0, and the shared manual/scheduled pipeline contract; continue productising the remaining surfaces without importing legacy algorithms or vague confidence claims.
+The application has the Stage 8B Today command centre plus Stage 8C improvements to Symbol Research, refresh recovery, and watchlist recovery. Version 0.28.1 adds the Stage 9A acceptance checkpoint without changing runtime behaviour. Preserve the v0.26 state model and shared manual/scheduled pipeline contract; continue productising the remaining surfaces without importing legacy algorithms or vague confidence claims.
 
-Heavy statistical work is intentionally paused. On resumption, read the protocol, CTA result, audit, and backlog before proposing CTA v2. Do not tune CTA v1 after observing its rejection.
+Heavy statistical work is intentionally paused. On resumption, apply the model acceptance standard before selecting CTA v2, consolidation, momentum, or any other candidate. Then read the protocol, CTA result, audit, and backlog. Do not tune CTA v1 after observing its rejection.
 
 ## Non-negotiable state
 
@@ -40,6 +40,7 @@ Heavy statistical work is intentionally paused. On resumption, read the protocol
 | How was CTA v1 tested? | [Research protocol](research-protocol.md) |
 | What did CTA v1 show? | [Result](research-results/cta-trend-wf-v1.md) and [audit](research-results/cta-trend-wf-v1-audit.md) |
 | What research may follow? | [Research backlog](research-backlog.md) |
+| How is a candidate selected and allowed to advance? | [Model acceptance standard](model-acceptance-standard.md) |
 | What is the drafted consolidation study? | [Daily Consolidation Zone v1](research-hypotheses/daily-consolidation-zone-v1.md) |
 | Why are contracts fixed this way? | [ADRs](adr/) |
 | What changed by version? | [Changelog](../CHANGELOG.md) |

@@ -4,11 +4,11 @@ Status: parked until Stage 8 product work is complete and the user explicitly re
 
 ## Resume gate
 
-Before proposing another model, read [the CTA v1 protocol](research-protocol.md), [result](research-results/cta-trend-wf-v1.md), [audit](research-results/cta-trend-wf-v1-audit.md), and [benchmark ADR](adr/0005-product-objective-and-portfolio-benchmark.md). CTA v1 is closed; do not optimize it retrospectively.
+Before proposing another model, read [the model acceptance standard](model-acceptance-standard.md), [CTA v1 protocol](research-protocol.md), [result](research-results/cta-trend-wf-v1.md), [audit](research-results/cta-trend-wf-v1-audit.md), and [benchmark ADR](adr/0005-product-objective-and-portfolio-benchmark.md). CTA v1 is closed; do not optimize it retrospectively.
 
 ## Candidate research programmes
 
-The current next-design candidate is [Daily Consolidation Zone v1](research-hypotheses/daily-consolidation-zone-v1.md). It remains a draft and does not supersede the Stage 9 pause.
+[Daily Consolidation Zone v1](research-hypotheses/daily-consolidation-zone-v1.md) is a preserved design draft, not the next-design priority. It must compete with every other candidate under Stage 9A before implementation.
 
 ### CTA v2
 
@@ -39,6 +39,7 @@ ML is justified only if the sample, target, leakage controls, turnover/cost mode
 
 ## Required outputs for any new hypothesis
 
+- pre-result candidate scorecard and selection record;
 - immutable specification and fingerprint;
 - point-in-time universe and data provenance;
 - executable timing and portfolio contract;

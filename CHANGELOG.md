@@ -2,6 +2,10 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.28.1
+
+- Inserted Stage 9A before new model research: candidates must be scored before results are observed, and model-specific acceptance thresholds must be preregistered; the consolidation-zone draft is no longer presented as the default priority.
+
 ## 0.28.0
 
 - Clarified interrupted data refresh: successful per-symbol publications survive server restart; the primary resume action skips current symbols, while core/all refreshes are explicitly labelled as forced operations.
