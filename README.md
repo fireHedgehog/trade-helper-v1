@@ -58,6 +58,13 @@ parameter tuning until a backtest looks attractive. Scheduled operation and AWS
 remain parked until that business gate—and the safety gates for external
 operation—have passed.
 
+That product objective is now fixed: build a local research decision assistant
+that makes unsupported strategies easier to reject. Portfolio experiments will
+use the same-universe Passive ETF-12 v1 as their primary benchmark, with SPY and
+cash shown as secondary references. The complete decision is recorded in
+[ADR 0005](docs/adr/0005-product-objective-and-portfolio-benchmark.md); benchmark
+calculation and validation are the next implementation slice.
+
 The honest baseline is poor as an “edge”: full-history SPY CTA returned roughly
 276.5% net versus roughly 3,119.6% buy-and-hold. Lower drawdown does not by itself
 prove that the strategy adds value.

@@ -21,6 +21,7 @@
 - [ADR 0002: market-data contract](adr/0002-market-data-contract.md)
 - [ADR 0003: research statistics](adr/0003-research-statistics.md)
 - [ADR 0004: portfolio capital and risk](adr/0004-portfolio-risk-contract.md)
+- [ADR 0005: product objective and portfolio benchmark](adr/0005-product-objective-and-portfolio-benchmark.md)
 
 ## Component guides
 

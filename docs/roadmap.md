@@ -277,11 +277,13 @@ limited set of permitted choices, and pass/fail thresholds. Failed and
 uninteresting results are retained. CTA Trend v1 remains rejected and cannot be
 rescued by changing its rules after seeing its result.
 
-- [ ] Choose the product goal before judging results: a research assistant, a
+- [x] Choose the product goal before judging results: a research assistant, a
       lower-risk alternative, or a strategy intended to beat a benchmark. Do
-      not switch goals after seeing performance.
-- [ ] Define the fair portfolio benchmark, its rebalancing rule, and treatment
-      of idle cash before making any excess-return claim.
+      not switch goals after seeing performance. The accepted goal is a local
+      research decision assistant ([ADR 0005](adr/0005-product-objective-and-portfolio-benchmark.md)).
+- [x] Define the fair portfolio benchmark, its rebalancing rule, and treatment
+      of idle cash before making any excess-return claim. Passive ETF-12 v1 is
+      the primary comparator; SPY and cash are secondary references.
 - [ ] Select one next hypothesis for an economic reason and write its rules and
       rejection criteria before running it.
 - [ ] Freeze the investment universe, research periods, trading costs,

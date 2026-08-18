@@ -2,6 +2,18 @@
 
 # Product and research design
 
+## Product objective
+
+The first product is a **local research decision assistant**, not a trading
+signal service. Its purpose is to turn one prewritten hypothesis into a
+reproducible `reject`, `revise`, or `continue` decision and to make weak evidence
+obvious. Preventing a false belief in an edge counts as product success; trade
+frequency and attractive historical charts do not.
+
+Portfolio strategies will use Passive ETF-12 v1 as their primary benchmark,
+with SPY buy-and-hold and cash as secondary references. The exact contract is
+fixed in [ADR 0005](adr/0005-product-objective-and-portfolio-benchmark.md).
+
 ## A. Today (dashboard)
 
 - Tabs per strategy ("Momentum v1", ...); each tab lists today's picks.
@@ -89,8 +101,9 @@
     15% drawdown kill switch follow [ADR 0004](adr/0004-portfolio-risk-contract.md).
   - Today displays account equity, return, drawdown, exposure, turnover, trade
     and rejection counts, plus actual open-position value and dollar P&L.
-  - The API deliberately makes no portfolio benchmark claim until benchmark
-    composition and rebalancing are specified.
+  - Passive ETF-12 v1 composition and annual rebalancing are now specified in
+    ADR 0005. The API correctly continues to make no benchmark claim until that
+    contract is implemented and tested.
   - SMA Cross and RSI Reversion are unavailable in this view because they have
     no explicit protective stop. The product refuses them rather than inventing
     a risk rule after seeing results.

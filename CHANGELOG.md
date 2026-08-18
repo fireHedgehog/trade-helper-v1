@@ -2,6 +2,20 @@
 
 # Changelog
 
+## v0.24.1 — 2026-08-18
+
+- Fixed the initial product objective as a local research decision assistant
+  whose success includes rejecting unsupported strategies, not generating more
+  trades or attractive backtests.
+- Accepted Passive ETF-12 v1 as the primary portfolio benchmark: the same locked
+  universe and capital, equal weights, annual rebalancing, whole shares, shared
+  dates, costs, cash yield, and settlement assumptions.
+- Retained SPY buy-and-hold and cash as secondary references, preventing either
+  from replacing the primary comparison after results are known.
+- Recorded the full contract in ADR 0005 and completed the first two Stage 8
+  business-decision checklist items. Implementation remains pending, so the API
+  correctly continues to return no portfolio benchmark claim.
+
 ## v0.24.0 — 2026-08-18
 
 - Clarified that the remaining work is not merely cron and deployment. Added a
