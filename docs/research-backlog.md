@@ -2,7 +2,11 @@
 
 Status: active Stage 9A. Cycle 1 consolidation feasibility closed `not_evaluable`
 because the locked matcher admitted no controls; see the [selection
-record](research-candidates/2026-08-19-cycle-1.md) and [result](research-results/consolidation-support-feasibility-v1.md). Cycle 2 candidate selection is next.
+record](research-candidates/2026-08-19-cycle-1.md) and [result](research-results/consolidation-support-feasibility-v1.md). Cycle 2 selected SMA Cross v1's
+exposure-reduction claim, jointly designed against volatility-managed exposure's
+control; see the [selection record](research-candidates/2026-08-19-cycle-2.md).
+Next is locking that joint protocol, per the record's next-locked-deliverable list;
+do not begin it from a favourable-looking exploratory number.
 
 ## Resume gate
 
@@ -18,17 +22,36 @@ strategy implementation or outcome calculation, and it does not reject the claim
 
 ### CTA v2
 
-Define a new economic hypothesis before choosing parameters. Candidate changes may include diversified trend horizons, volatility scaling, cross-asset allocation, alternative exits, or explicit regime conditioning. For every change specify causal rationale, expected failure mode, benchmark, estimand, search budget, multiplicity control, stability tests, and untouched confirmation data.
+Operationalized and scored in Cycle 2 as a pooled, volatility-scaled trend overlay
+across the 12-ETF universe — see [Candidate C](research-candidates/2026-08-19-cycle-2.md). Eligible (score 13) but parked: its estimand needs a
+multi-instrument pooled-portfolio weighting engine that exists nowhere in this
+codebase today, and it overlaps materially with cross-sectional rotation and
+volatility-managed exposure. Park is an infrastructure gate, not a data or
+rationale gate; do not choose parameters until that engine is scoped and a
+distinct, non-overlapping mechanism is confirmed.
 
 ### SMA cross, breakout, and momentum horizons
 
-These are product placeholders, not validated strategies. Each requires an independent protocol. Momentum may compare short/mid/long horizons; breakout may study channel definitions and volatility filters; SMA cross must distinguish exposure reduction from excess-return claims. UI availability must never imply statistical approval.
+SMA cross was operationalized, scored, and prioritised in Cycle 2 as an
+exposure-reduction claim, jointly designed against a volatility-managed-exposure
+control — see [Candidate A](research-candidates/2026-08-19-cycle-2.md). Momentum
+horizons was operationalized as ETF-12 cross-sectional relative-strength rotation
+— see [Candidate D](research-candidates/2026-08-19-cycle-2.md) — eligible (score
+13) but parked: its estimand needs panel/permutation statistical tooling this
+codebase does not have (no `scipy`/`statsmodels` dependency, no panel-regression or
+permutation-null machinery in `research.py`), and it overlaps with CTA v2's trend
+family. Generic breakout is covered under Classical TA series below. UI
+availability must never imply statistical approval.
 
 ### Classical TA series
 
 `S/R Bounce` is the existing quantified classical-TA prototype: prior rolling support/resistance, support-test recovery entry, resistance target, and ATR-buffered stop. It may be charted and backtested but has no accepted edge claim.
 
-`TA Breakout v1` is a parked, distinct hypothesis for a short local resistance zone followed by a completed-close breakout and next-available-open entry. Before implementation, lock:
+`TA Breakout v1` was operationalized and scored in Cycle 2 — see [Candidate
+E](research-candidates/2026-08-19-cycle-2.md). Not prioritised: lowest score of
+its cycle (10), an explicit zero on diversification, and its own record concedes
+that its distinguishing multi-touch-zone mechanic degenerates to a CTA v1 retest
+once stripped out. Before any future implementation attempt, lock:
 
 - resistance/support construction: rolling extremes versus confirmed pivots/zones, including pivot confirmation delay so no future bars leak into the signal;
 - horizon and zone tolerance;

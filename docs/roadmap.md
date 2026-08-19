@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.41.0`; Stage 8 is closed and Stage 9A Cycle 1 is closed `not_evaluable`. The locked matcher admitted no controls, so power and actual-event outcomes were not run.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.42.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and Cycle 2 selected SMA Cross v1's exposure-reduction claim for a joint protocol against a volatility-managed-exposure control.
 
 ## Completed foundation
 
@@ -80,10 +80,20 @@ Gate: one candidate has earned priority on rationale, product relevance, distinc
 
 Cycle 1 selected [consolidation support recovery](research-candidates/2026-08-19-cycle-1.md) only for a bounded [detector/event-feasibility protocol](research-protocols/daily-consolidation-support-recovery-feasibility-v1.md). Its [result](research-results/consolidation-support-feasibility-v1.md) is `not_evaluable`: breadth and prevalence passed, but the locked matcher admitted zero controls for 274 events. Power and actual-event outcomes were correctly skipped. This does not reject the hypothesis.
 
-Next: open Cycle 2 and score data-ready candidates before results. A materially
+Cycle 2 scored five new candidates before any result: [selection
+record](research-candidates/2026-08-19-cycle-2.md). SMA Cross v1's
+exposure-reduction claim was prioritised, jointly designed against a
+volatility-managed-exposure control so the two are not scored as independent
+evidence of the same question. CTA v2 and ETF-12 cross-sectional rotation are
+eligible but parked pending infrastructure this codebase does not have — a
+pooled multi-instrument portfolio engine and panel/permutation statistical
+tooling respectively — not pending data. TA Breakout v1 was not prioritised.
+Next: lock one protocol for the SMA Cross v1 / volatility-managed-exposure joint
+experiment per that record's next-locked-deliverable list. A materially
 different consolidation matcher may compete only as a new justified protocol;
 Cycle 1 thresholds cannot be relaxed retrospectively. Futures trend and
-cross-sectional momentum remain parked until their point-in-time data path exists.
+cross-sectional equity momentum on the ~500-symbol list remain parked until their
+point-in-time data path exists.
 
 ### 9B — Locked experiment and confirmation
 
