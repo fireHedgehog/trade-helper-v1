@@ -11,10 +11,15 @@
     "symbols": 12
   },
   "status": "structural_stage_complete",
-  "structural_events_sha256": "05092007ff47ad959f1676d352e15d5aac9c1ba86aac19894de304ec4ec43d4c",
+  "structural_events_sha256": "500082efee5bccab3bc837e828cea31a46412e33b4e16f1eabf67af68bcef4aa",
   "structural_schema_keys": [
+    "control_dates",
+    "control_distances",
     "event_date",
     "event_index",
+    "matching_eligible",
+    "matching_funnel",
+    "pre_event_features",
     "resistances",
     "supports",
     "symbol",

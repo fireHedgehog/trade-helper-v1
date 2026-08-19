@@ -4,7 +4,7 @@ Local, long-only systematic-research workspace for testing whether a strategy ad
 
 ## Current state
 
-Version `0.39.0` begins Stage 9A execution with a locked consolidation support-recovery feasibility protocol and a deterministic structural-only engine. The first run found 274 deduplicated development events across all 12 ETFs and 13 years, but matching and power remain incomplete and no forward outcome or evidence decision exists. CTA v1 remains rejected under its locked protocol; no paper trading, broker integration, unattended refresh, or deployment is enabled.
+Version `0.40.0` closes Stage 9A Cycle 1 as `not_evaluable`. The locked consolidation detector found 274 broad, non-concentrated events, but its exact matcher admitted zero controls; power and actual-event outcomes were therefore not run. This is not a rejection of consolidation support recovery. Cycle 2 candidate selection is next. CTA v1 remains rejected under its locked protocol; no paper trading, broker integration, unattended refresh, or deployment is enabled.
 
 Start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint, next task, and document map.
 

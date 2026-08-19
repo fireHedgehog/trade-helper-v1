@@ -1,8 +1,8 @@
 # Research backlog
 
-Status: active Stage 9A. Cycle 1 prioritised consolidation support recovery for a
-detector/event-feasibility protocol; see the [selection
-record](research-candidates/2026-08-19-cycle-1.md).
+Status: active Stage 9A. Cycle 1 consolidation feasibility closed `not_evaluable`
+because the locked matcher admitted no controls; see the [selection
+record](research-candidates/2026-08-19-cycle-1.md) and [result](research-results/consolidation-support-feasibility-v1.md). Cycle 2 candidate selection is next.
 
 ## Resume gate
 
@@ -12,8 +12,9 @@ Before proposing another model, read [hypothesis engineering](hypothesis-enginee
 
 [Daily Consolidation Zone v1](research-hypotheses/daily-consolidation-zone-v1.md)
 competed in the Cycle 1 Stage 9A scorecard. Support recovery—not breakout or failed
-breakout—was prioritised for detector/event feasibility only. This does not
-authorise a strategy implementation or outcome calculation.
+breakout—was prioritised for detector/event feasibility only. The detector was
+structurally viable, but matching feasibility failed. This does not authorise a
+strategy implementation or outcome calculation, and it does not reject the claim.
 
 ### CTA v2
 

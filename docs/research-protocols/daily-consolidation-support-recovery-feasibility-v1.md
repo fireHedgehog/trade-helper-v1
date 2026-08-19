@@ -1,9 +1,9 @@
 # Consolidation support-recovery feasibility v1
 
-Status: locked preregistration; implementation not started. Detector structure,
-event counts, blinded matching coverage, and prospective pseudo-event power are
-authorised only after implementation verification. Actual-event forward outcomes,
-trading rules, and P&L remain prohibited.
+Status: executed and closed as `not_evaluable`. Detector structure and blinded
+matching coverage were evaluated; the locked 90% matching gate failed at `0/274`,
+so prospective power was not run. Actual-event forward outcomes, trading rules,
+and P&L were never accessed and remain prohibited. See the [result](../research-results/consolidation-support-feasibility-v1.md).
 
 Selection authority: [Stage 9A Cycle 1](../research-candidates/2026-08-19-cycle-1.md).
 Parent design: [Daily Consolidation Zone v1](../research-hypotheses/daily-consolidation-zone-v1.md).

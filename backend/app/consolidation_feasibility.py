@@ -61,6 +61,12 @@ class StructuralEvent:
         return asdict(self)
 
 
+@dataclass(frozen=True)
+class StructuralScan:
+    zones: tuple[Zone, ...]
+    events: tuple[StructuralEvent, ...]
+
+
 def variants_from_spec(spec: dict) -> tuple[DetectorVariant, ...]:
     detector = spec["detector"]
     variants = tuple(
@@ -225,15 +231,16 @@ def detect_variant_events(
     return tuple(found)
 
 
-def structural_events(
+def scan_structure(
     bars: pd.DataFrame,
     *,
     symbol: str,
     spec: dict,
-) -> tuple[StructuralEvent, ...]:
-    """Detect and deduplicate economic events across all locked variants."""
+) -> StructuralScan:
+    """Detect zones and deduplicated events across all locked variants."""
     frame = bars.reset_index(drop=True)
     by_index: dict[int, list[Zone]] = {}
+    all_zones: list[Zone] = []
     rolling_by_window = {
         window: _rolling_inputs(frame, window, spec["detector"])
         for window in spec["detector"]["windows"]
@@ -246,11 +253,12 @@ def structural_events(
             detector=spec["detector"],
             rolling=rolling_by_window[variant.window],
         )
+        all_zones.extend(zones)
         for index, zone in detect_variant_events(
             frame, zones=zones, event_spec=spec["event"]
         ):
             by_index.setdefault(index, []).append(zone)
-    return tuple(
+    events = tuple(
         StructuralEvent(
             symbol=symbol,
             event_index=index,
@@ -263,3 +271,14 @@ def structural_events(
         )
         for index, zones in sorted(by_index.items())
     )
+    return StructuralScan(zones=tuple(all_zones), events=events)
+
+
+def structural_events(
+    bars: pd.DataFrame,
+    *,
+    symbol: str,
+    spec: dict,
+) -> tuple[StructuralEvent, ...]:
+    """Compatibility wrapper returning only deduplicated economic events."""
+    return scan_structure(bars, symbol=symbol, spec=spec).events

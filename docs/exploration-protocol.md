@@ -14,7 +14,7 @@ Search and validation are separate machines. Search generates and screens candid
 |---|---|
 | `attempt_id` | Unique, permanent identifier. |
 | `hypothesis_family` | The economic idea family (e.g. `cta`, `consolidation`, `momentum`). Legacy rows may use `strategy` until migrated. |
-| `status` | `exploratory`, `contaminated_exploratory`, `preregistered_no_results`, `development_rejected_insufficient_evidence`, `audit_complete_no_material_defect`, `promoted`. |
+| `status` | `exploratory`, `contaminated_exploratory`, `preregistered_no_results`, `development_not_evaluable`, `development_rejected_insufficient_evidence`, `audit_complete_no_material_defect`, `promoted`. |
 | `scope` | Universe, sample, and window actually touched. |
 | `result_used_for_defaults` | Whether any default parameter was taken from this run. |
 | `variant_count` | Number of specifications or feature combinations actually evaluated. Legacy rows use `candidate_count`. |

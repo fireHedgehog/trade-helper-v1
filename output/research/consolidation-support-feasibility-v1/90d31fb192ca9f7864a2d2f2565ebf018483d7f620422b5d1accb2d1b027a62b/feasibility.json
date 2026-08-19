@@ -1,6 +1,26 @@
 {
-  "decision": null,
+  "decision": "not_evaluable",
   "deduplicated_events": 274,
+  "detector_prevalence_by_variant": {
+    "w40-width0.08-vol0.75": 0.00623224992111076,
+    "w40-width0.08-vol1.00": 0.012148942884190597,
+    "w40-width0.12-vol0.75": 0.007021142316188072,
+    "w40-width0.12-vol1.00": 0.013647838434837488,
+    "w60-width0.08-vol0.75": 0.002743155427719186,
+    "w60-width0.08-vol1.00": 0.005859166932992437,
+    "w60-width0.12-vol0.75": 0.0032491743901139876,
+    "w60-width0.12-vol1.00": 0.006844572280813891
+  },
+  "eligible_completion_dates_by_variant": {
+    "w40-width0.08-vol0.75": 38028,
+    "w40-width0.08-vol1.00": 38028,
+    "w40-width0.12-vol0.75": 38028,
+    "w40-width0.12-vol1.00": 38028,
+    "w60-width0.08-vol0.75": 37548,
+    "w60-width0.08-vol1.00": 37548,
+    "w60-width0.12-vol0.75": 37548,
+    "w60-width0.12-vol1.00": 37548
+  },
   "events_by_symbol": {
     "DBC": 33,
     "EEM": 18,
@@ -30,7 +50,35 @@
     "2017": 11,
     "2018": 17
   },
-  "matching_coverage": null,
+  "excluded_sparse_or_degenerate_variants": [
+    "w60-width0.08-vol0.75",
+    "w60-width0.12-vol0.75"
+  ],
+  "matched_events": 0,
+  "matching_coverage": 0.0,
+  "matching_funnel_totals": {
+    "after_event_exclusion": 16489,
+    "inside_caliper": 0,
+    "same_year_candidates": 66161
+  },
   "prospective_power": null,
-  "status": "incomplete_structural_only"
+  "retained_variants": [
+    "w40-width0.08-vol0.75",
+    "w40-width0.08-vol1.00",
+    "w40-width0.12-vol0.75",
+    "w40-width0.12-vol1.00",
+    "w60-width0.08-vol1.00",
+    "w60-width0.12-vol1.00"
+  ],
+  "status": "complete",
+  "zones_by_variant": {
+    "w40-width0.08-vol0.75": 237,
+    "w40-width0.08-vol1.00": 462,
+    "w40-width0.12-vol0.75": 267,
+    "w40-width0.12-vol1.00": 519,
+    "w60-width0.08-vol0.75": 103,
+    "w60-width0.08-vol1.00": 220,
+    "w60-width0.12-vol0.75": 122,
+    "w60-width0.12-vol1.00": 257
+  }
 }

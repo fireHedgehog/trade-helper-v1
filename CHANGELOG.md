@@ -2,6 +2,18 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.40.0
+
+Closed Stage 9A Cycle 1 as `not_evaluable`, without accessing actual-event outcomes.
+
+- Completed detector-prevalence and locked pre-event matching feasibility for 274 deduplicated consolidation support-recovery events.
+- Retained six of eight detector variants; two were transparently excluded as sparse under the preregistered prevalence gate.
+- Recorded a zero-control matching result: 66,161 same-year candidates, 16,489 after event exclusion, and zero inside every locked feature caliper.
+- Correctly short-circuited before prospective power; no return, drawdown, P&L, or post-event price was joined to an actual event.
+- Added deterministic matching leakage/exclusion tests, a final decision artifact, immutable result documentation, and an attempts-ledger closure.
+- Preserved the distinction between `not_evaluable` and hypothesis rejection; any alternative comparison design must enter a new research cycle.
+- Verification: `222 passed`, locked input reproduction, and byte-identical structural rerun.
+
 ## 0.39.0
 
 First Stage 9A execution checkpoint; structural feasibility only, with no forward-outcome or P&L access.

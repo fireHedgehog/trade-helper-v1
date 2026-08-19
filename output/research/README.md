@@ -6,7 +6,7 @@ Compact, reviewable outputs from locked experiments. Large resumable candidate c
 
 [Protocol](../../docs/research-protocol.md) · [Result](../../docs/research-results/cta-trend-wf-v1.md) · [Audit](../../docs/research-results/cta-trend-wf-v1-audit.md)
 
-`consolidation-support-feasibility-v1/<fingerprint>/` is an incomplete,
-structural-only feasibility artifact. It contains no actual-event forward outcomes
-and no evidence decision. [Protocol](../../docs/research-protocols/daily-consolidation-support-recovery-feasibility-v1.md)
-· [Structural checkpoint](../../docs/research-results/consolidation-support-feasibility-v1-structural.md)
+`consolidation-support-feasibility-v1/<fingerprint>/` is the closed feasibility
+artifact. It records `not_evaluable` after the locked matching gate failed and
+contains no actual-event forward outcomes. [Protocol](../../docs/research-protocols/daily-consolidation-support-recovery-feasibility-v1.md)
+· [Result](../../docs/research-results/consolidation-support-feasibility-v1.md)

@@ -1,0 +1,29 @@
+{
+  "actual_event_forward_outcomes_accessed": false,
+  "data_sha256": "86eeb197919baad820d07c450b546245962ce9ae76404b339fdc7d7738f74ccc",
+  "decision": "not_evaluable",
+  "excluded_sparse_or_degenerate_variants": [
+    "w60-width0.08-vol0.75",
+    "w60-width0.12-vol0.75"
+  ],
+  "gates": {
+    "asset_breadth": true,
+    "asset_concentration": true,
+    "calendar_breadth": true,
+    "detector_variants_retained": true,
+    "locked_inputs": true,
+    "matching_coverage": false,
+    "prospective_power": null,
+    "year_concentration": true
+  },
+  "reason": "locked matching coverage is below 90%; power was not run because the comparison set is infeasible",
+  "retained_variants": [
+    "w40-width0.08-vol0.75",
+    "w40-width0.08-vol1.00",
+    "w40-width0.12-vol0.75",
+    "w40-width0.12-vol1.00",
+    "w60-width0.08-vol1.00",
+    "w60-width0.12-vol1.00"
+  ],
+  "spec_sha256": "90d31fb192ca9f7864a2d2f2565ebf018483d7f620422b5d1accb2d1b027a62b"
+}

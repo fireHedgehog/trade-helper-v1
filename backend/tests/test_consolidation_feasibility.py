@@ -18,8 +18,10 @@ from app.run_consolidation_feasibility import (
     canonical_spec_sha256,
     development_bars,
     development_data_sha256,
+    finalize_existing,
     validate_locked_inputs,
 )
+from app import run_consolidation_feasibility as runner
 
 
 ROOT = Path(__file__).parents[2]
@@ -136,3 +138,36 @@ def test_events_are_deduplicated_across_variants(monkeypatch) -> None:
     assert len(events[0].variant_ids) == 8
     forbidden = {"forward_return", "drawdown", "pnl", "rank", "signal"}
     assert forbidden.isdisjoint(events[0].to_dict())
+
+
+def test_finalize_short_circuits_to_not_evaluable_when_matching_fails(
+    tmp_path, monkeypatch
+) -> None:
+    monkeypatch.setattr(runner, "ROOT", tmp_path)
+    output = tmp_path / "output/research/consolidation-support-feasibility-v1" / SPEC_SHA256
+    output.mkdir(parents=True)
+    prevalence = {
+        variant.variant_id: 0.01 for variant in variants_from_spec(SPEC)
+    }
+    (output / "feasibility.json").write_text(
+        json.dumps(
+            {
+                "deduplicated_events": 100,
+                "events_by_symbol": {symbol: 9 for symbol in SPEC["universe"]},
+                "events_by_year": {str(year): 10 for year in range(2007, 2017)},
+                "detector_prevalence_by_variant": prevalence,
+                "matching_coverage": 0.0,
+                "prospective_power": None,
+            }
+        )
+    )
+    checks = {
+        "spec_matches": True,
+        "data_matches": True,
+        "rows_match": True,
+        "data_sha256": SPEC["data"]["development_sha256"],
+    }
+    _, decision = finalize_existing(SPEC, checks)
+    assert decision["decision"] == "not_evaluable"
+    assert decision["gates"]["prospective_power"] is None
+    assert decision["actual_event_forward_outcomes_accessed"] is False

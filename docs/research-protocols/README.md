@@ -9,4 +9,4 @@ protocol and normative field template. New protocols live here.
 
 | Protocol | Status | File |
 |---|---|---|
-| Consolidation support-recovery detector/event feasibility v1 | Locked; implementation not started; actual-event outcomes prohibited | [v1](daily-consolidation-support-recovery-feasibility-v1.md) |
+| Consolidation support-recovery detector/event feasibility v1 | Closed `not_evaluable`; matching 0/274; actual-event outcomes not accessed | [v1](daily-consolidation-support-recovery-feasibility-v1.md) · [result](../research-results/consolidation-support-feasibility-v1.md) |

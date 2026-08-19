@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.39.0`; Stage 8 is closed and Stage 9A structural feasibility is complete without outcome access. Matching and prospective power remain before any feasibility decision.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.40.0`; Stage 8 is closed and Stage 9A Cycle 1 is closed `not_evaluable`. The locked matcher admitted no controls, so power and actual-event outcomes were not run.
 
 ## Completed foundation
 
@@ -78,13 +78,12 @@ Candidate search and promotion follow the [exploration protocol](exploration-pro
 
 Gate: one candidate has earned priority on rationale, product relevance, distinct information, data readiness, implementability, falsifiability, research restraint, and diversification; its immutable protocol defines what will cause `reject`, `revise`, or `continue research`.
 
-Cycle 1 selection: [consolidation support recovery](research-candidates/2026-08-19-cycle-1.md) is prioritised only for a bounded [detector/event-feasibility protocol](research-protocols/daily-consolidation-support-recovery-feasibility-v1.md). Futures trend and cross-sectional momentum are parked for unavailable point-in-time data. The protocol and machine specification are locked; Stage 9A remains open until every feasibility gate is executed.
+Cycle 1 selected [consolidation support recovery](research-candidates/2026-08-19-cycle-1.md) only for a bounded [detector/event-feasibility protocol](research-protocols/daily-consolidation-support-recovery-feasibility-v1.md). Its [result](research-results/consolidation-support-feasibility-v1.md) is `not_evaluable`: breadth and prevalence passed, but the locked matcher admitted zero controls for 274 events. Power and actual-event outcomes were correctly skipped. This does not reject the hypothesis.
 
-Version `0.39.0` locked/fingerprinted the protocol and implemented the pure
-no-look-ahead detector/event engine. Its [structural checkpoint](research-results/consolidation-support-feasibility-v1-structural.md)
-has broad, non-concentrated event counts but no outcome or decision. Next: detector
-prevalence, matching coverage, corrected block-selector fixtures, and pseudo-event
-power.
+Next: open Cycle 2 and score data-ready candidates before results. A materially
+different consolidation matcher may compete only as a new justified protocol;
+Cycle 1 thresholds cannot be relaxed retrospectively. Futures trend and
+cross-sectional momentum remain parked until their point-in-time data path exists.
 
 ### 9B — Locked experiment and confirmation
 
