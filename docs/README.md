@@ -6,19 +6,19 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.42.0` |
+| Version | `0.43.0` |
 | Parent release | `0.37.0` (first Stage 8 acceptance candidate) |
-| Current state | Stage 9A Cycle 2 closed: SMA Cross v1 exposure-reduction prioritised jointly with a volatility-managed-exposure control; CTA v2 and cross-sectional rotation eligible but parked pending infrastructure; TA Breakout v1 not prioritised |
-| Verification | `222 passed` at `0.40.0`; Cycle 2 is a documentation-only selection cycle, no code changed |
-| Completed | Stage 8; Stage 9A Cycle 1 selection through matching feasibility; Stage 9A Cycle 2 candidate operationalization, scoring, and adversarial data-feasibility/code verification for five candidates |
-| Next product work | Lock one protocol for the SMA Cross v1 / volatility-managed-exposure joint experiment per [Cycle 2](research-candidates/2026-08-19-cycle-2.md)'s next-locked-deliverable list |
-| Active research | Stage 9A Cycle 2 protocol drafting; Stage 9B remains gated |
+| Current state | Stage 9A Cycle 2 closed and its chosen protocol locked: [SMA Cross v1 exposure-reduction, jointly against a volatility-state placebo](research-protocols/sma-cross-v1-exposure-reduction.md), specification SHA-256 `5bee965b775645681149049e3ecf43a618b4e71b225bc97b53b88b62b6ebf4ae`; no data fetched or inspected under it yet |
+| Verification | `222 passed` at `0.40.0`; `0.43.0` added no runtime code, only a locked spec and docs |
+| Completed | Stage 8; Stage 9A Cycle 1 selection through matching feasibility; Stage 9A Cycle 2 candidate scoring/verification and protocol lock for Candidate A/B |
+| Next product work | Fetch the 12-ETF universe on the executing machine, record the spec's data fingerprint, implement the state-recomputing bootstrap extension in `research.py` per the protocol's lock checklist, then run |
+| Active research | Stage 9A Cycle 2 execution (not yet started); CTA v2 and cross-sectional rotation remain parked pending infrastructure; Stage 9B remains gated |
 | Parked operations | Stage 10 cron; Stage 11 deployment; CTA v2 and cross-sectional rotation pending a pooled-portfolio engine and panel/permutation tooling respectively |
 | Pending triage | 2026-08-19 methodology/implementation audit (2 critical, 2 high, 5 medium, 4 low), untriaged; see [audits/README.md](audits/README.md) |
 
 The first real `0.37.0` acceptance run correctly ended `complete_with_errors`, but revealed two contract defects: settlement-based Yahoo futures were treated as equity candles, and a small invalid subset blocked every full-universe daily scan. Version `0.37.1` separates market context from the strategy universe, keeps equity validation strict, gives context bars an honest settlement contract, and permits daily discovery above a visible 90% coverage floor. The repaired real run then completed with zero failed/blocked model jobs: five new and two reused full-universe snapshots; empty watchlist scopes were honestly skipped. Saved snapshots retain exact exclusions and fingerprints. Formal experiments remain governed by their locked coverage rules.
 
-Local-optimum guard: Stage 8 is closed. Do not add more infrastructure or UX polish unless a concrete defect blocks research. Cycle 1 is closed `not_evaluable`; Cycle 2 candidate selection is closed. The next work is locking one protocol for the prioritised Cycle 2 candidate, not scoring a sixth candidate or building the pooled-portfolio engine that would unblock the parked ones — that engine is a future, separately justified deliverable, not a default next task.
+Local-optimum guard: Stage 8 is closed. Do not add more infrastructure or UX polish unless a concrete defect blocks research. Cycle 1 is closed `not_evaluable`; Cycle 2 selection and protocol lock are both closed. The next work is fetching data and implementing the one bounded bootstrap extension the locked protocol names, then running it — not scoring a sixth candidate, not building the pooled-portfolio engine that would unblock the parked candidates (a future, separately justified deliverable), and not widening the SMA window grid before this run's result is seen.
 
 Heavy statistical work is intentionally paused. On resumption, first operationalize candidate theses, audit benchmark/universe suitability, and only then apply the model acceptance scorecard. Read the protocol, CTA result, audit, and backlog before experiment design. Do not tune CTA v1 after observing its rejection.
 

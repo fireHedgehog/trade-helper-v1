@@ -2,6 +2,16 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.43.0
+
+Locked the Stage 9A Cycle 2 protocol; no data fetched, no code executed, no result computed.
+
+- Locked [SMA Cross v1 exposure-reduction and volatility-state placebo v1](docs/research-protocols/sma-cross-v1-exposure-reduction.md): recast Candidate B's volatility-managed-exposure mechanism into a second self-referential trailing state (below/above its own expanding-median realized volatility) instead of a continuous, target-vol-anchored weight, so the joint experiment needs no new portfolio-weighting engine.
+- Specified a bounded extension of the existing `circular_block_bootstrap_p_value` (state-recomputing resample, not a new panel/permutation library) as the only new statistics code required, reusing the existing `holm_adjust` unchanged.
+- Locked warm-up (252 sessions, keeping 2008 in-sample for every asset including DBC), materiality thresholds (Δσ ≤ −3pp, ΔMDD ≤ −5pp), an 8/12-asset breadth gate, and an explicit placebo rule so the SMA state must beat the volatility state, not merely beat continuous exposure — resolving every open item Cycle 2's verification flagged against the raw Candidate A/B records.
+- Created `research/experiments/sma-cross-v1-exposure-reduction.json` with every constant above, canonical-hashed (spec SHA-256 `5bee965b775645681149049e3ecf43a618b4e71b225bc97b53b88b62b6ebf4ae`); its data-fingerprint fields are honestly `null`, pending a data fetch on the executing machine.
+- Appended one `preregistered_no_results` attempts-ledger entry before any execution, per the exploration protocol.
+
 ## 0.42.0
 
 Closed Stage 9A Cycle 2 candidate selection; no strategy implemented, no result computed, no code changed.

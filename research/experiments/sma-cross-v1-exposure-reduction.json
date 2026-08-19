@@ -1,0 +1,92 @@
+{
+  "experiment_id": "sma-cross-v1-exposure-reduction",
+  "status": "preregistered_no_results",
+  "protocol": "docs/research-protocols/sma-cross-v1-exposure-reduction.md",
+  "selection_record": "docs/research-candidates/2026-08-19-cycle-2.md",
+  "base_code_commit": "62f140af68ae8744fabc6a649fa9b57cc6d7204b",
+  "fingerprint_date": "2026-08-19",
+  "canonicalization": "UTF-8 JSON; recursively sorted keys; separators comma and colon; ensure_ascii=false; trailing newline excluded",
+  "permitted_decisions": ["material_and_consistent", "not_material_or_not_consistent", "invalid"],
+  "forbidden_outputs": ["alpha", "entry_signal", "exit_signal", "stop", "position_size", "sharpe", "reject", "revise", "continue_research"],
+  "universe": ["SPY", "QQQ", "IWM", "EFA", "EEM", "TLT", "IEF", "GLD", "DBC", "XLK", "XLF", "XLE"],
+  "estimand": "no_pooled_panel_per_asset_only",
+  "data": {
+    "database": "data/market.db",
+    "contract": "docs/adr/0002-market-data-contract.md",
+    "columns": ["symbol", "date", "open", "high", "low", "close", "volume"],
+    "fingerprint_method": "SHA-256 incremental ORDER BY symbol,date; symbol UTF-8 + NUL + date ASCII + NUL + big-endian IEEE-754 open/high/low/close doubles + signed 64-bit integer volume",
+    "development_sha256": null,
+    "development_rows": null,
+    "development_first_date": null,
+    "development_last_date": null,
+    "fingerprint_pending_reason": "specification locked before data fetch; fingerprint recorded once the 12-ETF universe is present on the executing machine, per protocol Implementation and artifact contract step 3"
+  },
+  "states": {
+    "sma": {
+      "fast": 20,
+      "slow": 50,
+      "definition": "State_SMA(t) = 1{SMA_fast(t) > SMA_slow(t)}, both computed on adjusted daily closes through completed close t"
+    },
+    "volatility": {
+      "lookback": 20,
+      "estimator": "trailing 20-session close-to-close log-return standard deviation, annualized by sqrt(252)",
+      "reference": "expanding median of the trailing-vol series from the first post-warm-up session through t",
+      "definition": "State_Vol(t) = 1{trailing_vol_20(t) <= expanding_median(trailing_vol_20)(t)}",
+      "note": "self-referential; no external target_vol or leverage/weight-cap contract required"
+    },
+    "warm_up_sessions": 252,
+    "warm_up_rationale": "long enough for a stable 50-session SMA and a non-degenerate expanding median; short enough to keep 2008 inside the evaluated sample for every asset including DBC's 2006 inception"
+  },
+  "gated_return": {
+    "definition": "r_gated_i(t) = r_i(t) * 1{State_i(t-1)}",
+    "timing_note": "state computed through completed close t-1 gates day t's return, matching ADR 0001 signal/fill separation even though no position is opened in this no-trade experiment"
+  },
+  "estimator": {
+    "primary": {
+      "delta_sigma": "annualized_vol(r_gated) - annualized_vol(r_raw), annualization = sqrt(252)",
+      "delta_mdd": "max_drawdown(cumulative(r_gated)) - max_drawdown(cumulative(r_raw))",
+      "favourable_direction": "negative (reduction)"
+    },
+    "secondary_unscored": ["delta_cagr"]
+  },
+  "bootstrap": {
+    "base_function": "backend/app/research.py:circular_block_bootstrap_p_value",
+    "extension_required": "state-recomputing variant: resample raw returns in circular blocks, reconstruct a synthetic price path, recompute both trailing states on the resampled path, then compute delta_sigma/delta_mdd on the resampled state-recomputed path",
+    "block_bars": 20,
+    "resamples": 5000,
+    "seed": 17291,
+    "p_value_convention": "one-sided; fraction of resamples with resampled_delta <= observed_delta (favourable is negative), plus add-one correction, mirroring the existing function's convention with the inequality direction flipped",
+    "correction": {
+      "method": "backend/app/research.py:holm_adjust",
+      "alpha": 0.05,
+      "family_definition": "12 assets x 2 statistics (delta_sigma, delta_mdd) per state; SMA state and volatility-placebo state are separate families, each independently Holm-corrected, not pooled"
+    }
+  },
+  "gates": {
+    "materiality": {
+      "delta_sigma_max_percentage_points": -3,
+      "delta_mdd_max_percentage_points": -5,
+      "significance": "holm_adjusted_p <= alpha for both statistics on the same asset"
+    },
+    "breadth_minimum_assets": 8,
+    "breadth_total_assets": 12,
+    "placebo_rule": "for each asset meeting materiality, the SMA state's delta_sigma and delta_mdd must each be more favourable (more negative) than the volatility-state placebo's delta_sigma/delta_mdd on the same asset",
+    "concentration_minimum_clusters": 2,
+    "concentration_total_clusters": 4,
+    "concentration_source": "backend/app/portfolio_universe.py:PORTFOLIO_CLASSIFICATIONS",
+    "reproducibility": "byte-identical delta_sigma/delta_mdd/p-value artifact on an independent rerun against the same fingerprinted data"
+  },
+  "multiplicity": {
+    "families": 2,
+    "family_labels": ["sma_state", "volatility_state_placebo"],
+    "variant_count": 2,
+    "dependence_group": "sma-cross-v1-exposure-reduction",
+    "sma_window_grid": "none in this run; a neighbourhood robustness check (e.g. 10/30, 50/100) is explicitly deferred to a separate, independently justified amendment if this result is material_and_consistent"
+  },
+  "scope_exclusions": {
+    "no_trade": true,
+    "no_costs": "out of scope for this no-trade characterization run; deferred to any later executable-expression protocol",
+    "no_pooled_panel_estimator": "deliberate; avoids the panel/permutation infrastructure gap that parked Cycle 2's cross-sectional-rotation candidate",
+    "no_book_level_or_leveraged_expression": "Candidate B's book-level/continuous-weight expression remains parked pending a portfolio-weighting engine; only the single-asset binary placebo state is in scope here"
+  }
+}

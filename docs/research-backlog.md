@@ -3,10 +3,11 @@
 Status: active Stage 9A. Cycle 1 consolidation feasibility closed `not_evaluable`
 because the locked matcher admitted no controls; see the [selection
 record](research-candidates/2026-08-19-cycle-1.md) and [result](research-results/consolidation-support-feasibility-v1.md). Cycle 2 selected SMA Cross v1's
-exposure-reduction claim, jointly designed against volatility-managed exposure's
-control; see the [selection record](research-candidates/2026-08-19-cycle-2.md).
-Next is locking that joint protocol, per the record's next-locked-deliverable list;
-do not begin it from a favourable-looking exploratory number.
+exposure-reduction claim, jointly designed against a volatility-state placebo; see
+the [selection record](research-candidates/2026-08-19-cycle-2.md). Its protocol is
+now [locked](research-protocols/sma-cross-v1-exposure-reduction.md); next is
+fetching the 12-ETF universe and implementing the one named bootstrap extension,
+not beginning from a favourable-looking exploratory number.
 
 ## Resume gate
 
@@ -33,8 +34,9 @@ distinct, non-overlapping mechanism is confirmed.
 ### SMA cross, breakout, and momentum horizons
 
 SMA cross was operationalized, scored, and prioritised in Cycle 2 as an
-exposure-reduction claim, jointly designed against a volatility-managed-exposure
-control — see [Candidate A](research-candidates/2026-08-19-cycle-2.md). Momentum
+exposure-reduction claim, jointly designed against a volatility-state placebo —
+see [Candidate A](research-candidates/2026-08-19-cycle-2.md) and its now-[locked
+protocol](research-protocols/sma-cross-v1-exposure-reduction.md). Momentum
 horizons was operationalized as ETF-12 cross-sectional relative-strength rotation
 — see [Candidate D](research-candidates/2026-08-19-cycle-2.md) — eligible (score
 13) but parked: its estimand needs panel/permutation statistical tooling this

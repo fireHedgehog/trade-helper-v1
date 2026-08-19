@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.42.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and Cycle 2 selected SMA Cross v1's exposure-reduction claim for a joint protocol against a volatility-managed-exposure control.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.43.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and Cycle 2's chosen protocol — SMA Cross v1's exposure-reduction claim jointly against a volatility-state placebo — is locked and awaiting data/execution.
 
 ## Completed foundation
 
@@ -83,15 +83,19 @@ Cycle 1 selected [consolidation support recovery](research-candidates/2026-08-19
 Cycle 2 scored five new candidates before any result: [selection
 record](research-candidates/2026-08-19-cycle-2.md). SMA Cross v1's
 exposure-reduction claim was prioritised, jointly designed against a
-volatility-managed-exposure control so the two are not scored as independent
-evidence of the same question. CTA v2 and ETF-12 cross-sectional rotation are
-eligible but parked pending infrastructure this codebase does not have — a
-pooled multi-instrument portfolio engine and panel/permutation statistical
-tooling respectively — not pending data. TA Breakout v1 was not prioritised.
-Next: lock one protocol for the SMA Cross v1 / volatility-managed-exposure joint
-experiment per that record's next-locked-deliverable list. A materially
-different consolidation matcher may compete only as a new justified protocol;
-Cycle 1 thresholds cannot be relaxed retrospectively. Futures trend and
+volatility-state placebo (recast from Candidate B's raw operationalization into a
+second self-referential trailing state, avoiding any new portfolio-weighting
+engine) so the two are not scored as independent evidence of the same question.
+CTA v2 and ETF-12 cross-sectional rotation are eligible but parked pending
+infrastructure this codebase does not have — a pooled multi-instrument portfolio
+engine and panel/permutation statistical tooling respectively — not pending data.
+TA Breakout v1 was not prioritised. The chosen protocol is now
+[locked](research-protocols/sma-cross-v1-exposure-reduction.md), specification
+SHA-256 `5bee965b775645681149049e3ecf43a618b4e71b225bc97b53b88b62b6ebf4ae`; its
+data fingerprint is honestly `null` pending a data fetch. Next: fetch the 12-ETF
+universe, implement the protocol's one named bootstrap extension, then run. A
+materially different consolidation matcher may compete only as a new justified
+protocol; Cycle 1 thresholds cannot be relaxed retrospectively. Futures trend and
 cross-sectional equity momentum on the ~500-symbol list remain parked until their
 point-in-time data path exists.
 
