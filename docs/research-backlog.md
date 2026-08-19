@@ -3,11 +3,14 @@
 Status: active Stage 9A. Cycle 1 consolidation feasibility closed `not_evaluable`
 because the locked matcher admitted no controls; see the [selection
 record](research-candidates/2026-08-19-cycle-1.md) and [result](research-results/consolidation-support-feasibility-v1.md). Cycle 2 selected SMA Cross v1's
-exposure-reduction claim, jointly designed against a volatility-state placebo; see
-the [selection record](research-candidates/2026-08-19-cycle-2.md). Its protocol is
-now [locked](research-protocols/sma-cross-v1-exposure-reduction.md); next is
-fetching the 12-ETF universe and implementing the one named bootstrap extension,
-not beginning from a favourable-looking exploratory number.
+exposure-reduction claim, jointly designed against a volatility-state placebo;
+see the [selection record](research-candidates/2026-08-19-cycle-2.md). Its
+[locked protocol](research-protocols/sma-cross-v1-exposure-reduction.md) executed
+and [closed](research-results/sma-cross-v1-exposure-reduction.md)
+`not_material_or_not_consistent` — a real, properly-powered negative result: 0/12
+assets survived Holm correction on both statistics, and a volatility-only placebo
+matched or beat the SMA state's variance reduction on every asset. No follow-up
+research task is queued; the next Stage 9A step, if any, is a new cycle.
 
 ## Resume gate
 
@@ -35,8 +38,13 @@ distinct, non-overlapping mechanism is confirmed.
 
 SMA cross was operationalized, scored, and prioritised in Cycle 2 as an
 exposure-reduction claim, jointly designed against a volatility-state placebo —
-see [Candidate A](research-candidates/2026-08-19-cycle-2.md) and its now-[locked
-protocol](research-protocols/sma-cross-v1-exposure-reduction.md). Momentum
+see [Candidate A](research-candidates/2026-08-19-cycle-2.md). Its
+[locked protocol](research-protocols/sma-cross-v1-exposure-reduction.md) is
+closed `not_material_or_not_consistent`: the volatility-only placebo matched or
+beat it on every asset, and no asset survived Holm correction on both statistics
+at once — see the [result](research-results/sma-cross-v1-exposure-reduction.md).
+A different window pair or a pooled/panel version would be a new, independently
+justified attempt, not a repair of this one. Momentum
 horizons was operationalized as ETF-12 cross-sectional relative-strength rotation
 — see [Candidate D](research-candidates/2026-08-19-cycle-2.md) — eligible (score
 13) but parked: its estimand needs panel/permutation statistical tooling this

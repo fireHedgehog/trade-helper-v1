@@ -1,13 +1,14 @@
 # SMA Cross v1 — exposure-reduction feasibility and test v1
 
-Status: locked, not yet executed. No data has been fetched or inspected under this
-protocol; no bar has been read for any purpose other than counting warm-up length.
+Status: executed and closed as `not_material_or_not_consistent`. See the
+[result](../research-results/sma-cross-v1-exposure-reduction.md).
 
 Selection authority: [Stage 9A Cycle 2, Candidate
 A](../research-candidates/2026-08-19-cycle-2.md), jointly designed against
 [Candidate B](../research-candidates/2026-08-19-cycle-2.md)'s
-volatility-managed-exposure mechanism as its required control.
-Parent design: [SMA Cross v1 operationalization](../research-hypotheses/sma-cross-v1.md).
+volatility-managed-exposure mechanism as its required control. Candidate A's
+full operationalization record lives in that same Cycle 2 selection record;
+no separate standalone hypothesis file exists for it.
 
 ## Decision this protocol may make
 
@@ -129,7 +130,7 @@ consistent`, not partial credit:
 | Materiality (SMA state) | Holm-adjusted-significant `Δσ ≤ −3` percentage points annualized **and** `ΔMDD ≤ −5` percentage points, at `α = 0.05` |
 | Breadth | Both materiality conditions hold in at least `8/12` assets |
 | Placebo | For each asset meeting materiality, the SMA state's `Δσ` and `ΔMDD` are each more favourable (more negative) than the volatility state's own `Δσ`/`ΔMDD` on the same asset — the SMA state must add something beyond the volatility-state placebo, not merely equal it |
-| Concentration | No single asset accounts for the entire breadth count in isolation from the rest — at minimum `2` of `4` asset-class clusters from `portfolio_universe.py`'s classification must each contribute at least one qualifying asset |
+| Concentration | No single asset accounts for the entire breadth count in isolation from the rest — at minimum `3` of the `6` distinct `cluster` values in `portfolio_universe.py:PORTFOLIO_CLASSIFICATIONS` must each contribute at least one qualifying asset |
 | Reproducibility | Byte-identical `Δσ`/`ΔMDD`/p-value artifact on an independent rerun against the same fingerprinted data |
 
 Materiality thresholds (`3`-point `Δσ`, `5`-point `ΔMDD`) are Stage 9A research
@@ -165,7 +166,18 @@ Before execution:
    `data` block's fingerprint fields are `null`, honestly, pending step 3. Locked
    specification SHA-256:
 
-   `5bee965b775645681149049e3ecf43a618b4e71b225bc97b53b88b62b6ebf4ae`
+   `3c7e8be2a5fb636a8234bf982e42862412143213f9f42f592a93babcc9956238`
+
+   **Pre-execution amendment 1 (2026-08-19).** The original concentration gate
+   said "`2` of `4` asset-class clusters," paraphrasing the mechanism from
+   memory rather than reading `portfolio_universe.py:AssetClassification`
+   directly. The actual `cluster` field has `6` distinct values (US equity,
+   International equity, Long-duration Treasury, Intermediate Treasury, Gold,
+   Commodities), not `4`. Corrected to "`3` of `6`" before any data access or
+   execution; no threshold's practical strictness changed materially (roughly
+   half of the actual clusters, same as originally intended). Original
+   specification SHA-256 `5bee965b775645681149049e3ecf43a618b4e71b225bc97b53b88b62b6ebf4ae`
+   remains in the attempts ledger.
 3. Fetch the 12-ETF universe if not already current, then compute and record the
    development-data SHA-256 using the existing ordered-binary hashing convention
    from `run_consolidation_feasibility.py`'s `development_data_sha256` — **this

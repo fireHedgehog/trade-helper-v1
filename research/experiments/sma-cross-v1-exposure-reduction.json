@@ -71,9 +71,9 @@
     "breadth_minimum_assets": 8,
     "breadth_total_assets": 12,
     "placebo_rule": "for each asset meeting materiality, the SMA state's delta_sigma and delta_mdd must each be more favourable (more negative) than the volatility-state placebo's delta_sigma/delta_mdd on the same asset",
-    "concentration_minimum_clusters": 2,
-    "concentration_total_clusters": 4,
-    "concentration_source": "backend/app/portfolio_universe.py:PORTFOLIO_CLASSIFICATIONS",
+    "concentration_minimum_clusters": 3,
+    "concentration_total_clusters": 6,
+    "concentration_source": "backend/app/portfolio_universe.py:PORTFOLIO_CLASSIFICATIONS[symbol].cluster (6 distinct values: US equity, International equity, Long-duration Treasury, Intermediate Treasury, Gold, Commodities)",
     "reproducibility": "byte-identical delta_sigma/delta_mdd/p-value artifact on an independent rerun against the same fingerprinted data"
   },
   "multiplicity": {

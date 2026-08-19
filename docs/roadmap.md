@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.43.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and Cycle 2's chosen protocol — SMA Cross v1's exposure-reduction claim jointly against a volatility-state placebo — is locked and awaiting data/execution.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.45.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and Cycle 2's chosen protocol — SMA Cross v1's exposure-reduction claim jointly against a volatility-state placebo — is closed `not_material_or_not_consistent`, a completed, properly-powered negative result.
 
 ## Completed foundation
 
@@ -89,15 +89,19 @@ engine) so the two are not scored as independent evidence of the same question.
 CTA v2 and ETF-12 cross-sectional rotation are eligible but parked pending
 infrastructure this codebase does not have — a pooled multi-instrument portfolio
 engine and panel/permutation statistical tooling respectively — not pending data.
-TA Breakout v1 was not prioritised. The chosen protocol is now
-[locked](research-protocols/sma-cross-v1-exposure-reduction.md), specification
-SHA-256 `5bee965b775645681149049e3ecf43a618b4e71b225bc97b53b88b62b6ebf4ae`; its
-data fingerprint is honestly `null` pending a data fetch. Next: fetch the 12-ETF
-universe, implement the protocol's one named bootstrap extension, then run. A
-materially different consolidation matcher may compete only as a new justified
-protocol; Cycle 1 thresholds cannot be relaxed retrospectively. Futures trend and
-cross-sectional equity momentum on the ~500-symbol list remain parked until their
-point-in-time data path exists.
+TA Breakout v1 was not prioritised. The chosen protocol was
+[locked](research-protocols/sma-cross-v1-exposure-reduction.md), executed, and
+[closed](research-results/sma-cross-v1-exposure-reduction.md)
+`not_material_or_not_consistent`: 0/12 assets survived Holm correction on both
+statistics at once, and the volatility-state placebo matched or beat the SMA
+state's variance reduction on all 12 assets, directly triggering the
+protocol's own falsifier. This is a real negative result on the specific
+locked claim, not a blocked test. A materially different consolidation
+matcher, a different SMA window, or a pooled/panel version of this same claim
+may compete only as a new, independently justified protocol — none is a
+default next task. Cycle 1 thresholds cannot be relaxed retrospectively.
+Futures trend and cross-sectional equity momentum on the ~500-symbol list
+remain parked until their point-in-time data path exists.
 
 ### 9B — Locked experiment and confirmation
 

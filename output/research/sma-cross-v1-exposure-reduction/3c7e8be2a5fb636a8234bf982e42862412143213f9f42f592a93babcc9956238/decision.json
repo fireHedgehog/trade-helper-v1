@@ -1,0 +1,10 @@
+{
+  "breadth_count": 0,
+  "breadth_met": false,
+  "clusters_represented": [],
+  "concentration_met": false,
+  "data_sha256": "0c5a81332f9ba941ddce9bd6a69cb9fe90c3f7570b163c1a4ec3bd4c609fc5bc",
+  "decision": "not_material_or_not_consistent",
+  "qualifying_assets": [],
+  "spec_sha256": "3c7e8be2a5fb636a8234bf982e42862412143213f9f42f592a93babcc9956238"
+}

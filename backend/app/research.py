@@ -535,3 +535,176 @@ def select_validation_candidate(
         )
 
     return sorted(survivors, key=ranking)[0], report
+
+
+# --- SMA Cross v1 exposure-reduction / volatility-state placebo (Stage 9A Cycle 2) ---
+# Implements docs/research-protocols/sma-cross-v1-exposure-reduction.md. Both
+# trailing states are self-referential (no external target level); the
+# volatility state is the locked comparator, not a separate candidate.
+
+SMA_CROSS_WARM_UP_SESSIONS = 252
+SMA_CROSS_FAST = 20
+SMA_CROSS_SLOW = 50
+SMA_CROSS_VOL_LOOKBACK = 20
+SMA_CROSS_BLOCK_BARS = 20
+SMA_CROSS_RESAMPLES = 5_000
+SMA_CROSS_SEED = 17_291
+SMA_CROSS_ANNUALIZATION = math.sqrt(252)
+
+
+def _rolling_mean(values: np.ndarray, window: int) -> np.ndarray:
+    """NaN-padded rolling mean; result[i] uses values[i-window+1:i+1]."""
+    n = len(values)
+    result = np.full(n, np.nan)
+    if window > n:
+        return result
+    cumsum = np.concatenate([[0.0], np.cumsum(values)])
+    result[window - 1 :] = (cumsum[window:] - cumsum[:-window]) / window
+    return result
+
+
+def _rolling_std(values: np.ndarray, window: int) -> np.ndarray:
+    """NaN-padded rolling population standard deviation."""
+    n = len(values)
+    result = np.full(n, np.nan)
+    if window > n:
+        return result
+    mean = _rolling_mean(values, window)
+    cumsum_sq = np.concatenate([[0.0], np.cumsum(values**2)])
+    mean_sq = np.full(n, np.nan)
+    mean_sq[window - 1 :] = (cumsum_sq[window:] - cumsum_sq[:-window]) / window
+    variance = np.clip(mean_sq - mean**2, a_min=0.0, a_max=None)
+    result[window - 1 :] = np.sqrt(variance[window - 1 :])
+    return result
+
+
+def _expanding_median(values: np.ndarray) -> np.ndarray:
+    """Expanding median from the first finite value onward; NaN before that."""
+    series = pd.Series(values)
+    valid = series[series.notna()]
+    result = pd.Series(np.nan, index=series.index)
+    if not valid.empty:
+        result.loc[valid.index] = valid.expanding(min_periods=1).median()
+    return result.to_numpy()
+
+
+def log_returns_from_closes(closes: np.ndarray) -> np.ndarray:
+    """Day-0-padded log returns; index i is the return realized arriving at closes[i]."""
+    padded = np.empty(len(closes))
+    padded[0] = 0.0
+    padded[1:] = np.diff(np.log(closes))
+    return padded
+
+
+def sma_cross_state(log_returns_padded: np.ndarray) -> np.ndarray:
+    """State_SMA(t) = 1{SMA_fast(t) > SMA_slow(t)} on a reconstructed price path.
+
+    Scale-invariant: SMA_fast > SMA_slow does not depend on the arbitrary base
+    used to reconstruct the path from returns, so this gives byte-identical
+    results whether fed real closes' own returns or a resampled return path.
+    """
+    closes_proxy = np.exp(np.cumsum(log_returns_padded))
+    fast = _rolling_mean(closes_proxy, SMA_CROSS_FAST)
+    slow = _rolling_mean(closes_proxy, SMA_CROSS_SLOW)
+    return np.where(np.isfinite(fast) & np.isfinite(slow), fast > slow, False)
+
+
+def sma_cross_volatility_state(log_returns_padded: np.ndarray) -> np.ndarray:
+    """State_Vol(t) = 1{trailing_vol_20(t) <= expanding_median(trailing_vol_20)(t)}."""
+    trailing_vol = (
+        _rolling_std(log_returns_padded, SMA_CROSS_VOL_LOOKBACK) * SMA_CROSS_ANNUALIZATION
+    )
+    expanding_med = _expanding_median(trailing_vol)
+    return np.where(
+        np.isfinite(trailing_vol) & np.isfinite(expanding_med),
+        trailing_vol <= expanding_med,
+        False,
+    )
+
+
+def _max_drawdown_magnitude(log_returns: np.ndarray) -> float:
+    """Positive magnitude of the worst peak-to-trough decline; 0 if none."""
+    wealth = np.exp(np.cumsum(log_returns))
+    running_max = np.maximum.accumulate(wealth)
+    drawdown = wealth / running_max - 1.0
+    return float(-drawdown.min())
+
+
+def sma_cross_delta_stats(
+    log_returns_padded: np.ndarray, state: np.ndarray
+) -> tuple[float, float]:
+    """(delta_sigma, delta_mdd) on the post-warm-up region; negative is favourable.
+
+    state[i] gates the return realized moving from close i to close i+1
+    (state(t-1) gates return(t)); evaluation begins at close
+    SMA_CROSS_WARM_UP_SESSIONS so both indicators are long stable.
+    """
+    n = len(log_returns_padded)
+    start = SMA_CROSS_WARM_UP_SESSIONS
+    raw = log_returns_padded[start:]
+    gate = state[start - 1 : n - 1]
+    gated = raw * gate
+    delta_sigma = (float(np.std(gated)) - float(np.std(raw))) * SMA_CROSS_ANNUALIZATION
+    delta_mdd = _max_drawdown_magnitude(gated) - _max_drawdown_magnitude(raw)
+    return delta_sigma, delta_mdd
+
+
+def sma_cross_bootstrap(
+    closes: np.ndarray,
+    state_fn,
+    *,
+    block_bars: int = SMA_CROSS_BLOCK_BARS,
+    resamples: int = SMA_CROSS_RESAMPLES,
+    seed: int = SMA_CROSS_SEED,
+) -> dict:
+    """One-sided p-values for a favourable (negative) delta_sigma/delta_mdd.
+
+    Extends circular_block_bootstrap_p_value's scaffold to a state-recomputing
+    variant: each resample reconstructs a synthetic price path and recomputes
+    the trailing state on it, rather than resampling a precomputed statistic.
+    The null is "no informative relationship between trailing state and
+    subsequent regime beyond what block-preserved serial dependence produces" —
+    returns are not centered/demeaned, unlike circular_block_bootstrap_p_value's
+    zero-mean null, because that would remove the vol-clustering structure this
+    test is specifically about.
+    """
+    log_returns_padded = log_returns_from_closes(closes)
+    n = len(log_returns_padded)
+    if n <= SMA_CROSS_WARM_UP_SESSIONS + SMA_CROSS_SLOW:
+        raise ValueError("series too short for warm-up plus evaluation")
+
+    observed_state = state_fn(log_returns_padded)
+    observed_delta_sigma, observed_delta_mdd = sma_cross_delta_stats(
+        log_returns_padded, observed_state
+    )
+
+    values = log_returns_padded[1:]
+    if block_bars <= 0 or block_bars > len(values):
+        raise ValueError("block_bars must be between 1 and the sample length")
+    if resamples <= 0:
+        raise ValueError("resamples must be positive")
+
+    blocks_needed = (len(values) + block_bars - 1) // block_bars
+    offsets = np.arange(block_bars)
+    rng = np.random.default_rng(seed)
+    at_least_sigma = 0
+    at_least_mdd = 0
+    for _ in range(resamples):
+        starts = rng.integers(0, len(values), size=blocks_needed)
+        indexes = (starts[:, None] + offsets) % len(values)
+        resampled_values = values[indexes.ravel()[: len(values)]]
+        resampled_padded = np.concatenate([[0.0], resampled_values])
+        resampled_state = state_fn(resampled_padded)
+        resampled_delta_sigma, resampled_delta_mdd = sma_cross_delta_stats(
+            resampled_padded, resampled_state
+        )
+        if resampled_delta_sigma <= observed_delta_sigma:
+            at_least_sigma += 1
+        if resampled_delta_mdd <= observed_delta_mdd:
+            at_least_mdd += 1
+    return {
+        "observed_delta_sigma": observed_delta_sigma,
+        "p_delta_sigma": (at_least_sigma + 1) / (resamples + 1),
+        "observed_delta_mdd": observed_delta_mdd,
+        "p_delta_mdd": (at_least_mdd + 1) / (resamples + 1),
+    }

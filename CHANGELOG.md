@@ -2,6 +2,16 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.45.0
+
+Executed the locked Stage 9A Cycle 2 protocol and closed it `not_material_or_not_consistent`; no strategy implemented, no trade, no cost/execution modelling.
+
+- Implemented the protocol's one named statistics extension in `backend/app/research.py`: a state-recomputing generalization of `circular_block_bootstrap_p_value` (each resample reconstructs a synthetic price path and recomputes both trailing states on it) plus `delta_sigma`/`delta_mdd` computation, reusing `holm_adjust` unchanged. Added 7 unit tests proving no future bar affects an earlier state value and pinning the favourable-direction sign convention.
+- Added `backend/app/run_sma_cross_exposure_reduction.py`, executed against the real 12-ETF dataset fetched this session (data SHA-256 `0c5a81332f9ba941ddce9bd6a69cb9fe90c3f7570b163c1a4ec3bd4c609fc5bc`).
+- Result: 4/12 assets cleared raw materiality and significance on both statistics; 0/12 survived Holm correction across the 12-asset × 2-statistic family on both statistics at once. The volatility-state placebo matched or beat the SMA state's variance reduction on 12/12 assets and drawdown reduction on 5/12 — the protocol's own falsifier triggering directly. Recorded in [docs/research-results/sma-cross-v1-exposure-reduction.md](docs/research-results/sma-cross-v1-exposure-reduction.md).
+- Pre-execution amendment: corrected the concentration gate from a paraphrased "2 of 4 asset-class clusters" to the actual "3 of 6" distinct `cluster` values in `portfolio_universe.py`, verified by reading the field directly rather than from memory, before any data access.
+- Fetched the full S&P 500 ∪ NASDAQ-100 ∪ XL sector ETF universe and all ten managed FRED macro series onto this machine using existing CLI tools; no new code required for the fetch itself.
+
 ## 0.44.0
 
 Fixed a real bar-validation defect found while fetching FRED macro data; no research conclusion changed.

@@ -6,19 +6,19 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.43.0` |
+| Version | `0.45.0` |
 | Parent release | `0.37.0` (first Stage 8 acceptance candidate) |
-| Current state | Stage 9A Cycle 2 closed and its chosen protocol locked: [SMA Cross v1 exposure-reduction, jointly against a volatility-state placebo](research-protocols/sma-cross-v1-exposure-reduction.md), specification SHA-256 `5bee965b775645681149049e3ecf43a618b4e71b225bc97b53b88b62b6ebf4ae`; no data fetched or inspected under it yet |
-| Verification | `222 passed` at `0.40.0`; `0.43.0` added no runtime code, only a locked spec and docs |
-| Completed | Stage 8; Stage 9A Cycle 1 selection through matching feasibility; Stage 9A Cycle 2 candidate scoring/verification and protocol lock for Candidate A/B |
-| Next product work | Fetch the 12-ETF universe on the executing machine, record the spec's data fingerprint, implement the state-recomputing bootstrap extension in `research.py` per the protocol's lock checklist, then run |
-| Active research | Stage 9A Cycle 2 execution (not yet started); CTA v2 and cross-sectional rotation remain parked pending infrastructure; Stage 9B remains gated |
+| Current state | Stage 9A Cycle 2's locked protocol [executed and closed](research-results/sma-cross-v1-exposure-reduction.md) `not_material_or_not_consistent`: 0/12 assets survived Holm correction on both statistics; the volatility-state placebo matched or beat the SMA state's variance reduction on 12/12 assets |
+| Verification | `229 passed` at `0.44.0` (7 new statistics tests); local run confirmed `222 passed` + 1 expected-and-documented failure once real data exists |
+| Completed | Stage 8; Stage 9A Cycle 1 selection through matching feasibility; Stage 9A Cycle 2 selection, protocol lock, and execution to a closed result |
+| Next product work | No queued research task. Candidates C (CTA v2) and D (cross-sectional rotation) remain parked pending infrastructure a future, separately justified deliverable would need to scope; do not start that engine by default |
+| Active research | None active; Stage 9A Cycle 3 candidate selection would be the next research-governance step if resumed; Stage 9B remains gated |
 | Parked operations | Stage 10 cron; Stage 11 deployment; CTA v2 and cross-sectional rotation pending a pooled-portfolio engine and panel/permutation tooling respectively |
 | Pending triage | 2026-08-19 methodology/implementation audit (2 critical, 2 high, 5 medium, 4 low), untriaged; see [audits/README.md](audits/README.md) |
 
 The first real `0.37.0` acceptance run correctly ended `complete_with_errors`, but revealed two contract defects: settlement-based Yahoo futures were treated as equity candles, and a small invalid subset blocked every full-universe daily scan. Version `0.37.1` separates market context from the strategy universe, keeps equity validation strict, gives context bars an honest settlement contract, and permits daily discovery above a visible 90% coverage floor. The repaired real run then completed with zero failed/blocked model jobs: five new and two reused full-universe snapshots; empty watchlist scopes were honestly skipped. Saved snapshots retain exact exclusions and fingerprints. Formal experiments remain governed by their locked coverage rules.
 
-Local-optimum guard: Stage 8 is closed. Do not add more infrastructure or UX polish unless a concrete defect blocks research. Cycle 1 is closed `not_evaluable`; Cycle 2 selection and protocol lock are both closed. The next work is fetching data and implementing the one bounded bootstrap extension the locked protocol names, then running it — not scoring a sixth candidate, not building the pooled-portfolio engine that would unblock the parked candidates (a future, separately justified deliverable), and not widening the SMA window grid before this run's result is seen.
+Local-optimum guard: Stage 8 is closed. Do not add more infrastructure or UX polish unless a concrete defect blocks research. Cycle 1 is closed `not_evaluable`; Cycle 2's chosen protocol is closed `not_material_or_not_consistent`. The result is a real, informative negative finding, not a blocked test — do not widen the SMA window grid, add a pooled/panel version, or otherwise retry this same claim in reaction to the result; any such attempt is a new, independently justified candidate, not a repair. The next work is a new Stage 9A cycle if and when the user wants one, not a reflexive follow-up to this result.
 
 Heavy statistical work is intentionally paused. On resumption, first operationalize candidate theses, audit benchmark/universe suitability, and only then apply the model acceptance scorecard. Read the protocol, CTA result, audit, and backlog before experiment design. Do not tune CTA v1 after observing its rejection.
 

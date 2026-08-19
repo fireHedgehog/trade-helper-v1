@@ -1,0 +1,21 @@
+{
+  "actual_costs_or_execution_accessed": false,
+  "data_sha256": "0c5a81332f9ba941ddce9bd6a69cb9fe90c3f7570b163c1a4ec3bd4c609fc5bc",
+  "experiment_id": "sma-cross-v1-exposure-reduction",
+  "no_trade": true,
+  "spec_sha256": "3c7e8be2a5fb636a8234bf982e42862412143213f9f42f592a93babcc9956238",
+  "universe": [
+    "DBC",
+    "EEM",
+    "EFA",
+    "GLD",
+    "IEF",
+    "IWM",
+    "QQQ",
+    "SPY",
+    "TLT",
+    "XLE",
+    "XLF",
+    "XLK"
+  ]
+}
