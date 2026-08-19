@@ -4,7 +4,7 @@ Local, long-only systematic-research workspace for testing whether a strategy ad
 
 ## Current state
 
-Version `0.37.1` repairs defects found by the real Stage 8 acceptance run: market-context futures are outside the equity/ETF strategy universe, context bars have an asset-appropriate validation contract, and daily discovery can proceed above a disclosed 90% current-coverage floor while preserving exclusions. A manual pipeline re-test remains required before Stage 9A. CTA v1 remains rejected. No paper trading, broker integration, unattended refresh, or deployment is enabled.
+Version `0.38.0` closes Stage 8 after the repaired real pipeline completed with zero failed/blocked model jobs. The Today workspace now retains per-model pipeline provenance and dated candidate snapshots while keeping once-daily controls collapsed by default. Stage 9A candidate prioritisation is next. CTA v1 remains rejected under its locked protocol; no paper trading, broker integration, unattended refresh, or deployment is enabled.
 
 Start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint, next task, and document map.
 

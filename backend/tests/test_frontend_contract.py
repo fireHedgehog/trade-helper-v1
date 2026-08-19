@@ -21,6 +21,10 @@ def test_today_exposes_the_daily_workflow_in_dependency_order() -> None:
     assert "Update watched status" in HTML
     assert "Run full-universe candidates" in HTML
     assert "Run portfolio comparison" in HTML
+    assert '<details class="panel workflow-collapsible" id="today-manual-workflow">' in HTML
+    assert '<details class="panel workflow-collapsible" id="today-pipeline-workflow">' in HTML
+    assert "<details class=\"panel workflow-collapsible\" id=\"today-manual-workflow\" open" not in HTML
+    assert "<details class=\"panel workflow-collapsible\" id=\"today-pipeline-workflow\" open" not in HTML
 
 
 def test_today_semantic_states_have_text_and_colour_contracts() -> None:
@@ -56,7 +60,7 @@ def test_today_navigation_is_read_only_until_an_action_is_clicked() -> None:
     assert "$('#today-refresh').addEventListener('click', () => runTodaySnapshot('watchlist'))" in HTML
     assert "$('#today-run-discovery').addEventListener('click', () => runTodaySnapshot('all'))" in HTML
     assert "$('#today-plan-pipeline').addEventListener('click', previewDailyPipeline)" in HTML
-    assert "Batch alternative · Daily pipeline" in HTML
+    assert "Daily pipeline · Recommended routine" in HTML
     assert "It replaces manual Steps 1–3" in HTML
     assert "portfolio comparison remains a separate Step 4 action" in HTML
     assert "Provider pacing alone requires at least" in HTML
@@ -64,6 +68,11 @@ def test_today_navigation_is_read_only_until_an_action_is_clicked() -> None:
     assert "Formal experiments use their own locked coverage gate" in HTML
     assert "$('#today-run-pipeline').addEventListener('click', runDailyPipeline)" in HTML
     assert 'id="today-run-pipeline" disabled' in HTML
+    assert 'id="today-pipeline-results" hidden' in HTML
+    assert "new run #${row.run_id}" in HTML
+    assert "reused run #${resultId}" in HTML
+    assert "stored ${run.created_at || 'unknown'}" in HTML
+    assert "$('#today-view-candidates').addEventListener('click'" in HTML
 
 
 def test_data_refresh_distinguishes_resume_from_forced_scopes() -> None:

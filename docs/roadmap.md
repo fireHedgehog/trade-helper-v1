@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.37.1`; Stage 8 acceptance defects are repaired and require a real pipeline re-test before 9A.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.38.0`; Stage 8 is accepted and closed after the repaired real pipeline passed with zero failed/blocked model jobs and exposed durable result provenance. Stage 9A is active.
 
 ## Completed foundation
 
@@ -60,7 +60,7 @@ Completed in `0.35.0`: read-only dependency preflight and deterministic input/mo
 
 Completed in `0.37.0`: task-based ambiguity audit; explicit manual-vs-batch and portfolio boundaries; fixed provider-delay estimate; responsive primary views at 390 px; expanded deterministic browser regression and operating notes.
 
-Acceptance repair in `0.37.1`: separate Yahoo market context from the equity/ETF strategy universe; asset-appropriate context validation; a disclosed 90% operational daily-discovery coverage floor; persisted exclusions. Formal research coverage remains protocol-specific. The gate is reopened until the real workflow passes.
+Acceptance repair in `0.37.1`: separate Yahoo market context from the equity/ETF strategy universe; asset-appropriate context validation; a disclosed 90% operational daily-discovery coverage floor; persisted exclusions. Formal research coverage remains protocol-specific. The repaired real run produced or reused all seven full-universe model snapshots with zero failed/blocked jobs. Version `0.38.0` adds visible per-job/run provenance, collapses infrequent controls, and closes the gate.
 
 Anti-toy exit rule: after the layout/usability and smoke-test items above, stop Stage 8 infrastructure work and enter Stage 9A. Do not add dashboards, schedulers, providers, or strategy decoration merely because the pipeline can support them.
 

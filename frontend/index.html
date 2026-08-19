@@ -223,6 +223,18 @@
   .model-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
   .model-tab { background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
   .model-tab.active { color: var(--text); border-color: var(--blue); background: #17223a; }
+  .workflow-collapsible { padding: 0; }
+  .workflow-collapsible > summary {
+    cursor: pointer; list-style: none; padding: 16px 18px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .workflow-collapsible > summary::-webkit-details-marker { display: none; }
+  .workflow-collapsible > summary::after { content: 'Show'; color: var(--blue); font-size: 12px; font-weight: 650; }
+  .workflow-collapsible[open] > summary::after { content: 'Hide'; }
+  .workflow-collapsible > summary h2 { color: var(--text); font-size: 14px; }
+  .workflow-collapsible > summary p { color: var(--muted); font-size: 12px; margin: 4px 0 0; }
+  .workflow-collapsible > .collapsible-body { border-top: 1px solid var(--border); padding: 16px 18px; }
+  .workflow-collapsible .today-actions { margin: 0; }
   .today-hero { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; }
   .today-eyebrow { color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
   .today-title { margin: 5px 0 7px; font-size: 28px; line-height: 1.1; color: var(--text); }
@@ -385,8 +397,10 @@
         </div>
       </section>
 
-      <section class="today-actions" aria-label="Daily workflow actions">
-        <div class="action-card">
+      <details class="panel workflow-collapsible" id="today-manual-workflow">
+        <summary><div><h2>Manual workflow · Steps 1–4</h2><p>Use individual actions only when you do not want the daily batch.</p></div></summary>
+        <div class="collapsible-body"><section class="today-actions" aria-label="Daily workflow actions">
+          <div class="action-card">
           <span class="action-step">Step 1 · Data</span>
           <strong>Confirm market data</strong>
           <p>Review expected session, coverage, provider failures, and selectively refresh missing or stale symbols.</p>
@@ -409,16 +423,30 @@
           <strong>Compare the portfolio</strong>
           <p>Replay the shared-capital historical portfolio against Passive ETF-12, SPY, and cash.</p>
           <button id="today-run-portfolio">Run portfolio comparison</button>
-        </div>
-      </section>
+          </div>
+        </section></div>
+      </details>
 
-      <section class="panel">
-        <div class="section-heading">
-          <div><h2>Batch alternative · Daily pipeline</h2><p>Runs Data → watched states → full-universe discovery for every model. It replaces manual Steps 1–3 for a routine batch; portfolio comparison remains a separate Step 4 action.</p></div>
+      <details class="panel workflow-collapsible" id="today-pipeline-workflow">
+        <summary><div><h2>Daily pipeline · Recommended routine</h2><p>Run once after the market session; current work is skipped.</p></div></summary>
+        <div class="collapsible-body">
+          <div class="section-heading">
+            <div><p>Runs Data → watched states → full-universe discovery for every model. It replaces manual Steps 1–3 for a routine batch; portfolio comparison remains a separate Step 4 action.</p></div>
           <div><button id="today-plan-pipeline">Preview</button> <button class="primary" id="today-run-pipeline" disabled>Run reviewed pipeline</button></div>
+          </div>
+          <div id="today-pipeline-plan" class="sample-note">Not planned. Preview checks freshness and stored input/model fingerprints only.</div>
+          <div id="today-pipeline-results" hidden>
+            <div class="section-heading compact-heading">
+              <div><h3>Model job ledger</h3><p>One row per model and scope; retained after restart.</p></div>
+              <button id="today-view-candidates">View candidate results</button>
+            </div>
+            <div class="table-wrap"><table class="today-table">
+              <thead><tr><th>Model</th><th>Scope</th><th>Outcome</th><th>Result snapshot</th><th>Reason</th></tr></thead>
+              <tbody id="today-pipeline-results-rows"></tbody>
+            </table></div>
+          </div>
         </div>
-        <div id="today-pipeline-plan" class="sample-note">Not planned. Preview checks freshness and stored input/model fingerprints only.</div>
-      </section>
+      </details>
 
       <section class="panel">
         <div class="section-heading">
@@ -1623,7 +1651,12 @@ function renderModelDiscoveryTabs() {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `model-tab${tab.id === activeDiscoveryTab ? ' active' : ''}`;
-    button.textContent = tab.label;
+    const strategy = tab.id.startsWith('strategy:') ? tab.id.replace('strategy:', '') : null;
+    const run = strategy ? storedModelRuns[strategy] : null;
+    button.textContent = run ? `${tab.label} · #${run.id}` : tab.label;
+    if (run) {
+      button.title = `Stored ${run.created_at || 'unknown'} · data through ${run.data_as_of || 'unknown'}`;
+    }
     button.addEventListener('click', () => {
       activeDiscoveryTab = tab.id;
       renderModelDiscoveryTabs();
@@ -1724,7 +1757,8 @@ function renderModelDiscovery() {
   }));
   const coverage = run.result.coverage || {};
   $('#model-discovery-note').textContent =
-    `${strategy} · ${label} · full-universe run #${run.id}, params ${run.set}, data as of ${run.data_as_of || 'unknown'} · ` +
+    `${strategy} · ${label} · full-universe run #${run.id} · stored ${run.created_at || 'unknown'} · ` +
+    `data through ${run.data_as_of || 'unknown'} · params ${run.set} · ` +
     `${coverage.processed || 0}/${coverage.requested || 0} evaluated, ${rows.length} new-entry candidates. ` +
     `${evidence} Ordering is this model’s heuristic rank, not probability.`;
   discoveryTable(rows, `The completed ${strategy} universe scan has no entry-pending candidates.`);
@@ -1957,11 +1991,35 @@ function renderPipelineStatus(job) {
   const exclusions = [...new Set(jobs.flatMap(row => (row.excluded_data || []).map(item => item.symbol)))];
   $('#today-pipeline-plan').innerHTML =
     `<b>Pipeline ${escapeHtml(job.state)} · session ${escapeHtml(job.expected_session || '—')}</b><br>` +
+    `Started ${escapeHtml(job.started_at || '—')} · finished ${escapeHtml(job.finished_at || '—')}.<br>` +
     `Data: ${escapeHtml(job.refresh?.state || 'pending')} · model jobs: ${complete} complete · ${failed} failed/blocked · ${skipped} current/empty.<br>` +
     (exclusions.length ? `Excluded from daily discovery (${exclusions.length}): ${escapeHtml(exclusions.join(', '))}.<br>` : '') +
     `${escapeHtml(job.message || '')}`;
+  const ledger = $('#today-pipeline-results');
+  const ledgerRows = $('#today-pipeline-results-rows');
+  ledger.hidden = jobs.length === 0;
+  ledgerRows.innerHTML = jobs.map((row) => {
+    const resultId = row.run_id || row.previous_run_id;
+    const resultLabel = row.run_id
+      ? `new run #${row.run_id}`
+      : row.state === 'skipped_current' && resultId
+        ? `reused run #${resultId}`
+        : '—';
+    return `<tr><td>${escapeHtml(strategyDisplayName(row.strategy))}</td>` +
+      `<td>${escapeHtml(row.scope === 'all' ? 'full universe' : 'watched symbols')}</td>` +
+      `<td><span class="state-pill ${pipelineJobStateClass(row.state)}">${escapeHtml(row.state || 'pending')}</span></td>` +
+      `<td>${escapeHtml(resultLabel)}</td><td>${escapeHtml(row.reason || row.error || '—')}</td></tr>`;
+  }).join('');
   $('#today-run-pipeline').textContent = job.state === 'running' ? 'Pipeline running…' : 'Retry incomplete / changed';
   $('#today-run-pipeline').disabled = job.state === 'running';
+}
+
+function pipelineJobStateClass(state) {
+  if (state === 'complete') return 'state-positive';
+  if (state === 'skipped_current') return 'state-info';
+  if (state === 'skipped_empty') return 'state-neutral';
+  if (['failed', 'blocked_data', 'interrupted'].includes(state)) return 'state-negative';
+  return 'state-warning';
 }
 
 async function pollPipelineStatus() {
@@ -2099,6 +2157,9 @@ $('#today-run-discovery').addEventListener('click', () => runTodaySnapshot('all'
 $('#today-run-portfolio').addEventListener('click', runTodayPortfolio);
 $('#today-plan-pipeline').addEventListener('click', previewDailyPipeline);
 $('#today-run-pipeline').addEventListener('click', runDailyPipeline);
+$('#today-view-candidates').addEventListener('click', () => {
+  document.querySelector('#model-discovery-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 
 /* ---------- range + zoom controls ---------- */
 const RANGES = [

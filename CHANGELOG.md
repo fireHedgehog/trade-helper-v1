@@ -2,6 +2,17 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.38.0
+
+Stage 8 accepted and closed; Stage 9A research prioritisation is now the active gate.
+
+- Exposed the durable pipeline as a per-model/per-scope ledger with outcome, reason, and new or reused result ID instead of only aggregate counts.
+- Added run ID, storage timestamp, and data-through date to each executable candidate-model tab.
+- Collapsed manual Steps 1–4 and the once-daily pipeline by default so stored research results remain the primary workspace.
+- Recorded the successful real pipeline acceptance: seven full-universe snapshots produced or reused, zero model jobs failed/blocked, and partial-data exclusions disclosed.
+- Added a quarantined audits index: point-in-time reviews carry zero acceptance weight and are ignored during ordinary work unless explicitly requested and separately triaged.
+- Preserved all research conclusions; this release changes product observability and governance only.
+
 ## 0.37.1
 
 Repair of defects found by the first real Stage 8 refresh/pipeline acceptance run; no research conclusion changed.

@@ -20,7 +20,7 @@ Strategy Lab must not present its in-memory scoreboard as a formal experiment. L
 
 `index.html` contains the single-page application. TradingView Lightweight Charts is pinned via CDN for candles, volume, markers, and price levels. Introduce a framework only if state complexity makes the current design materially unsafe to maintain.
 
-The four manual actions appear in dependency order: data, watchlist, discovery, portfolio. The reviewed daily pipeline is a batch alternative for Steps 1–3 across every model; it excludes portfolio comparison, shows the fixed provider-pacing floor, persists progress, and retries by re-planning. Navigation remains read-only. Future scheduling may only trigger this same pipeline.
+The four manual actions appear in dependency order: data, watchlist, discovery, portfolio. Manual actions and the once-daily pipeline are collapsed by default so stored research remains the primary workspace. The reviewed pipeline is a batch alternative for Steps 1–3 across every model; it excludes portfolio comparison, shows the fixed provider-pacing floor, persists progress, and retries by re-planning. Its retained job ledger exposes model, scope, outcome, new/reused snapshot ID, and reason; candidate tabs expose snapshot ID, storage time, and data-through date. Navigation remains read-only. Future scheduling may only trigger this same pipeline.
 
 Run the backend and open <http://127.0.0.1:8000/>. The pending product contract is [workspace-redesign.md](../docs/workspace-redesign.md).
 
