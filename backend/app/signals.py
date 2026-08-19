@@ -196,11 +196,13 @@ def compute_signal(bars: pd.DataFrame, strategy_name: str, params: dict) -> dict
         long_now = bool(impulse.iloc[-1] and close.iloc[-1] > breakout.iloc[-1])
         result["state"] = "long" if long_now else "flat"
         result["event"] = "entry" if bool(crossed.iloc[-1]) else "none"
-        moved_pct = (float(close.iloc[-1]) / float(close.iloc[-1 - impulse_bars]) - 1) * 100
-        result["note"] = (
-            f"impulse +{moved_pct:.1f}% in {impulse_bars} days, then breakout"
-            if long_now else "no impulse-pullback setup"
-        )
+        if not long_now:
+            result["note"] = "no impulse-pullback setup"
+        elif len(close) > impulse_bars:
+            moved_pct = (float(close.iloc[-1]) / float(close.iloc[-1 - impulse_bars]) - 1) * 100
+            result["note"] = f"impulse +{moved_pct:.1f}% in {impulse_bars} days, then breakout"
+        else:
+            result["note"] = f"impulse (insufficient {impulse_bars}-day history to size), then breakout"
         result["indicators"] = {
             "pullback high": round(float(breakout.iloc[-1]), 2),
             "pullback low": round(float(pullback_low.iloc[-1]), 2),

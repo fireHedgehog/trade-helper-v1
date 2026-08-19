@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.47.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and three completed protocols are each closed `not_material_or_not_consistent` for three different reasons: SMA Cross v1 (Cycle 2) on a confound (a volatility-only placebo explained it away), RSI oversold reversal (Cycle 3) on a power limitation (36–56 events per asset), and TA Breakout v1 (picked up from Cycle 2's unpicked Candidate E) on weak event/placebo separation by construction, disclosed rather than hidden.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.48.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and three completed protocols are each closed `not_material_or_not_consistent` for three different reasons: SMA Cross v1 (Cycle 2) on a confound (a volatility-only placebo explained it away), RSI oversold reversal (Cycle 3) on a power limitation (36–56 events per asset), and TA Breakout v1 (picked up from Cycle 2's unpicked Candidate E) on weak event/placebo separation by construction, disclosed rather than hidden.
 
 ## Completed foundation
 

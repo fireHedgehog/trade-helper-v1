@@ -2,6 +2,14 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.48.0
+
+Fixed the known `Wave Pull` `IndexError` (2026-08-19 audit's L4 finding); no research conclusion changed.
+
+- `backend/app/signals.py::compute_signal`'s `Wave Pull` branch indexed `close.iloc[-1 - impulse_bars]` unconditionally for a display-only note string, crashing whenever `impulse_bars` reached or exceeded the available bar history. The Strategy Lab UI slider suggests a max of `30`, but `compute_signal` never enforced that bound itself, so the crash was reachable via any direct API call with a larger value.
+- Now only computes the note when `long_now` is true (it was unused otherwise) and falls back to an honest "insufficient history" note when `impulse_bars` exceeds the available bars, instead of crashing.
+- Added a regression test reproducing the exact crash condition (`60`-bar minimum history, `impulse_bars=65`) and a normal-path check.
+
 ## 0.47.0
 
 Locked, executed, and closed TA Breakout v1 (Cycle 2's unpicked Candidate E); assessed and declined MACD and full Elliott Wave counting. No strategy implemented, no trade, no cost/execution modelling.

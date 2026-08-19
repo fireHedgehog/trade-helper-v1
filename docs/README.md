@@ -6,12 +6,12 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.47.0` |
+| Version | `0.48.0` |
 | Parent release | `0.37.0` (first Stage 8 acceptance candidate) |
-| Current state | TA Breakout v1 (Cycle 2 Candidate E, picked up from the checklist) [executed and closed](research-results/ta-breakout-v1.md) `not_material_or_not_consistent`: 0/12 assets reached raw significance despite 1,477 events; event/placebo separation was weak by construction, a disclosed design limitation |
-| Verification | `243 passed` at `0.47.0` (6 new statistics tests for TA Breakout, plus 8 for RSI and 7 for SMA Cross); local run confirmed `243/244` + 1 expected-and-documented failure |
-| Completed | Stage 8; Stage 9A Cycles 1–3 each selected, locked, and executed to a closed result; TA Breakout v1 (Cycle 2's unpicked Candidate E) locked, executed, and closed |
-| Next product work | No queued research task. Candidates C (CTA v2) and D (cross-sectional rotation) remain parked pending infrastructure a future, separately justified deliverable would need to scope. `S/R Bounce` needs a materially different construction to re-score. `Wave Pull` needs its known `IndexError` bug fixed before it can be scored at all. MACD and full Elliott Wave counting were assessed and not recommended — see [pending checklist](brainstorm/2026-08-19-pending-candidate-checklist.md) |
+| Current state | Three Stage 9A protocols closed `not_material_or_not_consistent`; `Wave Pull`'s known `IndexError` bug (2026-08-19 audit L4) is now fixed |
+| Verification | `245 passed` at `0.48.0`; local run confirmed `245/246` + 1 expected-and-documented failure |
+| Completed | Stage 8; Stage 9A Cycles 1–3 each selected, locked, and executed to a closed result; TA Breakout v1 locked, executed, and closed; `Wave Pull`'s crash bug fixed and regression-tested |
+| Next product work | No queued research task. Candidates C (CTA v2) and D (cross-sectional rotation) remain parked pending infrastructure a future, separately justified deliverable would need to scope. `S/R Bounce` needs a materially different construction to re-score. `Wave Pull` is now unblocked but not yet operationalized or scored. MACD and full Elliott Wave counting were assessed and not recommended — see [pending checklist](brainstorm/2026-08-19-pending-candidate-checklist.md) |
 | Active research | None active; a new Stage 9A cycle would be the next research-governance step if resumed; Stage 9B remains gated |
 | Parked operations | Stage 10 cron; Stage 11 deployment; CTA v2 and cross-sectional rotation pending a pooled-portfolio engine and panel/permutation tooling respectively |
 | Pending triage | 2026-08-19 methodology/implementation audit (2 critical, 2 high, 5 medium, 4 low), untriaged; see [audits/README.md](audits/README.md) |

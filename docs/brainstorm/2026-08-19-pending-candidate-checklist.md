@@ -49,9 +49,11 @@ build. This is where "next cheap test" should come from.
   information, too close to Cycle 1's already-closed consolidation work with
   a cruder detector. Not prioritised; would need a materially different
   construction to earn a re-look, same rule as any future consolidation
-  matcher. `Fib Retrace` remains poor exploratory result, low priority; `Wave
-  Pull` remains blocked by a known `IndexError` bug at `impulse_bars >= 59`
-  (2026-08-19 audit's L4 finding) — fix before scoring, not after.
+  matcher. `Fib Retrace` remains poor exploratory result, low priority. `Wave
+  Pull`'s known `IndexError` (2026-08-19 audit's L4 finding) is
+  [fixed](../../CHANGELOG.md) as of `0.48.0`; it is now unblocked and could be
+  operationalized and scored in a future cycle, but has not been yet — a bug
+  fix is not a score.
 
 ## Tier 2 — needs new engineering, not new data
 
