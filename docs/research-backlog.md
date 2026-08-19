@@ -58,11 +58,26 @@ protocol](research-protocols/calendar-day-of-week-v1.md) executed and
 `not_material_or_not_consistent` too — `9`/`12` assets negative, a more
 directionally consistent tilt than turn-of-month, and `DBC` reached raw
 `p=0.048`, but its Holm-adjusted `p=0.578` did not survive correction.
-Seven negative results, seven different reasons. Overnight-gap conditioning
-remains an eligible, unexecuted Cycle 5 candidate blocked on a new
-joint-resampling design step; no follow-up research task is queued, and the
-next step (that design step, CTA v2's engine, macro data investment, or a
-fresh cycle) is a deliberate choice, not a default.
+Overnight-gap conditioning (Cycle 5, Candidate C) was picked up last: its
+joint-paired resampling design step (same block-index sequence applied to
+both the overnight and intraday return components, preserving their real
+day-to-day pairing) was completed, then put through independent
+adversarial pre-lock code review — three lenses, three agents, zero shared
+context — before any data was touched, finding and fixing six real issues
+(see the
+[protocol](research-protocols/overnight-gap-continuation-v1.md)'s Pre-lock
+verification record). Its locked protocol executed and
+[closed](research-results/overnight-gap-continuation-v1.md)
+`not_material_or_not_consistent` — the most decisive negative of the
+session: `12`/`12` assets showed a *negative* signed forward return, the
+opposite sign from the continuation hypothesis, not merely small or mixed.
+The strengthened placebo significance gate added during review correctly
+rejected `3` assets that would have trivially passed the bare
+point-estimate comparison every prior candidate used, directly validating
+the review's own concern. Eight negative results, eight different reasons
+this session. No follow-up research task is queued, and the next step
+(CTA v2's engine, macro data investment, or a fresh cycle) is a deliberate
+choice, not a default.
 
 ## Resume gate
 
@@ -184,10 +199,18 @@ erased it. A locked, non-gating diagnostic also found `8`/`12` assets have
 modestly higher realized volatility on Mondays than other days, disclosed
 but not further interpreted. Overnight-gap conditioning (Candidate C,
 `13/16`) is a
-distinct market-microstructure mechanism, not a calendar effect, but is not
-implementable today — it needs a new joint/paired resampling design (the
-existing scaffold only reconstructs a single synthetic close-price path per
-resample, not two paired series) before a protocol can be locked.
+distinct market-microstructure mechanism, not a calendar effect. It needed
+a new joint/paired resampling design (the existing scaffold only
+reconstructs a single synthetic close-price path per resample, not two
+paired series) — completed, put through independent adversarial pre-lock
+code review, then locked and closed
+[`not_material_or_not_consistent`](research-results/overnight-gap-continuation-v1.md):
+`12`/`12` assets showed a negative signed forward return, opposite the
+continuation hypothesis — the most decisive negative of the session. A
+disclosed, non-gating diagnostic suggests a reversal-shaped pattern instead
+(down-gaps tend to bounce back), which this protocol was not designed to
+test and cannot claim; a reversal-framed candidate would be new,
+independently justified work.
 
 ### Model selection and machine learning
 

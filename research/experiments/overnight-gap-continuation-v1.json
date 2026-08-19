@@ -1,0 +1,76 @@
+{
+  "experiment_id": "overnight-gap-continuation-v1",
+  "status": "preregistered_no_results",
+  "protocol": "docs/research-protocols/overnight-gap-continuation-v1.md",
+  "selection_record": "docs/research-candidates/2026-08-20-cycle-5.md",
+  "base_code_commit": "299b8970b838a027bf9cd3416a7e01fe2836d8b9",
+  "fingerprint_date": "2026-08-20",
+  "canonicalization": "UTF-8 JSON; recursively sorted keys; separators comma and colon; ensure_ascii=false; trailing newline excluded",
+  "permitted_decisions": ["material_and_consistent", "not_material_or_not_consistent", "invalid"],
+  "forbidden_outputs": ["alpha", "entry_signal", "exit_signal", "stop", "position_size", "sharpe", "reject", "revise", "continue_research"],
+  "universe": ["SPY", "QQQ", "IWM", "EFA", "EEM", "TLT", "IEF", "GLD", "DBC", "XLK", "XLF", "XLE"],
+  "data": {
+    "database": "data/market.db",
+    "contract": "docs/adr/0002-market-data-contract.md",
+    "columns": ["symbol", "date", "open", "high", "low", "close", "volume"],
+    "fingerprint_method": "SHA-256 incremental ORDER BY symbol,date; symbol UTF-8 + NUL + date ASCII + NUL + big-endian IEEE-754 open/high/low/close doubles + signed 64-bit integer volume",
+    "development_sha256": null,
+    "development_rows": null,
+    "fingerprint_pending_reason": "specification locked before execution; fingerprint recorded fresh at execution time"
+  },
+  "scope_decision": "joint-paired block resampling: every resample draws one shared block-index sequence and applies it to both the overnight and intraday return components at once, preserving their real day-to-day pairing, and recomputes BOTH the Gap and Placebo statistics on that same resampled path; self-referential expanding-quantile event threshold (0.90, strictly positive), reusing _expanding_quantile unchanged, same convention as RSI's placebo, with the overnight component's undefined first observation excluded from threshold calibration via NaN-padding rather than the usual zero-padding; signed-continuation statistic (each event's forward return signed by that event's own gap direction), same idiom as Wave Pull, with a non-gating up/down diagnostic breakdown disclosed; placebo strips only the overnight precondition, applying the identical quantile rule to the intraday component instead, and is gated by a genuine paired-null significance test (p_gap_vs_placebo), not a bare point estimate; non-finite/non-positive price inputs rejected explicitly; pre-lock independent adversarial code review (three lenses, three agents) completed 2026-08-20, before the specification hash below was finalized, found and fixed six issues -- see the protocol's Pre-lock verification record",
+  "overnight_intraday_decomposition": {
+    "definition": "g(t) = ln(open(t)) - ln(close(t-1)) [overnight]; d(t) = ln(close(t)) - ln(open(t)) [intraday]; g(t) + d(t) equals the ordinary daily log return for t >= 1"
+  },
+  "event_and_placebo": {
+    "quantile": 0.9,
+    "definition": "Gap(t) = 1{|g(t)| >= ExpandingQuantile_0.90(|g(1..t)|)}; Placebo(t) = 1{|d(t)| >= ExpandingQuantile_0.90(|d(1..t)|)}, self-referential (includes session t's own value), reusing backend/app/research.py:_expanding_quantile unchanged",
+    "cooldown_sessions": 10
+  },
+  "signed_forward_return": {
+    "horizon_sessions": 10,
+    "definition": "SFR(t) = sign(g(t)) * sum of log returns over the 10 sessions following the event close, for the Gap track; sign(d(t)) for the Placebo track",
+    "favourable_direction": "positive"
+  },
+  "warm_up_sessions": 20,
+  "bootstrap": {
+    "base_function": "backend/app/research.py:overnight_gap_bootstrap",
+    "block_bars": 20,
+    "resamples": 5000,
+    "seed": 17291,
+    "p_value_convention": "one-sided; fraction of resamples with resampled_gap_mean_signed_forward_return >= observed, plus add-one correction",
+    "correction": {
+      "method": "backend/app/research.py:holm_adjust",
+      "alpha": 0.05,
+      "family_definition": "eligible assets, Gap event statistic only; Placebo compared per-asset, not a second Holm-corrected family"
+    }
+  },
+  "gates": {
+    "minimum_event_count": 30,
+    "materiality": {
+      "mean_signed_forward_return_minimum": 0.005,
+      "significance": "holm_adjusted_p <= alpha"
+    },
+    "breadth_minimum_assets": 8,
+    "placebo_rule": "Gap mean signed forward return must exceed Placebo mean signed forward return on the same asset AND the paired-null p_gap_vs_placebo <= alpha",
+    "concentration_minimum_clusters": 3,
+    "concentration_total_clusters": 6,
+    "concentration_source": "backend/app/portfolio_universe.py:PORTFOLIO_CLASSIFICATIONS[symbol].cluster",
+    "reproducibility": "byte-identical forward-return/p-value artifact on an independent rerun against the same fingerprinted data"
+  },
+  "diagnostics": {
+    "gap_direction_split": "per-asset mean unsigned forward return and count for the up-gap and down-gap subsets of qualifying Gap occurrences, disclosed, non-gating"
+  },
+  "multiplicity": {
+    "families": 1,
+    "family_labels": ["overnight_gap_continuation_event"],
+    "variant_count": 1,
+    "dependence_group": "overnight-gap-continuation-v1",
+    "parameter_grid": "none in this run; one locked quantile, cooldown, warm-up, and forward horizon"
+  },
+  "scope_exclusions": {
+    "no_trade": true,
+    "no_costs": "out of scope for this no-trade characterization run",
+    "no_book_level_or_executable_expression": "any tradeable expression remains a separate, later, separately locked protocol"
+  }
+}

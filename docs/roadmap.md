@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.52.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and seven completed protocols are each closed `not_material_or_not_consistent` for seven different reasons: SMA Cross v1 (Cycle 2) on a confound, RSI oversold reversal (Cycle 3) on a power limitation, TA Breakout v1 on weak event/placebo separation by construction, Wave Pull v1 (Cycle 4) on a clean but null result, ETF-12 cross-sectional rotation v1 on a clean, decisive null with no caveat, Calendar Turn-of-Month v1 (Cycle 5) on a well-powered null in the first non-technical-pattern mechanism tested, and Calendar Day-of-Week v1 (Cycle 5) on a well-powered null with a directionally consistent but statistically unconfirmed tilt — the cheap tier of the pending checklist is exhausted and one Tier 2 item is closed.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.53.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and eight completed protocols are each closed `not_material_or_not_consistent` for eight different reasons: SMA Cross v1 (Cycle 2) on a confound, RSI oversold reversal (Cycle 3) on a power limitation, TA Breakout v1 on weak event/placebo separation by construction, Wave Pull v1 (Cycle 4) on a clean but null result, ETF-12 cross-sectional rotation v1 on a clean, decisive null with no caveat, Calendar Turn-of-Month v1 (Cycle 5) on a well-powered null in the first non-technical-pattern mechanism tested, Calendar Day-of-Week v1 (Cycle 5) on a well-powered null with a directionally consistent but statistically unconfirmed tilt, and Overnight Gap Continuation v1 (Cycle 5) on the session's most decisive negative — every asset opposite-signed from the hypothesis — after a new joint-paired resampling design passed independent adversarial pre-lock code review. The cheap tier of the pending checklist is exhausted and one Tier 2 item is closed.
 
 ## Completed foundation
 
@@ -223,10 +223,33 @@ raw-significant single-asset result at the conventional `0.05` threshold
 across both calendar experiments — but Holm correction (`p=0.578`) erased
 it. A locked, non-gating diagnostic also found `8`/`12` assets have modestly
 higher realized volatility on Mondays, disclosed but not further
-interpreted. Overnight-gap conditioning (Candidate C, `13/16`) remains
-eligible but blocked on a new joint/paired resampling design step this
-codebase doesn't yet have. The next step remains a deliberate choice, not a
-default continuation.
+interpreted.
+
+Overnight-gap conditioning (Candidate C, `13/16`) was picked up last. Its
+required joint-paired resampling design (same block-index sequence applied
+to both the overnight and intraday return components at once, preserving
+their real day-to-day pairing — the same principle rotation used across
+assets, applied here across return components within one asset) was
+completed, then put through independent adversarial pre-lock code review —
+three lenses, three agents, zero shared context — before any market data
+was touched. That review found six real, well-verified issues (none
+catastrophic): a threshold-calibration asymmetry between the two
+components, a placebo gate with no real statistical backing, signed-pooling
+that could mask a directionally asymmetric effect, a missing test the
+protocol's own checklist required, a degenerate all-tied-values threshold
+collapse, and unguarded NaN/Inf propagation from bad prices — all fixed
+before the specification hash was computed. Executed and
+[closed](research-results/overnight-gap-continuation-v1.md)
+`not_material_or_not_consistent`: the most decisive negative of the
+session — `12`/`12` assets showed a *negative* signed forward return, the
+opposite sign from the continuation hypothesis. The strengthened placebo
+significance gate added during review correctly rejected `3` assets that
+would have trivially passed the bare point-estimate comparison every prior
+candidate used, directly validating the review's own concern. A disclosed,
+non-gating diagnostic suggests a reversal-shaped pattern instead (down-gaps
+tend to bounce back), which this protocol was not designed to test and
+cannot claim. This closes Cycle 5 in full. The next step remains a
+deliberate choice, not a default continuation.
 
 ### 9B — Locked experiment and confirmation
 

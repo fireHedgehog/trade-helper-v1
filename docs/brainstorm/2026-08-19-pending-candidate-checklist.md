@@ -111,22 +111,27 @@ build. This is where "next cheap test" should come from.
   `p=0.048` — the only raw-significant single-asset result at the
   conventional `0.05` threshold across both calendar experiments — but its
   Holm-adjusted `p=0.578` did not survive correction.
-- [ ] **Overnight-gap conditioned forward return** (new, 2026-08-20) —
+- [x] **Overnight-gap conditioned forward return** (new, 2026-08-20) —
   session-structure decomposition: a large overnight gap (open vs. prior
   close) conditioning a forward K-session return, distinct from every prior
   candidate in that it is the first to touch the open price at all (order-
   flow/liquidity-provision literature, e.g. Berkman et al. 2012). Scored
-  `13/16` in [Cycle 5](../research-candidates/2026-08-20-cycle-5.md) but
-  **not implementable today**: it needs a genuinely new *joint/paired*
-  resampling design (overnight and intraday returns must be resampled
-  together, preserving their real pairing, on a reconstructed synthetic
-  path) that doesn't exist in this codebase — closer to cross-sectional
-  rotation's redesign effort than a template fill. Also must be framed as a
-  low-frequency conditioning signal from the start, not a literal daily
-  round-trip, or its cost-viability collapses under this project's own
-  ~0.3-0.4% round-trip cost defaults regardless of significance. Needs its
-  own small design pass (the joint-resampling method) before a protocol can
-  be locked — a real, if modest, prerequisite, not a template fill.
+  `13/16` in [Cycle 5](../research-candidates/2026-08-20-cycle-5.md).
+  Needed a genuinely new joint-paired resampling design (same block-index
+  sequence applied to both the overnight and intraday components at once,
+  preserving their real day-to-day pairing) — designed, then put through
+  independent adversarial pre-lock code review (three lenses, three agents,
+  six real issues found and fixed) before any data was touched. Locked,
+  executed, and closed
+  [`not_material_or_not_consistent`](../research-results/overnight-gap-continuation-v1.md):
+  the most decisive negative of the session — `12/12` assets showed a
+  *negative* signed forward return, the opposite sign from the continuation
+  hypothesis. The strengthened placebo significance gate (added during
+  review) correctly rejected 3 assets that would have trivially passed the
+  bare point-estimate comparison every prior candidate used, directly
+  validating the review's concern. A disclosed, non-gating diagnostic
+  suggests a reversal-shaped pattern instead (down-gaps tend to bounce),
+  which this protocol was not designed to test and cannot claim.
 
 ## Tier 2 — needs new engineering, not new data
 

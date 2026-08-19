@@ -1529,3 +1529,274 @@ def dow_bootstrap(
             at_least += 1
     result["p_event"] = (at_least + 1) / (resamples + 1)
     return result
+
+
+# --- Overnight Gap Continuation v1: gap-conditioned signed forward return
+# vs. joint-paired-resampled null --- Implements
+# docs/research-protocols/overnight-gap-continuation-v1.md. The first
+# candidate this session whose event depends on TWO return components
+# (overnight, intraday) of the same asset. Every resample draws ONE shared
+# block-index sequence and applies it to both components at once,
+# preserving their real day-to-day pairing -- the same principle
+# etf12_rotation_bootstrap used to preserve real cross-asset correlation
+# (same resampled dates applied to all assets simultaneously), applied here
+# across return components within one asset instead of across assets.
+# Hardened by an independent pre-lock adversarial code review (2026-08-20,
+# three lenses: statistical soundness, implementation correctness,
+# adversarial coverage) before any market data was touched -- see the
+# protocol's Pre-lock verification record for the full disposition.
+
+GAP_QUANTILE = 0.90
+GAP_WARM_UP_SESSIONS = 20
+GAP_EVENT_COOLDOWN = 10
+GAP_FORWARD_HORIZON = 10
+GAP_MIN_EVENT_COUNT = 30
+GAP_BLOCK_BARS = 20
+GAP_RESAMPLES = 5_000
+GAP_SEED = 17_291
+
+
+def gap_and_intraday_returns(opens: np.ndarray, closes: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Day-0-padded (overnight, intraday) log-return pairs. g[t] is the
+    overnight return arriving at open[t]; d[t] is the same day's open-to-
+    close intraday return. g[t] + d[t] equals log_returns_from_closes(closes)[t]
+    for t >= 1 -- the two components exactly partition the ordinary daily
+    return.
+
+    g[0] is padded NaN, not 0.0 (unlike every other candidate's zero-padded
+    convention): a pre-lock review found that zero-padding g's undefined
+    first entry (no prior close exists) let it silently enter
+    `overnight_gap_event_mask`'s expanding-quantile threshold calibration as
+    a spurious real observation, asymmetrically diluting the Gap track's
+    threshold relative to the Placebo track's (d[0] is a genuinely observed
+    value and was never affected). NaN is excluded by `_expanding_quantile`'s
+    own NaN-skipping logic instead. d[0] needs no such treatment. Callers
+    building the ordinary daily-return path for cumsum/forward-return
+    purposes must use `np.nan_to_num(g, nan=0.0)` -- see
+    `overnight_gap_bootstrap` -- since a bare NaN would poison every
+    downstream cumulative sum."""
+    n = len(closes)
+    if len(opens) != n:
+        raise ValueError("opens and closes must have the same length")
+    if not (np.all(np.isfinite(opens)) and np.all(opens > 0)):
+        raise ValueError("opens must be finite and strictly positive")
+    if not (np.all(np.isfinite(closes)) and np.all(closes > 0)):
+        raise ValueError("closes must be finite and strictly positive")
+    log_opens = np.log(opens)
+    log_closes = np.log(closes)
+    g = np.empty(n)
+    d = np.empty(n)
+    g[0] = np.nan
+    g[1:] = log_opens[1:] - log_closes[:-1]
+    d[:] = log_closes - log_opens
+    return g, d
+
+
+def overnight_gap_event_mask(padded_component: np.ndarray, quantile: float = GAP_QUANTILE) -> np.ndarray:
+    """True where |component[t]| >= the self-referential expanding quantile
+    of |component[1..t]| -- reusing `_expanding_quantile` unchanged, the
+    same "includes today's own value" convention already established and
+    disclosed by RSI's placebo design, not a new leakage risk. Shared by
+    both the Gap event (fed the overnight component) and the Placebo event
+    (fed the intraday component).
+
+    Requires a strictly positive threshold. A pre-lock review found that a
+    near-degenerate trailing history (e.g. a long tied-at-zero stretch, such
+    as stale or forward-filled opens) makes the quantile collapse to that
+    tied value, and a non-strict `>=` comparison alone would then flag
+    almost every day as an "event" instead of the intended top decile --
+    excluded explicitly here rather than relying on real data happening not
+    to trigger it. Not observed in the current 12-ETF universe (verified
+    directly against data/market.db), but a genuine robustness gap without
+    this guard."""
+    abs_values = np.abs(padded_component)
+    threshold = _expanding_quantile(abs_values, quantile)
+    valid = np.isfinite(threshold) & (threshold > 0)
+    return np.where(valid, abs_values >= threshold, False)
+
+
+def _circular_block_resample_indexes(
+    length: int, block_bars: int, rng: np.random.Generator
+) -> np.ndarray:
+    """One circular-block-resampled index sequence of the given length.
+    Applying this SAME sequence to multiple arrays is what preserves real
+    pairing/joint structure across those arrays -- used here for the
+    (overnight, intraday) component pair, the same principle
+    etf12_rotation_bootstrap uses across assets."""
+    blocks_needed = (length + block_bars - 1) // block_bars
+    offsets = np.arange(block_bars)
+    starts = rng.integers(0, length, size=blocks_needed)
+    indexes = (starts[:, None] + offsets) % length
+    return indexes.ravel()[:length]
+
+
+def _signed_mean_forward_return(
+    log_returns_padded: np.ndarray,
+    event_indices: np.ndarray,
+    signs: np.ndarray,
+    horizon: int,
+) -> tuple[float, int]:
+    """Like `_mean_forward_return`, but each event's forward return is
+    multiplied by that event's own sign before averaging -- a continuation
+    claim (does the market keep moving the way the event pointed), not a
+    raw-direction claim. `signs` must be aligned 1:1 with `event_indices`."""
+    n = len(log_returns_padded)
+    cumsum = np.concatenate([[0.0], np.cumsum(log_returns_padded)])
+    usable_mask = event_indices + horizon < n
+    usable = event_indices[usable_mask]
+    usable_signs = signs[usable_mask]
+    if len(usable) == 0:
+        return 0.0, 0
+    forward = cumsum[usable + horizon + 1] - cumsum[usable + 1]
+    return float((forward * usable_signs).mean()), len(usable)
+
+
+def _gap_track_events_and_signs(
+    component_padded: np.ndarray,
+    *,
+    warm_up: int,
+    cooldown: int,
+    quantile: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Shared by the Gap and Placebo tracks: build the expanding-quantile
+    event mask for `component_padded`, apply warm-up and cooldown, and
+    return the kept event indices with each one's own sign. warm_up always
+    excludes index 0, so `component_padded[0]` being NaN (the Gap track's
+    own convention) never reaches `np.sign`."""
+    mask = overnight_gap_event_mask(component_padded, quantile)
+    raw_events = np.where(mask)[0]
+    raw_events = raw_events[raw_events >= warm_up]
+    events = _apply_cooldown(raw_events, cooldown)
+    signs = np.sign(component_padded[events])
+    return events, signs
+
+
+def _gap_track_forward_return(
+    r_padded: np.ndarray,
+    component_padded: np.ndarray,
+    *,
+    warm_up: int,
+    cooldown: int,
+    horizon: int,
+    quantile: float,
+) -> tuple[float, int]:
+    """Signed mean forward return for the Gap or Placebo track, computed
+    from the ordinary daily-return series `r_padded` -- see
+    `_gap_track_events_and_signs` for the event/sign construction."""
+    events, signs = _gap_track_events_and_signs(
+        component_padded, warm_up=warm_up, cooldown=cooldown, quantile=quantile
+    )
+    return _signed_mean_forward_return(r_padded, events, signs, horizon)
+
+
+def _split_by_gap_direction_forward_return(
+    r_padded: np.ndarray,
+    events: np.ndarray,
+    signs: np.ndarray,
+    horizon: int,
+) -> dict:
+    """Non-gating diagnostic: mean UNSIGNED forward return and count for the
+    up-gap and down-gap subsets separately. A pooled signed-continuation
+    statistic can mask a real, directionally asymmetric effect (e.g. up-gaps
+    continuing while down-gaps revert) -- a pre-lock review's concern; this
+    does not change the estimand or any gate, only what a closed result
+    discloses, the same treatment already given to `tom_volatility_diagnostic`."""
+    up_mean, up_count = _mean_forward_return(r_padded, events[signs > 0], horizon)
+    down_mean, down_count = _mean_forward_return(r_padded, events[signs < 0], horizon)
+    return {
+        "up_gap_mean_forward_return": up_mean,
+        "up_gap_count": up_count,
+        "down_gap_mean_forward_return": down_mean,
+        "down_gap_count": down_count,
+    }
+
+
+def overnight_gap_bootstrap(
+    opens: np.ndarray,
+    closes: np.ndarray,
+    *,
+    quantile: float = GAP_QUANTILE,
+    block_bars: int = GAP_BLOCK_BARS,
+    resamples: int = GAP_RESAMPLES,
+    seed: int = GAP_SEED,
+    warm_up: int = GAP_WARM_UP_SESSIONS,
+    cooldown: int = GAP_EVENT_COOLDOWN,
+    horizon: int = GAP_FORWARD_HORIZON,
+    min_event_count: int = GAP_MIN_EVENT_COUNT,
+) -> dict:
+    """One-sided p-values for a favourable (positive) gap-conditioned signed
+    forward return, per
+    docs/research-protocols/overnight-gap-continuation-v1.md. Each resample
+    draws ONE shared block-index sequence and applies it to both the
+    overnight and intraday components at once, preserving their real
+    day-to-day pairing, then reconstructs the synthetic daily-return path as
+    their sum and recomputes BOTH the Gap and Placebo statistics fresh on
+    the resampled path -- unlike every prior candidate's bare real-data-only
+    placebo comparison (Wave Pull's, TA Breakout's convention), this also
+    yields a genuine paired-null p-value for whether Gap's advantage over
+    Placebo is itself distinguishable from chance, not just a point-estimate
+    inequality; a pre-lock review found the bare inequality alone gives the
+    placebo little real discriminating power against a generic
+    large-one-day-move confound (SMA Cross v1's own failure mode). The
+    computational cost of also recomputing Placebo each iteration is
+    accepted as cheap relative to the correctness gained."""
+    n = len(closes)
+    if len(opens) != n:
+        raise ValueError("opens and closes must have the same length")
+    g, d = gap_and_intraday_returns(opens, closes)
+    r_padded = np.nan_to_num(g, nan=0.0) + d
+
+    observed_gap_mean, gap_count = _gap_track_forward_return(
+        r_padded, g, warm_up=warm_up, cooldown=cooldown, horizon=horizon, quantile=quantile
+    )
+    observed_placebo_mean, placebo_count = _gap_track_forward_return(
+        r_padded, d, warm_up=warm_up, cooldown=cooldown, horizon=horizon, quantile=quantile
+    )
+    gap_events, gap_signs = _gap_track_events_and_signs(
+        g, warm_up=warm_up, cooldown=cooldown, quantile=quantile
+    )
+    diagnostics = _split_by_gap_direction_forward_return(r_padded, gap_events, gap_signs, horizon)
+
+    result = {
+        "observed_gap_mean_signed_forward_return": observed_gap_mean,
+        "gap_event_count": gap_count,
+        "observed_placebo_mean_signed_forward_return": observed_placebo_mean,
+        "placebo_event_count": placebo_count,
+        "p_event": None,
+        "p_gap_vs_placebo": None,
+        "insufficient_events": gap_count < min_event_count,
+        "diagnostics": diagnostics,
+    }
+    if gap_count < min_event_count:
+        return result
+
+    m = n - 1
+    if block_bars <= 0 or block_bars > m:
+        raise ValueError("block_bars must be between 1 and the sample length")
+    if resamples <= 0:
+        raise ValueError("resamples must be positive")
+
+    g_values = g[1:]  # never NaN: index 0 is excluded by this slice itself
+    d_values = d[1:]
+    observed_diff = observed_gap_mean - observed_placebo_mean
+    rng = np.random.default_rng(seed)
+    at_least_gap = 0
+    at_least_diff = 0
+    for _ in range(resamples):
+        flat_indexes = _circular_block_resample_indexes(m, block_bars, rng)
+        resampled_g = np.concatenate([[np.nan], g_values[flat_indexes]])
+        resampled_d = np.concatenate([[0.0], d_values[flat_indexes]])
+        resampled_r = np.nan_to_num(resampled_g, nan=0.0) + resampled_d
+        resampled_gap_mean, _ = _gap_track_forward_return(
+            resampled_r, resampled_g, warm_up=warm_up, cooldown=cooldown, horizon=horizon, quantile=quantile
+        )
+        resampled_placebo_mean, _ = _gap_track_forward_return(
+            resampled_r, resampled_d, warm_up=warm_up, cooldown=cooldown, horizon=horizon, quantile=quantile
+        )
+        if resampled_gap_mean >= observed_gap_mean:
+            at_least_gap += 1
+        if (resampled_gap_mean - resampled_placebo_mean) >= observed_diff:
+            at_least_diff += 1
+    result["p_event"] = (at_least_gap + 1) / (resamples + 1)
+    result["p_gap_vs_placebo"] = (at_least_diff + 1) / (resamples + 1)
+    return result
