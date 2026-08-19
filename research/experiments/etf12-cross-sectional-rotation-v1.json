@@ -1,0 +1,78 @@
+{
+  "experiment_id": "etf12-cross-sectional-rotation-v1",
+  "status": "preregistered_no_results",
+  "protocol": "docs/research-protocols/etf12-cross-sectional-rotation-v1.md",
+  "selection_record": "docs/research-candidates/2026-08-19-cycle-2.md",
+  "base_code_commit": "ce5a3597807bca207e3955a2b1c75dd6535fa601",
+  "fingerprint_date": "2026-08-19",
+  "canonicalization": "UTF-8 JSON; recursively sorted keys; separators comma and colon; ensure_ascii=false; trailing newline excluded",
+  "permitted_decisions": ["material_and_consistent", "not_material_or_not_consistent", "invalid"],
+  "forbidden_outputs": ["alpha", "entry_signal", "exit_signal", "stop", "position_size", "sleeve", "sharpe", "reject", "revise", "continue_research"],
+  "universe": ["SPY", "QQQ", "IWM", "EFA", "EEM", "TLT", "IEF", "GLD", "DBC", "XLK", "XLF", "XLE"],
+  "data": {
+    "database": "data/market.db",
+    "contract": "docs/adr/0002-market-data-contract.md",
+    "columns": ["symbol", "date", "open", "high", "low", "close", "volume"],
+    "fingerprint_method": "SHA-256 incremental ORDER BY symbol,date; symbol UTF-8 + NUL + date ASCII + NUL + big-endian IEEE-754 open/high/low/close doubles + signed 64-bit integer volume",
+    "development_sha256": null,
+    "development_rows": null,
+    "fingerprint_pending_reason": "specification locked before execution; fingerprint recorded fresh at execution time"
+  },
+  "scope_decision": "Spearman rank correlation instead of a panel regression (no scipy/statsmodels dependency required); cluster/regime control achieved via a joint-panel block-resampling null instead of per-asset cluster residualization, which is degenerate for the four singleton-cluster assets (TLT, IEF, GLD, DBC)",
+  "formation": {
+    "window_sessions": 60,
+    "definition": "F(t) = close(t)/close(t-60) - 1, per asset, computed through close t only"
+  },
+  "holding": {
+    "horizon_sessions": 20,
+    "definition": "G(t) = close(t+20)/close(t) - 1, per asset"
+  },
+  "rebalance_grid": {
+    "warm_up_sessions": 100,
+    "spacing_sessions": 20,
+    "definition": "rebalance dates at session indices 100, 120, 140, ... through the last index with a full forward window available"
+  },
+  "rank": {
+    "tie_breaking": "average rank (ties split the contested rank positions evenly)",
+    "cross_sectional_n": 12
+  },
+  "estimand": {
+    "statistic": "pooled Spearman rank correlation between formation rank and forward rank, across all (asset, rebalance date) pairs",
+    "favourable_direction": "positive"
+  },
+  "bootstrap": {
+    "base_function": "backend/app/research.py:etf12_rotation_bootstrap (joint-panel block-resampling extension of the event-recomputing bootstrap used by RSI/TA Breakout/Wave Pull)",
+    "block_bars": 20,
+    "resamples": 2000,
+    "seed": 17291,
+    "p_value_convention": "one-sided; fraction of resamples with resampled pooled correlation >= observed, plus add-one correction",
+    "joint_resampling": "the same resampled date-block sequence is applied to all 12 assets simultaneously in each resample, preserving real contemporaneous cross-asset correlation while breaking the specific formation-to-forward temporal link",
+    "no_holm_correction": "single pooled statistic across the whole panel, not per-asset tests; Holm correction does not apply"
+  },
+  "gates": {
+    "materiality": {
+      "minimum_correlation": 0.10,
+      "significance": "p <= alpha"
+    },
+    "alpha": 0.05,
+    "cluster_breadth_minimum_clusters": 3,
+    "cluster_breadth_total_clusters": 6,
+    "cluster_breadth_source": "backend/app/portfolio_universe.py:PORTFOLIO_CLASSIFICATIONS[symbol].cluster",
+    "cluster_breadth_definition": "at least 3 of 6 distinct cluster values must each contribute at least one asset to the top-third formation-rank group at least once across all rebalance dates",
+    "reproducibility": "byte-identical correlation/p-value artifact on an independent rerun against the same fingerprinted data"
+  },
+  "multiplicity": {
+    "families": 1,
+    "family_labels": ["pooled_rank_correlation"],
+    "variant_count": 1,
+    "dependence_group": "etf12-cross-sectional-rotation-v1",
+    "parameter_grid": "none in this run; one locked formation window and holding horizon"
+  },
+  "scope_exclusions": {
+    "no_trade": true,
+    "no_costs": "out of scope for this no-trade rank-continuation study",
+    "no_panel_regression": "Spearman rank correlation used instead, by deliberate scope decision",
+    "no_cluster_residualization": "joint-panel block-resampling null used instead, avoiding the singleton-cluster degeneracy",
+    "no_sleeve_or_executable_expression": "any tradeable expression remains a separate, later, separately locked protocol"
+  }
+}

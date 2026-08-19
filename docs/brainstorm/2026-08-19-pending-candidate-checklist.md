@@ -74,14 +74,23 @@ something to start by default just because it would unblock a candidate.
   Needs a genuine multi-instrument weighted-portfolio engine (nothing in
   this codebase does simultaneous cross-instrument position weighting
   today — every backtest path is single-instrument or median-of-single-
-  instrument). Scored 13/16, eligible.
-- [ ] **ETF-12 cross-sectional rotation** — relative-strength ranking across
-  the 12 ETFs. Needs panel/permutation statistics tooling (no `scipy`/
-  `statsmodels` dependency, no panel regression or cluster-shuffle null
-  anywhere in `research.py`). Scored 13/16, eligible. Overlaps with CTA v2's
-  trend family — building one engine doesn't reduce the case for the other;
-  they'd need to be checked against each other before both are treated as
-  independent evidence.
+  instrument). Scored 13/16, eligible. Its overlap concern with
+  cross-sectional rotation is now moot: rotation ran and found nothing, so
+  building CTA v2 no longer risks double-counting a shared trend-family
+  effect against a still-open sibling.
+- [x] **ETF-12 cross-sectional rotation** — relative-strength ranking across
+  the 12 ETFs. Scored 13/16 in Cycle 2, parked pending panel/permutation
+  tooling. Unblocked without adding `scipy`/`statsmodels`: redesigned around
+  Spearman rank correlation (computable in plain `numpy`/`pandas`) and a
+  joint-panel block-resampling null (same resampled dates applied to all 12
+  assets at once, preserving real cluster correlation) instead of a formal
+  panel regression. Locked, executed, and closed
+  [`not_material_or_not_consistent`](../research-results/etf12-cross-sectional-rotation-v1.md):
+  pooled correlation `0.045` against a `0.10` floor, `p=0.266` — the cleanest
+  negative of the session, no confound or design caveat attached. CTA v2's
+  overlap concern is now moot in the other direction: this candidate ran and
+  found nothing, so CTA v2 no longer risks double-counting a shared
+  trend-family effect with it.
 
 ## Tier 3 — needs new but still free/accessible data
 

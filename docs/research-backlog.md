@@ -27,13 +27,20 @@ executed and [closed](research-results/wave-pull-v1.md)
 `not_material_or_not_consistent` on a *clean-separation-but-null* result — the
 event/placebo split was sharp this time (unlike TA Breakout), one asset
 (`TLT`) reached raw significance before correction for the first time this
-session, but failed Holm correction on a thin 20-event sample. Four negative
-results, four different reasons — see each result's own reading before
-treating them as interchangeable. Every Tier 0/1 item on the [pending
+session, but failed Holm correction on a thin 20-event sample. ETF-12
+cross-sectional rotation (Cycle 2's Candidate D) was picked up next by
+resolving its infrastructure gap through redesign, not a new dependency; its
+[locked protocol](research-protocols/etf12-cross-sectional-rotation-v1.md)
+executed and [closed](research-results/etf12-cross-sectional-rotation-v1.md)
+`not_material_or_not_consistent` on a *clean, decisive null* — pooled rank
+correlation `0.045` against a `0.10` floor, `p=0.266`, no confound or design
+caveat attached, the cleanest of the five. Five negative results, five
+different reasons — see each result's own reading before treating them as
+interchangeable. Every Tier 0/1 item and one Tier 2 item on the [pending
 checklist](brainstorm/2026-08-19-pending-candidate-checklist.md) is now
 scored or executed; no follow-up research task is queued, and the next step
-(infrastructure investment, macro data investment, or a fresh cycle) is a
-deliberate choice, not a default.
+(CTA v2's engine, macro data investment, or a fresh cycle) is a deliberate
+choice, not a default.
 
 ## Resume gate
 
@@ -52,10 +59,12 @@ strategy implementation or outcome calculation, and it does not reject the claim
 Operationalized and scored in Cycle 2 as a pooled, volatility-scaled trend overlay
 across the 12-ETF universe — see [Candidate C](research-candidates/2026-08-19-cycle-2.md). Eligible (score 13) but parked: its estimand needs a
 multi-instrument pooled-portfolio weighting engine that exists nowhere in this
-codebase today, and it overlaps materially with cross-sectional rotation and
-volatility-managed exposure. Park is an infrastructure gate, not a data or
-rationale gate; do not choose parameters until that engine is scoped and a
-distinct, non-overlapping mechanism is confirmed.
+codebase today. Its overlap concern with cross-sectional rotation is now moot —
+rotation ran and [closed `not_material_or_not_consistent`](research-results/etf12-cross-sectional-rotation-v1.md) — so building this engine no longer risks
+double-counting a shared trend-family effect against a still-open sibling; the
+overlap with volatility-managed exposure remains live. Park is an infrastructure
+gate, not a data or rationale gate; do not choose parameters until that engine
+is scoped.
 
 ### SMA cross, breakout, and momentum horizons
 
@@ -69,12 +78,17 @@ at once — see the [result](research-results/sma-cross-v1-exposure-reduction.md
 A different window pair or a pooled/panel version would be a new, independently
 justified attempt, not a repair of this one. Momentum
 horizons was operationalized as ETF-12 cross-sectional relative-strength rotation
-— see [Candidate D](research-candidates/2026-08-19-cycle-2.md) — eligible (score
-13) but parked: its estimand needs panel/permutation statistical tooling this
-codebase does not have (no `scipy`/`statsmodels` dependency, no panel-regression or
-permutation-null machinery in `research.py`), and it overlaps with CTA v2's trend
-family. Generic breakout is covered under Classical TA series below. UI
-availability must never imply statistical approval.
+— see [Candidate D](research-candidates/2026-08-19-cycle-2.md), score `13/16`.
+Its infrastructure gap (no `scipy`/`statsmodels`, no panel-regression or
+permutation-null machinery) was resolved by redesign, not a new dependency:
+Spearman rank correlation plus a joint-panel block-resampling null. Its
+[locked protocol](research-protocols/etf12-cross-sectional-rotation-v1.md)
+executed and [closed](research-results/etf12-cross-sectional-rotation-v1.md)
+`not_material_or_not_consistent` — pooled correlation `0.045` against a `0.10`
+floor, `p=0.266`, the cleanest negative of the session. A different formation
+window, holding horizon, or rebalance cadence would be a new, independently
+justified attempt. Generic breakout is covered under Classical TA series
+below. UI availability must never imply statistical approval.
 
 ### RSI mean reversion
 

@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.49.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and four completed protocols are each closed `not_material_or_not_consistent` for four different reasons: SMA Cross v1 (Cycle 2) on a confound, RSI oversold reversal (Cycle 3) on a power limitation, TA Breakout v1 on weak event/placebo separation by construction, and Wave Pull v1 (Cycle 4) on a clean but null result — the cheap tier of the pending checklist is now exhausted.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.50.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and five completed protocols are each closed `not_material_or_not_consistent` for five different reasons: SMA Cross v1 (Cycle 2) on a confound, RSI oversold reversal (Cycle 3) on a power limitation, TA Breakout v1 on weak event/placebo separation by construction, Wave Pull v1 (Cycle 4) on a clean but null result, and ETF-12 cross-sectional rotation v1 on a clean, decisive null with no caveat — the cheap tier of the pending checklist is exhausted and one Tier 2 item is closed.
 
 ## Completed foundation
 
@@ -157,8 +157,27 @@ separation was clean (events ran `5`–`20×` fewer than placebo occurrences).
 significance across all four experiments this session — but failed
 correction on only `20` events, and several equity assets showed a
 negative-direction effect, disclosed rather than omitted. This closes every
-Tier 0/1 item on the pending checklist; the next step is a deliberate
-choice, not a default continuation.
+Tier 0/1 item on the pending checklist.
+
+ETF-12 cross-sectional rotation (Cycle 2's Candidate D, scored `13/16`,
+parked pending statistics infrastructure) was picked up next: its
+[protocol](research-protocols/etf12-cross-sectional-rotation-v1.md) resolved
+the infrastructure gap by redesign rather than a new dependency — Spearman
+rank correlation instead of a panel regression, and a joint-panel
+block-resampling null (the same resampled calendar-time blocks applied to
+all 12 assets simultaneously) instead of per-asset cluster residualization,
+which would have been degenerate for the four singleton-cluster assets
+(`TLT`, `IEF`, `GLD`, `DBC`). Executed and
+[closed](research-results/etf12-cross-sectional-rotation-v1.md)
+`not_material_or_not_consistent`: pooled rank correlation `0.045` against a
+locked `0.10` floor, `p=0.266` across `253` rebalance dates — the cleanest
+negative of the session's five experiments, with no confound, power
+limitation, or design weakness attached. Cluster breadth passed cleanly
+(`6/6`), so the null is not a concentration artifact. This closes the last
+Tier 0/1/2-ready item on the pending checklist; CTA v2's overlap concern
+with rotation is now moot in the other direction, since rotation ran and
+found nothing. The next step is a deliberate choice, not a default
+continuation.
 
 ### 9B — Locked experiment and confirmation
 

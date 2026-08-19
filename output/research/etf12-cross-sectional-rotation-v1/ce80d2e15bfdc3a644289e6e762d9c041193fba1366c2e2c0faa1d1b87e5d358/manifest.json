@@ -1,0 +1,23 @@
+{
+  "actual_costs_or_execution_accessed": false,
+  "aligned_common_end": "2026-08-18",
+  "aligned_common_start": "2006-02-06",
+  "data_sha256": "e0172560cca89a66d07251347d999872555d5c477358f9a5a910beb5b37edcfa",
+  "experiment_id": "etf12-cross-sectional-rotation-v1",
+  "no_trade": true,
+  "spec_sha256": "ce80d2e15bfdc3a644289e6e762d9c041193fba1366c2e2c0faa1d1b87e5d358",
+  "universe": [
+    "DBC",
+    "EEM",
+    "EFA",
+    "GLD",
+    "IEF",
+    "IWM",
+    "QQQ",
+    "SPY",
+    "TLT",
+    "XLE",
+    "XLF",
+    "XLK"
+  ]
+}

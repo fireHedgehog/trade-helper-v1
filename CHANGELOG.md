@@ -2,6 +2,15 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.50.0
+
+Locked, executed, and closed ETF-12 cross-sectional rotation v1 (Cycle 2's Candidate D), resolving its statistics-infrastructure gap by redesign rather than a new dependency. No strategy implemented, no trade, no cost/execution modelling.
+
+- Resolved the "no panel regression, no permutation-null machinery, no scipy/statsmodels" gap Cycle 2's verification found by substituting Spearman rank correlation (computable in plain `numpy`/`pandas`) for a panel regression, and a joint-panel block-resampling null (the same resampled calendar-time blocks applied to all 12 assets simultaneously, preserving real cluster co-movement) for per-asset cluster residualization — which would have been degenerate for the four singleton-cluster assets (`TLT`, `IEF`, `GLD`, `DBC`) in `portfolio_universe.py:PORTFOLIO_CLASSIFICATIONS`.
+- Implemented `etf12_rotation_bootstrap` and supporting functions in `backend/app/research.py`, the first genuinely panel/cross-sectional design this session (every prior candidate was per-asset independent). Added 6 unit tests, including a sanity check that a synthetic panel with a planted rank-continuation effect produces a materially higher correlation than an independent-noise panel of the same shape.
+- Result: pooled Spearman rank correlation across `253` rebalance dates and 12 assets (`3,036` pooled observations, `2006-02-06` onward) was `0.045`, an order of magnitude below the locked `0.10` materiality floor; the joint-panel null placed it at `p=0.266`. Cluster breadth passed cleanly (`6/6` clusters represented in the top-third group at some point), so the null is not a concentration artifact. The cleanest negative of the session's five experiments — no confound, power limitation, or design weakness to disclose. Recorded in [docs/research-results/etf12-cross-sectional-rotation-v1.md](docs/research-results/etf12-cross-sectional-rotation-v1.md).
+- Closes the last checklist item ready to run without a new data source or a genuinely different infrastructure investment; CTA v2's overlap concern with rotation is now moot in the other direction, since rotation ran and found nothing.
+
 ## 0.49.0
 
 Selected, locked, executed, and closed Stage 9A Cycle 4; closes every Tier 0/1 item on the pending checklist. No strategy implemented, no trade, no cost/execution modelling.

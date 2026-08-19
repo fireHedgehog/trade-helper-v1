@@ -1166,3 +1166,154 @@ def wave_pull_bootstrap(
             at_least += 1
     result["p_event"] = (at_least + 1) / (resamples + 1)
     return result
+
+
+# --- ETF-12 cross-sectional rotation v1: rank continuation vs. joint-panel null ---
+# Implements docs/research-protocols/etf12-cross-sectional-rotation-v1.md.
+# Unlike every prior candidate this session, this is a genuinely panel/
+# cross-sectional design: ranks are computed jointly across all 12 assets at
+# each rebalance date, and the null resamples the SAME calendar-time blocks
+# across all 12 assets simultaneously (not independently per asset), which
+# preserves real contemporaneous cluster correlation and is how "net of
+# cluster membership" is achieved here instead of a per-asset residualization
+# that would be degenerate for the four singleton-cluster assets.
+
+ROTATION_FORMATION_WINDOW = 60
+ROTATION_HOLDING_HORIZON = 20
+ROTATION_WARM_UP_SESSIONS = 100
+ROTATION_REBALANCE_SPACING = 20
+ROTATION_BLOCK_BARS = 20
+ROTATION_RESAMPLES = 2_000
+ROTATION_SEED = 17_291
+ROTATION_MIN_CORRELATION = 0.10
+
+
+def _average_rank(values: np.ndarray) -> np.ndarray:
+    """Cross-sectional average-rank, matching pandas' default tie-breaking."""
+    return pd.Series(values).rank(method="average").to_numpy()
+
+
+def rotation_rebalance_dates(
+    n: int,
+    *,
+    warm_up: int = ROTATION_WARM_UP_SESSIONS,
+    spacing: int = ROTATION_REBALANCE_SPACING,
+    formation: int = ROTATION_FORMATION_WINDOW,
+    holding: int = ROTATION_HOLDING_HORIZON,
+) -> np.ndarray:
+    """Session indices usable as rebalance dates: enough formation history
+    behind them (>= formation) and enough forward history ahead (+ holding < n)."""
+    start = max(warm_up, formation)
+    stop = n - holding
+    if stop <= start:
+        return np.array([], dtype=int)
+    return np.arange(start, stop, spacing)
+
+
+def rotation_pooled_correlation(
+    closes_matrix: np.ndarray,
+    *,
+    warm_up: int = ROTATION_WARM_UP_SESSIONS,
+    spacing: int = ROTATION_REBALANCE_SPACING,
+    formation: int = ROTATION_FORMATION_WINDOW,
+    holding: int = ROTATION_HOLDING_HORIZON,
+) -> tuple[float, int, dict]:
+    """closes_matrix: (T, num_assets) aligned close prices, one column per
+    asset. Returns (pooled Spearman correlation, rebalance date count,
+    {date_index: array of formation ranks}) — the per-date ranks are returned
+    for the cluster-breadth gate, computed once on the real (non-resampled)
+    panel only."""
+    n = closes_matrix.shape[0]
+    dates = rotation_rebalance_dates(
+        n, warm_up=warm_up, spacing=spacing, formation=formation, holding=holding
+    )
+    if len(dates) == 0:
+        return 0.0, 0, {}
+
+    formation_ranks_by_date: dict[int, np.ndarray] = {}
+    pooled_formation = []
+    pooled_forward = []
+    for t in dates:
+        f_returns = closes_matrix[t] / closes_matrix[t - formation] - 1
+        g_returns = closes_matrix[t + holding] / closes_matrix[t] - 1
+        f_rank = _average_rank(f_returns)
+        formation_ranks_by_date[int(t)] = f_rank
+        pooled_formation.append(f_rank)
+        pooled_forward.append(_average_rank(g_returns))
+
+    pooled_formation = np.concatenate(pooled_formation)
+    pooled_forward = np.concatenate(pooled_forward)
+    if np.std(pooled_formation) == 0 or np.std(pooled_forward) == 0:
+        return 0.0, len(dates), formation_ranks_by_date
+    correlation = float(np.corrcoef(pooled_formation, pooled_forward)[0, 1])
+    return correlation, len(dates), formation_ranks_by_date
+
+
+def etf12_rotation_bootstrap(
+    closes_by_symbol: dict[str, np.ndarray],
+    *,
+    block_bars: int = ROTATION_BLOCK_BARS,
+    resamples: int = ROTATION_RESAMPLES,
+    seed: int = ROTATION_SEED,
+    warm_up: int = ROTATION_WARM_UP_SESSIONS,
+    spacing: int = ROTATION_REBALANCE_SPACING,
+    formation: int = ROTATION_FORMATION_WINDOW,
+    holding: int = ROTATION_HOLDING_HORIZON,
+) -> dict:
+    """One-sided p-value for a favourable (positive) pooled rank correlation,
+    per docs/research-protocols/etf12-cross-sectional-rotation-v1.md. Each
+    resample applies the SAME block-permuted date sequence to all assets
+    simultaneously, preserving real contemporaneous cross-asset correlation."""
+    symbols = sorted(closes_by_symbol)
+    lengths = {len(closes_by_symbol[s]) for s in symbols}
+    if len(lengths) != 1:
+        raise ValueError("all assets must share the same aligned length")
+    n = lengths.pop()
+    if n <= warm_up + formation + holding:
+        raise ValueError("series too short for warm-up plus evaluation")
+
+    closes_matrix = np.column_stack([closes_by_symbol[s] for s in symbols])
+    observed_corr, date_count, formation_ranks_by_date = rotation_pooled_correlation(
+        closes_matrix, warm_up=warm_up, spacing=spacing, formation=formation, holding=holding
+    )
+    if date_count == 0:
+        raise ValueError("no usable rebalance dates for this sample length")
+
+    log_returns_by_symbol = {
+        s: log_returns_from_closes(closes_by_symbol[s])[1:] for s in symbols
+    }
+    m = n - 1
+    if block_bars <= 0 or block_bars > m:
+        raise ValueError("block_bars must be between 1 and the sample length")
+    if resamples <= 0:
+        raise ValueError("resamples must be positive")
+
+    blocks_needed = (m + block_bars - 1) // block_bars
+    offsets = np.arange(block_bars)
+    rng = np.random.default_rng(seed)
+    at_least = 0
+    for _ in range(resamples):
+        starts = rng.integers(0, m, size=blocks_needed)
+        indexes = (starts[:, None] + offsets) % m  # same indexes for every asset
+        flat_indexes = indexes.ravel()[:m]
+        resampled_columns = []
+        for symbol in symbols:
+            resampled_values = log_returns_by_symbol[symbol][flat_indexes]
+            resampled_padded = np.concatenate([[0.0], resampled_values])
+            resampled_columns.append(np.exp(np.cumsum(resampled_padded)))
+        resampled_matrix = np.column_stack(resampled_columns)
+        resampled_corr, _, _ = rotation_pooled_correlation(
+            resampled_matrix, warm_up=warm_up, spacing=spacing, formation=formation, holding=holding
+        )
+        if resampled_corr >= observed_corr:
+            at_least += 1
+
+    return {
+        "observed_correlation": observed_corr,
+        "rebalance_date_count": date_count,
+        "p_value": (at_least + 1) / (resamples + 1),
+        "symbols": symbols,
+        "formation_ranks_by_date": {
+            str(date): rank.tolist() for date, rank in formation_ranks_by_date.items()
+        },
+    }
