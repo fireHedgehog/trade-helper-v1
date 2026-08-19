@@ -98,14 +98,19 @@ build. This is where "next cheap test" should come from.
   negative). `EEM` reached raw `p=0.013` — the strongest single-asset raw
   significance this session — but its Holm-adjusted `p=0.156` did not
   survive correction.
-- [ ] **Day-of-week calendar effect** — same calendar-effect family as
-  turn-of-month above; scored `12/16` in [Cycle
-  5](../research-candidates/2026-08-20-cycle-5.md), eligible but not
-  prioritised this cycle (weaker literature grounding — the classic "Monday
-  effect" is widely reported as decayed post-1987 — and real mechanism
-  overlap with turn-of-month, so bundling both risks non-independent
-  evidence from one underlying "calendar effects in this universe" answer).
-  Available for a future, separately-justified cycle.
+- [x] **Day-of-week calendar effect** — Monday-only underperformance claim
+  (French 1980), scored `12/16` in [Cycle
+  5](../research-candidates/2026-08-20-cycle-5.md). Picked up directly
+  (2026-08-20) without a new selection cycle, same precedent as TA Breakout
+  v1. Locked, executed, and closed
+  [`not_material_or_not_consistent`](../research-results/calendar-day-of-week-v1.md):
+  `969`-`1,588` Mondays per asset, no power limitation; `0/12` cleared
+  materiality and Holm-corrected significance simultaneously. Notably more
+  directionally consistent than turn-of-month (`9/12` assets negative,
+  matching the literature's predicted sign), and `DBC` reached raw
+  `p=0.048` — the only raw-significant single-asset result at the
+  conventional `0.05` threshold across both calendar experiments — but its
+  Holm-adjusted `p=0.578` did not survive correction.
 - [ ] **Overnight-gap conditioned forward return** (new, 2026-08-20) —
   session-structure decomposition: a large overnight gap (open vs. prior
   close) conditioning a forward K-session return, distinct from every prior

@@ -1444,3 +1444,88 @@ def tom_bootstrap(
             at_least += 1
     result["p_event"] = (at_least + 1) / (resamples + 1)
     return result
+
+
+# --- Calendar Day-of-Week v1: Monday daily-return differential vs.
+# block-resampled null --- Implements
+# docs/research-protocols/calendar-day-of-week-v1.md. Reuses
+# tom_daily_differential and tom_volatility_diagnostic unchanged (both are
+# generic, mask-based statistics with no turn-of-month-specific logic); only
+# the event mask (weekday, not month-position) and the bootstrap's test
+# direction (negative -- French 1980's claim is Monday underperformance, not
+# outperformance) differ from Calendar Turn-of-Month v1.
+
+DOW_TARGET_WEEKDAY = 0  # pandas .dt.weekday: Monday = 0
+DOW_BLOCK_BARS = 20
+DOW_RESAMPLES = 5_000
+DOW_SEED = 17_291
+DOW_MIN_EVENT_COUNT = 200
+DOW_MATERIALITY_MAX = -0.0005
+
+
+def dow_event_mask(dates, target_weekday: int = DOW_TARGET_WEEKDAY) -> np.ndarray:
+    """True at each trading day whose calendar weekday matches
+    `target_weekday` (default Monday). Computed purely from the trading-day
+    calendar; carries no price information and no look-ahead risk, the same
+    as `tom_event_mask`."""
+    parsed = pd.to_datetime(pd.Series(dates).reset_index(drop=True))
+    return (parsed.dt.weekday == target_weekday).to_numpy()
+
+
+def dow_bootstrap(
+    closes: np.ndarray,
+    dates,
+    *,
+    target_weekday: int = DOW_TARGET_WEEKDAY,
+    block_bars: int = DOW_BLOCK_BARS,
+    resamples: int = DOW_RESAMPLES,
+    seed: int = DOW_SEED,
+    min_event_count: int = DOW_MIN_EVENT_COUNT,
+) -> dict:
+    """One-sided p-value for a favourable (negative -- underperformance)
+    Monday daily return differential, per
+    docs/research-protocols/calendar-day-of-week-v1.md. Structurally
+    identical to `tom_bootstrap` except the event mask is weekday-based and
+    the resampled comparison direction is flipped to match the claim being
+    tested."""
+    log_returns_padded = log_returns_from_closes(closes)
+    event_mask = dow_event_mask(dates, target_weekday)
+    if len(event_mask) != len(log_returns_padded):
+        raise ValueError("dates and closes must have the same length")
+
+    observed_diff, event_count, non_event_count = tom_daily_differential(
+        log_returns_padded, event_mask
+    )
+    diagnostics = tom_volatility_diagnostic(log_returns_padded, event_mask)
+
+    result = {
+        "observed_daily_differential": observed_diff,
+        "event_count": event_count,
+        "non_event_count": non_event_count,
+        "p_event": None,
+        "insufficient_events": event_count < min_event_count,
+        "diagnostics": diagnostics,
+    }
+    if event_count < min_event_count:
+        return result
+
+    values = log_returns_padded[1:]
+    mask = event_mask[1:]
+    if block_bars <= 0 or block_bars > len(values):
+        raise ValueError("block_bars must be between 1 and the sample length")
+    if resamples <= 0:
+        raise ValueError("resamples must be positive")
+
+    blocks_needed = (len(values) + block_bars - 1) // block_bars
+    offsets = np.arange(block_bars)
+    rng = np.random.default_rng(seed)
+    at_least = 0
+    for _ in range(resamples):
+        starts = rng.integers(0, len(values), size=blocks_needed)
+        indexes = (starts[:, None] + offsets) % len(values)
+        resampled_values = values[indexes.ravel()[: len(values)]]
+        resampled_diff = float(resampled_values[mask].mean() - resampled_values[~mask].mean())
+        if resampled_diff <= observed_diff:
+            at_least += 1
+    result["p_event"] = (at_least + 1) / (resamples + 1)
+    return result

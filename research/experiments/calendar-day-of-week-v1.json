@@ -1,0 +1,73 @@
+{
+  "experiment_id": "calendar-day-of-week-v1",
+  "status": "preregistered_no_results",
+  "protocol": "docs/research-protocols/calendar-day-of-week-v1.md",
+  "selection_record": "docs/research-candidates/2026-08-20-cycle-5.md",
+  "base_code_commit": "fea21b84b9072275a7144f3fad2969f4916192ea",
+  "fingerprint_date": "2026-08-20",
+  "canonicalization": "UTF-8 JSON; recursively sorted keys; separators comma and colon; ensure_ascii=false; trailing newline excluded",
+  "permitted_decisions": ["material_and_consistent", "not_material_or_not_consistent", "invalid"],
+  "forbidden_outputs": ["alpha", "entry_signal", "exit_signal", "stop", "position_size", "sharpe", "reject", "revise", "continue_research"],
+  "universe": ["SPY", "QQQ", "IWM", "EFA", "EEM", "TLT", "IEF", "GLD", "DBC", "XLK", "XLF", "XLE"],
+  "data": {
+    "database": "data/market.db",
+    "contract": "docs/adr/0002-market-data-contract.md",
+    "columns": ["symbol", "date", "open", "high", "low", "close", "volume"],
+    "fingerprint_method": "SHA-256 incremental ORDER BY symbol,date; symbol UTF-8 + NUL + date ASCII + NUL + big-endian IEEE-754 open/high/low/close doubles + signed 64-bit integer volume",
+    "development_sha256": null,
+    "development_rows": null,
+    "fingerprint_pending_reason": "specification locked before execution; fingerprint recorded fresh at execution time"
+  },
+  "scope_decision": "reuses tom_daily_differential and tom_volatility_diagnostic unchanged from Calendar Turn-of-Month v1; only the event mask (weekday instead of month-position) and the test direction (negative/underperformance, matching French 1980's actual claim) differ; single locked day (Monday), no five-way weekday scan",
+  "day_of_week_event": {
+    "definition": "DOW(t) = 1 if session t's calendar weekday is Monday",
+    "target_weekday": "Monday",
+    "source": "French (1980)"
+  },
+  "differential": {
+    "definition": "Delta = mean(daily_log_return | DOW=1) - mean(daily_log_return | DOW=0), excluding the first synthetic zero-return padding entry of each asset's history",
+    "favourable_direction": "negative"
+  },
+  "warm_up_sessions": 0,
+  "bootstrap": {
+    "base_function": "backend/app/research.py:dow_bootstrap",
+    "block_bars": 20,
+    "resamples": 5000,
+    "seed": 17291,
+    "p_value_convention": "one-sided; fraction of resamples with resampled_differential <= observed, plus add-one correction",
+    "correction": {
+      "method": "backend/app/research.py:holm_adjust",
+      "alpha": 0.05,
+      "family_definition": "12-asset family, event statistic only"
+    }
+  },
+  "gates": {
+    "minimum_event_count": 200,
+    "materiality": {
+      "daily_differential_maximum": -0.0005,
+      "significance": "holm_adjusted_p <= alpha"
+    },
+    "breadth_minimum_assets": 8,
+    "concentration_minimum_clusters": 3,
+    "concentration_total_clusters": 6,
+    "concentration_source": "backend/app/portfolio_universe.py:PORTFOLIO_CLASSIFICATIONS[symbol].cluster",
+    "reproducibility": "byte-identical differential/p-value artifact on an independent rerun against the same fingerprinted data"
+  },
+  "diagnostics": {
+    "volatility_comparison": "per-asset standard deviation of daily log returns on Monday vs. non-Monday days, disclosed, non-gating"
+  },
+  "multiplicity": {
+    "families": 1,
+    "family_labels": ["monday_daily_differential"],
+    "variant_count": 1,
+    "dependence_group": "calendar-day-of-week-v1",
+    "parameter_grid": "none in this run; one locked weekday (Monday) sourced from literature, not fit to this data"
+  },
+  "scope_exclusions": {
+    "no_trade": true,
+    "no_costs": "out of scope for this no-trade characterization run",
+    "no_forward_horizon": "contemporaneous realized-return partition, not an event-then-forward-return design",
+    "no_five_way_weekday_scan": "only Monday is tested; a full weekday scan would introduce a new multiple-comparisons dimension deliberately avoided here",
+    "no_book_level_or_executable_expression": "any tradeable expression remains a separate, later, separately locked protocol"
+  }
+}

@@ -50,11 +50,19 @@ protocol](research-protocols/calendar-turn-of-month-v1.md) executed and
 events per asset ruled out a power limitation, and a locked volatility
 diagnostic ruled out a confound story, but the daily differential was small
 and inconsistent; `EEM`'s raw `p=0.013` was the strongest single-asset raw
-signal this session but did not survive Holm correction. Six negative
-results, six different reasons. Day-of-week and overnight-gap conditioning
-remain eligible, unexecuted Cycle 5 candidates; no follow-up research task
-is queued, and the next step (one of those two, CTA v2's engine, macro data
-investment, or a fresh cycle) is a deliberate choice, not a default.
+signal this session but did not survive Holm correction. Day-of-week
+(Cycle 5, Candidate B) was picked up directly afterward without a new
+selection cycle; its [locked
+protocol](research-protocols/calendar-day-of-week-v1.md) executed and
+[closed](research-results/calendar-day-of-week-v1.md)
+`not_material_or_not_consistent` too — `9`/`12` assets negative, a more
+directionally consistent tilt than turn-of-month, and `DBC` reached raw
+`p=0.048`, but its Holm-adjusted `p=0.578` did not survive correction.
+Seven negative results, seven different reasons. Overnight-gap conditioning
+remains an eligible, unexecuted Cycle 5 candidate blocked on a new
+joint-resampling design step; no follow-up research task is queued, and the
+next step (that design step, CTA v2's engine, macro data investment, or a
+fresh cycle) is a deliberate choice, not a default.
 
 ## Resume gate
 
@@ -162,10 +170,20 @@ events per asset ruling out any power-limitation explanation — see the
 [result](research-results/calendar-turn-of-month-v1.md). A locked, non-gating
 volatility diagnostic found no evidence of SMA Cross v1's confound (event-day
 and non-event-day realized volatility were nearly identical for every
-asset). Day-of-week (Candidate B, `12/16`, eligible) shares real mechanism
-overlap with turn-of-month and was not bundled into the same cycle to avoid
-non-independent evidence; it remains available for a future, separately
-justified attempt. Overnight-gap conditioning (Candidate C, `13/16`) is a
+asset). Day-of-week (Candidate B, `12/16`) was picked up directly afterward
+(2026-08-20), not bundled into the same cycle as turn-of-month to avoid
+non-independent evidence from one underlying "calendar effects" answer. Its
+[locked protocol](research-protocols/calendar-day-of-week-v1.md) is closed
+`not_material_or_not_consistent`: `0`/`12` cleared materiality and
+Holm-corrected significance together, but the direction was notably more
+consistent than turn-of-month's (`9`/`12` assets negative, matching French
+1980's predicted sign) and `DBC` reached raw `p=0.048` — the only
+raw-significant single-asset result at the conventional `0.05` threshold
+across both calendar experiments — before Holm correction (`p=0.578`)
+erased it. A locked, non-gating diagnostic also found `8`/`12` assets have
+modestly higher realized volatility on Mondays than other days, disclosed
+but not further interpreted. Overnight-gap conditioning (Candidate C,
+`13/16`) is a
 distinct market-microstructure mechanism, not a calendar effect, but is not
 implementable today — it needs a new joint/paired resampling design (the
 existing scaffold only reconstructs a single synthetic close-price path per

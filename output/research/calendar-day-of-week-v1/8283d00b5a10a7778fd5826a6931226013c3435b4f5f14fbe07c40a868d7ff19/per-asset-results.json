@@ -1,0 +1,146 @@
+{
+  "DBC": {
+    "diagnostics": {
+      "event_std": 0.013313176087092874,
+      "non_event_std": 0.011930645042547044
+    },
+    "event_count": 969,
+    "holm_p_event": 0.5782843431313738,
+    "insufficient_events": false,
+    "non_event_count": 4195,
+    "observed_daily_differential": -0.0007136466833620092,
+    "p_event": 0.04819036192761448
+  },
+  "EEM": {
+    "diagnostics": {
+      "event_std": 0.01833455863918295,
+      "non_event_std": 0.016744446963565706
+    },
+    "event_count": 1101,
+    "holm_p_event": 1.0,
+    "insufficient_events": false,
+    "non_event_count": 4772,
+    "observed_daily_differential": -0.0006369113335096872,
+    "p_event": 0.14537092581483704
+  },
+  "EFA": {
+    "diagnostics": {
+      "event_std": 0.014501252024257213,
+      "non_event_std": 0.012750342855517465
+    },
+    "event_count": 1179,
+    "holm_p_event": 0.6092781443711258,
+    "insufficient_events": false,
+    "non_event_count": 5100,
+    "observed_daily_differential": -0.0006839869810208146,
+    "p_event": 0.05538892221555689
+  },
+  "GLD": {
+    "diagnostics": {
+      "event_std": 0.011361707667363146,
+      "non_event_std": 0.011526906989698958
+    },
+    "event_count": 1025,
+    "holm_p_event": 1.0,
+    "insufficient_events": false,
+    "non_event_count": 4444,
+    "observed_daily_differential": -0.0004503392819380609,
+    "p_event": 0.1297740451909618
+  },
+  "IEF": {
+    "diagnostics": {
+      "event_std": 0.003986119270212362,
+      "non_event_std": 0.004342284105618319
+    },
+    "event_count": 1135,
+    "holm_p_event": 0.7198560287942412,
+    "insufficient_events": false,
+    "non_event_count": 4916,
+    "observed_daily_differential": -0.000210317059950825,
+    "p_event": 0.07198560287942411
+  },
+  "IWM": {
+    "diagnostics": {
+      "event_std": 0.016055155239606853,
+      "non_event_std": 0.014827091550340963
+    },
+    "event_count": 1238,
+    "holm_p_event": 1.0,
+    "insufficient_events": false,
+    "non_event_count": 5356,
+    "observed_daily_differential": -0.0002934644569616116,
+    "p_event": 0.28594281143771244
+  },
+  "QQQ": {
+    "diagnostics": {
+      "event_std": 0.016996028876886168,
+      "non_event_std": 0.016934486110643014
+    },
+    "event_count": 1296,
+    "holm_p_event": 1.0,
+    "insufficient_events": false,
+    "non_event_count": 5606,
+    "observed_daily_differential": 0.00016552452035006415,
+    "p_event": 0.6234753049390122
+  },
+  "SPY": {
+    "diagnostics": {
+      "event_std": 0.012810641972981622,
+      "non_event_std": 0.011419573295899037
+    },
+    "event_count": 1588,
+    "holm_p_event": 1.0,
+    "insufficient_events": false,
+    "non_event_count": 6856,
+    "observed_daily_differential": 0.00011518110585371968,
+    "p_event": 0.6316736652669466
+  },
+  "TLT": {
+    "diagnostics": {
+      "event_std": 0.00851496987555289,
+      "non_event_std": 0.009095303211754873
+    },
+    "event_count": 1135,
+    "holm_p_event": 1.0,
+    "insufficient_events": false,
+    "non_event_count": 4916,
+    "observed_daily_differential": -0.00033899629772279617,
+    "p_event": 0.1367726454709058
+  },
+  "XLE": {
+    "diagnostics": {
+      "event_std": 0.02045891365823523,
+      "non_event_std": 0.017486445204961402
+    },
+    "event_count": 1305,
+    "holm_p_event": 1.0,
+    "insufficient_events": false,
+    "non_event_count": 5649,
+    "observed_daily_differential": -0.0005225175058817191,
+    "p_event": 0.17776444711057787
+  },
+  "XLF": {
+    "diagnostics": {
+      "event_std": 0.01950552642788906,
+      "non_event_std": 0.017358439560548382
+    },
+    "event_count": 1305,
+    "holm_p_event": 1.0,
+    "insufficient_events": false,
+    "non_event_count": 5649,
+    "observed_daily_differential": -0.0006514408014907193,
+    "p_event": 0.1247750449910018
+  },
+  "XLK": {
+    "diagnostics": {
+      "event_std": 0.016408638911648506,
+      "non_event_std": 0.016356728416335356
+    },
+    "event_count": 1305,
+    "holm_p_event": 1.0,
+    "insufficient_events": false,
+    "non_event_count": 5649,
+    "observed_daily_differential": 0.0003530947162489327,
+    "p_event": 0.7566486702659468
+  }
+}

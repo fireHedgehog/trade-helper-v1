@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.51.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and six completed protocols are each closed `not_material_or_not_consistent` for six different reasons: SMA Cross v1 (Cycle 2) on a confound, RSI oversold reversal (Cycle 3) on a power limitation, TA Breakout v1 on weak event/placebo separation by construction, Wave Pull v1 (Cycle 4) on a clean but null result, ETF-12 cross-sectional rotation v1 on a clean, decisive null with no caveat, and Calendar Turn-of-Month v1 (Cycle 5) on a well-powered null in the first non-technical-pattern mechanism tested — the cheap tier of the pending checklist is exhausted and one Tier 2 item is closed.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.52.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and seven completed protocols are each closed `not_material_or_not_consistent` for seven different reasons: SMA Cross v1 (Cycle 2) on a confound, RSI oversold reversal (Cycle 3) on a power limitation, TA Breakout v1 on weak event/placebo separation by construction, Wave Pull v1 (Cycle 4) on a clean but null result, ETF-12 cross-sectional rotation v1 on a clean, decisive null with no caveat, Calendar Turn-of-Month v1 (Cycle 5) on a well-powered null in the first non-technical-pattern mechanism tested, and Calendar Day-of-Week v1 (Cycle 5) on a well-powered null with a directionally consistent but statistically unconfirmed tilt — the cheap tier of the pending checklist is exhausted and one Tier 2 item is closed.
 
 ## Completed foundation
 
@@ -203,8 +203,30 @@ candidates. The evaluation also corrected two prior claims: CTA v2's true
 engineering cost is lower than previously stated (adjacent live-portfolio
 infrastructure exists but isn't directly reusable), and a genuinely distinct
 S/R Bounce construction (round-number price levels) is now known but blocked
-on an adjusted-vs-nominal-price data gap under ADR 0002. The next step
-remains a deliberate choice, not a default continuation.
+on an adjusted-vs-nominal-price data gap under ADR 0002.
+
+Day-of-week (Candidate B, `12/16`) was then picked up directly from the same
+selection record — no new cycle minted, the same precedent as TA Breakout
+v1 — testing Monday's underperformance claim (French 1980) only, not a
+five-way weekday scan, to avoid a new multiple-comparisons dimension. Its
+[locked protocol](research-protocols/calendar-day-of-week-v1.md) reused
+Turn-of-Month v1's generic statistics functions unchanged, flipping only the
+event mask and the test direction (negative, matching the actual literature
+claim). Executed and
+[closed](research-results/calendar-day-of-week-v1.md)
+`not_material_or_not_consistent`: `969`-`1,588` Mondays per asset ruled out
+a power limitation; `0`/`12` cleared materiality and Holm-corrected
+significance together. Unlike turn-of-month's near-even split, the
+direction was notably consistent (`9`/`12` assets negative, matching the
+literature's predicted sign), and `DBC` reached raw `p=0.048` — the only
+raw-significant single-asset result at the conventional `0.05` threshold
+across both calendar experiments — but Holm correction (`p=0.578`) erased
+it. A locked, non-gating diagnostic also found `8`/`12` assets have modestly
+higher realized volatility on Mondays, disclosed but not further
+interpreted. Overnight-gap conditioning (Candidate C, `13/16`) remains
+eligible but blocked on a new joint/paired resampling design step this
+codebase doesn't yet have. The next step remains a deliberate choice, not a
+default continuation.
 
 ### 9B — Locked experiment and confirmation
 

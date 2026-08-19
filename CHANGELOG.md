@@ -2,6 +2,15 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.52.0
+
+Picked up Stage 9A Cycle 5's Candidate B (day-of-week calendar effect) directly from its existing selection record, locked, executed, and closed. No strategy implemented, no trade, no cost/execution modelling.
+
+- Locked [docs/research-protocols/calendar-day-of-week-v1.md](docs/research-protocols/calendar-day-of-week-v1.md): a Monday-only underperformance claim (French 1980), not a five-way weekday scan, to avoid a new multiple-comparisons dimension. Picked up directly from [Cycle 5](docs/research-candidates/2026-08-20-cycle-5.md) without minting a new selection cycle, the same precedent as TA Breakout v1.
+- Implemented `dow_event_mask` and `dow_bootstrap` in `backend/app/research.py`, reusing `tom_daily_differential` and `tom_volatility_diagnostic` unchanged from Calendar Turn-of-Month v1 — only the event mask (weekday, not month-position) and the bootstrap's test direction (negative/underperformance, matching the actual literature claim rather than silently reusing Turn-of-Month's positive-direction convention) differ. Added 6 unit tests, including a hand-computed-calendar fixture and a check that the flipped test direction doesn't spuriously fire on pure noise.
+- Result: `not_material_or_not_consistent`. `969`-`1,588` Mondays per asset ruled out a power limitation. `0`/`12` cleared materiality and Holm-corrected significance simultaneously, but the direction was notably more consistent than Turn-of-Month v1's near-even split — `9`/`12` assets negative, matching the literature's predicted sign — and `DBC` reached raw `p=0.048` on a `-0.071%` daily differential, the only raw-significant single-asset result at the conventional `0.05` threshold across both calendar experiments this session; its Holm-adjusted `p=0.578` did not survive correction. A locked, non-gating diagnostic also found `8`/`12` assets have modestly higher realized volatility on Mondays than other days, disclosed but not further interpreted. Recorded in [docs/research-results/calendar-day-of-week-v1.md](docs/research-results/calendar-day-of-week-v1.md).
+- Seven negative results, seven different reasons this session. Overnight-gap conditioning remains the one eligible, unexecuted Cycle 5 candidate, blocked on a new joint-resampling design step; no research task is queued next by default.
+
 ## 0.51.0
 
 Ran an independent, adversarially verified next-priority evaluation, then selected, locked, executed, and closed Stage 9A Cycle 5's turn-of-month calendar effect. No strategy implemented, no trade, no cost/execution modelling.
