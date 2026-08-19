@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.40.0`; Stage 8 is closed and Stage 9A Cycle 1 is closed `not_evaluable`. The locked matcher admitted no controls, so power and actual-event outcomes were not run.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.41.0`; Stage 8 is closed and Stage 9A Cycle 1 is closed `not_evaluable`. The locked matcher admitted no controls, so power and actual-event outcomes were not run.
 
 ## Completed foundation
 

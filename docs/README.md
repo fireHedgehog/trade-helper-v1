@@ -6,14 +6,15 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.40.0` |
+| Version | `0.41.0` |
 | Parent release | `0.37.0` (first Stage 8 acceptance candidate) |
 | Current state | Stage 9A Cycle 1 closed `not_evaluable`; no outcome evidence was produced |
-| Verification | `222 passed`; 274 events, 6/8 retained variants, matching 0/274, byte-identical structural rerun |
+| Verification | `222 passed` at `0.40.0`; 274 events, 6/8 retained variants, matching 0/274, byte-identical structural rerun |
 | Completed | Stage 8; Stage 9A Cycle 1 selection, preregistration, detector, prevalence, and matching feasibility |
 | Next product work | Start Cycle 2 candidate selection; do not relax Cycle 1 matching retrospectively |
 | Active research | Stage 9A Cycle 2 selection; Stage 9B remains gated |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
+| Pending triage | 2026-08-19 methodology/implementation audit (2 critical, 2 high, 5 medium, 4 low), untriaged; see [audits/README.md](audits/README.md) |
 
 The first real `0.37.0` acceptance run correctly ended `complete_with_errors`, but revealed two contract defects: settlement-based Yahoo futures were treated as equity candles, and a small invalid subset blocked every full-universe daily scan. Version `0.37.1` separates market context from the strategy universe, keeps equity validation strict, gives context bars an honest settlement contract, and permits daily discovery above a visible 90% coverage floor. The repaired real run then completed with zero failed/blocked model jobs: five new and two reused full-universe snapshots; empty watchlist scopes were honestly skipped. Saved snapshots retain exact exclusions and fingerprints. Formal experiments remain governed by their locked coverage rules.
 
@@ -32,6 +33,16 @@ Heavy statistical work is intentionally paused. On resumption, first operational
 - Data refresh and strategy runs are explicit actions, not navigation side effects.
 - Macro series are non-tradable context under [ADR 0006](adr/0006-macro-data-contract.md); they never generate candidates until point-in-time data and a preregistered hypothesis exist.
 - Cron, paper/live trading, brokers, and AWS remain out of scope.
+
+## Environment and data portability
+
+`data/` and `.venv/` are git-ignored ([data/README.md](../data/README.md)); Git carries specifications, code, and immutable evidence, never the local database or interpreter. A checkout without both populated can read, edit, and plan documentation and specifications, and can run any test that does not require `data/market.db` rows; it cannot run the server or any detector/matching/experiment runner against real data.
+
+A locked specification's data fingerprint (for example `consolidation-support-feasibility-v1`'s `development_sha256`) is computed over the exact rows in `data/market.db` at lock time. Re-fetching is not a substitute: Yahoo `auto_adjust=True` rebases full price history on every dividend, so a fresh `python -m app.fetch` run is not guaranteed to reproduce a prior fingerprint, and `run_consolidation_feasibility.py` raises `RuntimeError` on any mismatch rather than proceeding on unverified data. To move locked-data execution to another machine, copy the `data/market.db` file itself; do not re-fetch and expect an identical hash.
+
+Consequence for new locked work (Stage 9A Cycle 2 or later): candidate selection, scorecard, and protocol drafting need no data. Locking a specification's data fingerprint and running its detector must happen on the machine holding the intended `data/market.db`; that machine then becomes the only one able to execute that specification until the database file is copied across.
+
+On a checkout with no `data/market.db` rows, `pytest -q` fails exactly two tests, not zero: `test_consolidation_feasibility.py::test_real_locked_spec_and_development_data_reproduce` (fingerprint mismatch against an empty database) and `test_api.py::test_signal_rejects_unknown_parameter` (`/api/signal/SPY` returns `404` before parameter validation because `SPY` is not stored). Both are the expected empty-database state, confirmed by direct run at `0.41.0`, not a regression to fix.
 
 ## Document authority
 
