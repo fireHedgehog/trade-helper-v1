@@ -15,3 +15,4 @@ Template: `YYYY-MM-DD-topic.md`, first line:
 | 2026-08-18 | Governance, β framework, data policy | [2026-08-18-governance-beta-data.md](2026-08-18-governance-beta-data.md) |
 | 2026-08-19 | Strategy taxonomy, benchmark questions, research tracks | [2026-08-19-strategy-taxonomy-benchmark-research-tracks.md](2026-08-19-strategy-taxonomy-benchmark-research-tracks.md) |
 | 2026-08-19 | Long-end yield shock and trend-entry failure | [2026-08-19-long-end-yield-shock.md](2026-08-19-long-end-yield-shock.md) |
+| 2026-08-19 | Pending candidate checklist, cheap to orthogonal | [2026-08-19-pending-candidate-checklist.md](2026-08-19-pending-candidate-checklist.md) |
