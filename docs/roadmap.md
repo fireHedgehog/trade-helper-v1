@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.48.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and three completed protocols are each closed `not_material_or_not_consistent` for three different reasons: SMA Cross v1 (Cycle 2) on a confound (a volatility-only placebo explained it away), RSI oversold reversal (Cycle 3) on a power limitation (36–56 events per asset), and TA Breakout v1 (picked up from Cycle 2's unpicked Candidate E) on weak event/placebo separation by construction, disclosed rather than hidden.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.49.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and four completed protocols are each closed `not_material_or_not_consistent` for four different reasons: SMA Cross v1 (Cycle 2) on a confound, RSI oversold reversal (Cycle 3) on a power limitation, TA Breakout v1 on weak event/placebo separation by construction, and Wave Pull v1 (Cycle 4) on a clean but null result — the cheap tier of the pending checklist is now exhausted.
 
 ## Completed foundation
 
@@ -141,6 +141,24 @@ its exact confound; Elliott Wave counting is not objectively definable
 without discretionary judgment, in tension with this project's falsifiability
 requirement — the existing `WavePull` prototype remains the honest,
 already-scoped stand-in, currently blocked by a known bug.
+
+`WavePull`'s `IndexError` was fixed in `0.48.0`, unblocking it; Cycle 4
+scored it (`13/16`) as impulse-pullback continuation and prioritised it —
+[selection record](research-candidates/2026-08-19-cycle-4.md). Its
+[protocol](research-protocols/wave-pull-v1.md) locked a close-price-only
+impulse-then-breakout event against a plain-breakout placebo stripping the
+impulse precondition, reusing the same event-recomputing bootstrap a third
+time. Executed and [closed](research-results/wave-pull-v1.md)
+`not_material_or_not_consistent`: `IEF` had zero qualifying events
+(disclosed, anticipated in the protocol's own risk section); `0/11` eligible
+assets survived Holm correction. Unlike TA Breakout, the event/placebo
+separation was clean (events ran `5`–`20×` fewer than placebo occurrences).
+`TLT` reached raw `p=0.032` — the closest any single asset has come to raw
+significance across all four experiments this session — but failed
+correction on only `20` events, and several equity assets showed a
+negative-direction effect, disclosed rather than omitted. This closes every
+Tier 0/1 item on the pending checklist; the next step is a deliberate
+choice, not a default continuation.
 
 ### 9B — Locked experiment and confirmation
 

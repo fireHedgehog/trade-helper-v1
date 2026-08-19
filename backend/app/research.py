@@ -1034,3 +1034,135 @@ def ta_breakout_bootstrap(
             at_least += 1
     result["p_event"] = (at_least + 1) / (resamples + 1)
     return result
+
+
+# --- Wave Pull v1: impulse-pullback continuation vs. plain-breakout placebo ---
+# Implements docs/research-protocols/wave-pull-v1.md. Reuses the same
+# event-recomputing bootstrap scaffold as RSI/TA Breakout (_apply_cooldown,
+# _mean_forward_return). Close-price-only by deliberate scope decision,
+# substituting a close-based rolling extreme for the existing WavePull
+# prototype's intraday high/low pullback range; see the protocol.
+
+WAVE_PULL_IMPULSE_LOOKBACK = 8
+WAVE_PULL_IMPULSE_MIN_MOVE = 0.06
+WAVE_PULL_PULLBACK_WINDOW = 3
+WAVE_PULL_WARM_UP_SESSIONS = 100
+WAVE_PULL_EVENT_COOLDOWN = 10
+WAVE_PULL_FORWARD_HORIZON = 10
+WAVE_PULL_MIN_EVENT_COUNT = 15
+WAVE_PULL_BLOCK_BARS = 20
+WAVE_PULL_RESAMPLES = 5_000
+WAVE_PULL_SEED = 17_291
+
+
+def wave_pull_events(
+    closes: np.ndarray,
+    *,
+    impulse_lookback: int = WAVE_PULL_IMPULSE_LOOKBACK,
+    impulse_min_move: float = WAVE_PULL_IMPULSE_MIN_MOVE,
+    pullback_window: int = WAVE_PULL_PULLBACK_WINDOW,
+) -> tuple[np.ndarray, np.ndarray]:
+    """(event, placebo) boolean arrays. Event requires a prior impulse;
+    placebo is the same pullback-high breakout with no impulse precondition."""
+    n = len(closes)
+    impulse = np.full(n, False)
+    if n > impulse_lookback:
+        impulse[impulse_lookback:] = (
+            closes[impulse_lookback:] / closes[:-impulse_lookback] - 1 >= impulse_min_move
+        )
+    pullback_high = _rolling_max_excluding_today(closes, pullback_window)
+    valid = np.isfinite(pullback_high)
+    placebo = np.where(valid, closes > pullback_high, False)
+    event = impulse & placebo
+    return event, placebo
+
+
+def wave_pull_event_forward_return(
+    log_returns_padded: np.ndarray,
+    *,
+    warm_up: int = WAVE_PULL_WARM_UP_SESSIONS,
+    cooldown: int = WAVE_PULL_EVENT_COOLDOWN,
+    horizon: int = WAVE_PULL_FORWARD_HORIZON,
+) -> tuple[float, int]:
+    closes_proxy = np.exp(np.cumsum(log_returns_padded))
+    event, _ = wave_pull_events(closes_proxy)
+    raw_events = np.where(event)[0]
+    raw_events = raw_events[raw_events >= warm_up]
+    events = _apply_cooldown(raw_events, cooldown)
+    return _mean_forward_return(log_returns_padded, events, horizon)
+
+
+def wave_pull_placebo_forward_return(
+    log_returns_padded: np.ndarray,
+    *,
+    warm_up: int = WAVE_PULL_WARM_UP_SESSIONS,
+    cooldown: int = WAVE_PULL_EVENT_COOLDOWN,
+    horizon: int = WAVE_PULL_FORWARD_HORIZON,
+) -> tuple[float, int]:
+    closes_proxy = np.exp(np.cumsum(log_returns_padded))
+    _, placebo = wave_pull_events(closes_proxy)
+    raw_events = np.where(placebo)[0]
+    raw_events = raw_events[raw_events >= warm_up]
+    events = _apply_cooldown(raw_events, cooldown)
+    return _mean_forward_return(log_returns_padded, events, horizon)
+
+
+def wave_pull_bootstrap(
+    closes: np.ndarray,
+    *,
+    block_bars: int = WAVE_PULL_BLOCK_BARS,
+    resamples: int = WAVE_PULL_RESAMPLES,
+    seed: int = WAVE_PULL_SEED,
+    warm_up: int = WAVE_PULL_WARM_UP_SESSIONS,
+    cooldown: int = WAVE_PULL_EVENT_COOLDOWN,
+    horizon: int = WAVE_PULL_FORWARD_HORIZON,
+    min_event_count: int = WAVE_PULL_MIN_EVENT_COUNT,
+) -> dict:
+    """One-sided p-value for a favourable (positive) mean forward return,
+    for both the impulse-pullback event and its plain-breakout placebo, per
+    docs/research-protocols/wave-pull-v1.md."""
+    log_returns_padded = log_returns_from_closes(closes)
+    n = len(log_returns_padded)
+    if n <= warm_up + WAVE_PULL_IMPULSE_LOOKBACK:
+        raise ValueError("series too short for warm-up plus evaluation")
+
+    observed_event_mean, event_count = wave_pull_event_forward_return(
+        log_returns_padded, warm_up=warm_up, cooldown=cooldown, horizon=horizon
+    )
+    observed_placebo_mean, placebo_count = wave_pull_placebo_forward_return(
+        log_returns_padded, warm_up=warm_up, cooldown=cooldown, horizon=horizon
+    )
+
+    result = {
+        "observed_event_mean_forward_return": observed_event_mean,
+        "event_count": event_count,
+        "observed_placebo_mean_forward_return": observed_placebo_mean,
+        "placebo_count": placebo_count,
+        "p_event": None,
+        "insufficient_events": event_count < min_event_count,
+    }
+    if event_count < min_event_count:
+        return result
+
+    values = log_returns_padded[1:]
+    if block_bars <= 0 or block_bars > len(values):
+        raise ValueError("block_bars must be between 1 and the sample length")
+    if resamples <= 0:
+        raise ValueError("resamples must be positive")
+
+    blocks_needed = (len(values) + block_bars - 1) // block_bars
+    offsets = np.arange(block_bars)
+    rng = np.random.default_rng(seed)
+    at_least = 0
+    for _ in range(resamples):
+        starts = rng.integers(0, len(values), size=blocks_needed)
+        indexes = (starts[:, None] + offsets) % len(values)
+        resampled_values = values[indexes.ravel()[: len(values)]]
+        resampled_padded = np.concatenate([[0.0], resampled_values])
+        resampled_mean, _ = wave_pull_event_forward_return(
+            resampled_padded, warm_up=warm_up, cooldown=cooldown, horizon=horizon
+        )
+        if resampled_mean >= observed_event_mean:
+            at_least += 1
+    result["p_event"] = (at_least + 1) / (resamples + 1)
+    return result

@@ -30,6 +30,15 @@ hypothesis engineering again.
   (the ≥2-rejection filter barely screened anything out), a disclosed design
   limitation, not just a bare negative. A tighter rejection definition would
   be new, independently justified work.
+- [x] **Wave Pull** — impulse-pullback continuation. Unblocked by the
+  `0.48.0` bug fix, scored (13/16) in [Cycle
+  4](../research-candidates/2026-08-19-cycle-4.md). Locked, executed, and
+  closed
+  [`not_material_or_not_consistent`](../research-results/wave-pull-v1.md):
+  0/11 eligible assets (`IEF` had zero qualifying events, disclosed) survived
+  Holm correction. Event/placebo separation was clean this time, unlike TA
+  Breakout — `TLT` reached raw p=0.032, the closest single-asset near-miss
+  this session, but failed correction on only 20 events.
 
 ## Tier 1 — cheap, single-asset, zero new infrastructure, data already in hand
 

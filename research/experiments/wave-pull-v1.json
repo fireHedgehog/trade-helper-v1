@@ -1,0 +1,85 @@
+{
+  "experiment_id": "wave-pull-v1",
+  "status": "preregistered_no_results",
+  "protocol": "docs/research-protocols/wave-pull-v1.md",
+  "selection_record": "docs/research-candidates/2026-08-19-cycle-4.md",
+  "base_code_commit": "fcf7cb24d81e96b0698bb85019e9363ddbf88368",
+  "fingerprint_date": "2026-08-19",
+  "canonicalization": "UTF-8 JSON; recursively sorted keys; separators comma and colon; ensure_ascii=false; trailing newline excluded",
+  "permitted_decisions": ["material_and_consistent", "not_material_or_not_consistent", "invalid"],
+  "forbidden_outputs": ["alpha", "entry_signal", "exit_signal", "stop", "position_size", "sharpe", "reject", "revise", "continue_research"],
+  "universe": ["SPY", "QQQ", "IWM", "EFA", "EEM", "TLT", "IEF", "GLD", "DBC", "XLK", "XLF", "XLE"],
+  "data": {
+    "database": "data/market.db",
+    "contract": "docs/adr/0002-market-data-contract.md",
+    "columns": ["symbol", "date", "open", "high", "low", "close", "volume"],
+    "fingerprint_method": "SHA-256 incremental ORDER BY symbol,date; symbol UTF-8 + NUL + date ASCII + NUL + big-endian IEEE-754 open/high/low/close doubles + signed 64-bit integer volume",
+    "development_sha256": null,
+    "development_rows": null,
+    "fingerprint_pending_reason": "specification locked before execution; fingerprint recorded fresh at execution time"
+  },
+  "scope_decision": "close-price-only, substituting a close-based rolling extreme for the prototype's intraday high/low pullback range; reuses the event-recomputing bootstrap scaffold proven by RSI oversold reversal and TA Breakout v1",
+  "impulse": {
+    "lookback_sessions": 8,
+    "minimum_move": 0.06,
+    "definition": "Impulse(t) = 1{close(t)/close(t-8) - 1 >= 0.06}"
+  },
+  "pullback": {
+    "window_sessions": 3,
+    "definition": "PullbackHigh(t) = rolling 3-session maximum close, computed through close t-1 only (shift(1) before the rolling window)"
+  },
+  "event": {
+    "definition": "Event(t) = 1{Impulse(t) and close(t) > PullbackHigh(t)}",
+    "cooldown_sessions": 10,
+    "minimum_event_count_per_asset": 15
+  },
+  "placebo": {
+    "definition": "Placebo(t) = 1{close(t) > PullbackHigh(t)}, no impulse precondition",
+    "cooldown_sessions": 10
+  },
+  "warm_up_sessions": 100,
+  "forward_return": {
+    "horizon_sessions": 10,
+    "definition": "R10(t) = sum of log returns over the 10 sessions following the event close",
+    "favourable_direction": "positive"
+  },
+  "bootstrap": {
+    "base_function": "backend/app/research.py:wave_pull_bootstrap (event-recomputing extension shared in design with rsi_bootstrap and ta_breakout_bootstrap)",
+    "block_bars": 20,
+    "resamples": 5000,
+    "seed": 17291,
+    "p_value_convention": "one-sided; fraction of resamples with resampled_mean_forward_return >= observed, plus add-one correction",
+    "correction": {
+      "method": "backend/app/research.py:holm_adjust",
+      "alpha": 0.05,
+      "family_definition": "eligible assets, event statistic only; placebo compared per-asset, not a second Holm-corrected family"
+    }
+  },
+  "gates": {
+    "minimum_event_count": 15,
+    "materiality": {
+      "mean_forward_return_minimum": 0.005,
+      "significance": "holm_adjusted_p <= alpha"
+    },
+    "breadth_minimum_assets": 8,
+    "placebo_rule": "event mean forward return must exceed placebo mean forward return on the same asset",
+    "concentration_minimum_clusters": 3,
+    "concentration_total_clusters": 6,
+    "concentration_source": "backend/app/portfolio_universe.py:PORTFOLIO_CLASSIFICATIONS[symbol].cluster",
+    "reproducibility": "byte-identical forward-return/p-value artifact on an independent rerun against the same fingerprinted data"
+  },
+  "multiplicity": {
+    "families": 1,
+    "family_labels": ["impulse_pullback_event"],
+    "variant_count": 1,
+    "dependence_group": "wave-pull-v1",
+    "parameter_grid": "none in this run; one locked impulse threshold, pullback window, and forward horizon, matching the existing prototype's own defaults"
+  },
+  "scope_exclusions": {
+    "no_trade": true,
+    "no_costs": "out of scope for this no-trade characterization run",
+    "no_intraday_high_low": "close-price-only by deliberate scope decision",
+    "no_stop_or_target_mechanics": "the prototype's own risk mechanics are not used in this no-trade event study",
+    "no_book_level_or_executable_expression": "any tradeable expression remains a separate, later, separately locked protocol"
+  }
+}

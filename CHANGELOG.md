@@ -2,6 +2,15 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.49.0
+
+Selected, locked, executed, and closed Stage 9A Cycle 4; closes every Tier 0/1 item on the pending checklist. No strategy implemented, no trade, no cost/execution modelling.
+
+- Scored `Wave Pull` impulse-pullback continuation (`13/16`) now that its `IndexError` bug is fixed. Recorded in [docs/research-candidates/2026-08-19-cycle-4.md](docs/research-candidates/2026-08-19-cycle-4.md).
+- Locked [docs/research-protocols/wave-pull-v1.md](docs/research-protocols/wave-pull-v1.md): a close-price-only impulse-then-breakout event against a plain-breakout placebo that strips the impulse precondition, reusing the event-recomputing bootstrap a third time (`wave_pull_bootstrap` in `backend/app/research.py`). Added 6 unit tests, including a check that the event set is a strict subset of the placebo set.
+- Result: `not_material_or_not_consistent`. `IEF` had zero qualifying events (disclosed, anticipated in the protocol's own risk section); `0/11` eligible assets survived Holm correction. Unlike TA Breakout, the event/placebo separation was clean (events ran `5`-`20x` fewer than placebo occurrences). `TLT` reached raw `p=0.032` — the closest any single asset has come to raw significance across all four experiments this session — but failed correction on only `20` events; several equity assets showed a negative-direction effect, disclosed rather than omitted. Recorded in [docs/research-results/wave-pull-v1.md](docs/research-results/wave-pull-v1.md).
+- This closes the cheap tier of the [pending candidate checklist](docs/brainstorm/2026-08-19-pending-candidate-checklist.md): four experiments, four different `not_material_or_not_consistent` reasons (confound, power limit, weak test design, clean-but-null). No research task is queued next by default.
+
 ## 0.48.0
 
 Fixed the known `Wave Pull` `IndexError` (2026-08-19 audit's L4 finding); no research conclusion changed.

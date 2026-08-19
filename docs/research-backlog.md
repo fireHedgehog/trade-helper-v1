@@ -21,9 +21,19 @@ its [locked protocol](research-protocols/ta-breakout-v1.md) executed and
 [closed](research-results/ta-breakout-v1.md) `not_material_or_not_consistent`
 on a *disclosed design weakness* — 0/12 reached raw significance despite
 1,477 events, and the event/placebo separation was weak by construction.
-Three negative results, three different reasons — see each result's own
-reading before treating them as interchangeable. No follow-up research task
-is queued; the next Stage 9A step, if any, is a new cycle.
+Cycle 4 selected Wave Pull impulse-pullback continuation, unblocked after its
+`IndexError` bug fix; its [locked protocol](research-protocols/wave-pull-v1.md)
+executed and [closed](research-results/wave-pull-v1.md)
+`not_material_or_not_consistent` on a *clean-separation-but-null* result — the
+event/placebo split was sharp this time (unlike TA Breakout), one asset
+(`TLT`) reached raw significance before correction for the first time this
+session, but failed Holm correction on a thin 20-event sample. Four negative
+results, four different reasons — see each result's own reading before
+treating them as interchangeable. Every Tier 0/1 item on the [pending
+checklist](brainstorm/2026-08-19-pending-candidate-checklist.md) is now
+scored or executed; no follow-up research task is queued, and the next step
+(infrastructure investment, macro data investment, or a fresh cycle) is a
+deliberate choice, not a default.
 
 ## Resume gate
 

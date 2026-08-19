@@ -1,0 +1,14 @@
+{
+  "breadth_count": 0,
+  "breadth_met": false,
+  "clusters_represented": [],
+  "concentration_met": false,
+  "data_sha256": "a45bce859cdeee705a06cdea9c03f1bf0f31cff501d5f66c2e544d8f13fb64ab",
+  "decision": "not_material_or_not_consistent",
+  "eligible_asset_count": 11,
+  "excluded_insufficient_events": [
+    "IEF"
+  ],
+  "qualifying_assets": [],
+  "spec_sha256": "618a482ae4866887d13b38d84679a98b7343fe2e4e983e29ead6a249f49050c1"
+}
