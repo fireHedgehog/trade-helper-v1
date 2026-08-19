@@ -18,6 +18,7 @@ from .calendar import macro_events
 from .confidence import compute_confidence
 from .data_management import (
     DataRefreshManager,
+    REQUEST_DELAY_SECONDS,
     RefreshAlreadyRunning,
     inventory_payload,
     select_refresh_symbols,
@@ -363,11 +364,16 @@ def _build_daily_pipeline_plan() -> dict:
                     ),
                 }
             )
-    return plan_daily_pipeline(
+    plan = plan_daily_pipeline(
         expected_session=status["expected_latest_session"],
         inventory=inventory,
         strategy_specs=specs,
     )
+    plan["refresh"]["delay_seconds"] = REQUEST_DELAY_SECONDS
+    plan["refresh"]["minimum_delay_seconds"] = max(
+        0, plan["refresh"]["count"] - 1
+    ) * REQUEST_DELAY_SECONDS
+    return plan
 
 
 _daily_pipeline_manager: DailyPipelineManager | None = None

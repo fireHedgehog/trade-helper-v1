@@ -57,11 +57,36 @@ assert_js "document.querySelector('#today-status').textContent !== 'Reading save
 assert_js "document.querySelector('#dimmer').hidden" "Navigation unexpectedly started a long-running action"
 echo "smoke: Today read-only state"
 
+# Pipeline fixtures prove review gating, persisted progress, and retry language
+# without starting refresh or strategy work.
+run_js "(() => { window.__smokeApi = window.api; window.api = async (path, options) => path === '/api/daily-pipeline/plan' ? ({expected_session:'2026-08-18',status:'refresh_required',refresh:{status:'ready',symbols:['SPY','QQQ'],count:2,delay_seconds:2,minimum_delay_seconds:2},strategy_jobs:[],summary:{ready:1,blocked_data:1,skipped_current:2,skipped_empty:3}}) : window.__smokeApi(path, options); document.querySelector('#today-plan-pipeline').click(); return 'pipeline fixture installed'; })()" "Could not install deterministic pipeline plan"
+sleep 1
+snapshot
+assert_js "!document.querySelector('#today-run-pipeline').disabled" "Reviewed pipeline did not enable its explicit run action"
+assert_js "document.querySelector('#today-pipeline-plan').textContent.includes('Portfolio comparison is excluded')" "Pipeline scope boundary is missing"
+pw eval "window.renderPipelineStatus({state:'running',expected_session:'2026-08-18',refresh:{state:'running'},strategy_jobs:[{state:'complete'},{state:'pending'}],message:'fixture running'})" >/dev/null
+snapshot
+assert_js "document.querySelector('#today-run-pipeline').disabled" "Pipeline action stayed enabled while running"
+pw eval "window.renderPipelineStatus({state:'interrupted',expected_session:'2026-08-18',refresh:{state:'interrupted'},strategy_jobs:[{state:'interrupted'}],message:'server stopped before completion'})" >/dev/null
+snapshot
+assert_js "document.querySelector('#today-run-pipeline').textContent.includes('Retry')" "Interrupted pipeline did not expose retry-by-replanning"
+echo "smoke: Pipeline reviewed, running, and interrupted states"
+
+pw resize 390 844 >/dev/null
+snapshot
+assert_js "getComputedStyle(document.querySelector('.today-actions')).gridTemplateColumns.split(' ').length === 1" "Today actions did not collapse to one narrow-screen column"
+assert_js "getComputedStyle(document.querySelector('.section-heading')).flexDirection === 'column'" "Pipeline heading/actions did not stack on narrow screens"
+assert_js "document.documentElement.scrollWidth <= window.innerWidth" "Narrow layout causes page-level horizontal overflow"
+echo "smoke: Today narrow layout"
+
 pw eval "location.hash = '#explorer'" >/dev/null
 sleep 1
 snapshot
 assert_js "document.querySelector('#status').textContent.includes('press Run Backtest')" "Symbol Research did not remain not-run"
 assert_js "document.querySelector('#dimmer').hidden" "Symbol Research navigation triggered computation"
+assert_js "getComputedStyle(document.querySelector('.content')).flexDirection === 'column'" "Symbol Research chart and dossier did not stack on narrow screens"
+assert_js "Math.round(document.querySelector('.rail').getBoundingClientRect().width) <= window.innerWidth" "Symbol Research dossier exceeds the narrow viewport"
+assert_js "document.documentElement.scrollWidth <= window.innerWidth" "Symbol Research causes page-level narrow overflow"
 echo "smoke: Symbol Research not-run state"
 
 pw eval "location.hash = '#lab'" >/dev/null
@@ -74,6 +99,7 @@ pw eval "document.querySelector('#lab-compute').click()" >/dev/null
 snapshot
 assert_js "document.querySelector('#lab-run-state').textContent.includes('no symbols selected')" "Empty Strategy Lab selection was not rejected"
 assert_js "document.querySelector('#scoreboard').textContent.includes('Select at least one symbol')" "Empty calculation did not explain the required action"
+assert_js "document.documentElement.scrollWidth <= window.innerWidth" "Strategy Lab causes page-level narrow overflow"
 echo "smoke: Strategy Lab not-run and empty states"
 
 # Macro response is injected to avoid a live Trading Economics request.
@@ -83,6 +109,7 @@ snapshot
 assert_js "document.querySelector('#macro-contract').textContent.includes('Point-in-time vintages: unavailable')" "Macro availability boundary was not rendered"
 assert_js "!document.querySelector('#macro-events').textContent.includes('good for equities')" "Macro rendered a prohibited equity-direction claim"
 assert_js "document.querySelector('#macro-events').textContent.includes('not signal eligible')" "Macro eligibility warning is missing"
+assert_js "document.documentElement.scrollWidth <= window.innerWidth" "Macro causes page-level narrow overflow"
 echo "smoke: Macro display-only state"
 
 # Render each supported Data Management state without provider calls or writes.
@@ -91,6 +118,7 @@ sleep 1
 snapshot
 assert_js "document.querySelector('#data-status').textContent.includes('0/1')" "Running data progress was not rendered"
 assert_js "document.querySelector('#data-refresh-stale').disabled" "Refresh controls stayed enabled during a running job"
+assert_js "document.documentElement.scrollWidth <= window.innerWidth" "Data Management causes page-level narrow overflow"
 pw eval "(() => { clearTimeout(dataPollTimer); window.renderDataStatus(window.__dataFixture('interrupted')); return 'interrupted rendered'; })()" >/dev/null
 snapshot
 assert_js "document.querySelector('#data-job-note').textContent.includes('server stopped before completion')" "Interrupted recovery guidance is missing"
@@ -107,6 +135,7 @@ assert_js "document.querySelector('#data-status').textContent.includes('status f
 assert_js "document.querySelector('#data-job-note').textContent.includes('Freshness is unknown')" "Failure did not invalidate freshness"
 assert_js "document.querySelector('#dimmer').hidden" "Failure left the global loader active"
 echo "smoke: transport failure state"
+pw resize 1280 900 >/dev/null
 
 console_output="$(pw console error || true)"
 if ! grep -q "Errors: 0" <<<"$console_output"; then

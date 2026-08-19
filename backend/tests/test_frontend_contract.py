@@ -56,7 +56,10 @@ def test_today_navigation_is_read_only_until_an_action_is_clicked() -> None:
     assert "$('#today-refresh').addEventListener('click', () => runTodaySnapshot('watchlist'))" in HTML
     assert "$('#today-run-discovery').addEventListener('click', () => runTodaySnapshot('all'))" in HTML
     assert "$('#today-plan-pipeline').addEventListener('click', previewDailyPipeline)" in HTML
-    assert "Review dependencies first. Execution is explicit, sequential, durable, and safe to retry." in HTML
+    assert "Batch alternative · Daily pipeline" in HTML
+    assert "It replaces manual Steps 1–3" in HTML
+    assert "portfolio comparison remains a separate Step 4 action" in HTML
+    assert "Provider pacing alone requires at least" in HTML
     assert "$('#today-run-pipeline').addEventListener('click', runDailyPipeline)" in HTML
     assert 'id="today-run-pipeline" disabled' in HTML
 

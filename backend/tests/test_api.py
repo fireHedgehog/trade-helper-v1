@@ -29,7 +29,7 @@ def clear_portfolio_cache():
 async def test_health(client) -> None:
     assert (await client.get("/api/health")).json() == {
         "status": "ok",
-        "version": "0.36.0",
+        "version": "0.37.0",
     }
 
 
@@ -206,6 +206,8 @@ async def test_daily_pipeline_plan_is_read_only_and_dependency_aware(
     payload = response.json()
     assert payload["status"] == "refresh_required"
     assert payload["refresh"]["symbols"] == ["SPY"]
+    assert payload["refresh"]["delay_seconds"] == 2.0
+    assert payload["refresh"]["minimum_delay_seconds"] == 0
     assert payload["summary"]["blocked_data"] == len(main.STRATEGIES)
     assert payload["summary"]["skipped_empty"] == len(main.STRATEGIES)
 

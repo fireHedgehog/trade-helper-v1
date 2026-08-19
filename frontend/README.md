@@ -20,10 +20,10 @@ Strategy Lab must not present its in-memory scoreboard as a formal experiment. L
 
 `index.html` contains the single-page application. TradingView Lightweight Charts is pinned via CDN for candles, volume, markers, and price levels. Introduce a framework only if state complexity makes the current design materially unsafe to maintain.
 
-Stage 8B defines the semantic UI tokens and Today command centre. Its four permanent actions appear in dependency order—data, watchlist, discovery, portfolio—but remain independent manual triggers. Future scheduling must call the same durable pipeline described in the workspace specification.
+The four manual actions appear in dependency order: data, watchlist, discovery, portfolio. The reviewed daily pipeline is a batch alternative for Steps 1–3 across every model; it excludes portfolio comparison, shows the fixed provider-pacing floor, persists progress, and retries by re-planning. Navigation remains read-only. Future scheduling may only trigger this same pipeline.
 
 Run the backend and open <http://127.0.0.1:8000/>. The pending product contract is [workspace-redesign.md](../docs/workspace-redesign.md).
 
-Run `scripts/browser-smoke.sh` from the repository root while the backend is running. It exercises navigation and deterministic not-run, empty, running, interrupted, partial-failure, and failed states without provider writes or strategy computation.
+Run `scripts/browser-smoke.sh` from the repository root while the backend is running. It exercises navigation, pipeline review/progress/recovery, deterministic not-run/empty/failure states, and every primary view at 390 px without provider writes or strategy computation.
 
 [Project](../README.md) · [Checkpoint](../docs/README.md) · [Roadmap](../docs/roadmap.md)

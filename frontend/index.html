@@ -266,12 +266,25 @@
     body { display: block; height: auto; min-height: 100vh; }
     aside { width: 100%; flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border); padding: 10px; }
     aside h1, .app-version { display: none; }
-    main { min-height: calc(100vh - 58px); }
+    .nav-item { flex: 0 0 auto; white-space: nowrap; }
+    main { min-height: calc(100vh - 58px); overflow: visible; }
+    .toolbar { flex-wrap: wrap; }
+    .toolbar .symbol-box { flex: 1 1 180px; }
+    .toolbar #status { width: 100%; margin-left: 0; }
+    .content { flex-direction: column; }
+    #chart-area { flex: 0 0 560px; min-height: 560px; }
+    .rail { width: 100%; overflow: visible; border-left: 0; border-top: 1px solid var(--border); }
     .today-body, .macro-body { padding: 14px; }
     .today-hero { align-items: flex-start; flex-direction: column; }
     .today-context { justify-content: flex-start; width: 100%; }
     .today-context select { flex: 1; min-width: 130px; }
     .today-actions { grid-template-columns: 1fr; }
+    .section-heading { flex-direction: column; }
+    .section-heading > div:last-child { display: flex; width: 100%; gap: 8px; }
+    .section-heading > div:last-child button { flex: 1; }
+    .event-row { align-items: flex-start; flex-direction: column; }
+    .ev-name, .ev-cell { width: 100%; }
+    .data-controls input { min-width: 0; width: 100%; }
     .safety-banner { margin: 0 14px; }
     .panel { padding: 16px; }
   }
@@ -401,7 +414,7 @@
 
       <section class="panel">
         <div class="section-heading">
-          <div><h2>Daily pipeline</h2><p>Review dependencies first. Execution is explicit, sequential, durable, and safe to retry.</p></div>
+          <div><h2>Batch alternative · Daily pipeline</h2><p>Runs Data → watched states → full-universe discovery for every model. It replaces manual Steps 1–3 for a routine batch; portfolio comparison remains a separate Step 4 action.</p></div>
           <div><button id="today-plan-pipeline">Preview</button> <button class="primary" id="today-run-pipeline" disabled>Run reviewed pipeline</button></div>
         </div>
         <div id="today-pipeline-plan" class="sample-note">Not planned. Preview checks freshness and stored input/model fingerprints only.</div>
@@ -1911,12 +1924,14 @@ async function previewDailyPipeline() {
     $('#today-run-pipeline').disabled = false;
     const refresh = plan.refresh;
     const summary = plan.summary;
+    const minimumMinutes = Math.ceil((refresh.minimum_delay_seconds || 0) / 60);
     $('#today-pipeline-plan').innerHTML =
       `<b>Expected session ${escapeHtml(plan.expected_session)} · ${escapeHtml(plan.status)}</b><br>` +
       `Data: ${escapeHtml(refresh.status)}${refresh.count ? ` · ${refresh.count} symbols require refresh` : ''}. ` +
       `Model jobs: ${summary.ready} ready · ${summary.blocked_data} blocked by data · ` +
       `${summary.skipped_current} skipped current · ${summary.skipped_empty} skipped empty.<br>` +
-      `Execution refreshes first, re-plans after publication, then runs only changed jobs.`;
+      (refresh.count ? `Provider pacing alone requires at least ~${minimumMinutes} minutes; downloads and model runs add time.<br>` : '') +
+      `Execution refreshes first, re-plans after publication, then runs only changed jobs. Portfolio comparison is excluded.`;
   } catch (err) {
     $('#today-pipeline-plan').textContent = `Pipeline plan failed · ${err.message}`;
   }
@@ -1956,7 +1971,10 @@ async function runDailyPipeline() {
   if (!reviewedPipelinePlan) return;
   const refreshCount = reviewedPipelinePlan.refresh.count;
   const ready = reviewedPipelinePlan.summary.ready;
-  if (!confirm(`Run the reviewed pipeline? It may refresh ${refreshCount} symbols, then re-plan and run ${ready} currently-ready model jobs. Existing current work will be skipped.`)) return;
+  const blocked = reviewedPipelinePlan.summary.blocked_data;
+  const minimumMinutes = Math.ceil((reviewedPipelinePlan.refresh.minimum_delay_seconds || 0) / 60);
+  const timing = refreshCount ? ` Fixed provider pacing requires at least ~${minimumMinutes} minutes before download/model time.` : '';
+  if (!confirm(`Run the reviewed pipeline? It may refresh ${refreshCount} symbols, then re-plan ${ready} ready and ${blocked} currently data-blocked model jobs.${timing} Existing current work will be skipped. Portfolio comparison is not included.`)) return;
   $('#today-run-pipeline').disabled = true;
   try {
     const job = await api('/api/daily-pipeline', {

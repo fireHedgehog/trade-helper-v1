@@ -6,18 +6,18 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.36.0` |
-| Parent release | `0.34.0` (Stage 8C gate closure) |
-| Current state | Stage 8D executor complete; bounded usability/layout exit work remains |
-| Verification | `207 passed` plus live Playwright preview with zero console errors; execution deliberately not triggered |
-| Completed | Stage 8A state foundation; Stage 8B visual system and Today command centre |
-| Next product work | Stage 8D exit: narrow-layout and task-based ambiguity check, then stop product infrastructure |
+| Version | `0.37.0` |
+| Parent release | `0.36.0` (durable executor) |
+| Current state | Stage 8 implementation complete; manual user acceptance pending before 9A |
+| Verification | `207 passed` plus full Playwright desktop/narrow/state smoke; provider and strategy work deliberately not triggered |
+| Completed | Stage 8A–8D implementation and automated exit evidence |
+| Next product work | None; manually browse/test the local workflow, then explicitly approve or reject entry to 9A |
 | Parked research | Stage 9A: acceptance standard and candidate priority; then 9B locked experiment |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 
-Version 0.36.0 completes the bounded executor slice. Today first previews the deterministic plan; only explicit confirmation starts work. The durable job refreshes dependencies, re-plans after publication (including partial failures), runs independent changed snapshots through the same path as manual actions, and stores every outcome in SQLite. Restart marks unfinished work interrupted. Retry creates a new plan, so current data and matching snapshots are skipped. Navigation remains read-only and cron remains parked.
+Version 0.37.0 closes the implemented Stage 8 gate. The UI now distinguishes four manual actions from the batch pipeline: the pipeline replaces Steps 1–3 across every model, excludes portfolio comparison, and discloses the fixed provider-pacing minimum before confirmation. Every primary view passes the 390 px overflow/layout checks. Deterministic browser coverage includes pipeline reviewed/running/interrupted states and all prior read-only/failure states. Real provider refresh and strategy work were deliberately not triggered.
 
-Local-optimum guard: Stage 8D ends after narrow-layout, task-usability, and browser-regression checks. Do not expand infrastructure or polish a “beautiful toy.” The next substantive gate is Stage 9A candidate priority and preregistered acceptance design; automation cannot turn rejected or unevaluated strategies into evidence.
+Local-optimum guard: do not add more Stage 8 infrastructure or polish. Manually inspect the app; only explicit user acceptance opens Stage 9A candidate priority and preregistered acceptance design. Automation cannot turn rejected or unevaluated strategies into evidence.
 
 Heavy statistical work is intentionally paused. On resumption, first operationalize candidate theses, audit benchmark/universe suitability, and only then apply the model acceptance scorecard. Read the protocol, CTA result, audit, and backlog before experiment design. Do not tune CTA v1 after observing its rejection.
 

@@ -2,6 +2,17 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.37.0
+
+Stage 8 implementation exit checkpoint; manual user acceptance remains required before 9A.
+
+- Clarified that the daily pipeline is a batch alternative for manual Steps 1–3 across every model and excludes the separate portfolio comparison.
+- Exposed the fixed two-second provider pacing and minimum delay estimate in the reviewed plan and confirmation, including jobs that may unblock after refresh.
+- Reflowed Today controls, Symbol Research chart/dossier, Macro events, and Data Management controls for narrow screens.
+- Expanded deterministic Playwright coverage for pipeline reviewed/running/interrupted states and page-level overflow across every primary view at 390×844.
+- Preserved the anti-toy boundary: no strategy, research result, scheduler, provider, paper-trading, or deployment change.
+- Verification: `207 passed`; complete browser smoke passed with zero console errors and no provider/strategy execution.
+
 ## 0.36.0
 
 Bounded Stage 8D executor slice; no strategy, research conclusion, scheduler, or deployment change.

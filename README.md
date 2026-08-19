@@ -4,7 +4,7 @@ Local, long-only systematic-research workspace for testing whether a strategy ad
 
 ## Current state
 
-Version `0.36.0` adds the explicit durable daily-pipeline executor. A reviewed run refreshes required data, re-plans after publication, executes only changed strategy snapshots, persists every transition, and makes retry idempotent. CTA v1 remains rejected; automation does not validate a model. No paper trading, broker integration, unattended refresh, or deployment is enabled.
+Version `0.37.0` completes the implemented Stage 8 local-product gate. The durable reviewed pipeline, task-scope language, fixed-delay estimate, narrow layouts, and deterministic browser states are verified; manual user acceptance is the final approval before Stage 9A. CTA v1 remains rejected, and automation does not validate a model. No paper trading, broker integration, unattended refresh, or deployment is enabled.
 
 Start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint, next task, and document map.
 

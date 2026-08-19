@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.36.0`, Stage 8D exit work in progress.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.37.0`; Stage 8 implementation is complete and awaits manual user acceptance before 9A.
 
 ## Completed foundation
 
@@ -58,13 +58,11 @@ Gate: browser smoke tests cover primary workflows and every asynchronous state; 
 
 Completed in `0.35.0`: read-only dependency preflight and deterministic input/model/scope fingerprints. Completed in `0.36.0`: confirmed durable execution through the existing refresh/snapshot paths, dependency re-planning after partial publication, persisted restart-visible state, and idempotent retry-by-replanning.
 
-- Validate desktop and narrow layouts.
-- Conduct a task-based usability pass and resolve high-severity ambiguity.
-- Update screenshots and operating notes only after behaviour stabilises.
+Completed in `0.37.0`: task-based ambiguity audit; explicit manual-vs-batch and portfolio boundaries; fixed provider-delay estimate; responsive primary views at 390 px; expanded deterministic browser regression and operating notes.
 
 Anti-toy exit rule: after the layout/usability and smoke-test items above, stop Stage 8 infrastructure work and enter Stage 9A. Do not add dashboards, schedulers, providers, or strategy decoration merely because the pipeline can support them.
 
-Gate: the local product is reliable enough for repeated daily research use, with no implication of live readiness.
+Gate: implementation evidence is complete. The user must manually inspect and accept the local workflow before explicitly opening 9A. This is not live-readiness approval.
 
 ## Stage 9: New strategy research — parked
 
