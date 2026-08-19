@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 from app import main
+from app.version import APP_VERSION
 
 
 pytestmark = pytest.mark.anyio
@@ -29,7 +30,7 @@ def clear_portfolio_cache():
 async def test_health(client) -> None:
     assert (await client.get("/api/health")).json() == {
         "status": "ok",
-        "version": "0.53.0",
+        "version": APP_VERSION,
     }
 
 

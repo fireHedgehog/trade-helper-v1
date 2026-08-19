@@ -1800,3 +1800,240 @@ def overnight_gap_bootstrap(
     result["p_event"] = (at_least_gap + 1) / (resamples + 1)
     result["p_gap_vs_placebo"] = (at_least_diff + 1) / (resamples + 1)
     return result
+
+
+# --- CTA v2: pooled vol-scaled trend overlay (Stage 9A Cycle 2, Candidate C,
+# picked up 2026-08-20) --- Implements
+# docs/research-protocols/cta-v2-pooled-trend-overlay.md. The estimand is a
+# single pooled daily excess-return series -- structurally identical in shape
+# to CTA v1's original per-symbol excess-return statistic, just computed from
+# a portfolio-weighted series instead of a per-symbol one -- so
+# circular_block_bootstrap_p_value and holm_adjust are reused completely
+# unchanged; no state-recomputing bootstrap is required the way SMA Cross
+# v1's Δσ/ΔMDD estimand needed, because nothing here depends on how a
+# threshold state would look on a resampled path.
+
+CTA_V2_VOL_LOOKBACK = 20  # shares SMA Cross v1's exact volatility estimator
+CTA_V2_VARIANTS = {"A": 150, "B": 252, "C": 350}  # SMA lookback per variant
+CTA_V2_PRIMARY_VARIANT = "B"
+CTA_V2_WARM_UP_SESSIONS = 350  # widest variant lookback, so every variant is
+# fully warmed up from the sample's first evaluated day
+CTA_V2_BLOCK_BARS = 20
+CTA_V2_RESAMPLES = 5_000
+CTA_V2_SEED = 17_291
+CTA_V2_MATERIALITY_ANNUALIZED_MIN = 0.01  # +1.0 percentage point
+CTA_V2_REGIME_YEARS = (2008, 2020, 2022)
+
+
+def cta_v2_trailing_vol(log_returns_padded: np.ndarray) -> np.ndarray:
+    """Trailing 20-session close-to-close log-return std, annualized -- the
+    exact estimator already locked for SMA Cross v1's volatility-state
+    placebo, reused here as both the trend-signal normalizer and the
+    vol-scaling weight denominator, so one volatility concept governs the
+    whole candidate rather than two different ones."""
+    return _rolling_std(log_returns_padded, CTA_V2_VOL_LOOKBACK) * SMA_CROSS_ANNUALIZATION
+
+
+def cta_v2_signal_matrix(
+    closes_by_symbol: dict[str, np.ndarray], *, sma_window: int
+) -> dict[str, np.ndarray]:
+    """Per-asset Trend(t) = (close(t) - SMA_n(t)) / sigma_20(t), close-only --
+    the same close-price-only simplification every prior close-derived
+    candidate this session made, to avoid a second, high/low-dependent
+    volatility proxy alongside the one already locked for the placebo."""
+    signals: dict[str, np.ndarray] = {}
+    for symbol, closes in closes_by_symbol.items():
+        log_returns = log_returns_from_closes(closes)
+        sma = _rolling_mean(closes, sma_window)
+        sigma = cta_v2_trailing_vol(log_returns)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            trend = (closes - sma) / sigma
+        signals[symbol] = np.where(np.isfinite(trend), trend, np.nan)
+    return signals
+
+
+def _normalized_score_weights(score: np.ndarray) -> np.ndarray:
+    """Row-normalize a (dates x assets) non-negative score matrix to sum to
+    at most 1.0 per row; an all-zero row (no eligible asset) stays all-zero
+    (100% cash), never divides by zero."""
+    totals = score.sum(axis=1)
+    return np.divide(
+        score, totals[:, None], out=np.zeros_like(score), where=totals[:, None] > 0
+    )
+
+
+def cta_v2_weight_matrix(
+    closes_by_symbol: dict[str, np.ndarray], *, sma_window: int
+) -> dict[str, np.ndarray]:
+    """w_i(t): long-only, sum-normalized, vol-scaled trend weight. Zero
+    weight where a signal is non-positive or unavailable (pre-warm-up); an
+    all-non-positive-trend day yields an all-zero row, i.e. 100% cash at
+    zero yield, matching ADR 0003's locked zero-cash-yield convention."""
+    symbols = list(closes_by_symbol)
+    n = len(closes_by_symbol[symbols[0]])
+    trends = cta_v2_signal_matrix(closes_by_symbol, sma_window=sma_window)
+    score = np.zeros((n, len(symbols)))
+    for j, symbol in enumerate(symbols):
+        trend = trends[symbol]
+        sigma = cta_v2_trailing_vol(log_returns_from_closes(closes_by_symbol[symbol]))
+        positive_trend = np.where(np.isfinite(trend) & (trend > 0), trend, 0.0)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            score[:, j] = np.where(
+                np.isfinite(sigma) & (sigma > 0), positive_trend / sigma, 0.0
+            )
+    weights = _normalized_score_weights(score)
+    return {symbol: weights[:, j] for j, symbol in enumerate(symbols)}
+
+
+def cta_v2_placebo_weight_matrix(
+    closes_by_symbol: dict[str, np.ndarray],
+) -> dict[str, np.ndarray]:
+    """Direction-blind volatility-only weight: no trend information at all,
+    only inverse-volatility scaling with the same sigma_20 estimator --
+    every asset always receives a positive weight, so this is always fully
+    invested, unlike the trend-weighted portfolio's possible all-cash days."""
+    symbols = list(closes_by_symbol)
+    n = len(closes_by_symbol[symbols[0]])
+    score = np.zeros((n, len(symbols)))
+    for j, symbol in enumerate(symbols):
+        sigma = cta_v2_trailing_vol(log_returns_from_closes(closes_by_symbol[symbol]))
+        with np.errstate(invalid="ignore", divide="ignore"):
+            score[:, j] = np.where(np.isfinite(sigma) & (sigma > 0), 1.0 / sigma, 0.0)
+    weights = _normalized_score_weights(score)
+    return {symbol: weights[:, j] for j, symbol in enumerate(symbols)}
+
+
+def cta_v2_portfolio_return(
+    closes_by_symbol: dict[str, np.ndarray],
+    weights_by_symbol: dict[str, np.ndarray],
+) -> np.ndarray:
+    """r_portfolio(t) = sum_i w_i(t-1) * r_i(t); day 0 has no prior weight,
+    so portfolio return is 0 there, matching log_returns_from_closes's own
+    day-0 padding convention. t-1 weights gating day t's return matches ADR
+    0001 even though no position is opened in this no-trade test."""
+    symbols = list(closes_by_symbol)
+    n = len(closes_by_symbol[symbols[0]])
+    portfolio = np.zeros(n)
+    for symbol in symbols:
+        r = log_returns_from_closes(closes_by_symbol[symbol])
+        w = weights_by_symbol[symbol]
+        lagged_w = np.concatenate([[0.0], w[:-1]])
+        portfolio += lagged_w * r
+    return portfolio
+
+
+def cta_v2_benchmark_return(closes_by_symbol: dict[str, np.ndarray]) -> np.ndarray:
+    """Continuous, no-cost, daily-rebalanced equal-weight benchmark: the
+    simple cross-sectional mean of the 12 assets' daily log returns. A
+    further deliberate simplification of ADR 0005's real annually-rebalanced,
+    whole-share, costed Passive ETF-12 v1 -- used only for this no-trade
+    comparison, where daily rebalancing needs no drift/position tracking and
+    stays fully transparent and easy to verify."""
+    returns = np.vstack(
+        [log_returns_from_closes(closes) for closes in closes_by_symbol.values()]
+    )
+    return returns.mean(axis=0)
+
+
+def cta_v2_bootstrap(
+    closes_by_symbol: dict[str, np.ndarray],
+    dates: np.ndarray,
+    *,
+    warm_up: int = CTA_V2_WARM_UP_SESSIONS,
+    block_bars: int = CTA_V2_BLOCK_BARS,
+    resamples: int = CTA_V2_RESAMPLES,
+    seed: int = CTA_V2_SEED,
+    materiality_annualized_min: float = CTA_V2_MATERIALITY_ANNUALIZED_MIN,
+) -> dict:
+    """Per-variant and placebo pooled-portfolio excess return over a
+    daily-rebalanced equal-weight benchmark, Holm-corrected across the
+    3-variant lookback family (the placebo is compared directly via the
+    paired placebo test, not pooled into that family), per
+    docs/research-protocols/cta-v2-pooled-trend-overlay.md."""
+    symbols = list(closes_by_symbol)
+    n = len(closes_by_symbol[symbols[0]])
+    for symbol, closes in closes_by_symbol.items():
+        if len(closes) != n:
+            raise ValueError(f"{symbol} calendar differs from the shared pooled calendar")
+    if len(dates) != n:
+        raise ValueError("dates must match the shared pooled calendar")
+    if n <= warm_up:
+        raise ValueError("series too short for warm-up plus evaluation")
+
+    benchmark = cta_v2_benchmark_return(closes_by_symbol)
+
+    variant_results: dict[str, dict] = {}
+    raw_p: dict[str, float] = {}
+    excess_by_variant: dict[str, np.ndarray] = {}
+    for label, sma_window in CTA_V2_VARIANTS.items():
+        weights = cta_v2_weight_matrix(closes_by_symbol, sma_window=sma_window)
+        portfolio = cta_v2_portfolio_return(closes_by_symbol, weights)
+        excess = (portfolio - benchmark)[warm_up:]
+        excess_by_variant[label] = excess
+        observed_mean = float(excess.mean())
+        p = circular_block_bootstrap_p_value(
+            excess, block_bars=block_bars, resamples=resamples, seed=seed
+        )
+        raw_p[label] = p
+        variant_results[label] = {
+            "sma_window": sma_window,
+            "observed_mean_daily_excess_return": observed_mean,
+            "annualized_materiality": observed_mean * 252,
+            "raw_p": p,
+            "asset_weight_share": {
+                symbol: float(np.nanmean(weights[symbol][warm_up:])) for symbol in symbols
+            },
+        }
+
+    labels = list(CTA_V2_VARIANTS)
+    adjusted = holm_adjust([raw_p[label] for label in labels])
+    for label, holm_p in zip(labels, adjusted):
+        variant_results[label]["holm_p"] = holm_p
+
+    placebo_weights = cta_v2_placebo_weight_matrix(closes_by_symbol)
+    placebo_portfolio = cta_v2_portfolio_return(closes_by_symbol, placebo_weights)
+    placebo_excess = (placebo_portfolio - benchmark)[warm_up:]
+    placebo_mean = float(placebo_excess.mean())
+
+    primary = CTA_V2_PRIMARY_VARIANT
+    primary_excess = excess_by_variant[primary]
+    primary_mean = variant_results[primary]["observed_mean_daily_excess_return"]
+    primary_annualized = variant_results[primary]["annualized_materiality"]
+    primary_holm_p = variant_results[primary]["holm_p"]
+    beats_placebo_point_estimate = primary_mean > placebo_mean
+    difference_series = primary_excess - placebo_excess
+    p_primary_vs_placebo = circular_block_bootstrap_p_value(
+        difference_series, block_bars=block_bars, resamples=resamples, seed=seed
+    )
+    beats_placebo = beats_placebo_point_estimate and p_primary_vs_placebo <= 0.05
+
+    material = primary_annualized >= materiality_annualized_min
+    significant = primary_holm_p <= 0.05
+    decision = (
+        "material_and_consistent"
+        if material and significant and beats_placebo
+        else "not_material_or_not_consistent"
+    )
+
+    years = pd.to_datetime(dates[warm_up:]).year.to_numpy()
+    regime_diagnostics = {
+        f"excluding_{year}": float(primary_excess[years != year].mean())
+        for year in CTA_V2_REGIME_YEARS
+    }
+
+    return {
+        "variants": variant_results,
+        "primary_variant": primary,
+        "placebo": {
+            "observed_mean_daily_excess_return": placebo_mean,
+            "beats_primary_point_estimate": not beats_placebo_point_estimate,
+            "p_primary_vs_placebo": p_primary_vs_placebo,
+        },
+        "decision": decision,
+        "gates": {
+            "materiality": material,
+            "significance": significant,
+            "placebo": beats_placebo,
+        },
+        "regime_diagnostics": regime_diagnostics,
+    }

@@ -2,6 +2,21 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.55.0
+
+Picked up CTA v2 (Cycle 2's Candidate C) directly, designed and locked its
+protocol after an independent, adversarially-verified next-priority
+evaluation, then executed and closed it. No strategy implemented, no trade,
+no cost/execution modelling.
+
+- Amended [docs/research-candidates/2026-08-19-cycle-2.md](docs/research-candidates/2026-08-19-cycle-2.md) rather than minting a new cycle: corrected the engineering-cost framing (a weight-vector construction and portfolio-return aggregator was needed, not a from-scratch engine) and re-read channel 1's rationale against the 2026-08-19 audit — that audit found CTA v1's design underpowered, not the underlying thesis false, and Candidate C's own record already stated its estimand exists specifically to fix that power problem. Channel 2 (vol-scaled de-risking) is retained only as the required shared placebo, not independent rationale, given SMA Cross v1's confound finding.
+- Locked [docs/research-protocols/cta-v2-pooled-trend-overlay.md](docs/research-protocols/cta-v2-pooled-trend-overlay.md): a pooled, vol-scaled, long-only trend overlay across all 12 ETFs, tested against a daily-rebalanced no-cost equal-weight benchmark and a required direction-blind volatility-only placebo. Two design corrections made before locking, both recorded rather than silently applied: substituted a close-only volatility proxy for Cycle 2's original "ATR" phrasing (no function in this module has high/low access, the same simplification every prior close-derived candidate made), and strengthened the placebo gate from a bare point-estimate comparison to a paired significance test — the exact fix Overnight-Gap's pre-lock review already proved necessary for two correlated statistics, applied here for free since both series are already realized (no event-recomputation needed).
+- The significance test needed no new bootstrap machinery at all: the estimand is a single pooled daily excess-return series, structurally identical in shape to CTA v1's original per-symbol statistic, so `circular_block_bootstrap_p_value` and `holm_adjust` are reused completely unchanged for both the primary test and the primary-vs-placebo paired test.
+- Implemented `cta_v2_trailing_vol`, `cta_v2_signal_matrix`, `cta_v2_weight_matrix`, `cta_v2_placebo_weight_matrix`, `cta_v2_portfolio_return`, `cta_v2_benchmark_return`, and `cta_v2_bootstrap` in `backend/app/research.py`. Added 6 unit tests, including a planted-favourable-effect-vs-pure-noise sanity check and a mismatched-calendar rejection test.
+- Found and fixed `test_api.py::test_health`'s hardcoded `"0.53.0"` expected version — broken by `0.54.0`'s own version bump but not caught before that commit was pushed, since the suite wasn't re-run after that specific edit. Replaced the hardcoded string with a direct import of `app.version.APP_VERSION` so this cannot recur on a future bump.
+- Result: `not_material_or_not_consistent`. The primary variant (`SMA_252`) cleared materiality (`+2.18pp` annualized, floor `+1.0pp`) and beat both the benchmark and the placebo on point estimate, but failed significance (raw `p=0.231`, Holm `p=0.692` across the 3-variant family) and the paired placebo test (`p=0.116`). All three lookback variants were consistently positive-signed. A disclosed, non-gating diagnostic found the positive point estimate depends materially on 2008 — excluding it flips the primary variant's mean daily excess from `+8.64e-5` to `-1.24e-5`. Recorded in [docs/research-results/cta-v2-pooled-trend-overlay.md](docs/research-results/cta-v2-pooled-trend-overlay.md).
+- Nine negative results this session (including CTA v1's own prior rejection), nine different reasons. Unlike every technical-pattern/calendar candidate this session, this one is a properly-powered retest of the project's own founding thesis, not a search for a new mechanism — it closes a loop the 2026-08-19 audit opened, rather than extending the search further.
+
 ## 0.54.0
 
 Fixed `store.py::upsert_bars`'s non-atomic publication defect (2026-08-19 audit's H2 finding); no research conclusion changed.

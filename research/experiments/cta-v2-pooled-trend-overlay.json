@@ -1,0 +1,84 @@
+{
+  "experiment_id": "cta-v2-pooled-trend-overlay",
+  "status": "preregistered_no_results",
+  "protocol": "docs/research-protocols/cta-v2-pooled-trend-overlay.md",
+  "selection_record": "docs/research-candidates/2026-08-19-cycle-2.md",
+  "base_code_commit": "2fb228643e84d3f5ed7ef2277b02ec464dde1524",
+  "fingerprint_date": "2026-08-20",
+  "canonicalization": "UTF-8 JSON; recursively sorted keys; separators comma and colon; ensure_ascii=false; trailing newline excluded",
+  "permitted_decisions": ["material_and_consistent", "not_material_or_not_consistent", "invalid"],
+  "forbidden_outputs": ["alpha", "entry_signal", "exit_signal", "stop", "position_size", "sharpe", "reject", "revise", "continue_research"],
+  "universe": ["SPY", "QQQ", "IWM", "EFA", "EEM", "TLT", "IEF", "GLD", "DBC", "XLK", "XLF", "XLE"],
+  "estimand": "pooled_portfolio_mean_daily_excess_return_over_daily_rebalanced_benchmark",
+  "data": {
+    "database": "data/market.db",
+    "contract": "docs/adr/0002-market-data-contract.md",
+    "columns": ["symbol", "date", "open", "high", "low", "close", "volume"],
+    "fingerprint_method": "SHA-256 incremental ORDER BY symbol,date; symbol UTF-8 + NUL + date ASCII + NUL + big-endian IEEE-754 open/high/low/close doubles + signed 64-bit integer volume",
+    "development_sha256": null,
+    "development_rows": null,
+    "development_first_date": null,
+    "development_last_date": null,
+    "fingerprint_pending_reason": "specification locked before data fetch; fingerprint recorded once the 12-ETF universe is present on the executing machine, per protocol Implementation and artifact contract step 3"
+  },
+  "signal": {
+    "definition": "Trend_i(t) = (close_i(t) - SMA_n(t)) / sigma_20_i(t), close-price-only",
+    "volatility_estimator": "trailing 20-session close-to-close log-return standard deviation, annualized by sqrt(252) -- shared with SMA Cross v1's volatility-state placebo estimator, used here as both the trend-signal normalizer and the vol-scaling weight denominator",
+    "variants": {"A": 150, "B": 252, "C": 350},
+    "primary_variant": "B",
+    "primary_variant_note": "the literal SMA lookback already named in Cycle 2's Candidate C record; only the primary can produce material_and_consistent, closing off variant cherry-picking by construction"
+  },
+  "weights": {
+    "definition": "w_i(t) = max(Trend_i(t), 0) / sigma_20_i(t), sum-normalized across assets to at most 1.0 (no leverage); an all-non-positive-trend day yields an all-zero row (100% cash at zero yield)",
+    "gross_cap": 1.0,
+    "leverage": false
+  },
+  "placebo": {
+    "definition": "w_placebo_i(t) = (1 / sigma_20_i(t)) / sum_j(1 / sigma_20_j(t)) -- direction-blind, always fully invested, shares the exact same sigma_20 estimator",
+    "required": true,
+    "rationale": "Cycle 2's own Cross-candidate findings named this mechanism as a rival explanation for Candidate C's own result and required it be shared, not separately re-litigated"
+  },
+  "benchmark": {
+    "definition": "continuous, no-cost, daily-rebalanced equal-weight (1/12) index: r_benchmark(t) = mean_i(r_i(t))",
+    "note": "a further deliberate simplification of ADR 0005's real annually-rebalanced, whole-share, costed Passive ETF-12 v1, used only for this no-trade comparison so neither side carries costs or drift the other does not"
+  },
+  "warm_up_sessions": 350,
+  "warm_up_rationale": "widest lookback across all three variants (secondary variant C's SMA_350), so every variant is fully warmed up from the sample's first evaluated day; DBC inception (2006-02-06) plus 350 sessions keeps 2008 inside the evaluated sample",
+  "bootstrap": {
+    "base_function": "backend/app/research.py:circular_block_bootstrap_p_value",
+    "extension_required": "none -- reused completely unchanged for both the primary significance test on each variant's excess-return series and the primary-vs-placebo paired test on the difference series",
+    "block_bars": 20,
+    "resamples": 5000,
+    "seed": 17291,
+    "correction": {
+      "method": "backend/app/research.py:holm_adjust",
+      "alpha": 0.05,
+      "family_definition": "3 lookback variants (A, B, C), Holm-corrected together; the placebo is compared via the separate paired test below, not pooled into this family"
+    }
+  },
+  "gates": {
+    "materiality_annualized_min_percentage_points": 1.0,
+    "materiality_rationale": "low enough not to demand an unrealistically large edge from a no-cost characterization test, high enough to sit clearly above this project's locked round-trip cost defaults (10 bp commission/side, 2 bp spread, 5 bp slippage)",
+    "significance_alpha": 0.05,
+    "placebo_rule": "primary variant's mean daily excess return strictly exceeds the placebo's point estimate AND the primary-minus-placebo difference series clears p <= 0.05 on the same bootstrap procedure",
+    "placebo_rule_rationale": "a bare point-estimate comparison is exactly the gate Overnight-Gap's pre-lock review found gives little real discriminating power between two correlated statistics; the paired test applies that lesson here",
+    "reproducibility": "byte-identical excess-return series, p-values, and weight-share diagnostics on an independent rerun against the same fingerprinted data"
+  },
+  "diagnostics_non_gating": {
+    "regime_concentration": "mean daily excess return of the primary variant, excluding 2008, excluding 2020, excluding 2022 separately",
+    "asset_weight_concentration": "each asset's mean weight share over the full sample, primary variant"
+  },
+  "multiplicity": {
+    "families": 1,
+    "family_labels": ["lookback_variants"],
+    "variant_count": 4,
+    "variant_count_note": "3 lookback variants plus the required placebo",
+    "dependence_group": "cta-v2-pooled-trend-overlay"
+  },
+  "scope_exclusions": {
+    "no_trade": true,
+    "no_costs": "out of scope for this no-cost characterization run; deferred to any later executable-expression protocol",
+    "no_leverage": true,
+    "no_further_parameter_search": "weight-clip thresholds, alternative vol-scaling estimators, and alternative rebalance timing are all out of scope for this run; any such change is a new, independently justified protocol"
+  }
+}

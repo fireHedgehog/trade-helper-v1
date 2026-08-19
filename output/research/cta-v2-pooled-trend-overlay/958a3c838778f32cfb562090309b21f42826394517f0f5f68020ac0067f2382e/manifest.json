@@ -1,0 +1,24 @@
+{
+  "actual_costs_or_execution_accessed": false,
+  "common_end": "2026-08-18",
+  "common_start": "2006-02-06",
+  "data_sha256": "d07c0d744186575ae7ba5d67a0758b3a06367997e6de9944b62a586853898aea",
+  "experiment_id": "cta-v2-pooled-trend-overlay",
+  "no_trade": true,
+  "pooled_calendar_length": 5165,
+  "spec_sha256": "958a3c838778f32cfb562090309b21f42826394517f0f5f68020ac0067f2382e",
+  "universe": [
+    "DBC",
+    "EEM",
+    "EFA",
+    "GLD",
+    "IEF",
+    "IWM",
+    "QQQ",
+    "SPY",
+    "TLT",
+    "XLE",
+    "XLF",
+    "XLK"
+  ]
+}

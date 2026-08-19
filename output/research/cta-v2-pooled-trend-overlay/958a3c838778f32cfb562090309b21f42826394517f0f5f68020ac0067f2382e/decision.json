@@ -1,0 +1,11 @@
+{
+  "data_sha256": "d07c0d744186575ae7ba5d67a0758b3a06367997e6de9944b62a586853898aea",
+  "decision": "not_material_or_not_consistent",
+  "gates": {
+    "materiality": true,
+    "placebo": false,
+    "significance": false
+  },
+  "primary_variant": "B",
+  "spec_sha256": "958a3c838778f32cfb562090309b21f42826394517f0f5f68020ac0067f2382e"
+}

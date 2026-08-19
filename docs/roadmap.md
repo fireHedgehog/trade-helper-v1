@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.53.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and eight completed protocols are each closed `not_material_or_not_consistent` for eight different reasons: SMA Cross v1 (Cycle 2) on a confound, RSI oversold reversal (Cycle 3) on a power limitation, TA Breakout v1 on weak event/placebo separation by construction, Wave Pull v1 (Cycle 4) on a clean but null result, ETF-12 cross-sectional rotation v1 on a clean, decisive null with no caveat, Calendar Turn-of-Month v1 (Cycle 5) on a well-powered null in the first non-technical-pattern mechanism tested, Calendar Day-of-Week v1 (Cycle 5) on a well-powered null with a directionally consistent but statistically unconfirmed tilt, and Overnight Gap Continuation v1 (Cycle 5) on the session's most decisive negative — every asset opposite-signed from the hypothesis — after a new joint-paired resampling design passed independent adversarial pre-lock code review. The cheap tier of the pending checklist is exhausted and one Tier 2 item is closed.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.55.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and nine completed protocols are each closed `not_material_or_not_consistent` for nine different reasons: SMA Cross v1 (Cycle 2) on a confound, RSI oversold reversal (Cycle 3) on a power limitation, TA Breakout v1 on weak event/placebo separation by construction, Wave Pull v1 (Cycle 4) on a clean but null result, ETF-12 cross-sectional rotation v1 on a clean, decisive null with no caveat, Calendar Turn-of-Month v1 (Cycle 5) on a well-powered null in the first non-technical-pattern mechanism tested, Calendar Day-of-Week v1 (Cycle 5) on a well-powered null with a directionally consistent but statistically unconfirmed tilt, Overnight Gap Continuation v1 (Cycle 5) on the session's most decisive negative — every asset opposite-signed from the hypothesis — after a new joint-paired resampling design passed independent adversarial pre-lock code review, and CTA v2 (Cycle 2's Candidate C, picked up 2026-08-20) on materiality clearing but significance and a paired placebo test both failing, with the positive point estimate materially dependent on 2008. The cheap tier of the pending checklist is exhausted, one Tier 2 item is closed, and CTA v2 — the properly-powered pooled retest of CTA v1's own founding thesis — is closed.
 
 ## Completed foundation
 
@@ -250,6 +250,41 @@ non-gating diagnostic suggests a reversal-shaped pattern instead (down-gaps
 tend to bounce back), which this protocol was not designed to test and
 cannot claim. This closes Cycle 5 in full. The next step remains a
 deliberate choice, not a default continuation.
+
+An independent, solo-but-adversarially-self-checked next-priority evaluation
+(2026-08-20) scored the remaining live options — CTA v2's engine, the
+Fed-put macro data investment, a reversal-framed overnight-gap follow-up,
+and a fresh candidate search — against the model-acceptance scorecard and
+surfaced CTA v2, contrary to this session's own earlier shorthand that its
+rationale was "pre-undermined" by the 2026-08-19 audit. Re-reading that
+audit's actual finding (CTA v1's design was underpowered, not its thesis
+false) showed CTA v2's own estimand — one pooled test across all 12
+instruments and the full sample instead of 54 independent per-fold
+candidates — exists specifically to fix that power problem, reinforcing
+channel 1 rather than undermining it; channel 2 (vol-scaled de-risking) was
+retained only as the already-required shared placebo, given SMA Cross v1's
+confound finding. Picked up directly from
+[Cycle 2](research-candidates/2026-08-19-cycle-2.md#update-2026-08-20-candidate-c-cta-v2-picked-up-directly)
+without minting a new cycle. Its
+[locked protocol](research-protocols/cta-v2-pooled-trend-overlay.md) needed
+no new bootstrap machinery — the pooled excess-return series is
+structurally identical in shape to CTA v1's own per-symbol statistic, so
+`circular_block_bootstrap_p_value` and `holm_adjust` are reused unchanged —
+and strengthened its placebo gate from a bare point-estimate comparison to
+a paired significance test, the same fix Overnight-Gap's pre-lock review
+already proved necessary. Executed and
+[closed](research-results/cta-v2-pooled-trend-overlay.md)
+`not_material_or_not_consistent`: the primary variant (`SMA_252`) cleared
+materiality (`+2.18pp` annualized) and beat both the benchmark and the
+required placebo on point estimate, with all three lookback variants
+positive-signed, but failed Holm-corrected significance (`p=0.692`) and the
+paired placebo test (`p=0.116`); a disclosed, non-gating diagnostic found
+the positive point estimate depends materially on 2008. This is a properly
+powered, informative null on CTA v1's own founding thesis — closing the
+power-limitation gap the audit found, not a repair of CTA v1 itself. Fed
+put is the clear #2 priority for the step after this; both a reversal-framed
+overnight-gap follow-up and a fresh candidate search remain open but
+unscheduled.
 
 ### 9B — Locked experiment and confirmation
 

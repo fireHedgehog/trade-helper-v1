@@ -75,9 +75,23 @@ The strengthened placebo significance gate added during review correctly
 rejected `3` assets that would have trivially passed the bare
 point-estimate comparison every prior candidate used, directly validating
 the review's own concern. Eight negative results, eight different reasons
-this session. No follow-up research task is queued, and the next step
-(CTA v2's engine, macro data investment, or a fresh cycle) is a deliberate
-choice, not a default.
+this session. CTA v2 (Cycle 2's Candidate C) was picked up next, per a
+solo-but-adversarially-self-checked next-priority evaluation that re-read
+its rationale against the 2026-08-19 audit and found channel 1 (own-asset
+trend continuation) reinforced rather than undermined — the audit found
+CTA v1's design underpowered, not its thesis false, and CTA v2's pooled
+estimand exists specifically to fix that power problem. Its
+[locked protocol](research-protocols/cta-v2-pooled-trend-overlay.md)
+executed and
+[closed](research-results/cta-v2-pooled-trend-overlay.md)
+`not_material_or_not_consistent`: the primary variant cleared materiality
+(`+2.18pp` annualized) and beat the required placebo on point estimate, but
+failed Holm-corrected significance (`p=0.692`) and the paired placebo test
+(`p=0.116`); a disclosed diagnostic found the result depends materially on
+2008. Nine negative results, nine different reasons this session. No
+follow-up research task is queued, and the next step (Fed put's data/
+methodology investment, a reversal-framed overnight-gap follow-up, or a
+fresh cycle) is a deliberate choice, not a default.
 
 ## Resume gate
 
@@ -93,26 +107,35 @@ strategy implementation or outcome calculation, and it does not reject the claim
 
 ### CTA v2
 
-Operationalized and scored in Cycle 2 as a pooled, volatility-scaled trend overlay
-across the 12-ETF universe — see [Candidate C](research-candidates/2026-08-19-cycle-2.md). Eligible (score 13) but parked: its estimand needs a
-multi-instrument pooled-portfolio weighting engine. Its overlap concern with cross-sectional rotation is now moot —
-rotation ran and [closed `not_material_or_not_consistent`](research-results/etf12-cross-sectional-rotation-v1.md) — so building this engine no longer risks
-double-counting a shared trend-family effect against a still-open sibling; the
-overlap with volatility-managed exposure remains live. Park is an infrastructure
-gate, not a data or rationale gate; do not choose parameters until that engine
-is scoped. **Cost correction (2026-08-20):** the true engineering cost is
-lower than "exists nowhere in this codebase" previously implied —
-`portfolio_execution.py` and `portfolio.py` (committed 2026-08-18) already
-implement a real shared-cash, multi-symbol, sector/cluster-capped daily
-replay engine, though built for the live "Today" view (discrete-share,
-stop-sized) rather than CTA v2's continuous vol-scaled target-weight
-estimand, and not wired into `research.py`'s bootstrap pipeline — a new
-weight-vector return-construction function is still needed, not a
-from-scratch engine. Separately, both of CTA v2's own rationale channels are
-now pre-undermined by this session's closed results (CTA v1's audit for
-channel 1, SMA Cross v1's confound for channel 2) — see the [pending
-checklist](brainstorm/2026-08-19-pending-candidate-checklist.md) for the
-full evaluation; not recommended to start next.
+Operationalized and scored in Cycle 2 as a pooled, volatility-scaled trend
+overlay across the 12-ETF universe — see
+[Candidate C](research-candidates/2026-08-19-cycle-2.md). Picked up directly
+(2026-08-20, no new cycle minted) per that record's
+[update](research-candidates/2026-08-19-cycle-2.md#update-2026-08-20-candidate-c-cta-v2-picked-up-directly):
+the "no infrastructure exists" framing was stale (`portfolio_execution.py`/
+`portfolio.py`, committed 2026-08-18, meant only a weight-vector
+return-construction function was needed, not a from-scratch engine), and
+channel 1's rationale — read against the 2026-08-19 audit's actual finding
+that CTA v1's design was underpowered, not its thesis false — was
+reinforced rather than undermined; channel 2 was retained only as the
+already-required shared placebo. Its
+[locked protocol](research-protocols/cta-v2-pooled-trend-overlay.md) needed
+no new bootstrap machinery: the pooled excess-return series is structurally
+identical in shape to CTA v1's own per-symbol statistic, so
+`circular_block_bootstrap_p_value` and `holm_adjust` are reused unchanged.
+Executed and
+[closed](research-results/cta-v2-pooled-trend-overlay.md)
+`not_material_or_not_consistent` — the primary variant cleared materiality
+(`+2.18pp` annualized) and beat the required placebo on point estimate, all
+three lookback variants agreed in sign, but Holm-corrected significance
+(`p=0.692`) and the paired placebo test (`p=0.116`) both failed, and a
+disclosed diagnostic found the result depends materially on 2008. This is a
+properly-powered, informative null on CTA v1's own founding thesis — it
+closes the power-limitation gap the audit found; it does not reject trend
+following generally, and it is not itself evidence the underlying
+mechanism is false, only that this locked design could not confirm it. A
+leveraged, vol-targeted, or costed executable expression would be a new,
+independently justified protocol, not a repair of this one.
 
 ### SMA cross, breakout, and momentum horizons
 
