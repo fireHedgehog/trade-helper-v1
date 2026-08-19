@@ -152,6 +152,105 @@ def test_non_monotonic_dates_are_rejected(isolated_store) -> None:
         isolated_store.upsert_bars(rows)
 
 
+def test_upsert_replaces_rather_than_merges_by_date(isolated_store) -> None:
+    """A symbol's whole row set is replaced, not merged, so a stale row from
+    an earlier adjustment vintage can never survive next to a fresh one."""
+    first_batch = pd.DataFrame(
+        [
+            {"symbol": "TEST", "date": "2024-01-02", "open": 10, "high": 12,
+             "low": 9, "close": 11, "volume": 1000},
+            {"symbol": "TEST", "date": "2024-01-03", "open": 11, "high": 13,
+             "low": 10, "close": 12, "volume": 1100},
+            {"symbol": "TEST", "date": "2024-01-04", "open": 12, "high": 14,
+             "low": 11, "close": 13, "volume": 1200},
+        ]
+    )
+    isolated_store.upsert_bars(first_batch)
+    assert isolated_store.row_count("TEST") == 3
+
+    # A fresh full-history fetch with different (re-adjusted) prices for the
+    # same dates, covering the exact same range: prices should be fully
+    # replaced, not merged with the stale first-batch values.
+    second_batch = first_batch.copy()
+    second_batch[["open", "high", "low", "close"]] = [
+        [19, 22, 18, 21], [20, 23, 19, 22], [21, 24, 20, 23],
+    ]
+    isolated_store.upsert_bars(second_batch)
+    stored = isolated_store.load_bars("TEST")
+    assert isolated_store.row_count("TEST") == 3
+    assert stored["close"].tolist() == [21, 22, 23]
+
+
+def test_upsert_rejects_a_batch_that_would_truncate_stored_history(isolated_store) -> None:
+    full_history = pd.DataFrame(
+        [
+            {"symbol": "TEST", "date": "2020-01-02", "open": 10, "high": 12,
+             "low": 9, "close": 11, "volume": 1000},
+            {"symbol": "TEST", "date": "2020-01-03", "open": 11, "high": 13,
+             "low": 10, "close": 12, "volume": 1100},
+            {"symbol": "TEST", "date": "2020-01-06", "open": 12, "high": 14,
+             "low": 11, "close": 13, "volume": 1200},
+        ]
+    )
+    isolated_store.upsert_bars(full_history)
+    assert isolated_store.row_count("TEST") == 3
+
+    # A short, truncated fetch (e.g. Yahoo returning only recent history)
+    # must not silently overwrite the longer history already stored.
+    truncated = full_history.iloc[[2]].copy()
+    with pytest.raises(ValueError, match="shrink or truncate"):
+        isolated_store.upsert_bars(truncated)
+    assert isolated_store.row_count("TEST") == 3
+    assert isolated_store.load_bars("TEST")["date"].tolist() == [
+        "2020-01-02", "2020-01-03", "2020-01-06",
+    ]
+
+
+def test_upsert_shrink_guard_rolls_back_the_whole_batch_not_just_one_symbol(
+    isolated_store,
+) -> None:
+    """One offending symbol in a multi-symbol batch must not let any other
+    symbol in the same call partially publish."""
+    isolated_store.upsert_bars(
+        pd.DataFrame(
+            [
+                {"symbol": "AAA", "date": "2020-01-02", "open": 1, "high": 1,
+                 "low": 1, "close": 1, "volume": 1},
+                {"symbol": "AAA", "date": "2020-01-03", "open": 1, "high": 1,
+                 "low": 1, "close": 1, "volume": 1},
+            ]
+        )
+    )
+    batch = pd.DataFrame(
+        [
+            {"symbol": "AAA", "date": "2020-01-03", "open": 1, "high": 1,
+             "low": 1, "close": 1, "volume": 1},  # shrinks AAA from 2 to 1
+            {"symbol": "BBB", "date": "2020-01-02", "open": 1, "high": 1,
+             "low": 1, "close": 1, "volume": 1},  # brand-new symbol, fine alone
+        ]
+    )
+    with pytest.raises(ValueError, match="shrink or truncate"):
+        isolated_store.upsert_bars(batch)
+    assert isolated_store.row_count("AAA") == 2
+    assert isolated_store.row_count("BBB") == 0
+
+
+def test_upsert_allow_shrink_permits_an_intentional_rebuild(isolated_store) -> None:
+    full_history = pd.DataFrame(
+        [
+            {"symbol": "TEST", "date": "2020-01-02", "open": 10, "high": 12,
+             "low": 9, "close": 11, "volume": 1000},
+            {"symbol": "TEST", "date": "2020-01-03", "open": 11, "high": 13,
+             "low": 10, "close": 12, "volume": 1100},
+        ]
+    )
+    isolated_store.upsert_bars(full_history)
+
+    rebuilt = full_history.iloc[[1]].copy()
+    isolated_store.upsert_bars(rebuilt, allow_shrink=True)
+    assert isolated_store.row_count("TEST") == 1
+
+
 def test_strategy_watchlist_is_persistent_ordered_and_replaceable(isolated_store) -> None:
     isolated_store.replace_strategy_watchlist("CTA Trend", ["SPY", "QQQ", "SPY"])
     assert [row["symbol"] for row in isolated_store.list_strategy_watchlist("CTA Trend")] == [

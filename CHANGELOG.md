@@ -2,6 +2,15 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.54.0
+
+Fixed `store.py::upsert_bars`'s non-atomic publication defect (2026-08-19 audit's H2 finding); no research conclusion changed.
+
+- `upsert_bars` was `INSERT OR REPLACE` keyed on `(symbol, date)`: rows already stored but absent from an incoming fetch were never removed. Because `auto_adjust=True` rebases a symbol's entire history on every dividend, a truncated or partial fetch (Yahoo returning a shorter response, a reused ticker, a bad manual `--period`) could leave older rows on a stale adjustment vintage sitting next to freshly adjusted new rows — a silent splice `validate_bars` cannot detect, since a level discontinuity at the seam is a structurally valid OHLC series. This was the precise failure `data_management.py`'s own docstring and ADR 0002 already claimed was prevented ("atomic per symbol"), but the code did not yet enforce it.
+- `upsert_bars` now replaces each symbol's entire row set per call (`DELETE` then insert, inside the existing single-transaction `connect()` block) instead of merging by date, and rejects — before writing anything — any symbol whose incoming batch would start later or contain fewer rows than what is already stored, with a new `allow_shrink=True` escape hatch for an intentional rebuild. All three live callers (`fetch.py`, `data_management.py`'s refresh manager, `fred.py`) always request full history in normal operation, so none needed a call-site change.
+- Added four regression tests: replacement-not-merge on an identical date range, rejection of a truncated batch that would have shrunk 3 stored rows to 1, a multi-symbol batch where one offending symbol correctly rolls back the *entire* call rather than partially publishing the other symbol, and the `allow_shrink=True` escape hatch. `284 passed`.
+- H1 (the orphaned mutating `GET /api/today` endpoint), the two critical CTA v1 statistical findings, and the remaining medium/low findings remain untriaged; see [docs/audits/README.md](docs/audits/README.md).
+
 ## 0.53.0
 
 Designed, adversarially pre-lock-reviewed, locked, executed, and closed Stage 9A Cycle 5's final candidate: Overnight Gap Continuation v1. Closes Cycle 5 in full. No strategy implemented, no trade, no cost/execution modelling.

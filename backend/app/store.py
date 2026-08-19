@@ -127,12 +127,21 @@ def connect() -> sqlite3.Connection:
     return conn
 
 
-def upsert_bars(df: pd.DataFrame) -> None:
-    """Insert-or-replace bars keyed by (symbol, date).
+def upsert_bars(df: pd.DataFrame, *, allow_shrink: bool = False) -> None:
+    """Replace each symbol's stored bars atomically with the incoming batch.
 
     Expects columns: symbol, date (YYYY-MM-DD), open, high, low, close, volume.
     The whole batch is rejected if a row is malformed; callers must clean and
     validate provider data before publishing it.
+
+    Publication replaces a symbol's entire row set rather than merging by
+    date, so a fetch that is shorter than what is already stored (a
+    truncated or partial response) cannot leave old rows sitting untouched
+    on a stale adjustment vintage while new rows use a fresh one -- the
+    "atomic per symbol" guarantee ADR 0002 describes. Every symbol whose
+    incoming batch would start later or contain fewer rows than what is
+    already stored is rejected before anything is written, unless the
+    caller explicitly passes allow_shrink=True for an intentional rebuild.
     """
     required = ['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']
     missing = set(required) - set(df.columns)
@@ -156,11 +165,27 @@ def upsert_bars(df: pd.DataFrame) -> None:
         {"open": float, "high": float, "low": float, "close": float, "volume": int}
     )
     with connect() as conn:
-        conn.executemany(
-            """INSERT OR REPLACE INTO bars (symbol, date, open, high, low, close, volume)
-               VALUES (:symbol, :date, :open, :high, :low, :close, :volume)""",
-            df.to_dict("records"),
-        )
+        for symbol, group in df.groupby("symbol", sort=False):
+            existing_rows, existing_first = conn.execute(
+                "SELECT COUNT(*), MIN(date) FROM bars WHERE symbol = ?", (symbol,)
+            ).fetchone()
+            if existing_rows and not allow_shrink:
+                incoming_first = str(group["date"].min())
+                if incoming_first > existing_first or len(group) < existing_rows:
+                    raise ValueError(
+                        f"{symbol}: incoming batch ({len(group)} rows from "
+                        f"{incoming_first}) would shrink or truncate the "
+                        f"{existing_rows} rows already stored from "
+                        f"{existing_first}; refusing to publish a partial "
+                        "history over full history. Pass allow_shrink=True "
+                        "for an intentional rebuild."
+                    )
+            conn.execute("DELETE FROM bars WHERE symbol = ?", (symbol,))
+            conn.executemany(
+                """INSERT INTO bars (symbol, date, open, high, low, close, volume)
+                   VALUES (:symbol, :date, :open, :high, :low, :close, :volume)""",
+                group.to_dict("records"),
+            )
 
 
 def load_bars(symbol: str) -> pd.DataFrame:
