@@ -17,3 +17,4 @@ Template: `YYYY-MM-DD-topic.md`, first line:
 | 2026-08-19 | Long-end yield shock and trend-entry failure | [2026-08-19-long-end-yield-shock.md](2026-08-19-long-end-yield-shock.md) |
 | 2026-08-19 | Pending candidate checklist, cheap to orthogonal | [2026-08-19-pending-candidate-checklist.md](2026-08-19-pending-candidate-checklist.md) |
 | 2026-08-19 | Fed put: purchase-conditioned long-end yield reversal | [2026-08-19-fed-put-long-end-reversal.md](2026-08-19-fed-put-long-end-reversal.md) |
+| 2026-08-20 | Ensemble/factor vocabulary and open questions | [2026-08-20-ensemble-factor-vocabulary.md](2026-08-20-ensemble-factor-vocabulary.md) |
