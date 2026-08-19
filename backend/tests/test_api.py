@@ -29,18 +29,20 @@ def clear_portfolio_cache():
 async def test_health(client) -> None:
     assert (await client.get("/api/health")).json() == {
         "status": "ok",
-        "version": "0.37.0",
+        "version": "0.37.1",
     }
 
 
-async def test_symbol_selector_excludes_fred_macro_series(client, monkeypatch) -> None:
-    monkeypatch.setattr(main.store, "list_symbols", lambda: ["DGS2", "SPY", "AAPL"])
+async def test_symbol_selector_excludes_non_strategy_context(client, monkeypatch) -> None:
+    monkeypatch.setattr(
+        main.store, "list_symbols", lambda: ["DGS2", "SPY", "GC=F", "AAPL"]
+    )
 
     response = await client.get("/api/symbols")
 
     assert response.status_code == 200
     assert response.json()["symbols"] == ["SPY", "AAPL"]
-    assert response.json()["data_series"] == ["DGS2"]
+    assert response.json()["data_series"] == ["DGS2", "GC=F"]
 
 
 async def test_data_status_includes_inventory_and_refresh_state(

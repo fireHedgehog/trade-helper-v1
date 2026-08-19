@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from . import confidence as confidence_module, store
+from .assets import is_strategy_symbol
 from .calendar import macro_events
 from .confidence import compute_confidence
 from .data_management import (
@@ -158,8 +159,16 @@ def health():
 def symbols():
     stored = store.list_symbols()
     return {
-        "symbols": [symbol for symbol in stored if symbol not in FRED_MANAGED_SERIES],
-        "data_series": [symbol for symbol in stored if symbol in FRED_MANAGED_SERIES],
+        "symbols": [
+            symbol
+            for symbol in stored
+            if symbol not in FRED_MANAGED_SERIES and is_strategy_symbol(symbol)
+        ],
+        "data_series": [
+            symbol
+            for symbol in stored
+            if symbol in FRED_MANAGED_SERIES or not is_strategy_symbol(symbol)
+        ],
         "default_basket": DEFAULT_BASKET,
     }
 
@@ -249,7 +258,11 @@ def strategy_watchlist(strategy: str = "CTA Trend"):
 def save_strategy_watchlist(strategy: str, request: StrategyWatchlistRequest):
     if strategy not in STRATEGIES:
         raise HTTPException(status_code=400, detail=f"unknown strategy: {strategy}")
-    stored_symbols = set(store.list_symbols()) - set(FRED_MANAGED_SERIES)
+    stored_symbols = {
+        symbol
+        for symbol in store.list_symbols()
+        if symbol not in FRED_MANAGED_SERIES and is_strategy_symbol(symbol)
+    }
     normalized = list(dict.fromkeys(symbol.strip().upper() for symbol in request.symbols))
     unknown = [symbol for symbol in normalized if symbol not in stored_symbols]
     if unknown:
@@ -283,7 +296,14 @@ def latest_strategy_run(
     }
 
 
-def _execute_strategy_snapshot(strategy: str, set_name: str, scope: str) -> dict:
+def _execute_strategy_snapshot(
+    strategy: str,
+    set_name: str,
+    scope: str,
+    *,
+    execution_symbols: list[str] | None = None,
+    excluded_data: list[dict] | None = None,
+) -> dict:
     params = _resolved_params(strategy, set_name)
     watch = [
         row["symbol"] for row in store.list_strategy_watchlist(strategy)
@@ -300,10 +320,9 @@ def _execute_strategy_snapshot(strategy: str, set_name: str, scope: str) -> dict
             watch = list(CORE_WATCHLIST)
         discovery = list(CORE_WATCHLIST)
     else:
-        discovery = [
-            symbol
-            for symbol in store.list_symbols()
-            if symbol not in FRED_MANAGED_SERIES
+        discovery = execution_symbols or [
+            symbol for symbol in store.list_symbols()
+            if symbol not in FRED_MANAGED_SERIES and is_strategy_symbol(symbol)
         ]
     result = create_strategy_snapshot(
         strategy,
@@ -311,6 +330,11 @@ def _execute_strategy_snapshot(strategy: str, set_name: str, scope: str) -> dict
         watch_symbols=watch,
         discovery_symbols=discovery,
     )
+    if excluded_data:
+        result["coverage"]["preflight_excluded"] = excluded_data
+        result["coverage"]["planned_requested"] = (
+            result["coverage"]["requested"] + len(excluded_data)
+        )
     inventory = inventory_payload()["symbols"]
     metadata = strategy_metadata(strategy)
     result["pipeline_fingerprint"] = strategy_input_fingerprint(
@@ -342,7 +366,9 @@ def _build_daily_pipeline_plan() -> dict:
     status = inventory_payload()
     inventory = status["symbols"]
     all_symbols = [
-        row["symbol"] for row in inventory if row.get("provider") == "yahoo"
+        row["symbol"]
+        for row in inventory
+        if row.get("provider") == "yahoo" and is_strategy_symbol(row["symbol"])
     ]
     specs = []
     for strategy in STRATEGIES:
@@ -387,7 +413,11 @@ def _get_daily_pipeline_manager() -> DailyPipelineManager:
             start_refresh=_data_refresh_manager.start,
             refresh_snapshot=_data_refresh_manager.snapshot,
             run_strategy=lambda job: _execute_strategy_snapshot(
-                job["strategy"], job["set"], job["scope"]
+                job["strategy"],
+                job["set"],
+                job["scope"],
+                execution_symbols=job.get("execution_symbols"),
+                excluded_data=job.get("excluded_data"),
             ),
             load_job=store.load_daily_pipeline_state,
             save_job=store.save_daily_pipeline_state,

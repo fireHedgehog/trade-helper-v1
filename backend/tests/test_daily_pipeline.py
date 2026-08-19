@@ -62,6 +62,55 @@ def test_strategy_job_blocks_data_then_skips_matching_fingerprint() -> None:
     assert current["previous_run_id"] == 7
 
 
+def test_full_universe_runs_above_coverage_floor_and_records_exclusions() -> None:
+    inventory = []
+    for index in range(10):
+        inventory.append(
+            {
+                **_inventory()[0],
+                "symbol": f"S{index}",
+                "freshness": "stale" if index == 9 else "fresh",
+            }
+        )
+    job = plan_strategy_job(
+        strategy="CTA Trend", metadata=META, params=PARAMS, scope="all",
+        symbols=[row["symbol"] for row in inventory], inventory=inventory,
+        latest_run=None,
+    )
+    assert job["status"] == "ready"
+    assert job["coverage_ratio"] == 0.9
+    assert job["eligible_symbols"] == 9
+    assert job["execution_symbols"] == [f"S{index}" for index in range(9)]
+    assert job["excluded_data"] == [{"symbol": "S9", "reason": "not_current"}]
+
+
+def test_full_universe_fails_closed_below_daily_coverage_floor() -> None:
+    inventory = [
+        {**_inventory()[0], "symbol": f"S{index}", "freshness": "fresh" if index < 8 else "stale"}
+        for index in range(10)
+    ]
+    job = plan_strategy_job(
+        strategy="CTA Trend", metadata=META, params=PARAMS, scope="all",
+        symbols=[row["symbol"] for row in inventory], inventory=inventory,
+        latest_run=None,
+    )
+    assert job["status"] == "blocked_data"
+    assert "below the 90%" in job["reason"]
+
+
+def test_watchlist_remains_strict_when_one_selected_symbol_is_stale() -> None:
+    inventory = [
+        {**_inventory()[0], "symbol": "SPY"},
+        {**_inventory()[0], "symbol": "QQQ", "freshness": "stale"},
+    ]
+    job = plan_strategy_job(
+        strategy="CTA Trend", metadata=META, params=PARAMS, scope="watchlist",
+        symbols=["SPY", "QQQ"], inventory=inventory, latest_run=None,
+    )
+    assert job["status"] == "blocked_data"
+    assert job["minimum_coverage_ratio"] == 1.0
+
+
 def test_pipeline_records_refresh_noop_and_empty_scope() -> None:
     plan = plan_daily_pipeline(
         expected_session="2026-08-18",

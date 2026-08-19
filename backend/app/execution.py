@@ -40,7 +40,12 @@ class Simulation:
 TRAILING_STRATEGIES = {"CTA Trend", "Donchian Trend"}
 
 
-def validate_bars(bars: pd.DataFrame) -> None:
+def validate_bars(
+    bars: pd.DataFrame,
+    *,
+    require_positive: bool = True,
+    enforce_ohlc_envelope: bool = True,
+) -> None:
     """Reject malformed market bars before they can produce plausible metrics."""
     required = {"date", "open", "high", "low", "close", "volume"}
     missing = required - set(bars.columns)
@@ -57,10 +62,14 @@ def validate_bars(bars: pd.DataFrame) -> None:
         numeric = pd.to_numeric(bars[column], errors="coerce")
         if numeric.isna().any() or not numeric.map(math.isfinite).all():
             raise ValueError(f"bar {column} values must be finite numbers")
-    if (bars[["open", "high", "low", "close"]] <= 0).any().any():
+    if require_positive and (bars[["open", "high", "low", "close"]] <= 0).any().any():
         raise ValueError("OHLC prices must be positive")
     if (bars["volume"] < 0).any():
         raise ValueError("volume cannot be negative")
+    if not enforce_ohlc_envelope:
+        if (bars["low"] > bars["high"]).any():
+            raise ValueError("bar low cannot exceed high")
+        return
     expected_high = bars[["open", "close"]].max(axis=1)
     expected_low = bars[["open", "close"]].min(axis=1)
     # Adjusted provider data can differ at the final binary floating-point bit

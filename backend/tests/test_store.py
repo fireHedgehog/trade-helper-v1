@@ -88,6 +88,38 @@ def test_invalid_batch_is_rejected_without_partial_write(
     assert isolated_store.row_count("TEST") == 0
 
 
+def test_negative_settlement_context_is_stored_without_weakening_equities(
+    isolated_store,
+) -> None:
+    context = pd.DataFrame(
+        [
+            {
+                "symbol": "CL=F", "date": "2020-04-20", "open": 17.73,
+                "high": 17.85, "low": -40.32, "close": -37.63, "volume": 1,
+            }
+        ]
+    )
+    isolated_store.upsert_bars(context)
+    assert isolated_store.row_count("CL=F") == 1
+
+    equity = context.assign(symbol="TEST")
+    with pytest.raises(ValueError, match="positive"):
+        isolated_store.upsert_bars(equity)
+
+
+def test_context_settlement_may_fall_outside_intraday_envelope(isolated_store) -> None:
+    rows = pd.DataFrame(
+        [
+            {
+                "symbol": "GC=F", "date": "2011-09-28", "open": 1650.0,
+                "high": 1650.0, "low": 1650.0, "close": 1616.3, "volume": 1,
+            }
+        ]
+    )
+    isolated_store.upsert_bars(rows)
+    assert isolated_store.row_count("GC=F") == 1
+
+
 def test_duplicate_dates_in_one_batch_are_rejected(isolated_store) -> None:
     rows = _valid_rows()
     rows.loc[1, "date"] = rows.loc[0, "date"]

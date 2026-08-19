@@ -59,14 +59,16 @@ echo "smoke: Today read-only state"
 
 # Pipeline fixtures prove review gating, persisted progress, and retry language
 # without starting refresh or strategy work.
-run_js "(() => { window.__smokeApi = window.api; window.api = async (path, options) => path === '/api/daily-pipeline/plan' ? ({expected_session:'2026-08-18',status:'refresh_required',refresh:{status:'ready',symbols:['SPY','QQQ'],count:2,delay_seconds:2,minimum_delay_seconds:2},strategy_jobs:[],summary:{ready:1,blocked_data:1,skipped_current:2,skipped_empty:3}}) : window.__smokeApi(path, options); document.querySelector('#today-plan-pipeline').click(); return 'pipeline fixture installed'; })()" "Could not install deterministic pipeline plan"
+run_js "(() => { window.__smokeApi = window.api; window.api = async (path, options) => path === '/api/daily-pipeline/plan' ? ({expected_session:'2026-08-18',status:'refresh_required',refresh:{status:'ready',symbols:['SPY','QQQ'],count:2,delay_seconds:2,minimum_delay_seconds:2},strategy_jobs:[],summary:{ready:1,blocked_data:1,skipped_current:2,skipped_empty:3,excluded_symbols:['BAD'],excluded_count:1}}) : window.__smokeApi(path, options); document.querySelector('#today-plan-pipeline').click(); return 'pipeline fixture installed'; })()" "Could not install deterministic pipeline plan"
 sleep 1
 snapshot
 assert_js "!document.querySelector('#today-run-pipeline').disabled" "Reviewed pipeline did not enable its explicit run action"
 assert_js "document.querySelector('#today-pipeline-plan').textContent.includes('Portfolio comparison is excluded')" "Pipeline scope boundary is missing"
-pw eval "window.renderPipelineStatus({state:'running',expected_session:'2026-08-18',refresh:{state:'running'},strategy_jobs:[{state:'complete'},{state:'pending'}],message:'fixture running'})" >/dev/null
+assert_js "document.querySelector('#today-pipeline-plan').textContent.includes('excludes 1 non-current symbols: BAD')" "Partial-coverage exclusion is not disclosed in preflight"
+pw eval "window.renderPipelineStatus({state:'running',expected_session:'2026-08-18',refresh:{state:'running'},strategy_jobs:[{state:'complete',excluded_data:[{symbol:'BAD',reason:'not_current'}]},{state:'pending'}],message:'fixture running'})" >/dev/null
 snapshot
 assert_js "document.querySelector('#today-run-pipeline').disabled" "Pipeline action stayed enabled while running"
+assert_js "document.querySelector('#today-pipeline-plan').textContent.includes('Excluded from daily discovery (1): BAD')" "Running pipeline hides its excluded coverage"
 pw eval "window.renderPipelineStatus({state:'interrupted',expected_session:'2026-08-18',refresh:{state:'interrupted'},strategy_jobs:[{state:'interrupted'}],message:'server stopped before completion'})" >/dev/null
 snapshot
 assert_js "document.querySelector('#today-run-pipeline').textContent.includes('Retry')" "Interrupted pipeline did not expose retry-by-replanning"

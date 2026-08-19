@@ -12,6 +12,9 @@ from datetime import datetime, timezone
 from typing import Callable
 
 
+MIN_FULL_UNIVERSE_COVERAGE = 0.90
+
+
 class PipelineAlreadyRunning(RuntimeError):
     pass
 
@@ -62,18 +65,40 @@ def plan_strategy_job(
         for symbol in symbols
         if symbol in by_symbol and by_symbol[symbol].get("freshness") != "fresh"
     ]
+    eligible = [
+        symbol
+        for symbol in symbols
+        if symbol in by_symbol and by_symbol[symbol].get("freshness") == "fresh"
+    ]
+    excluded_data = [
+        {
+            "symbol": symbol,
+            "reason": "missing" if symbol in missing else "not_current",
+        }
+        for symbol in symbols
+        if symbol in missing or symbol in non_current
+    ]
+    requested_count = len(set(symbols))
+    coverage_ratio = len(set(eligible)) / requested_count if requested_count else 0.0
+    execution_symbols = eligible if scope == "all" else symbols
     fingerprint = strategy_input_fingerprint(
         strategy_id=metadata["strategy_id"],
         strategy_version=metadata["version"],
         params=params,
         scope=scope,
-        symbols=symbols,
+        symbols=execution_symbols,
         inventory=inventory,
     )
     previous = (latest_run or {}).get("result", {}).get("pipeline_fingerprint")
     if not symbols:
         status, reason = "skipped_empty", "scope has no selected symbols"
-    elif missing or non_current:
+    elif scope == "all" and coverage_ratio < MIN_FULL_UNIVERSE_COVERAGE:
+        status, reason = (
+            "blocked_data",
+            f"current universe coverage {coverage_ratio:.1%} is below "
+            f"the {MIN_FULL_UNIVERSE_COVERAGE:.0%} daily-snapshot floor",
+        )
+    elif scope != "all" and (missing or non_current):
         status, reason = "blocked_data", "required inputs are missing or not current"
     elif previous == fingerprint:
         status, reason = "skipped_current", "input, model, parameters, and scope are unchanged"
@@ -87,7 +112,14 @@ def plan_strategy_job(
         "scope": scope,
         "status": status,
         "reason": reason,
-        "symbols": len(set(symbols)),
+        "symbols": requested_count,
+        "eligible_symbols": len(set(execution_symbols)),
+        "execution_symbols": sorted(set(execution_symbols)),
+        "excluded_data": excluded_data,
+        "coverage_ratio": coverage_ratio,
+        "minimum_coverage_ratio": (
+            MIN_FULL_UNIVERSE_COVERAGE if scope == "all" else 1.0
+        ),
         "missing": missing,
         "non_current": non_current,
         "fingerprint": fingerprint,
@@ -106,6 +138,14 @@ def plan_daily_pipeline(
         row["symbol"] for row in yahoo if row.get("freshness") != "fresh"
     ]
     jobs = [plan_strategy_job(inventory=inventory, **spec) for spec in strategy_specs]
+    exclusions = sorted(
+        {
+            row["symbol"]
+            for job in jobs
+            if job["scope"] == "all"
+            for row in job["excluded_data"]
+        }
+    )
     return {
         "expected_session": expected_session,
         "status": "refresh_required" if refresh_symbols else "ready",
@@ -120,6 +160,8 @@ def plan_daily_pipeline(
             "blocked_data": sum(job["status"] == "blocked_data" for job in jobs),
             "skipped_current": sum(job["status"] == "skipped_current" for job in jobs),
             "skipped_empty": sum(job["status"] == "skipped_empty" for job in jobs),
+            "excluded_symbols": exclusions,
+            "excluded_count": len(exclusions),
         },
     }
 

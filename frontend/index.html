@@ -1821,12 +1821,16 @@ function renderStrategySnapshot(run, savedWatchlist = []) {
   const coverage = result.coverage;
   const missing = coverage.missing.length;
   const failed = coverage.failed.length;
+  const preflightExcluded = coverage.preflight_excluded || [];
   $('#today-run-note').textContent =
     (usingSnapshotFallback
       ? `Current persistent watchlist is empty; showing ${snapshotSymbols.length} recoverable symbols from stored run #${run.id}. `
       : `Stored run #${run.id} · `) +
     `created ${run.created_at} · data as of ${run.data_as_of || 'unknown'} · ` +
     `${coverage.processed}/${coverage.requested} processed · ${missing} missing · ${failed} failed. ` +
+    (preflightExcluded.length
+      ? `${preflightExcluded.length} additional non-current symbols were excluded by the daily preflight. `
+      : '') +
     `${result.ranking_warning}` +
     (legacyLifecycle
       ? ' This older snapshot lacks complete entry/exit history; use Update watched status once to replace it.'
@@ -1925,11 +1929,15 @@ async function previewDailyPipeline() {
     const refresh = plan.refresh;
     const summary = plan.summary;
     const minimumMinutes = Math.ceil((refresh.minimum_delay_seconds || 0) / 60);
+    const exclusions = summary.excluded_symbols || [];
     $('#today-pipeline-plan').innerHTML =
       `<b>Expected session ${escapeHtml(plan.expected_session)} · ${escapeHtml(plan.status)}</b><br>` +
       `Data: ${escapeHtml(refresh.status)}${refresh.count ? ` · ${refresh.count} symbols require refresh` : ''}. ` +
       `Model jobs: ${summary.ready} ready · ${summary.blocked_data} blocked by data · ` +
       `${summary.skipped_current} skipped current · ${summary.skipped_empty} skipped empty.<br>` +
+      (exclusions.length
+        ? `Daily discovery coverage excludes ${exclusions.length} non-current symbols: ${escapeHtml(exclusions.join(', '))}. Formal experiments use their own locked coverage gate.<br>`
+        : '') +
       (refresh.count ? `Provider pacing alone requires at least ~${minimumMinutes} minutes; downloads and model runs add time.<br>` : '') +
       `Execution refreshes first, re-plans after publication, then runs only changed jobs. Portfolio comparison is excluded.`;
   } catch (err) {
@@ -1946,9 +1954,11 @@ function renderPipelineStatus(job) {
   const complete = jobs.filter(row => row.state === 'complete').length;
   const failed = jobs.filter(row => ['failed', 'blocked_data'].includes(row.state)).length;
   const skipped = jobs.filter(row => String(row.state).startsWith('skipped_')).length;
+  const exclusions = [...new Set(jobs.flatMap(row => (row.excluded_data || []).map(item => item.symbol)))];
   $('#today-pipeline-plan').innerHTML =
     `<b>Pipeline ${escapeHtml(job.state)} · session ${escapeHtml(job.expected_session || '—')}</b><br>` +
     `Data: ${escapeHtml(job.refresh?.state || 'pending')} · model jobs: ${complete} complete · ${failed} failed/blocked · ${skipped} current/empty.<br>` +
+    (exclusions.length ? `Excluded from daily discovery (${exclusions.length}): ${escapeHtml(exclusions.join(', '))}.<br>` : '') +
     `${escapeHtml(job.message || '')}`;
   $('#today-run-pipeline').textContent = job.state === 'running' ? 'Pipeline running…' : 'Retry incomplete / changed';
   $('#today-run-pipeline').disabled = job.state === 'running';
