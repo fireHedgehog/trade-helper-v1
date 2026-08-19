@@ -2,6 +2,15 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.44.0
+
+Fixed a real bar-validation defect found while fetching FRED macro data; no research conclusion changed.
+
+- `backend/app/store.py::upsert_bars` enforced `require_positive` on every symbol not in `MARKET_CONTEXT_SYMBOLS` (`GC=F`, `CL=F`, `^TNX`) — but FRED series were never added to that relaxation, so a legitimately negative value (`A191RL1Q225SBEA`, real GDP growth, negative in every contraction) was rejected as if it were a stock price.
+- Added `FRED_MANAGED_SERIES` to `backend/app/assets.py` (moved from `backend/app/fred.py`, which now imports it) and extended `upsert_bars`'s relaxed-validation check to include it, alongside the existing Yahoo market-context symbols.
+- Added a regression test confirming a negative FRED value is stored while an equity symbol with the same negative value is still rejected — the existing strict-equity guarantee is unchanged.
+- Found and fixed while fetching real macro data for the first time on this machine; all ten `FRED_MANAGED_SERIES` are now stored.
+
 ## 0.43.0
 
 Locked the Stage 9A Cycle 2 protocol; no data fetched, no code executed, no result computed.

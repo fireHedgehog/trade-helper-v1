@@ -107,6 +107,25 @@ def test_negative_settlement_context_is_stored_without_weakening_equities(
         isolated_store.upsert_bars(equity)
 
 
+def test_negative_fred_series_value_is_stored_without_weakening_equities(
+    isolated_store,
+) -> None:
+    macro = pd.DataFrame(
+        [
+            {
+                "symbol": "A191RL1Q225SBEA", "date": "2020-04-01", "open": -31.2,
+                "high": -31.2, "low": -31.2, "close": -31.2, "volume": 0,
+            }
+        ]
+    )
+    isolated_store.upsert_bars(macro)
+    assert isolated_store.row_count("A191RL1Q225SBEA") == 1
+
+    equity = macro.assign(symbol="TEST")
+    with pytest.raises(ValueError, match="positive"):
+        isolated_store.upsert_bars(equity)
+
+
 def test_context_settlement_may_fall_outside_intraday_envelope(isolated_store) -> None:
     rows = pd.DataFrame(
         [

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from .assets import MARKET_CONTEXT_SYMBOLS
+from .assets import FRED_MANAGED_SERIES, MARKET_CONTEXT_SYMBOLS
 from .execution import validate_bars
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -144,11 +144,11 @@ def upsert_bars(df: pd.DataFrame) -> None:
     if df["symbol"].isna().any() or (df["symbol"].astype(str).str.strip() == "").any():
         raise ValueError("bar symbols must be present")
     for symbol, group in df.groupby("symbol", sort=False):
-        is_context = symbol in MARKET_CONTEXT_SYMBOLS
+        is_non_ohlc = symbol in MARKET_CONTEXT_SYMBOLS or symbol in FRED_MANAGED_SERIES
         validate_bars(
             group.drop(columns="symbol").reset_index(drop=True),
-            require_positive=not is_context,
-            enforce_ohlc_envelope=not is_context,
+            require_positive=not is_non_ohlc,
+            enforce_ohlc_envelope=not is_non_ohlc,
         )
     # Convert to plain Python types so sqlite3 binds them without errors.
     df["date"] = df["date"].astype(str)
