@@ -2,6 +2,15 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.46.0
+
+Selected, locked, executed, and closed Stage 9A Cycle 3; no strategy implemented, no trade, no cost/execution modelling.
+
+- Scored two candidates from the pending checklist: RSI(14) oversold-crossing short-horizon reversal (`15/16`, highest of any candidate so far — a genuinely different mechanism from every trend-family candidate tested) and S/R Bounce formalization (`0/16` on distinct information — too close to Cycle 1's already-closed consolidation work). Prioritised RSI only. Recorded in [docs/research-candidates/2026-08-19-cycle-3.md](docs/research-candidates/2026-08-19-cycle-3.md).
+- Locked [docs/research-protocols/rsi-oversold-reversal-v1.md](docs/research-protocols/rsi-oversold-reversal-v1.md): an event study reusing the block-resample-and-recompute method proven by SMA Cross v1, extended from continuous state-gating to sparse event/forward-return recomputation — deliberately avoids Cycle 1's caliper-matching failure mode by never constructing a separate matched control set.
+- Implemented the extension in `backend/app/research.py` (`rsi_bootstrap` and supporting functions), reusing the existing `RsiReversion` prototype's exact RSI formula. Added 8 unit tests, including a direct cross-check against that prototype's own formula on real closes — caught and fixed a real bug where the reconstructed-price RSI diverged from the reference by up to 0.3% due to a warm-up initialization mismatch (padding the first price delta with `0.0` instead of letting pandas' EWM skip a leading `NaN`).
+- Result: all 12 assets cleared the 15-event minimum (508 events total), but 0/12 reached raw significance even before Holm correction (smallest raw p 0.138); the placebo comparison was genuinely mixed (6/12 each way), unlike SMA Cross v1's clean sweep. Recorded as `not_material_or_not_consistent` in [docs/research-results/rsi-oversold-reversal-v1.md](docs/research-results/rsi-oversold-reversal-v1.md), explicitly distinguished from Cycle 2's confound-driven result as a power limitation instead.
+
 ## 0.45.0
 
 Executed the locked Stage 9A Cycle 2 protocol and closed it `not_material_or_not_consistent`; no strategy implemented, no trade, no cost/execution modelling.

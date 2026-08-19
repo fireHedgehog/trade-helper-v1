@@ -708,3 +708,188 @@ def sma_cross_bootstrap(
         "observed_delta_mdd": observed_delta_mdd,
         "p_delta_mdd": (at_least_mdd + 1) / (resamples + 1),
     }
+
+
+# --- RSI(14) oversold-crossing short-horizon reversal (Stage 9A Cycle 3) ---
+# Implements docs/research-protocols/rsi-oversold-reversal-v1.md. Reuses the
+# block-resample-and-recompute scaffold proven by sma_cross_bootstrap, applied
+# to a sparse event/forward-return statistic instead of a continuous gated
+# exposure — deliberately avoids Cycle 1's caliper-matching failure mode by
+# never constructing a separate matched control set.
+
+RSI_PERIOD = 14
+RSI_OVERSOLD = 30.0
+RSI_WARM_UP_SESSIONS = 100
+RSI_EVENT_COOLDOWN = 10
+RSI_FORWARD_HORIZON = 10
+RSI_PLACEBO_LOOKBACK = 14
+RSI_PLACEBO_QUANTILE = 0.10
+RSI_MIN_EVENT_COUNT = 15
+RSI_BLOCK_BARS = 20
+RSI_RESAMPLES = 5_000
+RSI_SEED = 17_291
+
+
+def _expanding_quantile(values: np.ndarray, quantile: float) -> np.ndarray:
+    """Expanding quantile from the first finite value onward; NaN before that."""
+    series = pd.Series(values)
+    valid = series[series.notna()]
+    result = pd.Series(np.nan, index=series.index)
+    if not valid.empty:
+        result.loc[valid.index] = valid.expanding(min_periods=1).quantile(quantile)
+    return result.to_numpy()
+
+
+def rsi_from_log_returns(log_returns_padded: np.ndarray, period: int = RSI_PERIOD) -> np.ndarray:
+    """RSI(14) exactly as strategies.py::RsiReversion computes it: Wilder EWM
+    on raw price differences (not log returns) reconstructed from the path."""
+    closes_proxy = np.exp(np.cumsum(log_returns_padded))
+    delta = np.diff(closes_proxy, prepend=np.nan)
+    delta_series = pd.Series(delta)
+    gain = delta_series.clip(lower=0).ewm(alpha=1 / period, adjust=False).mean()
+    loss = (-delta_series.clip(upper=0)).ewm(alpha=1 / period, adjust=False).mean()
+    rsi = 100 - 100 / (1 + gain / loss.replace(0, 1e-12))
+    return rsi.to_numpy()
+
+
+def rsi_crossing_events(rsi: np.ndarray, threshold: float = RSI_OVERSOLD) -> np.ndarray:
+    """Event(t) = 1{RSI(t) < threshold and RSI(t-1) >= threshold}."""
+    below = rsi < threshold
+    prev_below = np.concatenate([[False], below[:-1]])
+    return below & ~prev_below
+
+
+def rsi_placebo_events(
+    log_returns_padded: np.ndarray,
+    lookback: int = RSI_PLACEBO_LOOKBACK,
+    quantile: float = RSI_PLACEBO_QUANTILE,
+) -> np.ndarray:
+    """Placebo(t) = 1{trailing lookback-session return <= its own expanding
+    quantile(t)} — self-referential, no full-sample calibration."""
+    trailing_sum = _rolling_mean(log_returns_padded, lookback) * lookback
+    expanding_q = _expanding_quantile(trailing_sum, quantile)
+    return np.where(
+        np.isfinite(trailing_sum) & np.isfinite(expanding_q),
+        trailing_sum <= expanding_q,
+        False,
+    )
+
+
+def _apply_cooldown(event_indices: np.ndarray, cooldown: int) -> np.ndarray:
+    """Keep only events at least `cooldown` sessions after the previously kept one."""
+    kept = []
+    last = -cooldown - 1
+    for idx in event_indices:
+        if idx - last > cooldown:
+            kept.append(idx)
+            last = idx
+    return np.asarray(kept, dtype=int)
+
+
+def _mean_forward_return(
+    log_returns_padded: np.ndarray, event_indices: np.ndarray, horizon: int
+) -> tuple[float, int]:
+    """Mean cumulative forward log return over `horizon` sessions after each
+    event; events too close to the sample end (no full forward window) are
+    excluded. Returns (mean, usable_event_count)."""
+    n = len(log_returns_padded)
+    cumsum = np.concatenate([[0.0], np.cumsum(log_returns_padded)])
+    usable = event_indices[event_indices + horizon < n]
+    if len(usable) == 0:
+        return 0.0, 0
+    forward = cumsum[usable + horizon + 1] - cumsum[usable + 1]
+    return float(forward.mean()), len(usable)
+
+
+def rsi_event_forward_return(
+    log_returns_padded: np.ndarray,
+    *,
+    warm_up: int = RSI_WARM_UP_SESSIONS,
+    cooldown: int = RSI_EVENT_COOLDOWN,
+    horizon: int = RSI_FORWARD_HORIZON,
+) -> tuple[float, int]:
+    """Observed mean forward return and usable event count for the RSI event,
+    on data at or after `warm_up`."""
+    rsi = rsi_from_log_returns(log_returns_padded)
+    raw_events = np.where(rsi_crossing_events(rsi))[0]
+    raw_events = raw_events[raw_events >= warm_up]
+    events = _apply_cooldown(raw_events, cooldown)
+    return _mean_forward_return(log_returns_padded, events, horizon)
+
+
+def rsi_placebo_forward_return(
+    log_returns_padded: np.ndarray,
+    *,
+    warm_up: int = RSI_WARM_UP_SESSIONS,
+    cooldown: int = RSI_EVENT_COOLDOWN,
+    horizon: int = RSI_FORWARD_HORIZON,
+) -> tuple[float, int]:
+    """Observed mean forward return and usable event count for the placebo."""
+    placebo = rsi_placebo_events(log_returns_padded)
+    raw_events = np.where(placebo)[0]
+    raw_events = raw_events[raw_events >= warm_up]
+    events = _apply_cooldown(raw_events, cooldown)
+    return _mean_forward_return(log_returns_padded, events, horizon)
+
+
+def rsi_bootstrap(
+    closes: np.ndarray,
+    *,
+    block_bars: int = RSI_BLOCK_BARS,
+    resamples: int = RSI_RESAMPLES,
+    seed: int = RSI_SEED,
+    warm_up: int = RSI_WARM_UP_SESSIONS,
+    cooldown: int = RSI_EVENT_COOLDOWN,
+    horizon: int = RSI_FORWARD_HORIZON,
+    min_event_count: int = RSI_MIN_EVENT_COUNT,
+) -> dict:
+    """One-sided p-values for a favourable (positive) mean forward return,
+    for both the RSI event and its placebo, per
+    docs/research-protocols/rsi-oversold-reversal-v1.md. Each resample
+    reconstructs a synthetic price path and recomputes both event definitions
+    on it, mirroring sma_cross_bootstrap's state-recomputing design."""
+    log_returns_padded = log_returns_from_closes(closes)
+    n = len(log_returns_padded)
+    if n <= warm_up + RSI_PERIOD:
+        raise ValueError("series too short for warm-up plus evaluation")
+
+    observed_event_mean, event_count = rsi_event_forward_return(
+        log_returns_padded, warm_up=warm_up, cooldown=cooldown, horizon=horizon
+    )
+    observed_placebo_mean, placebo_count = rsi_placebo_forward_return(
+        log_returns_padded, warm_up=warm_up, cooldown=cooldown, horizon=horizon
+    )
+
+    result = {
+        "observed_event_mean_forward_return": observed_event_mean,
+        "event_count": event_count,
+        "observed_placebo_mean_forward_return": observed_placebo_mean,
+        "placebo_count": placebo_count,
+        "p_event": None,
+        "insufficient_events": event_count < min_event_count,
+    }
+    if event_count < min_event_count:
+        return result
+
+    values = log_returns_padded[1:]
+    if block_bars <= 0 or block_bars > len(values):
+        raise ValueError("block_bars must be between 1 and the sample length")
+    if resamples <= 0:
+        raise ValueError("resamples must be positive")
+
+    blocks_needed = (len(values) + block_bars - 1) // block_bars
+    offsets = np.arange(block_bars)
+    rng = np.random.default_rng(seed)
+    at_least = 0
+    for _ in range(resamples):
+        starts = rng.integers(0, len(values), size=blocks_needed)
+        indexes = (starts[:, None] + offsets) % len(values)
+        resampled_values = values[indexes.ravel()[: len(values)]]
+        resampled_padded = np.concatenate([[0.0], resampled_values])
+        resampled_mean, _ = rsi_event_forward_return(
+            resampled_padded, warm_up=warm_up, cooldown=cooldown, horizon=horizon
+        )
+        if resampled_mean >= observed_event_mean:
+            at_least += 1
+    result["p_event"] = (at_least + 1) / (resamples + 1)
+    return result

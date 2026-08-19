@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.45.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and Cycle 2's chosen protocol — SMA Cross v1's exposure-reduction claim jointly against a volatility-state placebo — is closed `not_material_or_not_consistent`, a completed, properly-powered negative result.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.46.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, Cycle 2's chosen protocol (SMA Cross v1) is closed `not_material_or_not_consistent` on a confound (a volatility-only placebo explained it away), and Cycle 3's chosen protocol (RSI oversold reversal) is closed `not_material_or_not_consistent` on a power limitation (36–56 events per asset was not enough to distinguish signal from noise) — two completed, differently-shaped negative results.
 
 ## Completed foundation
 
@@ -102,6 +102,25 @@ may compete only as a new, independently justified protocol — none is a
 default next task. Cycle 1 thresholds cannot be relaxed retrospectively.
 Futures trend and cross-sectional equity momentum on the ~500-symbol list
 remain parked until their point-in-time data path exists.
+
+Cycle 3 scored two Tier 0/1 candidates from the [pending candidate
+checklist](brainstorm/2026-08-19-pending-candidate-checklist.md): [selection
+record](research-candidates/2026-08-19-cycle-3.md). RSI(14) oversold-crossing
+short-horizon reversal scored `15/16`, the highest of any candidate so far,
+and was prioritised as a genuinely different mechanism family (contrarian, not
+trend) from every candidate tested to date. S/R Bounce formalization scored
+`0` on distinct information — too close in shape to Cycle 1's already-closed
+consolidation work — and was not prioritised. The chosen protocol was
+[locked](research-protocols/rsi-oversold-reversal-v1.md), executed, and
+[closed](research-results/rsi-oversold-reversal-v1.md)
+`not_material_or_not_consistent`: 0/12 assets reached raw significance even
+before Holm correction (smallest raw p `0.138`), and the placebo comparison
+was genuinely mixed (`6/12` each way) rather than a clean sweep. This reads as
+a power limitation at the available event count (`36`–`56` per asset), not a
+confound explanation like Cycle 2's result — a materially different reading
+that a future attempt must not blur into the same conclusion. No parameter,
+cooldown, or horizon grid was run; any such change is a new, independently
+justified protocol.
 
 ### 9B — Locked experiment and confirmation
 

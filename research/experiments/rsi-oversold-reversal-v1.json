@@ -1,0 +1,84 @@
+{
+  "experiment_id": "rsi-oversold-reversal-v1",
+  "status": "preregistered_no_results",
+  "protocol": "docs/research-protocols/rsi-oversold-reversal-v1.md",
+  "selection_record": "docs/research-candidates/2026-08-19-cycle-3.md",
+  "base_code_commit": "8f7a6f332b6f49e84350ed34f6667d5cfa09cf51",
+  "fingerprint_date": "2026-08-19",
+  "canonicalization": "UTF-8 JSON; recursively sorted keys; separators comma and colon; ensure_ascii=false; trailing newline excluded",
+  "permitted_decisions": ["material_and_consistent", "not_material_or_not_consistent", "invalid"],
+  "forbidden_outputs": ["alpha", "entry_signal", "exit_signal", "stop", "position_size", "sharpe", "reject", "revise", "continue_research"],
+  "universe": ["SPY", "QQQ", "IWM", "EFA", "EEM", "TLT", "IEF", "GLD", "DBC", "XLK", "XLF", "XLE"],
+  "data": {
+    "database": "data/market.db",
+    "contract": "docs/adr/0002-market-data-contract.md",
+    "columns": ["symbol", "date", "open", "high", "low", "close", "volume"],
+    "fingerprint_method": "SHA-256 incremental ORDER BY symbol,date; symbol UTF-8 + NUL + date ASCII + NUL + big-endian IEEE-754 open/high/low/close doubles + signed 64-bit integer volume",
+    "development_sha256": null,
+    "development_rows": null,
+    "fingerprint_pending_reason": "specification locked before execution; fingerprint recorded fresh at execution time regardless of whether the same data already backs an earlier experiment"
+  },
+  "indicator": {
+    "rsi_period": 14,
+    "buy_below": 30,
+    "sell_above": 70,
+    "smoothing": "Wilder EWM via pandas ewm(alpha=1/period, adjust=False) on clipped gains/losses, identical to backend/app/strategies.py:RsiReversion",
+    "warm_up_sessions": 100
+  },
+  "event": {
+    "definition": "Event(t) = 1{RSI(t) < 30 and RSI(t-1) >= 30}",
+    "cooldown_sessions": 10,
+    "minimum_event_count_per_asset": 15
+  },
+  "placebo": {
+    "trailing_return_lookback": 14,
+    "expanding_quantile": 0.10,
+    "definition": "Placebo(t) = 1{trailing_14_session_log_return(t) <= expanding_10th_percentile(trailing_14_session_log_return)(t)}",
+    "cooldown_sessions": 10,
+    "note": "self-referential; no external decline-magnitude constant or full-sample calibration"
+  },
+  "forward_return": {
+    "horizon_sessions": 10,
+    "definition": "R10(t) = sum of log returns over the 10 sessions following the event close",
+    "favourable_direction": "positive"
+  },
+  "bootstrap": {
+    "base_function": "backend/app/research.py:circular_block_bootstrap_p_value / sma_cross_bootstrap",
+    "extension_required": "event-recomputing variant: resample raw returns in circular blocks, reconstruct a synthetic price path, recompute RSI/event/placebo on the resampled path, then compute mean forward return over resampled events",
+    "block_bars": 20,
+    "resamples": 5000,
+    "seed": 17291,
+    "p_value_convention": "one-sided; fraction of resamples with resampled_mean_forward_return >= observed, plus add-one correction",
+    "correction": {
+      "method": "backend/app/research.py:holm_adjust",
+      "alpha": 0.05,
+      "family_definition": "12 assets, event statistic only; placebo compared per-asset, not a second Holm-corrected family"
+    }
+  },
+  "gates": {
+    "minimum_event_count": 15,
+    "materiality": {
+      "mean_forward_return_minimum": 0.005,
+      "significance": "holm_adjusted_p <= alpha"
+    },
+    "breadth_minimum_assets": 8,
+    "placebo_rule": "event mean forward return must exceed placebo mean forward return on the same asset",
+    "concentration_minimum_clusters": 3,
+    "concentration_total_clusters": 6,
+    "concentration_source": "backend/app/portfolio_universe.py:PORTFOLIO_CLASSIFICATIONS[symbol].cluster",
+    "reproducibility": "byte-identical forward-return/p-value artifact on an independent rerun against the same fingerprinted data"
+  },
+  "multiplicity": {
+    "families": 1,
+    "family_labels": ["rsi_event"],
+    "variant_count": 1,
+    "dependence_group": "rsi-oversold-reversal-v1",
+    "parameter_grid": "none in this run; single locked RSI(14)/30/70 and single 10-session forward horizon"
+  },
+  "scope_exclusions": {
+    "no_trade": true,
+    "no_costs": "out of scope for this no-trade characterization run",
+    "no_pooled_panel_estimator": "per-asset only, consistent with Cycle 2/3 precedent",
+    "no_book_level_or_executable_expression": "any tradeable expression remains a separate, later, separately locked protocol"
+  }
+}

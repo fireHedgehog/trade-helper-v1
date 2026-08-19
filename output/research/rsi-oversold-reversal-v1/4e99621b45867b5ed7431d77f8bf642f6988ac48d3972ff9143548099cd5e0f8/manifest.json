@@ -1,0 +1,21 @@
+{
+  "actual_costs_or_execution_accessed": false,
+  "data_sha256": "a45bce859cdeee705a06cdea9c03f1bf0f31cff501d5f66c2e544d8f13fb64ab",
+  "experiment_id": "rsi-oversold-reversal-v1",
+  "no_trade": true,
+  "spec_sha256": "4e99621b45867b5ed7431d77f8bf642f6988ac48d3972ff9143548099cd5e0f8",
+  "universe": [
+    "DBC",
+    "EEM",
+    "EFA",
+    "GLD",
+    "IEF",
+    "IWM",
+    "QQQ",
+    "SPY",
+    "TLT",
+    "XLE",
+    "XLF",
+    "XLK"
+  ]
+}

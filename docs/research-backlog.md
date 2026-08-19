@@ -7,10 +7,17 @@ exposure-reduction claim, jointly designed against a volatility-state placebo;
 see the [selection record](research-candidates/2026-08-19-cycle-2.md). Its
 [locked protocol](research-protocols/sma-cross-v1-exposure-reduction.md) executed
 and [closed](research-results/sma-cross-v1-exposure-reduction.md)
-`not_material_or_not_consistent` — a real, properly-powered negative result: 0/12
-assets survived Holm correction on both statistics, and a volatility-only placebo
-matched or beat the SMA state's variance reduction on every asset. No follow-up
-research task is queued; the next Stage 9A step, if any, is a new cycle.
+`not_material_or_not_consistent` on a confound — a volatility-only placebo
+matched or beat the SMA state's variance reduction on every asset. Cycle 3
+selected RSI(14) oversold-crossing short-horizon reversal; its
+[locked protocol](research-protocols/rsi-oversold-reversal-v1.md) executed and
+[closed](research-results/rsi-oversold-reversal-v1.md)
+`not_material_or_not_consistent` on a *power limitation* instead — 0/12 assets
+reached raw significance even before correction, at 36–56 events per asset;
+the placebo comparison was genuinely mixed rather than a clean explanation.
+Two negative results, differently shaped — see each result's own reading
+before treating them as interchangeable. No follow-up research task is
+queued; the next Stage 9A step, if any, is a new cycle.
 
 ## Resume gate
 
@@ -53,9 +60,23 @@ permutation-null machinery in `research.py`), and it overlaps with CTA v2's tren
 family. Generic breakout is covered under Classical TA series below. UI
 availability must never imply statistical approval.
 
+### RSI mean reversion
+
+Operationalized, scored (`15/16`, highest of any candidate so far), and
+prioritised in Cycle 3 as a short-horizon contrarian reversal claim, distinct
+in mechanism from every trend-family candidate above — see [Candidate
+A](research-candidates/2026-08-19-cycle-3.md). Its [locked
+protocol](research-protocols/rsi-oversold-reversal-v1.md) is closed
+`not_material_or_not_consistent`: 0/12 assets reached raw significance even
+before Holm correction, at `36`–`56` qualifying events per asset — see the
+[result](research-results/rsi-oversold-reversal-v1.md). This reads as a power
+limitation, not a confound; a future attempt aimed at more events (longer
+horizon, shorter cooldown, pooled estimator) would be a new, independently
+justified protocol, not a repair of this one.
+
 ### Classical TA series
 
-`S/R Bounce` is the existing quantified classical-TA prototype: prior rolling support/resistance, support-test recovery entry, resistance target, and ATR-buffered stop. It may be charted and backtested but has no accepted edge claim.
+`S/R Bounce` is the existing quantified classical-TA prototype: prior rolling support/resistance, support-test recovery entry, resistance target, and ATR-buffered stop. It may be charted and backtested but has no accepted edge claim. Scored in Cycle 3 ([Candidate B](research-candidates/2026-08-19-cycle-3.md)): `0` on distinct information — its mechanism is close enough to Cycle 1's already-closed consolidation support-recovery detector, with a cruder unconfirmed construction, that it would substantially re-ask a question already answered. Not prioritised; eligible only behind a materially different construction.
 
 `TA Breakout v1` was operationalized and scored in Cycle 2 — see [Candidate
 E](research-candidates/2026-08-19-cycle-2.md). Not prioritised: lowest score of

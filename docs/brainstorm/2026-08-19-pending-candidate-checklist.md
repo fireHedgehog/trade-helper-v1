@@ -30,18 +30,22 @@ hypothesis engineering again.
 Same shape as SMA Cross v1: one asset, existing daily bars, no engine to
 build. This is where "next cheap test" should come from.
 
-- [ ] **RSI mean-reversion** — contrarian, not trend/breakout — genuinely
-  different mechanism family from everything tested so far (CTA v1, SMA
-  Cross, consolidation support-recovery are all trend/reversion-at-a-level;
-  none of them is a pure oversold-bounce claim). Unvalidated prototype
-  already exists (`RsiReversion` in `strategies.py`). My own recommendation
-  as the next thing to actually run, precisely because it's not another
-  trend variant.
-- [ ] **S/R Bounce formalization** — the existing quantified prototype
-  (`SrBounce`) has never been operationalized or scored at all, unlike its
-  sibling `Fib Retrace` (poor exploratory result, low priority) and `Wave
-  Pull` (blocked by a known `IndexError` bug at `impulse_bars >= 59`, per
-  the 2026-08-19 audit's L4 finding — fix the bug before scoring, not after).
+- [x] **RSI mean-reversion** — picked up in [Cycle
+  3](../research-candidates/2026-08-19-cycle-3.md), scored `15/16`, highest
+  of any candidate so far. Executed and closed
+  [`not_material_or_not_consistent`](../research-results/rsi-oversold-reversal-v1.md):
+  0/12 assets reached raw significance even before correction — a power
+  limitation at 36-56 events per asset, not a confound like SMA Cross v1. A
+  future attempt to fix the power problem (more events, pooled estimator)
+  would be new, independently justified work, not a repair of this one.
+- [x] **S/R Bounce formalization** — scored in [Cycle
+  3](../research-candidates/2026-08-19-cycle-3.md): `0` on distinct
+  information, too close to Cycle 1's already-closed consolidation work with
+  a cruder detector. Not prioritised; would need a materially different
+  construction to earn a re-look, same rule as any future consolidation
+  matcher. `Fib Retrace` remains poor exploratory result, low priority; `Wave
+  Pull` remains blocked by a known `IndexError` bug at `impulse_bars >= 59`
+  (2026-08-19 audit's L4 finding) — fix before scoring, not after.
 
 ## Tier 2 — needs new engineering, not new data
 
