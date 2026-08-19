@@ -87,6 +87,17 @@ free; nobody has wired it up yet.
   vintage ingestion, release-datetime alignment, a preregistered hypothesis
   — all before scoring, per ADR 0006 clauses 2–9. This is "new data" but
   free new data; the cost is engineering + governance discipline, not money.
+- [ ] **Fed put: purchase-conditioned long-end yield reversal** — see
+  [memo](2026-08-19-fed-put-long-end-reversal.md). Distinct from the
+  yield-shock idea above (this is about the yield's own reversal, not
+  equity trend-entry failure); grounded in real term-premium literature
+  (Gagnon et al. 2011; Krishnamurthy and Vissing-Jorgensen 2011; D'Amico
+  and King 2013), not folk pattern. Blocked on the same ADR 0006 gate, plus
+  two data sources not yet in this codebase (Fed H.4.1 SOMA holdings,
+  Treasury buyback operations — both free). Likely needs a Thesis Track
+  design (small-n regime episodes), not the block-bootstrap method used
+  for every candidate scored so far. Explicitly excludes any claim about a
+  specific Fed official's intentions — narrative, not quantifiable.
 
 ## Tier 4 — orthogonal, multidimensional, real cost
 
