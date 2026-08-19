@@ -2,6 +2,15 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.47.0
+
+Locked, executed, and closed TA Breakout v1 (Cycle 2's unpicked Candidate E); assessed and declined MACD and full Elliott Wave counting. No strategy implemented, no trade, no cost/execution modelling.
+
+- Picked up TA Breakout v1 (scored `10/16` in Cycle 2, never disqualified) from the pending checklist. Locked [docs/research-protocols/ta-breakout-v1.md](docs/research-protocols/ta-breakout-v1.md): a deliberately simplified, close-price-only rejected-resistance breakout, tested against the exact placebo Cycle 2's own verification named — a raw new-high breakout with no rejection requirement — reusing RSI's proven event-recomputing bootstrap rather than Cycle 1's caliper-matching design.
+- Implemented `ta_breakout_bootstrap` and supporting functions in `backend/app/research.py`, reusing `_apply_cooldown`/`_mean_forward_return` from the RSI implementation. Added 6 unit tests, including a deterministic no-lookahead check for the resistance calculation and a direct check that the event/placebo distinction behaves as designed.
+- Result: `1,477` total qualifying events across 12 assets (far more than RSI's `508`), yet `0/12` reached raw significance (smallest raw p `0.099`). Disclosed a genuine design weakness rather than filing this as an equivalent negative to the prior two results: the `≥2`-rejection filter barely separated event from placebo on any asset (e.g. `SPY`: `190` events vs. `195` placebo occurrences), so the `7/12` placebo-beating count reflects weak separation, not a clean comparison. Recorded in [docs/research-results/ta-breakout-v1.md](docs/research-results/ta-breakout-v1.md).
+- Assessed MACD and full Elliott Wave (5-3/ABCDE) counting against the pending checklist and declined both, with reasons recorded rather than silently skipped: MACD is mechanically the same shape as SMA Cross v1 and would very likely reproduce its exact confound; Elliott Wave counting cannot be made objective without discretionary judgment, in tension with this project's falsifiability requirement. The existing `WavePull` prototype remains the honest, already-scoped stand-in, currently blocked by a known bug.
+
 ## 0.46.0
 
 Selected, locked, executed, and closed Stage 9A Cycle 3; no strategy implemented, no trade, no cost/execution modelling.

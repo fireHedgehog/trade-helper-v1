@@ -21,9 +21,15 @@ Cross v1 exposure-reduction (`not_material_or_not_consistent`).
 No new data, no new infrastructure. Just needs someone to pick one and start
 hypothesis engineering again.
 
-- [ ] **TA Breakout v1** — resistance-zone breakout, distinct from
-  consolidation's mean-reversion-at-support. Scored (10/16) but not
-  prioritized; lowest of the batch, explicit `0` on diversification.
+- [x] **TA Breakout v1** — resistance-zone breakout, distinct from
+  consolidation's mean-reversion-at-support. Scored (10/16) in Cycle 2.
+  Locked, executed, and closed
+  [`not_material_or_not_consistent`](../research-results/ta-breakout-v1.md):
+  0/12 assets reached raw significance despite 1,477 events (far more than
+  RSI's 508) — and the event/placebo separation was weak by construction
+  (the ≥2-rejection filter barely screened anything out), a disclosed design
+  limitation, not just a bare negative. A tighter rejection definition would
+  be new, independently justified work.
 
 ## Tier 1 — cheap, single-asset, zero new infrastructure, data already in hand
 

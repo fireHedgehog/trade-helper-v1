@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.46.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, Cycle 2's chosen protocol (SMA Cross v1) is closed `not_material_or_not_consistent` on a confound (a volatility-only placebo explained it away), and Cycle 3's chosen protocol (RSI oversold reversal) is closed `not_material_or_not_consistent` on a power limitation (36–56 events per asset was not enough to distinguish signal from noise) — two completed, differently-shaped negative results.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.47.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and three completed protocols are each closed `not_material_or_not_consistent` for three different reasons: SMA Cross v1 (Cycle 2) on a confound (a volatility-only placebo explained it away), RSI oversold reversal (Cycle 3) on a power limitation (36–56 events per asset), and TA Breakout v1 (picked up from Cycle 2's unpicked Candidate E) on weak event/placebo separation by construction, disclosed rather than hidden.
 
 ## Completed foundation
 
@@ -121,6 +121,26 @@ confound explanation like Cycle 2's result — a materially different reading
 that a future attempt must not blur into the same conclusion. No parameter,
 cooldown, or horizon grid was run; any such change is a new, independently
 justified protocol.
+
+TA Breakout v1 (Cycle 2's Candidate E, scored `10/16`, never disqualified)
+was picked up next from the checklist: its
+[protocol](research-protocols/ta-breakout-v1.md) locked a close-price-only
+rejected-resistance breakout against the exact placebo Cycle 2's own
+verification named — a raw new-high breakout with no rejection requirement —
+reusing RSI's proven event-recomputing bootstrap rather than Cycle 1's
+caliper-matching design. Executed and
+[closed](research-results/ta-breakout-v1.md) `not_material_or_not_consistent`:
+`0/12` assets reached raw significance despite `1,477` events, far more than
+RSI's `508`. The result also discloses a design weakness rather than hiding
+it — the `≥2`-rejection filter barely separated event from placebo on any
+asset, so the placebo comparison here is weaker evidence than SMA Cross v1's
+clean sweep or RSI's genuinely mixed split. MACD and full Elliott Wave
+counting were assessed against the checklist and not recommended: MACD is
+mechanically the same shape as SMA Cross v1 and would very likely reproduce
+its exact confound; Elliott Wave counting is not objectively definable
+without discretionary judgment, in tension with this project's falsifiability
+requirement — the existing `WavePull` prototype remains the honest,
+already-scoped stand-in, currently blocked by a known bug.
 
 ### 9B — Locked experiment and confirmation
 

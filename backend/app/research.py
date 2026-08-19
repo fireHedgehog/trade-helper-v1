@@ -893,3 +893,144 @@ def rsi_bootstrap(
             at_least += 1
     result["p_event"] = (at_least + 1) / (resamples + 1)
     return result
+
+
+# --- TA Breakout v1: rejected-resistance breakout vs. raw new-high placebo ---
+# Implements docs/research-protocols/ta-breakout-v1.md. Reuses the same
+# event-recomputing bootstrap scaffold as RSI oversold reversal (_apply_cooldown,
+# _mean_forward_return), applied to a resistance-breakout event/placebo pair
+# instead. Close-price-only by deliberate scope decision; see the protocol.
+
+BREAKOUT_WINDOW = 60
+BREAKOUT_REJECTION_TOLERANCE = 0.01
+BREAKOUT_BUFFER = 0.005
+BREAKOUT_MIN_REJECTIONS = 2
+BREAKOUT_WARM_UP_SESSIONS = 100
+BREAKOUT_EVENT_COOLDOWN = 10
+BREAKOUT_FORWARD_HORIZON = 10
+BREAKOUT_MIN_EVENT_COUNT = 15
+BREAKOUT_BLOCK_BARS = 20
+BREAKOUT_RESAMPLES = 5_000
+BREAKOUT_SEED = 17_291
+
+
+def _rolling_max_excluding_today(values: np.ndarray, window: int) -> np.ndarray:
+    """Rolling max over the window ending at t-1; NaN until enough history exists."""
+    series = pd.Series(values)
+    return series.rolling(window).max().shift(1).to_numpy()
+
+
+def ta_breakout_events(
+    closes: np.ndarray,
+    *,
+    window: int = BREAKOUT_WINDOW,
+    tolerance: float = BREAKOUT_REJECTION_TOLERANCE,
+    buffer: float = BREAKOUT_BUFFER,
+    min_rejections: int = BREAKOUT_MIN_REJECTIONS,
+) -> tuple[np.ndarray, np.ndarray]:
+    """(event, placebo) boolean arrays. Event requires >= min_rejections prior
+    near-miss touches of the rolling high; placebo is the same breakout with
+    no rejection requirement (DonchianTrend's own raw breakout rule)."""
+    resistance = _rolling_max_excluding_today(closes, window)
+    valid = np.isfinite(resistance)
+    near_but_below = np.where(
+        valid,
+        (closes < resistance) & (closes >= resistance * (1 - tolerance)),
+        False,
+    )
+    rejection_count = _rolling_mean(near_but_below.astype(float), window) * window
+    raw_breakout = np.where(valid, closes > resistance * (1 + buffer), False)
+    event = raw_breakout & np.isfinite(rejection_count) & (rejection_count >= min_rejections)
+    placebo = raw_breakout
+    return event, placebo
+
+
+def breakout_event_forward_return(
+    log_returns_padded: np.ndarray,
+    *,
+    warm_up: int = BREAKOUT_WARM_UP_SESSIONS,
+    cooldown: int = BREAKOUT_EVENT_COOLDOWN,
+    horizon: int = BREAKOUT_FORWARD_HORIZON,
+) -> tuple[float, int]:
+    closes_proxy = np.exp(np.cumsum(log_returns_padded))
+    event, _ = ta_breakout_events(closes_proxy)
+    raw_events = np.where(event)[0]
+    raw_events = raw_events[raw_events >= warm_up]
+    events = _apply_cooldown(raw_events, cooldown)
+    return _mean_forward_return(log_returns_padded, events, horizon)
+
+
+def breakout_placebo_forward_return(
+    log_returns_padded: np.ndarray,
+    *,
+    warm_up: int = BREAKOUT_WARM_UP_SESSIONS,
+    cooldown: int = BREAKOUT_EVENT_COOLDOWN,
+    horizon: int = BREAKOUT_FORWARD_HORIZON,
+) -> tuple[float, int]:
+    closes_proxy = np.exp(np.cumsum(log_returns_padded))
+    _, placebo = ta_breakout_events(closes_proxy)
+    raw_events = np.where(placebo)[0]
+    raw_events = raw_events[raw_events >= warm_up]
+    events = _apply_cooldown(raw_events, cooldown)
+    return _mean_forward_return(log_returns_padded, events, horizon)
+
+
+def ta_breakout_bootstrap(
+    closes: np.ndarray,
+    *,
+    block_bars: int = BREAKOUT_BLOCK_BARS,
+    resamples: int = BREAKOUT_RESAMPLES,
+    seed: int = BREAKOUT_SEED,
+    warm_up: int = BREAKOUT_WARM_UP_SESSIONS,
+    cooldown: int = BREAKOUT_EVENT_COOLDOWN,
+    horizon: int = BREAKOUT_FORWARD_HORIZON,
+    min_event_count: int = BREAKOUT_MIN_EVENT_COUNT,
+) -> dict:
+    """One-sided p-value for a favourable (positive) mean forward return,
+    for both the rejected-resistance breakout event and its raw-breakout
+    placebo, per docs/research-protocols/ta-breakout-v1.md."""
+    log_returns_padded = log_returns_from_closes(closes)
+    n = len(log_returns_padded)
+    if n <= warm_up + BREAKOUT_WINDOW:
+        raise ValueError("series too short for warm-up plus evaluation")
+
+    observed_event_mean, event_count = breakout_event_forward_return(
+        log_returns_padded, warm_up=warm_up, cooldown=cooldown, horizon=horizon
+    )
+    observed_placebo_mean, placebo_count = breakout_placebo_forward_return(
+        log_returns_padded, warm_up=warm_up, cooldown=cooldown, horizon=horizon
+    )
+
+    result = {
+        "observed_event_mean_forward_return": observed_event_mean,
+        "event_count": event_count,
+        "observed_placebo_mean_forward_return": observed_placebo_mean,
+        "placebo_count": placebo_count,
+        "p_event": None,
+        "insufficient_events": event_count < min_event_count,
+    }
+    if event_count < min_event_count:
+        return result
+
+    values = log_returns_padded[1:]
+    if block_bars <= 0 or block_bars > len(values):
+        raise ValueError("block_bars must be between 1 and the sample length")
+    if resamples <= 0:
+        raise ValueError("resamples must be positive")
+
+    blocks_needed = (len(values) + block_bars - 1) // block_bars
+    offsets = np.arange(block_bars)
+    rng = np.random.default_rng(seed)
+    at_least = 0
+    for _ in range(resamples):
+        starts = rng.integers(0, len(values), size=blocks_needed)
+        indexes = (starts[:, None] + offsets) % len(values)
+        resampled_values = values[indexes.ravel()[: len(values)]]
+        resampled_padded = np.concatenate([[0.0], resampled_values])
+        resampled_mean, _ = breakout_event_forward_return(
+            resampled_padded, warm_up=warm_up, cooldown=cooldown, horizon=horizon
+        )
+        if resampled_mean >= observed_event_mean:
+            at_least += 1
+    result["p_event"] = (at_least + 1) / (resamples + 1)
+    return result

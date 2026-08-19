@@ -15,9 +15,15 @@ selected RSI(14) oversold-crossing short-horizon reversal; its
 `not_material_or_not_consistent` on a *power limitation* instead — 0/12 assets
 reached raw significance even before correction, at 36–56 events per asset;
 the placebo comparison was genuinely mixed rather than a clean explanation.
-Two negative results, differently shaped — see each result's own reading
-before treating them as interchangeable. No follow-up research task is
-queued; the next Stage 9A step, if any, is a new cycle.
+TA Breakout v1 (Cycle 2's unpicked Candidate E) was then picked up directly
+from the [pending checklist](brainstorm/2026-08-19-pending-candidate-checklist.md);
+its [locked protocol](research-protocols/ta-breakout-v1.md) executed and
+[closed](research-results/ta-breakout-v1.md) `not_material_or_not_consistent`
+on a *disclosed design weakness* — 0/12 reached raw significance despite
+1,477 events, and the event/placebo separation was weak by construction.
+Three negative results, three different reasons — see each result's own
+reading before treating them as interchangeable. No follow-up research task
+is queued; the next Stage 9A step, if any, is a new cycle.
 
 ## Resume gate
 
@@ -78,20 +84,22 @@ justified protocol, not a repair of this one.
 
 `S/R Bounce` is the existing quantified classical-TA prototype: prior rolling support/resistance, support-test recovery entry, resistance target, and ATR-buffered stop. It may be charted and backtested but has no accepted edge claim. Scored in Cycle 3 ([Candidate B](research-candidates/2026-08-19-cycle-3.md)): `0` on distinct information — its mechanism is close enough to Cycle 1's already-closed consolidation support-recovery detector, with a cruder unconfirmed construction, that it would substantially re-ask a question already answered. Not prioritised; eligible only behind a materially different construction.
 
-`TA Breakout v1` was operationalized and scored in Cycle 2 — see [Candidate
-E](research-candidates/2026-08-19-cycle-2.md). Not prioritised: lowest score of
-its cycle (10), an explicit zero on diversification, and its own record concedes
-that its distinguishing multi-touch-zone mechanic degenerates to a CTA v1 retest
-once stripped out. Before any future implementation attempt, lock:
-
-- resistance/support construction: rolling extremes versus confirmed pivots/zones, including pivot confirmation delay so no future bars leak into the signal;
-- horizon and zone tolerance;
-- breakout qualification: close penetration, time acceptance, volume/relative-strength filters, or none;
-- initial stop: failed-breakout close, breakout-zone buffer, confirmed swing support, or ATR distance;
-- trailing/target/timeout exit and gap treatment;
-- parameter-search budget, benchmark, costs, multiplicity control, and untouched confirmation data.
-
-No `NDO entry` marker is permitted until these choices define an executable rule. Descriptive support/resistance lines may be shown as chart context but must be labelled non-signal.
+`TA Breakout v1` was operationalized and scored in Cycle 2 ([Candidate
+E](research-candidates/2026-08-19-cycle-2.md), `10/16`, not prioritised at the
+time), then picked up from the [pending
+checklist](brainstorm/2026-08-19-pending-candidate-checklist.md) and locked as
+a deliberately simplified, close-price-only [event-study
+protocol](research-protocols/ta-breakout-v1.md) — rolling-high resistance,
+rejection-count requirement, and a raw-breakout placebo, no zone tolerance
+band, pivot-confirmation lag, or stop family. Executed and
+[closed](research-results/ta-breakout-v1.md) `not_material_or_not_consistent`,
+with a disclosed design weakness: the rejection filter barely separated event
+from placebo. A future attempt at a tighter separation (stricter tolerance,
+more required touches) or the fuller original construction (zone tolerance,
+pivot lag, stop families) would be new, independently justified work — no
+`NDO entry` marker is permitted until an executable rule is separately locked
+and evidenced. Descriptive support/resistance lines may be shown as chart
+context but must be labelled non-signal.
 
 ### Model selection and machine learning
 
