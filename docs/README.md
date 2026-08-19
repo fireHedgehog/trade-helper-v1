@@ -6,13 +6,13 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.38.0` |
+| Version | `0.39.0` |
 | Parent release | `0.37.0` (first Stage 8 acceptance candidate) |
-| Current state | Stage 8 accepted and closed; Stage 9A research candidate prioritisation is active |
-| Verification | `212 passed`; real run produced/reused 7 full-universe snapshots with 0 failed/blocked jobs and disclosed 26-symbol exclusion; final browser smoke pending in this release check |
-| Completed | Stage 8A–8D local product/staging workflow, durable pipeline, observable provenance, recovery, responsive UX, and real-run acceptance |
-| Next product work | Stage 9A: score serious hypotheses, select exactly one candidate, and lock its experiment protocol before implementation |
-| Parked research | Stage 9A: acceptance standard and candidate priority; then 9B locked experiment |
+| Current state | Stage 9A feasibility implementation active; structural stage complete without outcome access or decision |
+| Verification | `219 passed`; locked spec/data reproduce; 274 structural events across 12 ETFs/13 years; byte-identical structural rerun |
+| Completed | Stage 8; Stage 9A Cycle 1 selection/preregistration; pure detector/event engine and structural-only artifact |
+| Next product work | Implement detector prevalence, locked matching coverage, block-selector fixtures, and pseudo-event power; actual-event outcomes remain prohibited |
+| Active research | Stage 9A: lock consolidation support-recovery detector/event feasibility; Stage 9B remains gated |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 
 The first real `0.37.0` acceptance run correctly ended `complete_with_errors`, but revealed two contract defects: settlement-based Yahoo futures were treated as equity candles, and a small invalid subset blocked every full-universe daily scan. Version `0.37.1` separates market context from the strategy universe, keeps equity validation strict, gives context bars an honest settlement contract, and permits daily discovery above a visible 90% coverage floor. The repaired real run then completed with zero failed/blocked model jobs: five new and two reused full-universe snapshots; empty watchlist scopes were honestly skipped. Saved snapshots retain exact exclusions and fingerprints. Formal experiments remain governed by their locked coverage rules.
@@ -47,6 +47,8 @@ Heavy statistical work is intentionally paused. On resumption, first operational
 | How does a narrative become a measurable hypothesis? | [Hypothesis engineering](hypothesis-engineering.md) |
 | How is a candidate selected and allowed to advance? | [Model acceptance standard](model-acceptance-standard.md) |
 | How is candidate search governed? | [Exploration protocol](exploration-protocol.md) |
+| Which Stage 9A candidate was prioritised, and why? | [Candidate-selection index](research-candidates/README.md) and [Cycle 1 record](research-candidates/2026-08-19-cycle-1.md) |
+| Which new preregistrations exist? | [Research-protocol index](research-protocols/README.md) |
 | Where do non-contract brainstorm notes live? | [Brainstorm index](brainstorm/README.md) |
 | Where do point-in-time codebase/methodology audits live? | [Audits index](audits/README.md) |
 | How is macro data governed? | [Macro data contract](adr/0006-macro-data-contract.md) |

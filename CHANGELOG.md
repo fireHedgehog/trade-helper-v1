@@ -2,6 +2,19 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.39.0
+
+First Stage 9A execution checkpoint; structural feasibility only, with no forward-outcome or P&L access.
+
+- Added indexed candidate-selection and preregistration folders while keeping canonical authority documents at `docs/` root.
+- Selected consolidation support recovery through a pre-result scorecard; parked futures trend and cross-sectional momentum for unavailable point-in-time data.
+- Locked an eight-variant detector/event-feasibility protocol, canonical machine specification, exact development-data fingerprint, dependence-aware power contract, and attempts-ledger record.
+- Transparently amended a non-portable pre-execution SQLite text fingerprint to ordered binary IEEE-754/integer hashing; no research rule changed.
+- Implemented a pure no-look-ahead consolidation detector, support-recovery event state machine, cross-variant deduplication, and guarded structural-only runner.
+- Produced 274 deduplicated development events across 12/12 ETFs and 13 years; breadth/concentration preliminarily pass, while matching and power remain incomplete and decision remains null.
+- Fixed Today watchlist scope isolation and made Strategy Lab distinguish unsaved suggested symbols from persisted selections.
+- Verification: `219 passed`, locked input reproduction, and byte-identical structural artifact rerun.
+
 ## 0.38.0
 
 Stage 8 accepted and closed; Stage 9A research prioritisation is now the active gate.

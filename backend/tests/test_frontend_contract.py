@@ -86,9 +86,17 @@ def test_data_refresh_distinguishes_resume_from_forced_scopes() -> None:
 
 def test_watchlist_snapshot_is_recoverable_and_empty_save_is_explicit() -> None:
     assert "Restore snapshot symbols" in HTML
-    assert "showing ${snapshotSymbols.length} recoverable symbols" in HTML
+    assert "contains ${snapshotSymbols.length} historical symbols available through Restore snapshot symbols" in HTML
+    assert "Watchlist empty · historical run #${stored.run.id} is recoverable" in HTML
+    assert "const effectiveSymbols = savedSymbols" in HTML
     assert "Historical run snapshots remain recoverable" in HTML
     assert "if (!symbols.length && !window.confirm" in HTML
+
+
+def test_today_never_mixes_full_universe_runs_into_watchlist_state() -> None:
+    assert "&scope=watchlist`)" in HTML
+    assert "Suggested default basket selected for ${strategy}, but not saved" in HTML
+    assert "unsaved changes. Click “Save as strategy watchlist”" in HTML
 
 
 def test_symbol_research_evaluates_all_accordions_without_mixing_chart_markers() -> None:

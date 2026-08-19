@@ -1,0 +1,36 @@
+{
+  "decision": null,
+  "deduplicated_events": 274,
+  "events_by_symbol": {
+    "DBC": 33,
+    "EEM": 18,
+    "EFA": 13,
+    "GLD": 25,
+    "IEF": 16,
+    "IWM": 31,
+    "QQQ": 27,
+    "SPY": 19,
+    "TLT": 19,
+    "XLE": 26,
+    "XLF": 27,
+    "XLK": 20
+  },
+  "events_by_year": {
+    "2006": 7,
+    "2007": 29,
+    "2008": 20,
+    "2009": 19,
+    "2010": 30,
+    "2011": 17,
+    "2012": 33,
+    "2013": 24,
+    "2014": 14,
+    "2015": 25,
+    "2016": 28,
+    "2017": 11,
+    "2018": 17
+  },
+  "matching_coverage": null,
+  "prospective_power": null,
+  "status": "incomplete_structural_only"
+}

@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.38.0`; Stage 8 is accepted and closed after the repaired real pipeline passed with zero failed/blocked model jobs and exposed durable result provenance. Stage 9A is active.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.39.0`; Stage 8 is closed and Stage 9A structural feasibility is complete without outcome access. Matching and prospective power remain before any feasibility decision.
 
 ## Completed foundation
 
@@ -66,7 +66,7 @@ Anti-toy exit rule: after the layout/usability and smoke-test items above, stop 
 
 Gate: the repaired real workflow must complete with model snapshots or explain any remaining block correctly. The user must then explicitly accept it before 9A. This is not live-readiness approval.
 
-## Stage 9: New strategy research — parked
+## Stage 9: New strategy research — active
 
 Resume only by explicit decision after Stage 8.
 
@@ -77,6 +77,14 @@ Before selecting a strategy, operationalize each thesis under [hypothesis engine
 Candidate search and promotion follow the [exploration protocol](exploration-protocol.md): search is non-evidential, logged in `research/attempts.jsonl`, and only promoted survivors enter 9A scoring. Macro candidates additionally require [ADR 0006](adr/0006-macro-data-contract.md) point-in-time data before scoring.
 
 Gate: one candidate has earned priority on rationale, product relevance, distinct information, data readiness, implementability, falsifiability, research restraint, and diversification; its immutable protocol defines what will cause `reject`, `revise`, or `continue research`.
+
+Cycle 1 selection: [consolidation support recovery](research-candidates/2026-08-19-cycle-1.md) is prioritised only for a bounded [detector/event-feasibility protocol](research-protocols/daily-consolidation-support-recovery-feasibility-v1.md). Futures trend and cross-sectional momentum are parked for unavailable point-in-time data. The protocol and machine specification are locked; Stage 9A remains open until every feasibility gate is executed.
+
+Version `0.39.0` locked/fingerprinted the protocol and implemented the pure
+no-look-ahead detector/event engine. Its [structural checkpoint](research-results/consolidation-support-feasibility-v1-structural.md)
+has broad, non-concentrated event counts but no outcome or decision. Next: detector
+prevalence, matching coverage, corrected block-selector fixtures, and pseudo-event
+power.
 
 ### 9B — Locked experiment and confirmation
 

@@ -1,0 +1,25 @@
+{
+  "byte_identical_structural_rerun": true,
+  "forbidden_forward_fields_present": false,
+  "locked_inputs": {
+    "data_matches": true,
+    "data_sha256": "86eeb197919baad820d07c450b546245962ce9ae76404b339fdc7d7738f74ccc",
+    "rows": 38976,
+    "rows_match": true,
+    "spec_matches": true,
+    "spec_sha256": "90d31fb192ca9f7864a2d2f2565ebf018483d7f620422b5d1accb2d1b027a62b",
+    "symbols": 12
+  },
+  "status": "structural_stage_complete",
+  "structural_events_sha256": "05092007ff47ad959f1676d352e15d5aac9c1ba86aac19894de304ec4ec43d4c",
+  "structural_schema_keys": [
+    "event_date",
+    "event_index",
+    "resistances",
+    "supports",
+    "symbol",
+    "variant_ids",
+    "zone_atrs",
+    "zone_completion_dates"
+  ]
+}

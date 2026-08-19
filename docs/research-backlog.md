@@ -1,6 +1,8 @@
 # Research backlog
 
-Status: parked until Stage 8 product work is complete and the user explicitly resumes heavy statistical research.
+Status: active Stage 9A. Cycle 1 prioritised consolidation support recovery for a
+detector/event-feasibility protocol; see the [selection
+record](research-candidates/2026-08-19-cycle-1.md).
 
 ## Resume gate
 
@@ -8,7 +10,10 @@ Before proposing another model, read [hypothesis engineering](hypothesis-enginee
 
 ## Candidate research programmes
 
-[Daily Consolidation Zone v1](research-hypotheses/daily-consolidation-zone-v1.md) is a preserved design draft, not the next-design priority. It must compete with every other candidate under Stage 9A before implementation.
+[Daily Consolidation Zone v1](research-hypotheses/daily-consolidation-zone-v1.md)
+competed in the Cycle 1 Stage 9A scorecard. Support recovery—not breakout or failed
+breakout—was prioritised for detector/event feasibility only. This does not
+authorise a strategy implementation or outcome calculation.
 
 ### CTA v2
 

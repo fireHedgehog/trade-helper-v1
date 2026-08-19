@@ -1,0 +1,113 @@
+{
+  "experiment_id": "consolidation-support-feasibility-v1",
+  "status": "preregistered_no_results",
+  "protocol": "docs/research-protocols/daily-consolidation-support-recovery-feasibility-v1.md",
+  "selection_record": "docs/research-candidates/2026-08-19-cycle-1.md",
+  "base_code_commit": "ec9e0b7743b96f1089a17e92b5b230653245e493",
+  "fingerprint_date": "2026-08-19",
+  "canonicalization": "UTF-8 JSON; recursively sorted keys; separators comma and colon; ensure_ascii=false; trailing newline excluded",
+  "permitted_decisions": ["feasible", "not_evaluable", "invalid"],
+  "forbidden_outputs": ["alpha", "entry_signal", "exit_signal", "stop", "rank", "pnl", "reject", "revise", "continue_research"],
+  "universe": ["SPY", "QQQ", "IWM", "EFA", "EEM", "TLT", "IEF", "GLD", "DBC", "XLK", "XLF", "XLE"],
+  "data": {
+    "database": "data/market.db",
+    "contract": "docs/adr/0002-market-data-contract.md",
+    "columns": ["symbol", "date", "open", "high", "low", "close", "volume"],
+    "development_end": "2018-12-31",
+    "development_rows": 38976,
+    "development_first_date": "2006-02-06",
+    "development_last_date": "2018-12-31",
+    "fingerprint_method": "SHA-256 incremental ORDER BY symbol,date; symbol UTF-8 + NUL + date ASCII + NUL + big-endian IEEE-754 open/high/low/close doubles + signed 64-bit integer volume",
+    "development_sha256": "86eeb197919baad820d07c450b546245962ce9ae76404b339fdc7d7738f74ccc",
+    "reserved_event_study_start": "2019-01-01",
+    "reserved_event_study_end": "2023-12-29",
+    "contaminated_start": "2024-01-01",
+    "confirmation_rule": "strictly after specification fingerprint date"
+  },
+  "detector": {
+    "windows": [40, 60],
+    "lower_close_quantile": 0.1,
+    "upper_close_quantile": 0.9,
+    "maximum_zone_width_ratios": [0.08, 0.12],
+    "maximum_realized_volatility_ratios": [0.75, 1.0],
+    "atr_period": 14,
+    "atr_method": "Wilder",
+    "boundary_touch_atr_tolerance": 0.5,
+    "minimum_touches_per_boundary": 2,
+    "minimum_same_side_touch_separation_sessions": 5,
+    "minimum_close_containment_fraction": 0.8,
+    "containment_atr_buffer": 0.5,
+    "maximum_close_excursion_atr": 1.0,
+    "zone_cooldown_sessions": "window",
+    "variant_count": 8
+  },
+  "event": {
+    "search_start_sessions_after_zone": 5,
+    "search_end_sessions_after_zone": 60,
+    "low_to_support_atr_buffer": 0.25,
+    "recovery_close_rule": "close >= locked zone support",
+    "prior_failure_close_atr_buffer": -0.5,
+    "event_cooldown_sessions": 60,
+    "forward_sessions_required": 60,
+    "deduplicate_across_variants": true
+  },
+  "structural_audit": {
+    "sample_zones": 40,
+    "sample_seed": 910201,
+    "render_through": "zone completion close only",
+    "allowed_mismatches": 0,
+    "future_invariance_required": true
+  },
+  "matching": {
+    "controls_per_event_maximum": 5,
+    "controls_per_event_minimum": 3,
+    "same_symbol": true,
+    "same_calendar_year": true,
+    "event_exclusion_sessions": 60,
+    "distance": "Mahalanobis",
+    "per_feature_caliper_pooled_sd": 0.25,
+    "without_replacement_within_event": true,
+    "reusable_across_events": true,
+    "features": ["return_60", "atr14_over_close", "realized_volatility_60", "spy_close_over_sma200", "calendar_month_sin", "calendar_month_cos"]
+  },
+  "reserved_estimand": {
+    "primary": "median event-minus-mean-controls 60-session adverse excursion",
+    "adverse_excursion_reference": "next available open",
+    "adverse_excursion_mde": -0.03,
+    "maximum_median_forward_return_sacrifice": -0.01
+  },
+  "power": {
+    "target": 0.8,
+    "family_wise_alpha": 0.05,
+    "sidedness": "one-sided",
+    "resamples": 10000,
+    "monte_carlo_datasets": 1000,
+    "pseudo_event_seed": 910202,
+    "bootstrap_seed": 910203,
+    "method": "single-step Westfall-Young maxT with common-calendar circular moving blocks",
+    "statistic": "negative median matched adverse-excursion difference",
+    "null_centering": "subtract within-variant observed median before resampling",
+    "block_selector": "Patton-Politis-White 2009 corrected circular-block selector",
+    "allowed_block_lengths": [10, 20, 40, 60],
+    "block_rounding": "upward; cap at 60",
+    "power_success": "at least one retained variant adjusted p < 0.05"
+  },
+  "gates": {
+    "minimum_assets_with_events": 8,
+    "minimum_calendar_years_with_events": 8,
+    "minimum_matching_coverage": 0.9,
+    "maximum_asset_event_fraction": 0.25,
+    "maximum_year_event_fraction": 0.25,
+    "minimum_detector_prevalence": 0.005,
+    "maximum_detector_prevalence": 0.15,
+    "minimum_power": 0.8,
+    "mechanical_failures_allowed": 0,
+    "byte_identical_rerun_required": true
+  },
+  "artifact": {
+    "root": "output/research/consolidation-support-feasibility-v1/<fingerprint>/",
+    "files": ["manifest.json", "structural-events.jsonl", "feasibility.json", "audit.json", "decision.json"],
+    "atomic_writes": true,
+    "actual_event_forward_outcomes_forbidden": true
+  }
+}

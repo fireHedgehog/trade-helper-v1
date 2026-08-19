@@ -1237,12 +1237,16 @@ async function buildSymbolPicker() {
     api(`/api/strategy-watchlist?strategy=${encodeURIComponent(strategy)}`),
   ]);
   defaultBasket = default_basket || [];
-  const dflt = new Set(watchlist.symbols.length ? watchlist.symbols : defaultBasket);
+  const hasSavedWatchlist = watchlist.symbols.length > 0;
+  const dflt = new Set(hasSavedWatchlist ? watchlist.symbols : defaultBasket);
   $('#lab-symbols').innerHTML = symbols.map((s) =>
     `<label><input type="checkbox" value="${s}" ${dflt.has(s) ? 'checked' : ''}> ${s}</label>`
   ).join('');
   labPickerBuilt = true;
   filterLabSymbols();
+  $('#lab-sample-note').textContent = hasSavedWatchlist
+    ? `Loaded ${watchlist.symbols.length} saved symbols for ${strategy}.`
+    : `Suggested default basket selected for ${strategy}, but not saved. Click “Save as strategy watchlist” to persist it.`;
   if (freshnessData) {
     const summary = freshnessData.summary;
     const yahooSymbols = summary.symbols - summary.fred_managed;
@@ -1285,6 +1289,14 @@ function labNote() {
     : (checked > 40 || days === 0)
       ? `⚠ ${checked} symbols × ${days ? days + ' bars' : 'full history'} — heavy compute, cloud recommended (fan may spin)`
       : `sample: ${checked} symbols × ${days ? days + ' bars' : 'full history'} — laptop-safe`;
+  renderLabContractSample();
+}
+
+function markLabWatchlistUnsaved() {
+  const strategy = $('#lab-watch-strategy').value;
+  const checked = document.querySelectorAll('#lab-symbols input:checked').length;
+  $('#lab-sample-note').textContent =
+    `${checked} symbols selected for ${strategy} · unsaved changes. Click “Save as strategy watchlist” to persist them.`;
   renderLabContractSample();
 }
 
@@ -1373,18 +1385,18 @@ $('#lab-watch-strategy').addEventListener('change', () => {
 });
 $('#lab-select-all').addEventListener('click', () => {
   document.querySelectorAll('#lab-symbols input').forEach((el) => { el.checked = true; });
-  labNote();
+  markLabWatchlistUnsaved();
 });
 $('#lab-default').addEventListener('click', () => {
   const dflt = new Set(defaultBasket);
   document.querySelectorAll('#lab-symbols input').forEach((el) => { el.checked = dflt.has(el.value); });
-  labNote();
+  markLabWatchlistUnsaved();
 });
 $('#lab-clear').addEventListener('click', () => {
   document.querySelectorAll('#lab-symbols input').forEach((el) => { el.checked = false; });
-  labNote();
+  markLabWatchlistUnsaved();
 });
-$('#lab-symbols').addEventListener('change', labNote);
+$('#lab-symbols').addEventListener('change', markLabWatchlistUnsaved);
 $('#lab-years').addEventListener('change', labNote);
 $('#lab-symbol-search').addEventListener('input', filterLabSymbols);
 
@@ -1802,9 +1814,9 @@ function renderStrategySnapshot(run, savedWatchlist = []) {
     (result.watchlist || []).map((row) => [row.symbol, row])
   );
   const snapshotSymbols = [...snapshotBySymbol.keys()];
-  const usingSnapshotFallback = !savedSymbols.length && snapshotSymbols.length > 0;
-  const effectiveSymbols = usingSnapshotFallback ? snapshotSymbols : savedSymbols;
-  if (usingSnapshotFallback) {
+  const hasRecoverableSnapshot = !savedSymbols.length && snapshotSymbols.length > 0;
+  const effectiveSymbols = savedSymbols;
+  if (hasRecoverableSnapshot) {
     recoverableWatchlist = snapshotSymbols;
     $('#today-restore-watchlist').hidden = false;
   }
@@ -1857,8 +1869,8 @@ function renderStrategySnapshot(run, savedWatchlist = []) {
   const failed = coverage.failed.length;
   const preflightExcluded = coverage.preflight_excluded || [];
   $('#today-run-note').textContent =
-    (usingSnapshotFallback
-      ? `Current persistent watchlist is empty; showing ${snapshotSymbols.length} recoverable symbols from stored run #${run.id}. `
+    (hasRecoverableSnapshot
+      ? `Current persistent watchlist is empty; stored run #${run.id} contains ${snapshotSymbols.length} historical symbols available through Restore snapshot symbols. `
       : `Stored run #${run.id} · `) +
     `created ${run.created_at} · data as of ${run.data_as_of || 'unknown'} · ` +
     `${coverage.processed}/${coverage.requested} processed · ${missing} missing · ${failed} failed. ` +
@@ -1880,7 +1892,7 @@ async function loadTodayStored() {
     await refreshTodaySets(strategy);
     const set = $('#today-set').value || 'defaults';
     const [stored, freshnessData, , pipelineStatus] = await Promise.all([
-      api(`/api/strategy-runs/latest?strategy=${encodeURIComponent(strategy)}&set=${encodeURIComponent(set)}`),
+      api(`/api/strategy-runs/latest?strategy=${encodeURIComponent(strategy)}&set=${encodeURIComponent(set)}&scope=watchlist`),
       api('/api/data/status?details=false').catch(() => null),
       loadModelDiscovery(),
       api('/api/daily-pipeline/status').catch(() => null),
@@ -1893,7 +1905,7 @@ async function loadTodayStored() {
       '#today-status',
       !stored.watchlist.length ? 'warning' : stored.run ? 'positive' : 'info',
       !stored.watchlist.length && stored.run?.result?.watchlist?.length
-        ? `Watchlist empty · showing run #${stored.run.id} snapshot`
+        ? `Watchlist empty · historical run #${stored.run.id} is recoverable`
         : !stored.watchlist.length
           ? 'Watchlist empty · save symbols in Strategy Lab'
         : stored.run

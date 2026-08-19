@@ -4,7 +4,7 @@ Local, long-only systematic-research workspace for testing whether a strategy ad
 
 ## Current state
 
-Version `0.38.0` closes Stage 8 after the repaired real pipeline completed with zero failed/blocked model jobs. The Today workspace now retains per-model pipeline provenance and dated candidate snapshots while keeping once-daily controls collapsed by default. Stage 9A candidate prioritisation is next. CTA v1 remains rejected under its locked protocol; no paper trading, broker integration, unattended refresh, or deployment is enabled.
+Version `0.39.0` begins Stage 9A execution with a locked consolidation support-recovery feasibility protocol and a deterministic structural-only engine. The first run found 274 deduplicated development events across all 12 ETFs and 13 years, but matching and power remain incomplete and no forward outcome or evidence decision exists. CTA v1 remains rejected under its locked protocol; no paper trading, broker integration, unattended refresh, or deployment is enabled.
 
 Start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint, next task, and document map.
 

@@ -1,0 +1,8 @@
+{
+  "actual_event_forward_outcomes_accessed": false,
+  "data_sha256": "86eeb197919baad820d07c450b546245962ce9ae76404b339fdc7d7738f74ccc",
+  "decision_authorized": false,
+  "experiment_id": "consolidation-support-feasibility-v1",
+  "spec_sha256": "90d31fb192ca9f7864a2d2f2565ebf018483d7f620422b5d1accb2d1b027a62b",
+  "stage": "structural_only"
+}
