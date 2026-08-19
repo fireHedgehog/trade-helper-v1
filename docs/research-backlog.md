@@ -37,10 +37,24 @@ correlation `0.045` against a `0.10` floor, `p=0.266`, no confound or design
 caveat attached, the cleanest of the five. Five negative results, five
 different reasons — see each result's own reading before treating them as
 interchangeable. Every Tier 0/1 item and one Tier 2 item on the [pending
-checklist](brainstorm/2026-08-19-pending-candidate-checklist.md) is now
-scored or executed; no follow-up research task is queued, and the next step
-(CTA v2's engine, macro data investment, or a fresh cycle) is a deliberate
-choice, not a default.
+checklist](brainstorm/2026-08-19-pending-candidate-checklist.md) was then
+scored or executed. An independent, adversarially verified next-priority
+evaluation (2026-08-20) scored five options for what to do next and
+surfaced [Cycle 5](research-candidates/2026-08-20-cycle-5.md): a
+turn-of-month calendar effect, the first time-based (not price-derived)
+mechanism family this session, scored `15/16` — tied with RSI for the
+highest of any candidate. Its [locked
+protocol](research-protocols/calendar-turn-of-month-v1.md) executed and
+[closed](research-results/calendar-turn-of-month-v1.md)
+`not_material_or_not_consistent` — a *well-powered null* — `987`-`1,612`
+events per asset ruled out a power limitation, and a locked volatility
+diagnostic ruled out a confound story, but the daily differential was small
+and inconsistent; `EEM`'s raw `p=0.013` was the strongest single-asset raw
+signal this session but did not survive Holm correction. Six negative
+results, six different reasons. Day-of-week and overnight-gap conditioning
+remain eligible, unexecuted Cycle 5 candidates; no follow-up research task
+is queued, and the next step (one of those two, CTA v2's engine, macro data
+investment, or a fresh cycle) is a deliberate choice, not a default.
 
 ## Resume gate
 
@@ -58,13 +72,24 @@ strategy implementation or outcome calculation, and it does not reject the claim
 
 Operationalized and scored in Cycle 2 as a pooled, volatility-scaled trend overlay
 across the 12-ETF universe — see [Candidate C](research-candidates/2026-08-19-cycle-2.md). Eligible (score 13) but parked: its estimand needs a
-multi-instrument pooled-portfolio weighting engine that exists nowhere in this
-codebase today. Its overlap concern with cross-sectional rotation is now moot —
+multi-instrument pooled-portfolio weighting engine. Its overlap concern with cross-sectional rotation is now moot —
 rotation ran and [closed `not_material_or_not_consistent`](research-results/etf12-cross-sectional-rotation-v1.md) — so building this engine no longer risks
 double-counting a shared trend-family effect against a still-open sibling; the
 overlap with volatility-managed exposure remains live. Park is an infrastructure
 gate, not a data or rationale gate; do not choose parameters until that engine
-is scoped.
+is scoped. **Cost correction (2026-08-20):** the true engineering cost is
+lower than "exists nowhere in this codebase" previously implied —
+`portfolio_execution.py` and `portfolio.py` (committed 2026-08-18) already
+implement a real shared-cash, multi-symbol, sector/cluster-capped daily
+replay engine, though built for the live "Today" view (discrete-share,
+stop-sized) rather than CTA v2's continuous vol-scaled target-weight
+estimand, and not wired into `research.py`'s bootstrap pipeline — a new
+weight-vector return-construction function is still needed, not a
+from-scratch engine. Separately, both of CTA v2's own rationale channels are
+now pre-undermined by this session's closed results (CTA v1's audit for
+channel 1, SMA Cross v1's confound for channel 2) — see the [pending
+checklist](brainstorm/2026-08-19-pending-candidate-checklist.md) for the
+full evaluation; not recommended to start next.
 
 ### SMA cross, breakout, and momentum horizons
 
@@ -106,7 +131,7 @@ justified protocol, not a repair of this one.
 
 ### Classical TA series
 
-`S/R Bounce` is the existing quantified classical-TA prototype: prior rolling support/resistance, support-test recovery entry, resistance target, and ATR-buffered stop. It may be charted and backtested but has no accepted edge claim. Scored in Cycle 3 ([Candidate B](research-candidates/2026-08-19-cycle-3.md)): `0` on distinct information — its mechanism is close enough to Cycle 1's already-closed consolidation support-recovery detector, with a cruder unconfirmed construction, that it would substantially re-ask a question already answered. Not prioritised; eligible only behind a materially different construction.
+`S/R Bounce` is the existing quantified classical-TA prototype: prior rolling support/resistance, support-test recovery entry, resistance target, and ATR-buffered stop. It may be charted and backtested but has no accepted edge claim. Scored in Cycle 3 ([Candidate B](research-candidates/2026-08-19-cycle-3.md)): `0` on distinct information — its mechanism is close enough to Cycle 1's already-closed consolidation support-recovery detector, with a cruder unconfirmed construction, that it would substantially re-ask a question already answered. Not prioritised; eligible only behind a materially different construction. A genuinely different construction is now known — round-number/psychological price levels (Donaldson and Kim 1993; Osler 2003), an exogenous order-clustering mechanism rather than Cycle 1's endogenous own-history level — but it is blocked (2026-08-20): every fetched price series is dividend/split-adjusted under [ADR 0002](adr/0002-market-data-contract.md), and adjusted prices diverge substantially from real nominal historical prices for 10 of the 12 locked assets (e.g. `SPY`'s adjusted 2007 high is ~30% below its real nominal price; `TLT`/`IEF` are off by roughly `2×`). A round-number detector on this data would silently test price levels that were never on any trader's screen. Blocked until an ADR 0002 amendment or a new unadjusted-price data path exists — see the [pending checklist](brainstorm/2026-08-19-pending-candidate-checklist.md).
 
 `TA Breakout v1` was operationalized and scored in Cycle 2 ([Candidate
 E](research-candidates/2026-08-19-cycle-2.md), `10/16`, not prioritised at the
@@ -124,6 +149,27 @@ pivot lag, stop families) would be new, independently justified work — no
 `NDO entry` marker is permitted until an executable rule is separately locked
 and evidenced. Descriptive support/resistance lines may be shown as chart
 context but must be labelled non-signal.
+
+### Calendar effects
+
+Turn-of-month was operationalized and scored `15/16` in Cycle 5 ([Candidate
+A](research-candidates/2026-08-20-cycle-5.md)) — the first time-based, not
+price-derived, mechanism family this session. Its [locked
+protocol](research-protocols/calendar-turn-of-month-v1.md) is closed
+`not_material_or_not_consistent`: `0`/`12` assets cleared materiality and
+Holm-corrected significance simultaneously, despite `987`-`1,612` qualifying
+events per asset ruling out any power-limitation explanation — see the
+[result](research-results/calendar-turn-of-month-v1.md). A locked, non-gating
+volatility diagnostic found no evidence of SMA Cross v1's confound (event-day
+and non-event-day realized volatility were nearly identical for every
+asset). Day-of-week (Candidate B, `12/16`, eligible) shares real mechanism
+overlap with turn-of-month and was not bundled into the same cycle to avoid
+non-independent evidence; it remains available for a future, separately
+justified attempt. Overnight-gap conditioning (Candidate C, `13/16`) is a
+distinct market-microstructure mechanism, not a calendar effect, but is not
+implementable today — it needs a new joint/paired resampling design (the
+existing scaffold only reconstructs a single synthetic close-price path per
+resample, not two paired series) before a protocol can be locked.
 
 ### Model selection and machine learning
 

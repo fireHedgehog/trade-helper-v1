@@ -1,0 +1,21 @@
+{
+  "actual_costs_or_execution_accessed": false,
+  "data_sha256": "a45bce859cdeee705a06cdea9c03f1bf0f31cff501d5f66c2e544d8f13fb64ab",
+  "experiment_id": "calendar-turn-of-month-v1",
+  "no_trade": true,
+  "spec_sha256": "e961ffd26eb65b77b51ef397a603507aead215a4c9748a3073d4cc2e4bd01e92",
+  "universe": [
+    "DBC",
+    "EEM",
+    "EFA",
+    "GLD",
+    "IEF",
+    "IWM",
+    "QQQ",
+    "SPY",
+    "TLT",
+    "XLE",
+    "XLF",
+    "XLK"
+  ]
+}

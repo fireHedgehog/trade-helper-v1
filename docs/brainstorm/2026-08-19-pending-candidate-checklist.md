@@ -62,7 +62,66 @@ build. This is where "next cheap test" should come from.
   Pull`'s known `IndexError` (2026-08-19 audit's L4 finding) is
   [fixed](../../CHANGELOG.md) as of `0.48.0`; it is now unblocked and could be
   operationalized and scored in a future cycle, but has not been yet — a bug
-  fix is not a score.
+  fix is not a score. **New blocker found (2026-08-20, from a Cycle 5
+  next-priority evaluation):** a genuinely distinct construction exists —
+  round-number/psychological price levels (Donaldson & Kim 1993; Osler
+  2003), an *exogenous* order-clustering mechanism rather than Cycle 1's and
+  the original prototype's *endogenous* own-history technical level. But it
+  cannot be soundly executed on this project's current data: every fetched
+  price series is dividend/split-**adjusted** (`auto_adjust=True`, locked by
+  [ADR 0002](../adr/0002-market-data-contract.md), which also forbids mixing
+  adjusted and unadjusted prices in one run). A direct query of
+  `data/market.db` confirms the resulting distortion from real nominal
+  history is large for 10 of the 12 locked assets — e.g. `SPY`'s stored
+  adjusted close on 2007-10-01 is `$109.32` against its real nominal
+  ~`$156` all-time high that week (~30% off); `TLT`/`IEF` are off by
+  roughly `2x` by the early 2000s from two decades of compounded bond-
+  distribution adjustment. A round-number detector built on this pipeline
+  would silently flag "round-number touches" at prices that were never on
+  any trader's screen. Blocked until either an ADR 0002 amendment or a new
+  unadjusted-price data path exists — a real governance/data decision, not
+  a redesign task, and not something to start by default.
+
+- [x] **Turn-of-month calendar effect** (new, 2026-08-20) — mean daily
+  return on the last trading day of the month plus the first 3 trading days
+  of the following month (Lakonishok & Smidt 1988's window), vs. all other
+  days. First mechanism family this session that is time-based rather than
+  price-based; "calendar coincidence" was named as an untested alternative
+  explanation in two prior candidate docs (SMA Cross v1, ETF-12 rotation)
+  without ever being tested directly. Scored `15/16` in [Cycle
+  5](../research-candidates/2026-08-20-cycle-5.md) — highest of any
+  candidate this session, tied with RSI. Locked, executed, and closed
+  [`not_material_or_not_consistent`](../research-results/calendar-turn-of-month-v1.md):
+  987-1,612 events per asset ruled out a power limitation, and a locked
+  volatility diagnostic ruled out SMA Cross v1's confound story, but the
+  differential was small and inconsistent (`7`/`12` positive, `4`/`12`
+  negative). `EEM` reached raw `p=0.013` — the strongest single-asset raw
+  significance this session — but its Holm-adjusted `p=0.156` did not
+  survive correction.
+- [ ] **Day-of-week calendar effect** — same calendar-effect family as
+  turn-of-month above; scored `12/16` in [Cycle
+  5](../research-candidates/2026-08-20-cycle-5.md), eligible but not
+  prioritised this cycle (weaker literature grounding — the classic "Monday
+  effect" is widely reported as decayed post-1987 — and real mechanism
+  overlap with turn-of-month, so bundling both risks non-independent
+  evidence from one underlying "calendar effects in this universe" answer).
+  Available for a future, separately-justified cycle.
+- [ ] **Overnight-gap conditioned forward return** (new, 2026-08-20) —
+  session-structure decomposition: a large overnight gap (open vs. prior
+  close) conditioning a forward K-session return, distinct from every prior
+  candidate in that it is the first to touch the open price at all (order-
+  flow/liquidity-provision literature, e.g. Berkman et al. 2012). Scored
+  `13/16` in [Cycle 5](../research-candidates/2026-08-20-cycle-5.md) but
+  **not implementable today**: it needs a genuinely new *joint/paired*
+  resampling design (overnight and intraday returns must be resampled
+  together, preserving their real pairing, on a reconstructed synthetic
+  path) that doesn't exist in this codebase — closer to cross-sectional
+  rotation's redesign effort than a template fill. Also must be framed as a
+  low-frequency conditioning signal from the start, not a literal daily
+  round-trip, or its cost-viability collapses under this project's own
+  ~0.3-0.4% round-trip cost defaults regardless of significance. Needs its
+  own small design pass (the joint-resampling method) before a protocol can
+  be locked — a real, if modest, prerequisite, not a template fill.
 
 ## Tier 2 — needs new engineering, not new data
 
@@ -71,13 +130,31 @@ either engine is a real, separately-justified project decision — not
 something to start by default just because it would unblock a candidate.
 
 - [ ] **CTA v2** — pooled, volatility-scaled cross-asset trend overlay.
-  Needs a genuine multi-instrument weighted-portfolio engine (nothing in
-  this codebase does simultaneous cross-instrument position weighting
-  today — every backtest path is single-instrument or median-of-single-
-  instrument). Scored 13/16, eligible. Its overlap concern with
-  cross-sectional rotation is now moot: rotation ran and found nothing, so
-  building CTA v2 no longer risks double-counting a shared trend-family
-  effect against a still-open sibling.
+  Scored 13/16, eligible. Its overlap concern with cross-sectional rotation
+  is now moot: rotation ran and found nothing, so building CTA v2 no longer
+  risks double-counting a shared trend-family effect against a still-open
+  sibling. **Cost correction (2026-08-20, from a Cycle 5 next-priority
+  evaluation):** the "nothing in this codebase does simultaneous
+  cross-instrument position weighting" framing above is stale.
+  `backend/app/portfolio_execution.py` and `portfolio.py` (committed
+  2026-08-18, one day before this line was first written) already implement
+  a real shared-cash, multi-symbol, sector/cluster-capped daily replay
+  engine with cross-instrument capital allocation. It was built for the live
+  "Today" view — discrete whole-share sizing, stop-distance risk, a
+  drawdown kill switch — not the continuous vol-scaled target-weight return
+  series CTA v2's estimand needs, and it is not wired into `research.py`'s
+  bootstrap pipeline at all. So this is not a from-scratch engine build
+  (the true remaining cost is lower than this item implies), but it is also
+  not a small wiring task: a new weight-vector return-construction function
+  is still needed, plus a shared placebo design against Candidate B's
+  variance-timing mechanism (the same overlap this item already names).
+  Separately, both of CTA v2's own disclosed rationale channels are now
+  pre-undermined by this session's own closed results — channel 1 (own-asset
+  trend continuation) by CTA v1's audit (2.5% power at a realistic IR=1.0),
+  channel 2 (vol-scaled de-risking) by SMA Cross v1's proven volatility-only
+  placebo confound — so a third trend-family test behind this build is a
+  weak bet regardless of its true engineering cost. Not recommended to start
+  next; cheaper Tier 1 items remain unexhausted.
 - [x] **ETF-12 cross-sectional rotation** — relative-strength ranking across
   the 12 ETFs. Scored 13/16 in Cycle 2, parked pending panel/permutation
   tooling. Unblocked without adding `scipy`/`statsmodels`: redesigned around

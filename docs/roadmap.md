@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.50.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and five completed protocols are each closed `not_material_or_not_consistent` for five different reasons: SMA Cross v1 (Cycle 2) on a confound, RSI oversold reversal (Cycle 3) on a power limitation, TA Breakout v1 on weak event/placebo separation by construction, Wave Pull v1 (Cycle 4) on a clean but null result, and ETF-12 cross-sectional rotation v1 on a clean, decisive null with no caveat — the cheap tier of the pending checklist is exhausted and one Tier 2 item is closed.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.51.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and six completed protocols are each closed `not_material_or_not_consistent` for six different reasons: SMA Cross v1 (Cycle 2) on a confound, RSI oversold reversal (Cycle 3) on a power limitation, TA Breakout v1 on weak event/placebo separation by construction, Wave Pull v1 (Cycle 4) on a clean but null result, ETF-12 cross-sectional rotation v1 on a clean, decisive null with no caveat, and Calendar Turn-of-Month v1 (Cycle 5) on a well-powered null in the first non-technical-pattern mechanism tested — the cheap tier of the pending checklist is exhausted and one Tier 2 item is closed.
 
 ## Completed foundation
 
@@ -176,8 +176,35 @@ limitation, or design weakness attached. Cluster breadth passed cleanly
 (`6/6`), so the null is not a concentration artifact. This closes the last
 Tier 0/1/2-ready item on the pending checklist; CTA v2's overlap concern
 with rotation is now moot in the other direction, since rotation ran and
-found nothing. The next step is a deliberate choice, not a default
-continuation.
+found nothing.
+
+An independent, adversarially verified next-priority evaluation (2026-08-20)
+then scored five options for what to do next — building CTA v2's engine,
+redesigning S/R Bounce, investing in Fed-put macro data infrastructure,
+searching for genuinely new cheap candidates, or a structural retrospective
+— and surfaced [Cycle 5](research-candidates/2026-08-20-cycle-5.md): the
+first time-based, non-price-derived mechanism family this session. Turn-of-
+month calendar effect (Lakonishok and Smidt 1988's window) scored `15/16`,
+tied with RSI for the highest of any candidate this session, and used a
+genuinely simpler bootstrap variant — the event mask is calendar-fixed and
+computed once, not recomputed on each resampled synthetic path, since
+calendar membership carries no price dependence or look-ahead risk. Executed
+and [closed](research-results/calendar-turn-of-month-v1.md)
+`not_material_or_not_consistent`: `987`-`1,612` turn-of-month days per asset
+ruled out a power limitation, and a locked, non-gating volatility diagnostic
+ruled out SMA Cross v1's confound story, but the daily differential was
+small and inconsistent (`7`/`12` assets positive, `4`/`12` negative). `EEM`
+reached raw `p=0.013` — the strongest single-asset raw significance this
+session — but its Holm-adjusted `p=0.156` did not survive correction across
+the `12`-asset family. Day-of-week (scored `12/16`) and overnight-gap
+conditioning (scored `13/16`, but not implementable without a new
+joint-resampling design step) remain eligible, unexecuted Cycle 5
+candidates. The evaluation also corrected two prior claims: CTA v2's true
+engineering cost is lower than previously stated (adjacent live-portfolio
+infrastructure exists but isn't directly reusable), and a genuinely distinct
+S/R Bounce construction (round-number price levels) is now known but blocked
+on an adjusted-vs-nominal-price data gap under ADR 0002. The next step
+remains a deliberate choice, not a default continuation.
 
 ### 9B — Locked experiment and confirmation
 

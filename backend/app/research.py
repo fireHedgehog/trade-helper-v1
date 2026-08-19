@@ -1317,3 +1317,130 @@ def etf12_rotation_bootstrap(
             str(date): rank.tolist() for date, rank in formation_ranks_by_date.items()
         },
     }
+
+
+# --- Calendar Turn-of-Month v1: daily-return differential vs. block-resampled
+# null --- Implements docs/research-protocols/calendar-turn-of-month-v1.md.
+# Unlike every prior candidate this session, the event definition (turn-of-
+# month calendar membership) depends only on the trading-day calendar, not on
+# any price level -- it is computed once and held fixed, rather than
+# recomputed from a resampled synthetic path on every iteration. The
+# statistic is a group difference, so no mean-centering is applied before
+# resampling (see the protocol's Scope decision for why that is sound).
+
+TOM_LEADING_DAYS = 3
+TOM_BLOCK_BARS = 20
+TOM_RESAMPLES = 5_000
+TOM_SEED = 17_291
+TOM_MIN_EVENT_COUNT = 200
+TOM_MATERIALITY_MIN = 0.0005
+
+
+def tom_event_mask(dates) -> np.ndarray:
+    """True at each trading day that is the last trading day of its month, or
+    one of the first `TOM_LEADING_DAYS` trading days of a month -- the
+    Lakonishok and Smidt (1988) turn-of-month window. Computed purely from
+    the trading-day sequence in `dates` (assumed already ordered oldest
+    first); carries no price information and no look-ahead risk."""
+    parsed = pd.to_datetime(pd.Series(dates).reset_index(drop=True))
+    month = parsed.dt.to_period("M")
+    rank_from_start = month.groupby(month).cumcount()
+    rank_from_end = month.groupby(month).cumcount(ascending=False)
+    is_early = (rank_from_start < TOM_LEADING_DAYS).to_numpy()
+    is_month_end = (rank_from_end == 0).to_numpy()
+    return is_early | is_month_end
+
+
+def tom_daily_differential(
+    log_returns_padded: np.ndarray, event_mask: np.ndarray
+) -> tuple[float, int, int]:
+    """(event_mean - non_event_mean, event_count, non_event_count), excluding
+    the synthetic index-0 padding entry."""
+    values = log_returns_padded[1:]
+    mask = event_mask[1:]
+    event_values = values[mask]
+    non_event_values = values[~mask]
+    if len(event_values) == 0 or len(non_event_values) == 0:
+        return 0.0, len(event_values), len(non_event_values)
+    return (
+        float(event_values.mean() - non_event_values.mean()),
+        len(event_values),
+        len(non_event_values),
+    )
+
+
+def tom_volatility_diagnostic(
+    log_returns_padded: np.ndarray, event_mask: np.ndarray
+) -> dict:
+    """Non-gating diagnostic: realized volatility (std of daily log returns)
+    on turn-of-month days vs. all other days, checking the alternative
+    explanation that any effect is a volatility-timing artifact rather than
+    a return-level one (the same lesson SMA Cross v1's confound taught)."""
+    values = log_returns_padded[1:]
+    mask = event_mask[1:]
+    event_values = values[mask]
+    non_event_values = values[~mask]
+    return {
+        "event_std": float(event_values.std(ddof=1)) if len(event_values) > 1 else None,
+        "non_event_std": float(non_event_values.std(ddof=1)) if len(non_event_values) > 1 else None,
+    }
+
+
+def tom_bootstrap(
+    closes: np.ndarray,
+    dates,
+    *,
+    block_bars: int = TOM_BLOCK_BARS,
+    resamples: int = TOM_RESAMPLES,
+    seed: int = TOM_SEED,
+    min_event_count: int = TOM_MIN_EVENT_COUNT,
+) -> dict:
+    """One-sided p-value for a favourable (positive) turn-of-month daily
+    return differential, per
+    docs/research-protocols/calendar-turn-of-month-v1.md. The event mask is
+    computed once from the real calendar and held fixed across every
+    resample -- only the return values at those fixed positions are
+    resampled and re-differenced, unlike the price-derived candidates
+    earlier this session whose event definitions must be recomputed on each
+    synthetic path."""
+    log_returns_padded = log_returns_from_closes(closes)
+    event_mask = tom_event_mask(dates)
+    if len(event_mask) != len(log_returns_padded):
+        raise ValueError("dates and closes must have the same length")
+
+    observed_diff, event_count, non_event_count = tom_daily_differential(
+        log_returns_padded, event_mask
+    )
+    diagnostics = tom_volatility_diagnostic(log_returns_padded, event_mask)
+
+    result = {
+        "observed_daily_differential": observed_diff,
+        "event_count": event_count,
+        "non_event_count": non_event_count,
+        "p_event": None,
+        "insufficient_events": event_count < min_event_count,
+        "diagnostics": diagnostics,
+    }
+    if event_count < min_event_count:
+        return result
+
+    values = log_returns_padded[1:]
+    mask = event_mask[1:]
+    if block_bars <= 0 or block_bars > len(values):
+        raise ValueError("block_bars must be between 1 and the sample length")
+    if resamples <= 0:
+        raise ValueError("resamples must be positive")
+
+    blocks_needed = (len(values) + block_bars - 1) // block_bars
+    offsets = np.arange(block_bars)
+    rng = np.random.default_rng(seed)
+    at_least = 0
+    for _ in range(resamples):
+        starts = rng.integers(0, len(values), size=blocks_needed)
+        indexes = (starts[:, None] + offsets) % len(values)
+        resampled_values = values[indexes.ravel()[: len(values)]]
+        resampled_diff = float(resampled_values[mask].mean() - resampled_values[~mask].mean())
+        if resampled_diff >= observed_diff:
+            at_least += 1
+    result["p_event"] = (at_least + 1) / (resamples + 1)
+    return result

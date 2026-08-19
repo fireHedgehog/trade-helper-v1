@@ -1,0 +1,12 @@
+{
+  "breadth_count": 0,
+  "breadth_met": false,
+  "clusters_represented": [],
+  "concentration_met": false,
+  "data_sha256": "a45bce859cdeee705a06cdea9c03f1bf0f31cff501d5f66c2e544d8f13fb64ab",
+  "decision": "not_material_or_not_consistent",
+  "eligible_asset_count": 12,
+  "excluded_insufficient_events": [],
+  "qualifying_assets": [],
+  "spec_sha256": "e961ffd26eb65b77b51ef397a603507aead215a4c9748a3073d4cc2e4bd01e92"
+}

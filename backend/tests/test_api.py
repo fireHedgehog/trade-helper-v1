@@ -29,7 +29,7 @@ def clear_portfolio_cache():
 async def test_health(client) -> None:
     assert (await client.get("/api/health")).json() == {
         "status": "ok",
-        "version": "0.50.0",
+        "version": "0.51.0",
     }
 
 
