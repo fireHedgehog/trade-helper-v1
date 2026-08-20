@@ -26,6 +26,18 @@ Implemented = running in the engine today. Contracted = mandatory reporting for 
 | `continue research` | All gates pass; run the untouched confirmation test once. |
 | `eligible for operational validation` | Confirmation passes; only then bounded paper trading — an operational test (data/state/execution), not an alpha test. |
 
+**A second, parallel ladder exists as of [ADR 0007](adr/0007-risk-budgeted-ensemble-acceptance.md)
+(status: proposed, not yet accepted) — Chapter 4 of [the research
+program](research-program.md).** It does not replace or lower this one: a
+signal that clears *this* ladder graduates here, as before. Chapter 4
+answers a different question for signals that do not — a disclosed,
+modest, *uncertain* expected value, sized down by its own uncertainty via
+Loss-based Quantity Determination and combined into a diversified,
+risk-controlled ensemble, rather than asked to prove itself alone at high
+confidence. Its own terminal state is the same one this ladder already
+names: `eligible for operational validation`, never profit claimed
+directly.
+
 ## Anti-deceptions (re-read each session)
 
 - Not an alpha finder: the primary output is a sequence of `reject`s; passing grants observation, never profit.

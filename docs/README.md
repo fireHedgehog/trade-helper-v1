@@ -6,10 +6,10 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.68.0` |
+| Version | `0.68.1` |
 | Parent release | `0.37.0` (first Stage 8 acceptance candidate) |
 | Current state | Research reorganized into a chaptered, living program — see [research-program.md](research-program.md). Chapters 1-3 (single-asset/TA+calendar, cross-sectional, macro/event-driven) hold the existing strict falsification standard unchanged; a new, parallel Chapter 4 (risk-budgeted ensemble construction, [ADR 0007](adr/0007-risk-budgeted-ensemble-acceptance.md), draft/proposed) answers a different question — not "is this proven," but "is this worth a small, sized, loss-controlled bet" — reusing ADR 0004's existing loss-based sizing formula and drawdown halt rather than inventing new risk machinery |
-| Verification | `332 passed` at `0.67.0`; not re-run for this doc-only 0.68.0 change — re-run before touching code |
+| Verification | `349 passed` at `0.68.1` (includes 8 new Chapter 4 primitive tests + 10 new exploration-script tests) |
 | Completed | Stage 8; Stage 9A Cycles 1–6; CTA v1/v2; TA Breakout, Wave Pull, ETF-12 rotation, both calendar candidates, Overnight Gap, Fed put yield-stress precursor v1+v2+v3 — all closed and indexed in [research-protocols/README.md](research-protocols/README.md); labor-market claims lead-lag operationalized and bounded-explored (not yet scored) |
 | Next product work | No queued Stage 9A candidate. ADR 0007 is a draft awaiting review, not yet accepted — the ensemble-construction engine, confidence-multiplier sizing function, and minimum-breadth floor it names are required decisions, not yet built. Chapter 1-3 open threads (not yet sections): Dow theory swing structure, Fibonacci, golden/death cross, 52-week-high anchoring (Ch.1); the six Tier-4-blocked cross-sectional ideas (Ch.2); the 7-variable macro library, PEAD/earnings-gap (needs an earnings-date ingestion module — `yfinance.get_earnings_dates()` confirmed working, free, 1987-2026 depth), policy-exposure factor (Ch.3) — see [research-program.md](research-program.md) for the full inventory |
 | Active research | None active. Next step is a deliberate choice: accept/revise ADR 0007 and start building Chapter 4's engine, or pick a Chapter 1-3 open thread via [next-priority-evaluation.md](next-priority-evaluation.md). Stage 9B remains gated |
@@ -20,7 +20,7 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 Local-optimum guard: Stage 8 is closed, do not add infrastructure/UX polish absent a concrete defect. The single-asset/time-series line is parked — read [stage-closures](stage-closures/2026-08-20-single-asset-time-series-line.md) before proposing anything back into it. No closed result licenses a reflexive follow-up (wider window, pooled version, same claim retried) — that is always a new, independently justified candidate.
 
-Research is active (Cycle 6, Fed put). Do not tune CTA v1 after its rejection. Do not skip [next-priority-evaluation.md](next-priority-evaluation.md) when >1 candidate is live.
+No research line is currently active — Fed put (Cycle 6) closed across all three designs; see [research-program.md](research-program.md) for the full chaptered state. Do not tune CTA v1 after its rejection. Do not skip [next-priority-evaluation.md](next-priority-evaluation.md) when >1 candidate is live.
 
 ## Non-negotiable state
 

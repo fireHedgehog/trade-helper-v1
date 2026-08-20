@@ -48,16 +48,16 @@ needing extraordinary (Holm-corrected, placebo-controlled,
 adversarially-reviewed) evidence, exactly as built. Nothing here weakens
 that.
 
-This ADR opens a **second, parallel track** — call it Chapter 3 of the
+This ADR opens a **second, parallel track** — call it Chapter 4 of the
 research program — for signals that have real, disclosed, but *modest and
 uncertain* expected value: not proven, not rejected, genuinely ambiguous.
 Its job is not to resolve that ambiguity through more statistics. Its job
 is to make acting on that ambiguity **safe** through sizing and
 diversification instead.
 
-## Eligibility (the Chapter 3 inclusion bar)
+## Eligibility (the Chapter 4 inclusion bar)
 
-A candidate is Chapter-3-eligible if, and only if, all of the following
+A candidate is Chapter-4-eligible if, and only if, all of the following
 are true and disclosed in its own operationalization record (same fields
 as [hypothesis-engineering.md](../hypothesis-engineering.md) — claim,
 mechanism, falsifier, information set — this is not a lighter-weight
@@ -76,24 +76,34 @@ documentation standard, only a lighter-weight *statistical* one):
    against every other signal already accepted into the same ensemble.
    Redundant signals do not expand effective breadth and must be disclosed
    as redundant, not silently included as if independent.
-4. **No claim of statistical significance.** A Chapter-3 candidate that
-   *does* clear Stage 9A's full bar is not a Chapter-3 candidate — it
+4. **No claim of statistical significance.** A Chapter-4 candidate that
+   *does* clear Stage 9A's full bar is not a Chapter-4 candidate — it
    graduates to Chapter 1/2's stronger claim instead. This track is only
    for signals that explicitly do not, and are not claimed to, clear that
    bar.
+5. **A disclosed regime-concentration check, not just a diagnostic.**
+   Clause 2's positive point estimate must be reported alongside what
+   fraction of it traces to any single year or episode (the same
+   calculation CTA v2's own closed result already discloses). A point
+   estimate concentrated in one regime is not automatically disqualified —
+   but sizing it as if it were a diversified edge, without first deciding
+   explicitly whether "this regime recurs" is itself part of the bet being
+   taken, is exactly the kind of undocumented decision this ADR exists to
+   prevent. That decision must be written down in the candidate's own
+   eligibility record, not left implicit.
 
 ## Loss-based Quantity Determination (sizing)
 
 Reuses [ADR 0004](0004-portfolio-risk-contract.md)'s existing entry-capacity
 formula as the base, unchanged: `q_base = floor(min(0.005E / d, 0.10E / P))`
 — risk `0.5%` of equity against the stop distance `d`, capped at `10%` of
-equity notional. That formula is already loss-based sizing; Chapter 3 does
+equity notional. That formula is already loss-based sizing; Chapter 4 does
 not replace it.
 
-What Chapter 3 adds: every position sized through this track is scaled by
+What Chapter 4 adds: every position sized through this track is scaled by
 an explicit, disclosed **confidence multiplier** derived from the
 signal's own reported uncertainty band (eligibility clause 2 above) —
-smaller for a wider/weaker band, capped at `1.0` (a Chapter-3 signal may
+smaller for a wider/weaker band, capped at `1.0` (a Chapter-4 signal may
 never be sized as large as a fully-validated one, by construction, since it
 has not cleared that bar). The exact scaling function (e.g., a
 fractional-Kelly-style ratio of the interval's lower bound to the point
@@ -107,7 +117,7 @@ specific number yet.
   existing policy, applied at the whole-ensemble level, unchanged.
 - Sector/cluster exposure caps (`25%`/`30%` of equity) — same source,
   unchanged.
-- **New**: a minimum-breadth floor — a Chapter-3 ensemble may not deploy
+- **New**: a minimum-breadth floor — a Chapter-4 ensemble may not deploy
   with fewer than some minimum number of measurably-orthogonal signals
   (exact number a required decision before implementation), since the
   entire safety argument for accepting individually-unconfirmed signals
@@ -115,9 +125,9 @@ specific number yet.
 
 ## Live attrition rule
 
-Backtests cannot fully resolve the ambiguity Chapter 3 signals are
+Backtests cannot fully resolve the ambiguity Chapter 4 signals are
 explicitly allowed to carry. What resolves it instead is live tracking: a
-Chapter-3 signal's realized paper-trading performance must be monitored on
+Chapter-4 signal's realized paper-trading performance must be monitored on
 a fixed, preregistered cadence against its own backtested expectation, and
 removed from the ensemble if it underperforms a preregistered threshold for
 a preregistered duration. Both the threshold and duration must be fixed
@@ -128,11 +138,11 @@ end at the acceptance decision.
 
 ## Out of scope, unchanged
 
-This ADR does not authorize live or broker-connected trading. Chapter 3's
+This ADR does not authorize live or broker-connected trading. Chapter 4's
 terminal state is the same one [identity.md](../identity.md)'s existing
 epistemic ladder already names for a fully-validated candidate: bounded
 paper trading. `identity.md`'s statement that "passing grants observation,
-never profit" applies to Chapter 3 exactly as it applies to Chapter 1/2 —
+never profit" applies to Chapter 4 exactly as it applies to Chapter 1/2 —
 the difference this ADR introduces is *what bar a signal must clear to
 reach paper-traded observation*, not what happens after it gets there.
 
