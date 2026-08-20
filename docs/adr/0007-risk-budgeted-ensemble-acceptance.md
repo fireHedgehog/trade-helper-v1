@@ -1,9 +1,15 @@
 # ADR 0007: Risk-budgeted ensemble acceptance and Loss-based Quantity Determination
 
 Status: **accepted**, `2026-08-20`. Confidence-multiplier sizing is built
-and has scored three real candidates (CTA v2: not eligible; Wave Pull
-`TLT`: eligible; Calendar Day-of-Week: `6/12` eligible) — see [the research
-program](../research-program.md) Chapter 4. Acceptance does not mean
+and has scored three real candidates, none with a settled positive read as
+of `0.71.0`: CTA v2 not eligible; Wave Pull `TLT` initially scored eligible,
+since walked back — a symmetric 12-asset rescore (`2/11`) proved not
+distinguishable from the calibrated chance rate once selection bias
+(winner's curse) was corrected for; Calendar Day-of-Week's `6/12` initially
+looked eligible, since directly tested with a correlation-aware joint null
+and found not distinguishable from chance (`p≈0.13`–`0.14`) — see [the
+research program](../research-program.md) Chapter 4 §2b/§4 for the full
+corrected record. Acceptance does not mean
 finished: the ensemble-construction engine, the minimum-breadth floor, and
 the live attrition rule remain named, required, unimplemented decisions
 (see Consequences). Acceptance means the *design* — a second, parallel

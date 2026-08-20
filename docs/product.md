@@ -67,7 +67,7 @@ Navigation reads persisted results and must not trigger network work. Users expl
 
 ## Out of scope
 
-- Brokerage connectivity, automatic orders, leverage, short selling, options, or live risk controls.
+- Live brokerage connectivity, real-money execution, automatic orders, leverage, short selling, options, or live risk controls. (Amended by [ADR 0008](adr/0008-bounded-paper-trading.md), status `proposed`: a sandboxed *paper* connection to a broker's own paper-trading endpoint, gated by ADR 0008's approval design and carrying no real capital, is what that ADR authorizes the design of — live connectivity remains out of scope, unchanged.)
 - Claims of profitability, suitability, or production readiness.
 - Cron refresh before the visible manual workflow is reliable.
 - Cloud deployment before research and product gates pass.
@@ -75,4 +75,4 @@ Navigation reads persisted results and must not trigger network work. Users expl
 
 ## Release gates
 
-A local staging release requires deterministic tests, explicit loading/error/empty/stale states, durable progress, readable business language, responsive layouts, and no hidden work on page load. Paper trading requires a separate point-in-time data, operational risk, reconciliation, and approval design; it is not an implied next step.
+A local staging release requires deterministic tests, explicit loading/error/empty/stale states, durable progress, readable business language, responsive layouts, and no hidden work on page load. Paper trading requires a separate point-in-time data, operational risk, reconciliation, and approval design; it is not an implied next step. That design is drafted in [ADR 0008](adr/0008-bounded-paper-trading.md) (status `proposed`) — drafting the design is not itself the implied next step either; it still requires review/acceptance, then implementation, then a real candidate reaching `eligible for operational validation` before anything paper-trades.

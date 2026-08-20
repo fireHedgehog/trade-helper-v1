@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: `0.55.0`; Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and nine completed protocols are each closed `not_material_or_not_consistent` for nine different reasons: SMA Cross v1 (Cycle 2) on a confound, RSI oversold reversal (Cycle 3) on a power limitation, TA Breakout v1 on weak event/placebo separation by construction, Wave Pull v1 (Cycle 4) on a clean but null result, ETF-12 cross-sectional rotation v1 on a clean, decisive null with no caveat, Calendar Turn-of-Month v1 (Cycle 5) on a well-powered null in the first non-technical-pattern mechanism tested, Calendar Day-of-Week v1 (Cycle 5) on a well-powered null with a directionally consistent but statistically unconfirmed tilt, Overnight Gap Continuation v1 (Cycle 5) on the session's most decisive negative — every asset opposite-signed from the hypothesis — after a new joint-paired resampling design passed independent adversarial pre-lock code review, and CTA v2 (Cycle 2's Candidate C, picked up 2026-08-20) on materiality clearing but significance and a paired placebo test both failing, with the positive point estimate materially dependent on 2008. The cheap tier of the pending checklist is exhausted, one Tier 2 item is closed, and CTA v2 — the properly-powered pooled retest of CTA v1's own founding thesis — is closed.
+The roadmap is gate-based. Completion means evidence exists, not that code was written. Current checkpoint: see [docs/README.md](README.md) (this file is not the version source of truth and is not bumped every release). As of `0.55.0`: Stage 8 is closed, Stage 9A Cycle 1 is closed `not_evaluable`, and nine completed protocols are each closed `not_material_or_not_consistent` for nine different reasons: SMA Cross v1 (Cycle 2) on a confound, RSI oversold reversal (Cycle 3) on a power limitation, TA Breakout v1 on weak event/placebo separation by construction, Wave Pull v1 (Cycle 4) on a clean but null result, ETF-12 cross-sectional rotation v1 on a clean, decisive null with no caveat, Calendar Turn-of-Month v1 (Cycle 5) on a well-powered null in the first non-technical-pattern mechanism tested, Calendar Day-of-Week v1 (Cycle 5) on a well-powered null with a directionally consistent but statistically unconfirmed tilt, Overnight Gap Continuation v1 (Cycle 5) on the session's most decisive negative — every asset opposite-signed from the hypothesis — after a new joint-paired resampling design passed independent adversarial pre-lock code review, and CTA v2 (Cycle 2's Candidate C, picked up 2026-08-20) on materiality clearing but significance and a paired placebo test both failing, with the positive point estimate materially dependent on 2008. The cheap tier of the pending checklist is exhausted, one Tier 2 item is closed, and CTA v2 — the properly-powered pooled retest of CTA v1's own founding thesis — is closed.
 
 ## Completed foundation
 
@@ -291,6 +291,28 @@ unscheduled.
 Only after 9A, implement the finite experiment. Apply the preregistered suitable benchmark, estimand, universe, search budget, multiplicity control, validation topology, cost/risk stress, stability tests, and untouched confirmation data. Passing means eligible for the next validation stage, not safe or approved for trading. See [research-backlog.md](research-backlog.md).
 
 This stage is deliberately business/research work, not parameter tuning. UI placeholders do not authorize model development.
+
+### 9C — Bounded paper trading: design drafted, nothing eligible yet
+
+[ADR 0008](adr/0008-bounded-paper-trading.md) (2026-08-20, status `proposed`)
+answers what Stage 9B's own gate names but does not itself define — passing
+9B means "eligible for the next validation stage," and this is that next
+stage's design: an approval gate sourced from `research_catalog.py` (now
+reachable via three paths — the strict ladder, ADR 0007's Chapter 4
+ladder, or Track B, a lighter entry for disclosed discretionary/common-
+sense patterns that relaxes the statistical-proof bar without relaxing
+sizing or its own locked kill rule), a point-in-time data contract
+independent of the backtesting `bars` table, reuse of ADR 0004's
+sizing/drawdown formulas plus ADR 0007's confidence multiplier where
+applicable, and a daily reconciliation check against a broker's own
+paper-account state (build-vs-buy resolved in favour of Alpaca's free
+paper trading API over a custom fill simulator). See [the research
+program](research-program.md) Chapter 5. Drafting this design is not
+itself progress toward paper trading — the ADR remains `proposed` until
+explicitly reviewed and accepted, implementation is a separate step after
+that, and as of this draft zero strategies or candidates hold `eligible
+for operational validation` under any of the three paths, so nothing is
+currently positioned to use what this ADR defines even once built.
 
 ## Stage 10: Unattended data operation — parked
 
