@@ -1,0 +1,8 @@
+{
+  "data_sha256": "64d4b8883905c47869dc73dbe9508937e1a48dd2011ae8a0be3809d0b509fe49",
+  "decision": "not_evaluable",
+  "observed_mean_statistic": -2.351945145813484,
+  "p_value": 0.989002199560088,
+  "resamples": 5000,
+  "spec_sha256": "61eb422ef52275bb0947c8fe932f742e205c1aaa57fe665713734c6d9a06623f"
+}

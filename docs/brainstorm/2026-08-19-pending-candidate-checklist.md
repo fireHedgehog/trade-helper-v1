@@ -200,18 +200,18 @@ by itself.
   vintage ingestion, release-datetime alignment, a preregistered hypothesis
   — all before scoring, per ADR 0006 clauses 2–9. This is "new data" but
   free new data; the cost is engineering + governance discipline, not money.
-- [ ] **Fed put: yield-stress precursor to Fed balance-sheet expansion** —
+- [x] **Fed put: yield-stress precursor to Fed balance-sheet expansion** —
   see [memo](2026-08-19-fed-put-long-end-reversal.md). Reframed
-  (`0.63.1`, user-directed): tests whether long-end yield stress
+  (`0.63.1`, user-directed): tested whether long-end yield stress
   *precedes* QE, not whether QE causes yield reversal (the latter is
-  common knowledge, not a real edge). Treasury buybacks dropped entirely
-  — different institution/mandate than the Fed. **Cycle 6 (`0.62.0`),
-  sole eligible candidate, 14/16 — not yet preregistered.** `TREAST`/
-  `TREAS10Y` live via `macro_pit`. [Thesis Track](../thesis-track-small-n.md)
-  (small-*n* regime-episode design, reversed direction: precursor →
-  event) now exists, not the block-bootstrap method used for every
-  candidate scored so far. Explicitly excludes any claim about a specific
-  Fed official's intentions — narrative, not quantifiable.
+  common knowledge, not a real edge). Cycle 6, 14/16. Locked and executed
+  (`0.64.0`) via [Thesis Track](../thesis-track-small-n.md) (`app.thesis_track`,
+  placebo-in-time randomization, n=4 QE episodes). Closed
+  [`not_evaluable`](../research-results/fed-put-yield-stress-precursor-v1.md),
+  `p=0.989` — and decisively, not merely null: `4`/`4` real episodes were
+  preceded by both `2Y` and `10Y` falling together (flight-to-safety), the
+  opposite of the hypothesized "10Y high, 2Y contained" shape. QE
+  historically follows a broad yield collapse, not a long-end spike.
 
 ## Tier 4 — orthogonal, multidimensional, real cost
 

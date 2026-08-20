@@ -2,6 +2,16 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.65.0
+
+Locked, executed, and closed Fed put: yield-stress precursor v1 --
+Thesis Track's first real use. No trade, no signal, no Stage 9B
+authorization.
+
+- Locked [docs/research-protocols/fed-put-yield-stress-precursor-v1.md](docs/research-protocols/fed-put-yield-stress-precursor-v1.md): `score(t) = z_10Y(t) - abs(z_2Y(t))` (756-session trailing z-scores), 4 episodes (QE1/2/3, COVID QE) dated from the Fed's own balance-sheet-policy timeline, verified live rather than from memory -- never from the yield series itself. Real, disclosed PIT finding along the way: `DFII10`'s ALFRED "revisions" are re-publication timestamps, not value changes, and early `release_datetime`s reflect FRED backfill timing, not market-known timing -- for same-day-published Treasury yields, `fred.py`'s final-revised series with the trading date itself is the better-justified PIT convention here, not `macro_pit`'s ALFRED mechanism.
+- Result: `not_evaluable`, `p=0.989` per the pre-committed reading rule. Disclosed non-gating diagnostic, same weight as [Overnight Gap Continuation v1](docs/research-results/overnight-gap-continuation-v1.md)'s: `4`/`4` real QE episodes decisively opposite-signed, not merely null -- every real launch was preceded by both `2Y` and `10Y` falling sharply together (flight-to-safety), not "`10Y` high, `2Y` contained." QE has historically followed a broad yield collapse, not a long-end-specific spike; the motivating narrative has no precedent among the episodes tested. See [result](docs/research-results/fed-put-yield-stress-precursor-v1.md).
+- Closes Fed put's active-research status. A follow-up needs a new, independently-justified mechanism, not a retry of this one.
+
 ## 0.64.0
 
 Added `app.thesis_track`: the placebo-in-time randomization engine
