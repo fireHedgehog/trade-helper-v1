@@ -1,0 +1,274 @@
+{
+  "icsa_range": [
+    "1967-01-07",
+    "2026-08-08"
+  ],
+  "unrate_range": [
+    "1948-01-01",
+    "2026-07-01"
+  ],
+  "icsa_inflection_count": 42,
+  "sahm_trigger_count": 15,
+  "pairs": [
+    {
+      "icsa_inflection": "1969-07-05",
+      "sahm_trigger": "1970-03-01",
+      "lead_weeks": 34.1,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "1969-08-30",
+      "sahm_trigger": "1970-03-01",
+      "lead_weeks": 26.1,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "1971-07-24",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "1972-07-01",
+      "sahm_trigger": "1974-07-01",
+      "lead_weeks": 104.3,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "1973-11-10",
+      "sahm_trigger": "1974-07-01",
+      "lead_weeks": 33.3,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "1977-01-22",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "1979-01-06",
+      "sahm_trigger": "1980-02-01",
+      "lead_weeks": 55.9,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "1979-03-17",
+      "sahm_trigger": "1980-02-01",
+      "lead_weeks": 45.9,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "1981-02-14",
+      "sahm_trigger": "1981-11-01",
+      "lead_weeks": 37.1,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "1981-10-03",
+      "sahm_trigger": "1981-11-01",
+      "lead_weeks": 4.1,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "1984-10-20",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "1986-08-09",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "1989-03-18",
+      "sahm_trigger": "1990-10-01",
+      "lead_weeks": 80.3,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "1989-05-13",
+      "sahm_trigger": "1990-10-01",
+      "lead_weeks": 72.3,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "1992-07-25",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "1994-01-22",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "1994-05-07",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "1995-03-18",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "1998-06-27",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "1998-10-24",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "1998-12-26",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "2000-08-12",
+      "sahm_trigger": "2001-06-01",
+      "lead_weeks": 41.9,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "2000-10-21",
+      "sahm_trigger": "2001-06-01",
+      "lead_weeks": 31.9,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "2003-02-15",
+      "sahm_trigger": "2003-07-01",
+      "lead_weeks": 19.4,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "2003-04-26",
+      "sahm_trigger": "2003-07-01",
+      "lead_weeks": 9.4,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "2005-09-10",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "2006-11-18",
+      "sahm_trigger": "2008-02-01",
+      "lead_weeks": 62.9,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "2006-12-30",
+      "sahm_trigger": "2008-02-01",
+      "lead_weeks": 56.9,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "2007-08-18",
+      "sahm_trigger": "2008-02-01",
+      "lead_weeks": 23.9,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "2007-10-13",
+      "sahm_trigger": "2008-02-01",
+      "lead_weeks": 15.9,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "2017-09-09",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "2019-06-15",
+      "sahm_trigger": "2020-04-01",
+      "lead_weeks": 41.6,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "2019-08-17",
+      "sahm_trigger": "2020-04-01",
+      "lead_weeks": 32.6,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "2019-12-07",
+      "sahm_trigger": "2020-04-01",
+      "lead_weeks": 16.6,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "2020-03-14",
+      "sahm_trigger": "2020-04-01",
+      "lead_weeks": 2.6,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "2023-03-11",
+      "sahm_trigger": "2024-08-01",
+      "lead_weeks": 72.7,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "2024-01-27",
+      "sahm_trigger": "2024-08-01",
+      "lead_weeks": 26.7,
+      "miss": false
+    },
+    {
+      "icsa_inflection": "2024-09-14",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "2024-11-23",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "2025-02-15",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "2025-08-30",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    },
+    {
+      "icsa_inflection": "2025-11-08",
+      "sahm_trigger": null,
+      "lead_weeks": null,
+      "miss": true
+    }
+  ],
+  "lead_weeks_summary": {
+    "matched_count": 24,
+    "miss_count": 18,
+    "median_lead_weeks": 34.1,
+    "min_lead_weeks": 2.6,
+    "max_lead_weeks": 104.3,
+    "negative_or_zero_lead_count": 0
+  }
+}
