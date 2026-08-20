@@ -111,13 +111,17 @@ does not provide.
 | § | Candidate | Result |
 |---|---|---|
 | 1 | [CTA v2, primary variant](../../backend/app/score_cta_v2_chapter4.py) | **Not eligible.** `68%` confidence interval on the daily excess return: `[-0.0035%, +0.0204%]`, annualized lower bound `-0.88%`. Even at Chapter 4's deliberately loosened one-sigma bar, the interval still spans zero — confidence multiplier `0.0`, no position sized. Consistent with CTA v2's own raw `p=0.231` under the null test (not a contradiction, a cross-check: a raw p that far from significant implies a wide-enough interval to plausibly include zero at 68% coverage too). This is Chapter 4 working as designed, not failing — being the strongest candidate in Chapter 5's triage does not guarantee clearing even a lower bar, and checking that honestly was the entire point of building this before opening a new falsification thread. |
+| 2 | [Wave Pull, `TLT`](../../backend/app/score_wave_pull_tlt_chapter4.py) | **Eligible.** `68%` confidence interval on the 10-session forward return, case-resampled across the `20` qualifying events (ADR 0003's own convention — a small discrete event set, not a continuous series, so resampled directly rather than via block-resampled price-path reconstruction): `[+1.22%, +2.40%]`. The lower bound stays positive despite the thin sample. Confidence multiplier `0.674` — a real, if reduced, position size under Loss-based Quantity Determination. First candidate to actually clear Chapter 4, confirming the framework discriminates on real statistical strength (Wave Pull's raw `p=0.032` vs. CTA v2's `p=0.231`) rather than being either a blanket pass or a blanket reject. Still not deployable alone — ADR 0007's minimum-breadth floor (not yet decided) requires an ensemble, and one eligible signal is not one. |
 
 Ensemble engine and minimum-breadth floor remain required decisions, not
-yet built — moot for now since the first scored candidate isn't eligible
-to enter an ensemble. Wave Pull's `TLT` (raw `p=0.032`, a materially
-stronger raw signal than CTA v2's) is the natural next section to score,
-since its narrower implied uncertainty makes a positive lower bound
-plausible where CTA v2's did not hold.
+yet built — with one eligible signal now identified, the minimum-breadth
+floor's exact number has gone from an abstract parameter to something that
+will directly gate whether Wave Pull's `TLT` can actually be sized, once
+more Chapter 4 candidates are scored. Calendar Day-of-Week's directional
+tilt is the next natural section — a different statistical shape again
+(breadth across `9`/`12` assets, no single asset individually significant),
+worth checking whether Chapter 4's per-signal framing even applies cleanly
+to it or needs its own adaptation.
 
 ## Chapter 5 — Discussion: what the ten closed nulls might still be worth
 

@@ -801,6 +801,22 @@ def _mean_forward_return(
     return float(forward.mean()), len(usable)
 
 
+def _forward_returns_per_event(
+    log_returns_padded: np.ndarray, event_indices: np.ndarray, horizon: int
+) -> np.ndarray:
+    """Per-event cumulative forward log return over `horizon` sessions after
+    each event -- the same usable-event filter `_mean_forward_return` uses,
+    returning the individual per-event values instead of their mean. Used by
+    Chapter 4's case-resampling confidence interval (ADR 0007), which needs
+    the actual per-event observations, not just their aggregate."""
+    n = len(log_returns_padded)
+    cumsum = np.concatenate([[0.0], np.cumsum(log_returns_padded)])
+    usable = event_indices[event_indices + horizon < n]
+    if len(usable) == 0:
+        return np.array([])
+    return cumsum[usable + horizon + 1] - cumsum[usable + 1]
+
+
 def rsi_event_forward_return(
     log_returns_padded: np.ndarray,
     *,
@@ -1166,6 +1182,33 @@ def wave_pull_bootstrap(
             at_least += 1
     result["p_event"] = (at_least + 1) / (resamples + 1)
     return result
+
+
+def wave_pull_event_forward_returns_array(
+    log_returns_padded: np.ndarray,
+    *,
+    warm_up: int = WAVE_PULL_WARM_UP_SESSIONS,
+    cooldown: int = WAVE_PULL_EVENT_COOLDOWN,
+    horizon: int = WAVE_PULL_FORWARD_HORIZON,
+) -> np.ndarray:
+    """Per-event forward returns for the Wave Pull event -- same event
+    identification as `wave_pull_event_forward_return`, returning the
+    individual values instead of their mean. For Chapter 4 case-resampling
+    (ADR 0007): unlike CTA v2's continuous daily excess-return series, Wave
+    Pull's statistic is the mean of a small set of discrete, cooldown-spaced
+    event occurrences, so its confidence interval is built by resampling
+    those individual event-level observations directly (ADR 0003's own
+    post-signal-inference convention), not by block-resampling and
+    recomputing events on a reconstructed price path -- that reconstruction
+    is what makes `wave_pull_bootstrap`'s existing loop a null test, not a
+    sampling-distribution estimate, and reusing it directly for a confidence
+    interval would conflate the two."""
+    closes_proxy = np.exp(np.cumsum(log_returns_padded))
+    event, _ = wave_pull_events(closes_proxy)
+    raw_events = np.where(event)[0]
+    raw_events = raw_events[raw_events >= warm_up]
+    events = _apply_cooldown(raw_events, cooldown)
+    return _forward_returns_per_event(log_returns_padded, events, horizon)
 
 
 # --- ETF-12 cross-sectional rotation v1: rank continuation vs. joint-panel null ---
@@ -2108,3 +2151,45 @@ def chapter4_confidence_multiplier(observed_mean: float, lower_bound: float) -> 
     if observed_mean <= 0:
         return 0.0
     return float(np.clip(lower_bound / observed_mean, 0.0, 1.0))
+
+
+def case_resample_confidence_interval(
+    values: list[float] | np.ndarray,
+    *,
+    resamples: int = CHAPTER4_RESAMPLES,
+    seed: int = CHAPTER4_SEED,
+    lower_percentile: float = CHAPTER4_LOWER_PERCENTILE,
+    upper_percentile: float = CHAPTER4_UPPER_PERCENTILE,
+) -> dict:
+    """Ordinary (non-block) case-resampling bootstrap confidence interval on
+    the MEAN of `values` -- for a small set of discrete, cooldown-spaced
+    event-level observations, not a continuous, serially-correlated daily
+    series (`block_bootstrap_confidence_interval` is for that case instead).
+    Resamples the individual observations with replacement, matching ADR
+    0003's own post-signal-inference convention, rather than resampling
+    blocks of an underlying return series and recomputing events on it (that
+    reconstruction is what makes an event-recomputing bootstrap a null test,
+    not a sampling-distribution estimate)."""
+    values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values)]
+    if len(values) < 2:
+        raise ValueError("confidence interval requires at least two finite values")
+    if resamples <= 0:
+        raise ValueError("resamples must be positive")
+
+    observed = float(values.mean())
+    n = len(values)
+    rng = np.random.default_rng(seed)
+    resampled_means = np.empty(resamples)
+    for i in range(resamples):
+        draw = rng.integers(0, n, size=n)
+        resampled_means[i] = values[draw].mean()
+
+    return {
+        "observed_mean": observed,
+        "lower_bound": float(np.percentile(resampled_means, lower_percentile)),
+        "upper_bound": float(np.percentile(resampled_means, upper_percentile)),
+        "coverage_pct": upper_percentile - lower_percentile,
+        "resamples": resamples,
+        "event_count": n,
+    }

@@ -62,3 +62,43 @@ def test_confidence_multiplier_never_exceeds_one_even_if_lower_bound_exceeds_poi
     # hold regardless -- a Chapter 4 signal may never be sized as if fully
     # validated.
     assert research.chapter4_confidence_multiplier(0.02, 0.05) == pytest.approx(1.0)
+
+
+def test_case_resample_ci_brackets_a_known_positive_mean() -> None:
+    rng = np.random.default_rng(5)
+    values = rng.normal(loc=0.01, scale=0.02, size=200)
+    result = research.case_resample_confidence_interval(values, resamples=500, seed=1)
+    assert result["lower_bound"] < result["observed_mean"] < result["upper_bound"]
+    assert result["event_count"] == 200
+
+
+def test_case_resample_ci_is_wide_for_a_small_noisy_sample() -> None:
+    rng = np.random.default_rng(6)
+    small = rng.normal(loc=0.01, scale=0.03, size=15)
+    large = rng.normal(loc=0.01, scale=0.03, size=1000)
+    small_ci = research.case_resample_confidence_interval(small, resamples=500, seed=2)
+    large_ci = research.case_resample_confidence_interval(large, resamples=500, seed=2)
+    small_width = small_ci["upper_bound"] - small_ci["lower_bound"]
+    large_width = large_ci["upper_bound"] - large_ci["lower_bound"]
+    assert small_width > large_width
+
+
+def test_case_resample_ci_rejects_too_few_values() -> None:
+    with pytest.raises(ValueError, match="at least two"):
+        research.case_resample_confidence_interval([0.01])
+
+
+def test_wave_pull_event_forward_returns_array_matches_the_mean_it_feeds() -> None:
+    rng = np.random.default_rng(7)
+    log_returns = np.concatenate([[0.0], rng.normal(loc=0.0002, scale=0.01, size=999)])
+    closes = np.exp(np.cumsum(log_returns))
+    log_returns_padded = research.log_returns_from_closes(closes)
+
+    array = research.wave_pull_event_forward_returns_array(log_returns_padded)
+    observed_mean, count = research.wave_pull_event_forward_return(log_returns_padded)
+
+    if count > 0:
+        assert array.size == count
+        assert array.mean() == pytest.approx(observed_mean)
+    else:
+        assert array.size == 0

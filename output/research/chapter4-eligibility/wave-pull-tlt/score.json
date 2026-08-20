@@ -1,0 +1,26 @@
+{
+  "candidate": "wave-pull-v1",
+  "symbol": "TLT",
+  "chapter_1_3_decision": "not_material_or_not_consistent (unchanged, immutable)",
+  "chapter_1_3_raw_p": "0.032 (Holm-adjusted: 0.350, on 20 events)",
+  "confidence_interval": {
+    "event_count": 20,
+    "observed_mean_forward_return": 0.01811941081785231,
+    "lower_bound_68pct": 0.012213464345414572,
+    "upper_bound_68pct": 0.023995399008240444
+  },
+  "chapter4_confidence_multiplier": 0.674054165899321,
+  "eligible": true,
+  "eligibility_reasoning": "68% confidence interval's lower bound stays positive despite the small (20-event) sample -- some confidence, not high confidence, that the point estimate is real",
+  "illustrative_sizing_at_100k_equity": {
+    "note": "No trade authorized. Illustrates ADR 0004's entry-capacity formula scaled by the confidence multiplier, at an illustrative 2% stop distance -- not a real position.",
+    "base_risk_capital_unscaled": 500.0,
+    "confidence_scaled_risk_capital": 337.0270829496605,
+    "base_notional_cap_unscaled": 10000.0,
+    "confidence_scaled_notional_cap": 6740.54165899321
+  },
+  "disclosed_limitations": [
+    "Single candidate, not an ensemble -- ADR 0007's minimum-breadth floor is not met by one signal alone; this score characterizes eligibility only, it does not authorize deployment.",
+    "Only 20 qualifying events -- a small sample by construction (Wave Pull's own protocol disclosed this as expected, given the compound impulse-AND-breakout precondition). A case-resampling confidence interval on 20 points is inherently wide; treat this score as a first look, not a settled read."
+  ]
+}
