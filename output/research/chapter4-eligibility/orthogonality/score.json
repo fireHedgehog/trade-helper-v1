@@ -1,0 +1,213 @@
+{
+  "signals_scored": [
+    "wave_pull_TLT",
+    "dow_DBC",
+    "dow_EFA",
+    "dow_GLD",
+    "dow_IEF",
+    "dow_TLT",
+    "dow_XLF"
+  ],
+  "signal_count": 7,
+  "redundancy_threshold": 0.5,
+  "pairwise_correlations": [
+    {
+      "pair": [
+        "wave_pull_TLT",
+        "dow_DBC"
+      ],
+      "correlation": 0.07879318288049508,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "wave_pull_TLT",
+        "dow_EFA"
+      ],
+      "correlation": 0.12868395352463996,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "wave_pull_TLT",
+        "dow_GLD"
+      ],
+      "correlation": 0.008725912718785953,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "wave_pull_TLT",
+        "dow_IEF"
+      ],
+      "correlation": -0.09896594495258897,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "wave_pull_TLT",
+        "dow_TLT"
+      ],
+      "correlation": -0.1216036021442549,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "wave_pull_TLT",
+        "dow_XLF"
+      ],
+      "correlation": 0.15332778463235325,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "dow_DBC",
+        "dow_EFA"
+      ],
+      "correlation": 0.5068165271936835,
+      "redundant": true
+    },
+    {
+      "pair": [
+        "dow_DBC",
+        "dow_GLD"
+      ],
+      "correlation": 0.3436413712664178,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "dow_DBC",
+        "dow_IEF"
+      ],
+      "correlation": -0.29476528260363244,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "dow_DBC",
+        "dow_TLT"
+      ],
+      "correlation": -0.30004232016384474,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "dow_DBC",
+        "dow_XLF"
+      ],
+      "correlation": 0.4434389285087646,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "dow_EFA",
+        "dow_GLD"
+      ],
+      "correlation": 0.10966809618503123,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "dow_EFA",
+        "dow_IEF"
+      ],
+      "correlation": -0.3985818939621164,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "dow_EFA",
+        "dow_TLT"
+      ],
+      "correlation": -0.4066515923372561,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "dow_EFA",
+        "dow_XLF"
+      ],
+      "correlation": 0.8093751782189686,
+      "redundant": true
+    },
+    {
+      "pair": [
+        "dow_GLD",
+        "dow_IEF"
+      ],
+      "correlation": 0.1589444895288709,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "dow_GLD",
+        "dow_TLT"
+      ],
+      "correlation": 0.12830365535798335,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "dow_GLD",
+        "dow_XLF"
+      ],
+      "correlation": -0.010801377515959401,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "dow_IEF",
+        "dow_TLT"
+      ],
+      "correlation": 0.9170159041324584,
+      "redundant": true
+    },
+    {
+      "pair": [
+        "dow_IEF",
+        "dow_XLF"
+      ],
+      "correlation": -0.44601284781252665,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "dow_TLT",
+        "dow_XLF"
+      ],
+      "correlation": -0.4446715016345782,
+      "redundant": false
+    }
+  ],
+  "redundant_pairs": [
+    {
+      "pair": [
+        "dow_DBC",
+        "dow_EFA"
+      ],
+      "correlation": 0.5068165271936835
+    },
+    {
+      "pair": [
+        "dow_EFA",
+        "dow_XLF"
+      ],
+      "correlation": 0.8093751782189686
+    },
+    {
+      "pair": [
+        "dow_IEF",
+        "dow_TLT"
+      ],
+      "correlation": 0.9170159041324584
+    }
+  ],
+  "redundant_pair_count": 3,
+  "reading": "7 signal-slots scored eligible by Chapter 4 so far. 3 pair(s) flagged as materially redundant (|correlation| >= 0.5) -- these do not each count as independent breadth toward a future minimum-breadth floor, per ADR 0007 clause 3. This score does not itself authorize an ensemble; it is the measurement that clause 3 requires before one could be built honestly.",
+  "disclosed_limitations": [
+    "Contribution series are illustrative exposure proxies (asset return during Wave Pull's holding window; negative asset return on Monday for Day-of-Week) for correlation measurement only -- not real, costed, executable positions.",
+    "Correlation is computed pairwise over each pair's own overlapping date range, not a single shared calendar across all 7 signals -- DBC's shorter history means its pairs have less overlap than, e.g., TLT-vs-TLT-based pairs.",
+    "0.5 is a disclosed, locked rule-of-thumb threshold, not derived from this project's own data -- treat the raw correlation values as the primary evidence, the redundant/not-redundant label as one reasonable cut of it."
+  ]
+}

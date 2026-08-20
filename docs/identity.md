@@ -27,7 +27,8 @@ Implemented = running in the engine today. Contracted = mandatory reporting for 
 | `eligible for operational validation` | Confirmation passes; only then bounded paper trading — an operational test (data/state/execution), not an alpha test. |
 
 **A second, parallel ladder exists as of [ADR 0007](adr/0007-risk-budgeted-ensemble-acceptance.md)
-(status: proposed, not yet accepted) — Chapter 4 of [the research
+(status: accepted `2026-08-20`; the ensemble engine, minimum-breadth floor,
+and live attrition rule remain unbuilt) — Chapter 4 of [the research
 program](research-program.md).** It does not replace or lower this one: a
 signal that clears *this* ladder graduates here, as before. Chapter 4
 answers a different question for signals that do not — a disclosed,

@@ -1,8 +1,15 @@
 # ADR 0007: Risk-budgeted ensemble acceptance and Loss-based Quantity Determination
 
-Status: proposed. Draft for review, not yet accepted — this is a foundational
-change to what "acceptance" means, alongside the existing epistemic ladder
-in [identity.md](../identity.md), not a Stage 9A candidate itself.
+Status: **accepted**, `2026-08-20`. Confidence-multiplier sizing is built
+and has scored three real candidates (CTA v2: not eligible; Wave Pull
+`TLT`: eligible; Calendar Day-of-Week: `6/12` eligible) — see [the research
+program](../research-program.md) Chapter 4. Acceptance does not mean
+finished: the ensemble-construction engine, the minimum-breadth floor, and
+the live attrition rule remain named, required, unimplemented decisions
+(see Consequences). Acceptance means the *design* — a second, parallel
+track alongside the existing epistemic ladder in
+[identity.md](../identity.md), not a replacement for it — is settled
+enough to keep building on without revisiting its shape from scratch.
 
 ## Why a second track exists
 

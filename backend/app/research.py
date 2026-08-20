@@ -2249,3 +2249,107 @@ def two_sample_block_bootstrap_confidence_interval(
         "group_a_count": len(group_a),
         "group_b_count": len(group_b),
     }
+
+
+# --- Chapter 4 orthogonality measurement --- Implements ADR 0007 clause 3:
+# "Measured, not assumed, orthogonality -- a return-correlation check
+# against every other signal already accepted into the same ensemble.
+# Redundant signals do not expand effective breadth and must be disclosed
+# as redundant, not silently included as if independent." Contribution
+# series are illustrative exposure proxies for correlation measurement
+# only -- not a real, costed, executable position.
+
+CHAPTER4_REDUNDANCY_THRESHOLD = 0.5  # |correlation| at or above this is
+# flagged as materially redundant -- a common, disclosed rule-of-thumb for
+# factor/signal orthogonality screens, not derived from this project's own
+# data; a locked, stated choice like every other threshold this session.
+
+
+def wave_pull_daily_contribution(
+    closes: np.ndarray,
+    dates,
+    *,
+    warm_up: int = WAVE_PULL_WARM_UP_SESSIONS,
+    cooldown: int = WAVE_PULL_EVENT_COOLDOWN,
+    horizon: int = WAVE_PULL_FORWARD_HORIZON,
+) -> pd.Series:
+    """Daily strategy-return contribution for the Wave Pull event: the
+    asset's own daily return during the `horizon`-session holding window
+    following each qualifying event, zero elsewhere. For Chapter 4
+    orthogonality measurement (ADR 0007 clause 3) only -- an illustrative
+    exposure proxy, not a real, costed, executable position."""
+    log_returns_padded = log_returns_from_closes(closes)
+    closes_proxy = np.exp(np.cumsum(log_returns_padded))
+    event, _ = wave_pull_events(closes_proxy)
+    raw_events = np.where(event)[0]
+    raw_events = raw_events[raw_events >= warm_up]
+    events = _apply_cooldown(raw_events, cooldown)
+
+    n = len(closes)
+    exposure = np.zeros(n, dtype=bool)
+    for idx in events:
+        start = idx + 1
+        end = min(idx + horizon + 1, n)
+        if start < n:
+            exposure[start:end] = True
+
+    contribution = np.where(exposure, log_returns_padded, 0.0)
+    return pd.Series(contribution, index=pd.to_datetime(pd.Series(dates)).to_numpy())
+
+
+def dow_daily_contribution(
+    closes: np.ndarray, dates, *, target_weekday: int = DOW_TARGET_WEEKDAY
+) -> pd.Series:
+    """Daily strategy-return contribution for the Day-of-Week
+    underperformance edge: the NEGATIVE of the asset's own daily return on
+    the target weekday (Monday by default), zero elsewhere -- the sign
+    matches the direction Chapter 4 scoring found eligible (avoiding the
+    underperforming day), not raw buy-and-hold exposure. For Chapter 4
+    orthogonality measurement (ADR 0007 clause 3) only -- an illustrative
+    exposure proxy, not a real, costed, executable position."""
+    log_returns_padded = log_returns_from_closes(closes)
+    mask = dow_event_mask(dates, target_weekday)
+    contribution = np.where(mask, -log_returns_padded, 0.0)
+    return pd.Series(contribution, index=pd.to_datetime(pd.Series(dates)).to_numpy())
+
+
+def pairwise_signal_correlation_matrix(
+    contributions: dict[str, pd.Series],
+    *,
+    redundancy_threshold: float = CHAPTER4_REDUNDANCY_THRESHOLD,
+) -> dict:
+    """Pairwise Pearson correlation between named strategy daily-return
+    contribution series, each aligned to that PAIR's own overlapping date
+    range (different signals may live on different assets with different
+    histories). Per ADR 0007 clause 3: this is what turns "N eligible
+    signals" into a claim about real, measured breadth -- redundant pairs
+    (|correlation| >= `redundancy_threshold`) are flagged explicitly, not
+    silently counted as independent."""
+    names = list(contributions)
+    matrix: dict[str, dict[str, float | None]] = {a: {} for a in names}
+    redundant_pairs = []
+    for i, a in enumerate(names):
+        for b in names[i:]:
+            if a == b:
+                matrix[a][b] = 1.0
+                continue
+            common = contributions[a].index.intersection(contributions[b].index)
+            if len(common) < 30:
+                corr = None
+            else:
+                sa = contributions[a].loc[common].to_numpy()
+                sb = contributions[b].loc[common].to_numpy()
+                if sa.std() == 0 or sb.std() == 0:
+                    corr = 0.0
+                else:
+                    corr = float(np.corrcoef(sa, sb)[0, 1])
+            matrix[a][b] = corr
+            matrix[b][a] = corr
+            if corr is not None and abs(corr) >= redundancy_threshold:
+                redundant_pairs.append({"pair": [a, b], "correlation": corr})
+
+    return {
+        "matrix": matrix,
+        "redundancy_threshold": redundancy_threshold,
+        "redundant_pairs": redundant_pairs,
+    }

@@ -121,11 +121,35 @@ rejection (CTA v2), one clean single-asset acceptance (Wave Pull `TLT`),
 and one genuinely mixed, partial-breadth result (Calendar Day-of-Week,
 `6/12`) — three different outcomes from three different statistical
 shapes, which is itself evidence the eligibility rule is discriminating on
-real structure rather than defaulting to any one answer. The next real
-gap is no longer "do we have anything eligible" (there are now `7`
-eligible signal-slots across `2` candidates) — it is that orthogonality
-between them has never been measured, which is exactly what a minimum-
-breadth floor would need to be honest about before it means anything.
+real structure rather than defaulting to any one answer.
+
+**Orthogonality (ADR 0007 clause 3) is now measured, not assumed** —
+[`score_chapter4_orthogonality.py`](../../backend/app/score_chapter4_orthogonality.py),
+pairwise Pearson correlation of each signal's own daily return
+contribution, aligned per pair to its overlapping date range. Of the `21`
+pairs across the `7` eligible signal-slots, `3` are flagged materially
+redundant (`|correlation| ≥ 0.5`, a disclosed, locked rule-of-thumb, not
+derived from this project's own data): `dow_IEF`/`dow_TLT` (`r=0.92`, two
+treasury-duration bets moving almost identically on Mondays — the exact
+suspicion named when Calendar Day-of-Week was first scored), `dow_EFA`/
+`dow_XLF` (`r=0.81`), and `dow_DBC`/`dow_EFA` (`r=0.51`, just over the
+line). `wave_pull_TLT` is genuinely independent of all six Day-of-Week
+signals — including `dow_TLT`, the same underlying asset under a different
+mechanism (`r=-0.12`), a real, reassuring confirmation that two distinct
+mechanisms on the same instrument can be close to orthogonal rather than
+automatically redundant. Net effect: `7` nominal eligible slots is closer
+to `4`–`5` effectively independent ones once redundancy is accounted for —
+a real, disclosed correction, not a rounding error, and exactly what
+clause 3 exists to catch before any ensemble is built on an inflated
+breadth count.
+
+The remaining gap is the ensemble-construction engine and the
+minimum-breadth floor's exact number — both still named, required,
+unimplemented decisions. With real per-signal eligibility, real sizing,
+and now real measured orthogonality all in hand, that floor is no longer
+an abstract parameter to pick; it is the next and final piece standing
+between this chapter and something that could, in principle, be sized as
+an actual (paper) ensemble.
 
 ## Chapter 5 — Discussion: what the ten closed nulls might still be worth
 

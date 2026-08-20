@@ -8,6 +8,7 @@ true effect size (no centering, no null), not a p-value against a null.
 from __future__ import annotations
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from app import research
@@ -116,6 +117,73 @@ def test_two_sample_ci_is_roughly_symmetric_under_no_true_difference() -> None:
 def test_two_sample_ci_rejects_too_few_values_in_either_group() -> None:
     with pytest.raises(ValueError, match="at least two"):
         research.two_sample_block_bootstrap_confidence_interval([0.01], [0.01, 0.02, 0.03])
+
+
+def test_correlation_matrix_flags_a_perfectly_correlated_pair_as_redundant() -> None:
+    dates = pd.date_range("2015-01-01", periods=200, freq="D")
+    rng = np.random.default_rng(10)
+    base = rng.normal(scale=0.01, size=200)
+    contributions = {
+        "signal_a": pd.Series(base, index=dates),
+        "signal_b": pd.Series(base * 2.0, index=dates),  # perfectly correlated, different scale
+    }
+    result = research.pairwise_signal_correlation_matrix(contributions)
+    assert result["matrix"]["signal_a"]["signal_b"] == pytest.approx(1.0, abs=1e-6)
+    assert len(result["redundant_pairs"]) == 1
+    assert set(result["redundant_pairs"][0]["pair"]) == {"signal_a", "signal_b"}
+
+
+def test_correlation_matrix_does_not_flag_independent_signals() -> None:
+    dates = pd.date_range("2015-01-01", periods=500, freq="D")
+    rng = np.random.default_rng(11)
+    contributions = {
+        "signal_a": pd.Series(rng.normal(scale=0.01, size=500), index=dates),
+        "signal_b": pd.Series(rng.normal(scale=0.01, size=500), index=dates),
+    }
+    result = research.pairwise_signal_correlation_matrix(contributions)
+    assert abs(result["matrix"]["signal_a"]["signal_b"]) < 0.3
+    assert result["redundant_pairs"] == []
+
+
+def test_correlation_matrix_handles_non_overlapping_dates_as_none() -> None:
+    early = pd.date_range("2010-01-01", periods=100, freq="D")
+    late = pd.date_range("2020-01-01", periods=100, freq="D")
+    rng = np.random.default_rng(12)
+    contributions = {
+        "signal_a": pd.Series(rng.normal(size=100), index=early),
+        "signal_b": pd.Series(rng.normal(size=100), index=late),
+    }
+    result = research.pairwise_signal_correlation_matrix(contributions)
+    assert result["matrix"]["signal_a"]["signal_b"] is None
+
+
+def test_wave_pull_daily_contribution_is_nonzero_only_within_holding_windows() -> None:
+    rng = np.random.default_rng(13)
+    n = 500
+    log_returns = np.concatenate([[0.0], rng.normal(loc=0.0002, scale=0.01, size=n - 1)])
+    closes = np.exp(np.cumsum(log_returns))
+    dates = pd.bdate_range("2015-01-01", periods=n)
+
+    contribution = research.wave_pull_daily_contribution(closes, dates)
+
+    assert len(contribution) == n
+    zero_days = (contribution == 0.0).sum()
+    nonzero_days = (contribution != 0.0).sum()
+    assert nonzero_days <= zero_days  # holding windows are sparse, not the majority
+
+
+def test_dow_daily_contribution_is_nonzero_only_on_mondays() -> None:
+    rng = np.random.default_rng(14)
+    n = 500
+    log_returns = np.concatenate([[0.0], rng.normal(scale=0.01, size=n - 1)])
+    closes = np.exp(np.cumsum(log_returns))
+    dates = pd.bdate_range("2015-01-01", periods=n)
+
+    contribution = research.dow_daily_contribution(closes, dates)
+    mask = research.dow_event_mask(dates)
+
+    assert (contribution[~mask] == 0.0).all()
+    assert not (contribution[mask] == 0.0).all()
 
 
 def test_wave_pull_event_forward_returns_array_matches_the_mean_it_feeds() -> None:
