@@ -2,6 +2,14 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.61.1
+
+Docs-only. Two gaps found by cold-reading the checkpoint as a fresh agent
+would: cross-sectional idea library was unlinked from `docs/README.md`
+(fixed); "next-priority evaluation" (used twice this session) had no
+template (added [next-priority-evaluation.md](docs/next-priority-evaluation.md),
+indexed in the document-authority table).
+
 ## 0.61.0
 
 Proved both new engines actually run: a cross-sectional feasibility check
