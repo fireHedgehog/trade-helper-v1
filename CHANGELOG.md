@@ -2,6 +2,17 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.64.0
+
+Added `app.thesis_track`: the placebo-in-time randomization engine
+[thesis-track-small-n.md](docs/thesis-track-small-n.md) described but
+didn't implement. General-purpose -- any small-*n* episode candidate
+supplies its own per-window statistic; this handles placebo-window
+construction (excluding real episodes) and the randomization p-value.
+`trailing_zscore`/`yield_stress_score` help build Fed put's specific
+score. 8 new tests, 332 passed. No protocol locked yet, no data touched
+beyond what was already ingested.
+
 ## 0.63.2
 
 Docs-only, user-directed. Fed put reframed: claim is now "yield stress
