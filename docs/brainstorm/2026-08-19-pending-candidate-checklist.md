@@ -185,14 +185,15 @@ FRED's live series are already fetched (`0.44.0`) but are display-only,
 final-revised values — not usable as a signal input under
 [ADR 0006](../adr/0006-macro-data-contract.md) until point-in-time vintage
 data exists. FRED's own ALFRED archive provides that vintage history for
-free. **Ingestion now exists (`0.60.0`):** `app.macro_pit` implements ADR
-0006 clauses 2-4 (vintage storage, timestamp discipline, revision
-immutability) and a `value_asof` point-in-time query function — see the
-ADR's updated Consequences section. This unblocks the engineering gap, not
-the governance one: no live ingestion has been run (needs a free,
-self-registered `FRED_API_KEY` nobody has obtained yet), and every item
-below still needs its own preregistered hypothesis and Stage 9A score
-before any signal use — ingestion existing authorizes nothing by itself.
+free. **Ingestion now exists and is live-verified (`0.60.0`/`0.61.0`):**
+`app.macro_pit` implements ADR 0006 clauses 2-4 (vintage storage,
+timestamp discipline, revision immutability) and a `value_asof`
+point-in-time query function, verified against the real FRED API with
+real `PAYEMS`/`DFII10` ingestion — see the ADR's updated Consequences
+section. This unblocks the engineering gap, not the governance one: every
+item below still needs its own preregistered hypothesis and Stage 9A score
+before any signal use — ingestion existing and working authorizes nothing
+by itself.
 
 - [ ] **Any macro-conditioned strategy** — e.g. the parked [long-end yield
   shock](2026-08-19-long-end-yield-shock.md) idea. Blocked on: ALFRED
@@ -230,7 +231,13 @@ not before.
   library](2026-08-20-cross-sectional-experiment-ideas.md), this single item
   is the shared blocker behind six distinct candidate ideas, not one — the
   cost/benefit case for this line item is materially different read that
-  way than as a gate on any single factor test.
+  way than as a gate on any single factor test. **Engine feasibility
+  checked (0.61.0):** the panel-bootstrap machinery itself scales to real
+  equity breadth (`N=495`) with zero code change — see [cross-sectional
+  equity momentum feasibility
+  v1](../research-results/cross-sectional-equity-momentum-feasibility-v1.md).
+  This Tier 4 data item remains exactly as unpurchased and unblocking as
+  before; only the "would the engine even work" uncertainty is resolved.
 - [ ] **Futures continuous-contract and roll data** — unlocks a genuine
   diversified futures-trend candidate in the original Moskowitz/Ooi/Pedersen
   shape. Nothing in `fetch.py` constructs continuous contracts or rolls

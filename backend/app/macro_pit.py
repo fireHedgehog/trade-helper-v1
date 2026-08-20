@@ -10,9 +10,15 @@ input to a macro hypothesis test.
 
 Requires a free FRED_API_KEY (self-registered at
 https://fred.stlouisfed.org/docs/api/api_key.html -- this module cannot
-obtain one on its own). Export it before running:
+obtain one on its own). Either export it before running:
 
     FRED_API_KEY=... python -m app.macro_pit DFII10 T10YIE
+
+or store it once, locally, in the gitignored database (never a tracked
+file) so every future run picks it up automatically:
+
+    from app.store import set_key
+    set_key("FRED_API_KEY", "...")
 
 Endpoint and parameters verified against the FRED API's own documented
 realtime_start/realtime_end vintage-retrieval convention and the
@@ -26,50 +32,88 @@ is built and unit-tested against a mocked response, not verified against
 the real API's live shape.
 """
 import argparse
+import datetime as dt
 import os
 
 import pandas as pd
 import requests
 
-from .store import upsert_macro_vintages
+from .store import get_key, upsert_macro_vintages
 
 API_URL = "https://api.stlouisfed.org/fred/series/observations"
 ALFRED_EARLIEST = "1776-07-04"
 ALFRED_LATEST = "9999-12-31"
 MISSING_VALUE_SENTINEL = "."
+FRED_API_KEY_NAME = "FRED_API_KEY"
+VINTAGE_CAP_ERROR_MARKER = "exceeds the maximum number of vintage dates"
+NOT_YET_EXISTING_ERROR_MARKER = "does not exist in ALFRED"
 
 
 def _api_key() -> str:
-    key = os.environ.get("FRED_API_KEY", "").strip()
+    """FRED_API_KEY env var takes precedence (explicit override); otherwise
+    the locally stored key from `key_library` (never a tracked file, see
+    `store.set_key`)."""
+    key = os.environ.get(FRED_API_KEY_NAME, "").strip() or (get_key(FRED_API_KEY_NAME) or "")
     if not key:
         raise RuntimeError(
             "FRED_API_KEY is not set. Register a free key at "
-            "https://fred.stlouisfed.org/docs/api/api_key.html and export "
-            "it before running this module -- point-in-time vintages are "
-            "not available from the unauthenticated fredgraph.csv endpoint "
-            "app.fred uses for display-only series."
+            "https://fred.stlouisfed.org/docs/api/api_key.html, then either "
+            "export FRED_API_KEY or store it once via "
+            "app.store.set_key('FRED_API_KEY', '...') -- point-in-time "
+            "vintages are not available from the unauthenticated "
+            "fredgraph.csv endpoint app.fred uses for display-only series."
         )
     return key
 
 
-def fetch_all_vintages(series_id: str, *, api_key: str | None = None) -> pd.DataFrame:
-    """Every historical revision of series_id, one row per (reference_period, vintage).
+def _midpoint_date(start: str, end: str) -> str:
+    """Ordinal midpoint, clamped to <= today.
 
-    Returns columns: reference_period, value, realtime_start. Rows where the
-    reference period had no published value at that vintage (FRED's "."
-    sentinel) are dropped.
+    Live-verified constraint: FRED rejects any realtime_end beyond today's
+    date unless it is exactly the ALFRED_LATEST sentinel. A midpoint is
+    always used as an `end` boundary somewhere in the recursion (see
+    fetch_all_vintages), so it must never be allowed past today even when
+    bisecting toward the far-future ALFRED_LATEST sentinel. Clamped to two
+    days before this machine's local today, not today itself -- live-verified
+    that FRED's own server clock can disagree with a local clock by at least
+    a day (this machine said 2026-08-20, FRED said "today" was 2026-08-19),
+    plausibly a timezone offset; two days is a safe margin either direction.
+    """
+    d0, d1 = dt.date.fromisoformat(start), dt.date.fromisoformat(end)
+    mid = dt.date.fromordinal(d0.toordinal() + (d1.toordinal() - d0.toordinal()) // 2)
+    safe_today = dt.date.today() - dt.timedelta(days=2)
+    if mid > safe_today:
+        mid = safe_today
+    return mid.isoformat()
+
+
+def _fetch_vintage_page(
+    series_id: str, realtime_start: str, realtime_end: str, api_key: str
+) -> pd.DataFrame | None:
+    """One raw request. Returns None (not an empty frame) if this range
+    exceeds FRED's per-request vintage-date cap -- the caller must split
+    and retry, an empty frame is a genuine zero-observation result.
+
+    Live-verified: a range entirely before a series' first vintage is not
+    an empty `observations: []` response as the FRED docs would suggest --
+    it is its own 400 error ("The series does not exist in ALFRED...").
+    Treated as a true zero-observation result, not a failure.
     """
     response = requests.get(
         API_URL,
         params={
             "series_id": series_id,
-            "api_key": api_key or _api_key(),
+            "api_key": api_key,
             "file_type": "json",
-            "realtime_start": ALFRED_EARLIEST,
-            "realtime_end": ALFRED_LATEST,
+            "realtime_start": realtime_start,
+            "realtime_end": realtime_end,
         },
         timeout=30,
     )
+    if response.status_code == 400 and VINTAGE_CAP_ERROR_MARKER in response.text:
+        return None
+    if response.status_code == 400 and NOT_YET_EXISTING_ERROR_MARKER in response.text:
+        return pd.DataFrame(columns=["reference_period", "value", "realtime_start"])
     response.raise_for_status()
     observations = response.json().get("observations", [])
     columns = ["reference_period", "value", "realtime_start"]
@@ -79,6 +123,45 @@ def fetch_all_vintages(series_id: str, *, api_key: str | None = None) -> pd.Data
     df = df[df["value"] != MISSING_VALUE_SENTINEL].copy()
     df["value"] = df["value"].astype(float)
     return df[columns]
+
+
+def fetch_all_vintages(
+    series_id: str,
+    *,
+    api_key: str | None = None,
+    _realtime_start: str = ALFRED_EARLIEST,
+    _realtime_end: str = ALFRED_LATEST,
+) -> pd.DataFrame:
+    """Every historical revision of series_id, one row per (reference_period, vintage).
+
+    Returns columns: reference_period, value, realtime_start. Rows where the
+    reference period had no published value at that vintage (FRED's "."
+    sentinel) are dropped. High-frequency (e.g. daily) series can exceed
+    FRED's 2,000-vintage-dates-per-request cap over full history (found
+    live: DFII10 has 5,073) -- this recursively bisects the realtime_start/
+    realtime_end range on that specific error and merges the pages, so the
+    public interface never needs to know the cap exists.
+    """
+    key = api_key or _api_key()
+    page = _fetch_vintage_page(series_id, _realtime_start, _realtime_end, key)
+    if page is not None:
+        return page
+
+    mid = _midpoint_date(_realtime_start, _realtime_end)
+    if mid == _realtime_start or mid == _realtime_end:
+        raise RuntimeError(
+            f"{series_id}: vintage range {_realtime_start}..{_realtime_end} "
+            "cannot be split further but still exceeds FRED's per-request "
+            "vintage-date cap -- unexpected, investigate before retrying."
+        )
+    left = fetch_all_vintages(
+        series_id, api_key=key, _realtime_start=_realtime_start, _realtime_end=mid
+    )
+    right = fetch_all_vintages(
+        series_id, api_key=key, _realtime_start=mid, _realtime_end=_realtime_end
+    )
+    combined = pd.concat([left, right], ignore_index=True)
+    return combined.drop_duplicates(subset=["reference_period", "realtime_start", "value"])
 
 
 def to_revision_indexed(series_id: str, vintages: pd.DataFrame) -> pd.DataFrame:

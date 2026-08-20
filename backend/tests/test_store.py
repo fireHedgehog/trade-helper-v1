@@ -294,6 +294,31 @@ def test_strategy_runs_append_and_latest_read_does_not_recalculate(isolated_stor
     assert isolated_store.latest_strategy_run("SMA Cross") is None
 
 
+def test_set_key_and_get_key_round_trip(isolated_store) -> None:
+    assert isolated_store.get_key("FRED_API_KEY") is None
+    isolated_store.set_key("FRED_API_KEY", "abc123")
+    assert isolated_store.get_key("FRED_API_KEY") == "abc123"
+
+
+def test_set_key_overwrites_the_previous_value(isolated_store) -> None:
+    isolated_store.set_key("FRED_API_KEY", "old-value")
+    isolated_store.set_key("FRED_API_KEY", "new-value")
+    assert isolated_store.get_key("FRED_API_KEY") == "new-value"
+
+
+def test_set_key_rejects_empty_name_or_value(isolated_store) -> None:
+    with pytest.raises(ValueError):
+        isolated_store.set_key("", "abc123")
+    with pytest.raises(ValueError):
+        isolated_store.set_key("FRED_API_KEY", "")
+
+
+def test_list_key_names_returns_names_only_never_values(isolated_store) -> None:
+    isolated_store.set_key("FRED_API_KEY", "secret-value")
+    isolated_store.set_key("OTHER_KEY", "another-secret")
+    assert isolated_store.list_key_names() == ["FRED_API_KEY", "OTHER_KEY"]
+
+
 def _macro_vintage_row(**overrides) -> pd.DataFrame:
     row = {
         "series_id": "DFII10",

@@ -1,0 +1,14 @@
+{
+  "checks": {
+    "observed_correlation_finite": true,
+    "p_value_finite_and_in_range": true,
+    "rebalance_date_count_positive": true,
+    "resample_count_matches_spec": true
+  },
+  "data_sha256": "9085eaa5e1b1ffd45fa6b74bb41f3eaa3da8e82699964a640df40f3872c2db3e",
+  "decision": "engine_feasible",
+  "observed_correlation_reported_non_evidentially": -0.009275707923742573,
+  "p_value_reported_non_evidentially": 0.9665167416291854,
+  "rebalance_date_count": 85,
+  "spec_sha256": "482b84aef0479dff15b2ac489a82ab9cf542d9c59fe23bc82f9cca0fbc03f9b4"
+}

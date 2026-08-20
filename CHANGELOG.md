@@ -2,6 +2,18 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.61.0
+
+Proved both new engines actually run: a cross-sectional feasibility check
+at real equity scale, and a live (not mocked) macro point-in-time
+ingestion. No Stage 9A candidate, no strategy, no trade -- both are
+explicitly non-evidential infrastructure checks, disclosed as such
+throughout.
+
+- **Cross-sectional engine feasibility.** Locked and executed [cross-sectional equity momentum feasibility v1](docs/research-protocols/cross-sectional-equity-momentum-feasibility-v1.md): `etf12_rotation_bootstrap` (already asset-count-agnostic, no code change needed) scaled from ETF-12's `N=12` to `N=495` real S&P 500/Nasdaq-100/XL-sector-ETF symbols already sitting in `data/market.db`. `engine_feasible`: `2,000` resamples completed in under two minutes, well-formed correlation/p-value output. Explicitly non-confirmatory for two disclosed reasons, both stated up front in the protocol before execution: survivorship bias in today's-membership-applied-to-history universe, and a pre-lock parameter peek during a timing probe -- caught and disclosed rather than hidden, with the locked run deliberately using different, independently-motivated parameters (Jegadeesh & Titman 1993's 6-month/1-month momentum horizon) rather than what was peeked at. Result in [docs/research-results/cross-sectional-equity-momentum-feasibility-v1.md](docs/research-results/cross-sectional-equity-momentum-feasibility-v1.md).
+- **Macro engine live verification.** `app.macro_pit` (`0.60.0`) ingested real FRED data for the first time: `PAYEMS` (`13,685` vintage rows, 6 genuine revisions of the 1939-01 observation alone spanning 1961-2003) and `DFII10` (`17,776` rows). `value_asof` demonstrated returning different values for the same reference period at two different real decision dates. Found and fixed three real FRED API behaviors invisible from documentation alone: a 2,000-vintage-per-request cap on high-frequency series (`fetch_all_vintages` now recursively bisects and merges on that specific error), a same-day-or-sentinel-only `realtime_end` constraint (bisection midpoints clamped two days before local today, since FRED's server clock and this machine's disagreed by at least a day live), and a range-predates-series-existence case that is its own 400 error rather than an empty result (now handled as the zero-observation case it is). See [ADR 0006](docs/adr/0006-macro-data-contract.md)'s updated Consequences.
+- Added `key_library` table (`store.py`; `set_key`/`get_key`/`list_key_names`) so `FRED_API_KEY` (or any future provider key) persists locally in the gitignored database instead of requiring an env var every session; `macro_pit._api_key()` checks the env var first, then the stored key. 6 new tests. `309 passed`.
+
 ## 0.60.0
 
 Built the point-in-time macro data engine ADR 0006 has required since

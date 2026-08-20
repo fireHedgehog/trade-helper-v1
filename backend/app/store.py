@@ -95,6 +95,12 @@ CREATE TABLE IF NOT EXISTS daily_pipeline_state (
     updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS key_library (
+    key_name   TEXT NOT NULL PRIMARY KEY,  -- e.g. 'FRED_API_KEY'
+    value      TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS macro_vintages (
     series_id        TEXT    NOT NULL,
     reference_period  TEXT    NOT NULL,  -- YYYY-MM-DD, the period the value describes
@@ -195,6 +201,43 @@ def upsert_bars(df: pd.DataFrame, *, allow_shrink: bool = False) -> None:
                    VALUES (:symbol, :date, :open, :high, :low, :close, :volume)""",
                 group.to_dict("records"),
             )
+
+
+def set_key(key_name: str, value: str) -> None:
+    """Store or update one named credential in the local, gitignored database.
+
+    Never held in any tracked file. Extensible to any future provider key
+    (FRED_API_KEY today; any other vendor key later) by name alone -- no
+    schema change needed per key.
+    """
+    if not key_name or not key_name.strip():
+        raise ValueError("key_name must be non-empty")
+    if not value:
+        raise ValueError("value must be non-empty")
+    with connect() as conn:
+        conn.execute(
+            """INSERT INTO key_library (key_name, value, updated_at)
+               VALUES (:key_name, :value, datetime('now'))
+               ON CONFLICT(key_name) DO UPDATE SET
+                 value = excluded.value, updated_at = excluded.updated_at""",
+            {"key_name": key_name, "value": value},
+        )
+
+
+def get_key(key_name: str) -> str | None:
+    """The stored value for key_name, or None if never set."""
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT value FROM key_library WHERE key_name = ?", (key_name,)
+        ).fetchone()
+    return row[0] if row else None
+
+
+def list_key_names() -> list[str]:
+    """Names only, never values -- safe to log or display."""
+    with connect() as conn:
+        rows = conn.execute("SELECT key_name FROM key_library ORDER BY key_name").fetchall()
+    return [row[0] for row in rows]
 
 
 def upsert_macro_vintages(df: pd.DataFrame) -> None:

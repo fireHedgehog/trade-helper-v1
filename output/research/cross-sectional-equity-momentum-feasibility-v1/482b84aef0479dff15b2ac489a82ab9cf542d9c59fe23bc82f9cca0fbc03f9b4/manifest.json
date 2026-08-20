@@ -1,0 +1,12 @@
+{
+  "actual_costs_or_execution_accessed": false,
+  "common_date_count": 1913,
+  "common_date_end": "2026-08-14",
+  "common_date_start": "2019-01-02",
+  "data_sha256": "9085eaa5e1b1ffd45fa6b74bb41f3eaa3da8e82699964a640df40f3872c2db3e",
+  "evidential_status": "non-evidential -- engine feasibility check only, see protocol section 1",
+  "experiment_id": "cross-sectional-equity-momentum-feasibility-v1",
+  "no_trade": true,
+  "spec_sha256": "482b84aef0479dff15b2ac489a82ab9cf542d9c59fe23bc82f9cca0fbc03f9b4",
+  "universe_size": 495
+}
