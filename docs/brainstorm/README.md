@@ -16,8 +16,9 @@ Template: `YYYY-MM-DD-topic.md`, first line:
 | 2026-08-19 | Strategy taxonomy, benchmark questions, research tracks | [2026-08-19-strategy-taxonomy-benchmark-research-tracks.md](2026-08-19-strategy-taxonomy-benchmark-research-tracks.md) |
 | 2026-08-19 | Long-end yield shock and trend-entry failure | [2026-08-19-long-end-yield-shock.md](2026-08-19-long-end-yield-shock.md) |
 | 2026-08-19 | Pending candidate checklist, cheap to orthogonal | [2026-08-19-pending-candidate-checklist.md](2026-08-19-pending-candidate-checklist.md) |
-| 2026-08-19 | Fed put: purchase-conditioned long-end yield reversal | [2026-08-19-fed-put-long-end-reversal.md](2026-08-19-fed-put-long-end-reversal.md) |
+| 2026-08-19 | Fed put: yield-stress precursor — **closed 2026-08-20**, 3 designs, all `not_evaluable` | [2026-08-19-fed-put-long-end-reversal.md](2026-08-19-fed-put-long-end-reversal.md) |
 | 2026-08-20 | Ensemble/factor vocabulary and open questions | [2026-08-20-ensemble-factor-vocabulary.md](2026-08-20-ensemble-factor-vocabulary.md) |
 | 2026-08-20 | Cross-sectional experiment idea library | [2026-08-20-cross-sectional-experiment-ideas.md](2026-08-20-cross-sectional-experiment-ideas.md) |
 | 2026-08-20 | Macro reaction-function narrative library (beyond "Fed put") | [2026-08-20-macro-reaction-function-narrative-library.md](2026-08-20-macro-reaction-function-narrative-library.md) |
 | 2026-08-20 | Policy exposure / industrial-policy factor | [2026-08-20-policy-exposure-industrial-factor.md](2026-08-20-policy-exposure-industrial-factor.md) |
+| 2026-08-20 | Trading folklore falsification list | [2026-08-20-trading-folklore-falsification-list.md](2026-08-20-trading-folklore-falsification-list.md) |

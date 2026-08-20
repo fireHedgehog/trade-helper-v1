@@ -53,18 +53,18 @@ The Philly Fed Survey of Professional Forecasters is a free but coarse
 (quarterly) substitute; not resolved here, flagged for whoever formalizes
 the first surprise-based candidate.
 
-## The shared blocker, same pattern as last time
+## The shared blocker — closed 2026-08-20, engineering only
 
-Every row in the table above needs the same thing: [ADR 0006](../adr/0006-macro-data-contract.md)
-clauses 2-4 (ALFRED point-in-time vintage ingestion, release-timestamp
-alignment) don't exist in this codebase yet. That is the second time this
-session an idea library converges on one shared engineering gate rather
-than N separate ones (the [cross-sectional
-library](2026-08-20-cross-sectional-experiment-ideas.md)'s Tier-4 point
-being the first). Worth naming as a repeating shape: **the free/cheap gate
-(ALFRED ingestion) unlocks a whole macro-narrative cluster at once** — Fed
-put, yield-shock, and every row above — which is a different, higher-
-leverage cost/benefit case than scoring Fed put alone implied.
+[ADR 0006](../adr/0006-macro-data-contract.md) clauses 2-4 (ALFRED
+point-in-time vintage ingestion) are now implemented and live-verified
+(`app.macro_pit`, `0.60.0`/`0.61.0`) — the engineering gap every row here
+shared is closed. This authorizes none of them: each still needs its own
+$H_0$/$H_1$ pair, hypothesis-engineering record, and Stage 9A score
+before any signal use. [Fed put](2026-08-19-fed-put-long-end-reversal.md)
+(a related but distinct SOMA-holdings-precursor claim, not one of the 7
+rows above) has since run through this path 3 times and closed
+`not_evaluable` — real precedent for the discipline, not a result about
+any of these 7 variables specifically.
 
 ## Not scored, not authorized
 

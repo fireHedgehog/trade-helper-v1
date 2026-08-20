@@ -1,63 +1,45 @@
 # Fed put: yield-stress precursor to Fed balance-sheet expansion
 
 > Brainstorm · non-evidential · loaded only on explicit request · no acceptance weight.
-> Distinct from [long-end-yield-shock.md](2026-08-19-long-end-yield-shock.md) —
-> that memo is about yield shocks breaking equity trend entries. Reframed
-> 2026-08-20 (user-directed): the original claim (Fed support → yield
-> reversal) is common knowledge already priced in, not a real edge. The
-> reframed claim is the precursor side — does yield stress *predict* Fed
-> action — which is forward-looking, not reactive.
+> **Closed 2026-08-20**, three independent designs, all `not_evaluable` —
+> see [research-protocols/README.md](../research-protocols/README.md) for
+> the authoritative record. This memo is kept short as a pointer, not a
+> re-derivation.
 
-**Treasury buybacks dropped from this hypothesis entirely (2026-08-20,
-user-directed).** Treasury (debt management, administration-dependent,
-swings with fiscal policy) and the Fed (SOMA/QE, monetary policy,
-independent-agency) are different institutions with different mandates —
-bundling them as one "support" signal was a real conflation in the
-original framing, not a simplification. Treasury/fiscal-policy trades
-(CHIPS Act-style industrial policy, tariffs, leader announcements) are a
-distinct, separately-motivated future line — see the [Policy Exposure /
-Industrial-Policy Factor
-note](2026-08-20-policy-exposure-industrial-factor.md) — explicitly
-idea-stage, not this candidate.
+## What was tested
 
-## Claim
+Claim: long-end yield stress (elevated vs. trailing history, short end
+contained) precedes Fed balance-sheet expansion — the precursor
+direction, not "Fed support causes yield reversal" (that direction is
+common knowledge, not a real edge). Treasury buybacks excluded entirely
+— different institution/mandate than the Fed.
 
-Long-end yield stress (10Y/30Y elevated vs. trailing history) *while the
-short end stays contained* precedes Fed balance-sheet expansion (QE
-launch), above chance.
+- **v1** (n=4, QE1/2/3, COVID QE): `not_evaluable`, `p=0.989`. 4/4
+  episodes decisively opposite-signed — every launch was preceded by
+  both `2Y` and `10Y` collapsing together (flight-to-safety), not "10Y
+  high, 2Y contained." [Result](../research-results/fed-put-yield-stress-precursor-v1.md).
+- **v2** (n=6, adds 2019 bill purchases and 2025 Reserve Management
+  Purchases — real Fed action the Fed itself calls "not QE"):
+  `not_evaluable`, `p=0.981`, 6/6 negative including the current episode.
+  [Result](../research-results/fed-put-yield-stress-precursor-v2.md).
+- **v3** (20yr z-score lookback instead of 3yr): `not_evaluable`,
+  `p=0.885`. One live finding: the current episode (2025 RMP) is the
+  only one of six that flips positive, matching the hypothesis — real,
+  but one data point, not confirmable by a 6-episode pooled test.
+  [Result](../research-results/fed-put-yield-stress-precursor-v3.md).
 
-- **Mechanism**: a steepening driven by the long end alone signals
-  term-premium/market-functioning stress the policy rate can't address
-  (front end already anchored) — distinct from recession-driven curve
-  *inversion*, a different, already-known trigger (cuts, not QE).
-- **Estimand**: was the curve-stress state present in the *K* months
-  before each real QE launch, vs. placebo windows drawn from the rest of
-  history?
-- **Episodes**: QE1 (2008), QE2 (2010), QE3 (2012), COVID QE (2020) — 4
-  real, publicly-dated launches. [Thesis Track](../thesis-track-small-n.md),
-  reversed direction: precursor → event, not event → outcome.
-- **Alternative to rule out**: curve *inversion* + recession fear → cuts,
-  not QE (2019 shape) — the trigger state must be specified precisely
-  enough to exclude this.
-- **Data**: simpler than the original framing — Treasury yields aren't
-  revision-prone like survey data (final on release), no real
-  point-in-time gap. `TREAST`/`TREAS10Y` (live via `app.macro_pit`) covers
-  the QE side.
-- **Falsifier**: precursor state absent before a real launch, or present
-  with no launch following.
+Closes this line. A follow-up needs a new, independently-justified
+mechanism, not a further parameter variant.
 
-Explicitly out: any claim about a specific Fed chair's/governor's
-intentions — discretionary narrative, not quantifiable, never enters this
-thesis.
+## Related, still open
 
-Open: 30Y or belly-of-curve? Event definition for "yield extreme" ($h,L$,
-percentile vs. rolling z-score)? Precise curve-shape definition separating
-this from the inversion/recession case? Episode boundaries: officially-dated
-QE program starts (FOMC/Desk record) only, never a changepoint detected in
-`TREAST` or the outcome series itself. Preregistered hypothesis still
-required before any signal use, same as every macro candidate.
+[Long-end yield shock](2026-08-19-long-end-yield-shock.md) (yield shocks
+breaking equity trend entries — a different estimand, untested) and the
+[macro reaction-function narrative
+library](2026-08-20-macro-reaction-function-narrative-library.md) (7
+other free-data variables, none of them this specific claim) are
+distinct from what was closed here.
 
 ## Promotion status
 
-None promoted. If this matures into a hypothesis: exploration-protocol → 9A
-→ preregistration → 9B, same as every candidate.
+Closed, not promoted to Stage 9B (evidence review did not clear).

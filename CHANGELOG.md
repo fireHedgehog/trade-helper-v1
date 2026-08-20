@@ -2,6 +2,22 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.67.1
+
+Docs-only: brainstorm cleanup pass. Added
+[trading-folklore-falsification-list.md](docs/brainstorm/2026-08-20-trading-folklore-falsification-list.md)
+(higher-high/lower-low swing structure, Fibonacci, golden/death cross,
+volume-confirms-breakout, COT positioning, short interest, gamma
+pinning, sell-in-May, PEAD, 52wk-high momentum -- idea-stage, none
+scored). Compressed [pending-candidate-checklist.md](docs/brainstorm/2026-08-19-pending-candidate-checklist.md)
+(277 -> ~90 lines: closed items became one-line pointers to
+research-protocols/README.md instead of re-narrated paragraphs) and
+[fed-put-long-end-reversal.md](docs/brainstorm/2026-08-19-fed-put-long-end-reversal.md)
+(now a closed-line pointer, not a re-derivation). Fixed a real staleness
+bug in [macro-reaction-function-narrative-library.md](docs/brainstorm/2026-08-20-macro-reaction-function-narrative-library.md):
+it still claimed the ALFRED ingestion gap was unbuilt, which `0.60.0`/
+`0.61.0` already closed.
+
 ## 0.67.0
 
 Locked, executed, closed Fed put: yield-stress precursor v3 -- amends v2
