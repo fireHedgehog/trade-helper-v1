@@ -319,6 +319,40 @@ def test_list_key_names_returns_names_only_never_values(isolated_store) -> None:
     assert isolated_store.list_key_names() == ["FRED_API_KEY", "OTHER_KEY"]
 
 
+def _buyback_row(**overrides) -> pd.DataFrame:
+    row = {
+        "operation_date": "2026-08-18",
+        "maturity_bucket": "20Y to 30Y",
+        "security_type": "Nominal Coupons",
+        "settlement_date": "2026-08-19",
+        "operation_type": "Liquidity Support",
+        "nbr_issues_accepted": 3,
+        "nbr_issues_eligible": 36,
+        "total_par_amt_offered": 19868000000.0,
+        "total_par_amt_accepted": 2000000000.0,
+    }
+    row.update(overrides)
+    return pd.DataFrame([row])
+
+
+def test_upsert_treasury_buybacks_is_idempotent(isolated_store) -> None:
+    isolated_store.upsert_treasury_buybacks(_buyback_row())
+    isolated_store.upsert_treasury_buybacks(_buyback_row())
+    assert len(isolated_store.load_treasury_buybacks()) == 1
+
+
+def test_upsert_treasury_buybacks_rejects_a_conflicting_result(isolated_store) -> None:
+    isolated_store.upsert_treasury_buybacks(_buyback_row())
+    with pytest.raises(ValueError, match="refusing to overwrite"):
+        isolated_store.upsert_treasury_buybacks(_buyback_row(total_par_amt_accepted=9_999.0))
+
+
+def test_upsert_treasury_buybacks_distinguishes_by_full_key(isolated_store) -> None:
+    isolated_store.upsert_treasury_buybacks(_buyback_row(maturity_bucket="20Y to 30Y"))
+    isolated_store.upsert_treasury_buybacks(_buyback_row(maturity_bucket="10Y to 20Y"))
+    assert len(isolated_store.load_treasury_buybacks()) == 2
+
+
 def _macro_vintage_row(**overrides) -> pd.DataFrame:
     row = {
         "series_id": "DFII10",

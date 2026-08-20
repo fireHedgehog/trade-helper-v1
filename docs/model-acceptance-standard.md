@@ -61,7 +61,7 @@ Report total return, CAGR, volatility, Sharpe, Sortino, maximum drawdown, recove
 
 ## Verification risks and method selection
 
-Stage 9B must address each risk below, but the protocol chooses methods appropriate to its estimand, sample, and selection process. A method is not mandatory merely because it is sophisticated; justify use or non-use before results.
+Stage 9B must address each risk below, but the protocol chooses methods appropriate to its estimand, sample, and selection process. A method is not mandatory merely because it is sophisticated; justify use or non-use before results. For estimands with only a handful of dependent regime episodes rather than a large quasi-independent sample, see [Thesis Track](thesis-track-small-n.md) instead of the block-bootstrap default below.
 
 ### Trial-count deflation
 

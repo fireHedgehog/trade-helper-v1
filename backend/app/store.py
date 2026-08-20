@@ -101,6 +101,19 @@ CREATE TABLE IF NOT EXISTS key_library (
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS treasury_buybacks (
+    operation_date        TEXT NOT NULL,
+    maturity_bucket       TEXT NOT NULL DEFAULT '',
+    security_type         TEXT NOT NULL DEFAULT '',
+    settlement_date       TEXT,
+    operation_type        TEXT,
+    nbr_issues_accepted   INTEGER,
+    nbr_issues_eligible   INTEGER,
+    total_par_amt_offered REAL,
+    total_par_amt_accepted REAL,
+    PRIMARY KEY (operation_date, maturity_bucket, security_type)
+);
+
 CREATE TABLE IF NOT EXISTS macro_vintages (
     series_id        TEXT    NOT NULL,
     reference_period  TEXT    NOT NULL,  -- YYYY-MM-DD, the period the value describes
@@ -238,6 +251,61 @@ def list_key_names() -> list[str]:
     with connect() as conn:
         rows = conn.execute("SELECT key_name FROM key_library ORDER BY key_name").fetchall()
     return [row[0] for row in rows]
+
+
+def upsert_treasury_buybacks(df: pd.DataFrame) -> None:
+    """Store settled Treasury buyback operations, keyed (operation_date,
+    maturity_bucket, security_type). Same immutability discipline as
+    upsert_macro_vintages: a conflicting total_par_amt_accepted at an
+    already-stored key raises and rolls back the whole batch, rather than
+    silently overwriting a settled operation's result.
+    """
+    required = [
+        "operation_date", "maturity_bucket", "security_type", "settlement_date",
+        "operation_type", "nbr_issues_accepted", "nbr_issues_eligible",
+        "total_par_amt_offered", "total_par_amt_accepted",
+    ]
+    missing = set(required) - set(df.columns)
+    if missing:
+        raise ValueError(f"treasury buybacks missing columns: {', '.join(sorted(missing))}")
+    df = df[required].copy()
+    if df.empty:
+        raise ValueError("no treasury buybacks to store")
+    with connect() as conn:
+        for row in df.to_dict("records"):
+            key = (row["operation_date"], row["maturity_bucket"], row["security_type"])
+            existing = conn.execute(
+                "SELECT total_par_amt_accepted FROM treasury_buybacks "
+                "WHERE operation_date = ? AND maturity_bucket = ? AND security_type = ?",
+                key,
+            ).fetchone()
+            if existing is not None:
+                if existing[0] != row["total_par_amt_accepted"]:
+                    raise ValueError(
+                        f"{key}: stored total_par_amt_accepted {existing[0]} conflicts "
+                        f"with incoming {row['total_par_amt_accepted']} -- refusing to "
+                        "overwrite a settled operation's result."
+                    )
+                continue
+            conn.execute(
+                """INSERT INTO treasury_buybacks
+                   (operation_date, maturity_bucket, security_type, settlement_date,
+                    operation_type, nbr_issues_accepted, nbr_issues_eligible,
+                    total_par_amt_offered, total_par_amt_accepted)
+                   VALUES (:operation_date, :maturity_bucket, :security_type, :settlement_date,
+                           :operation_type, :nbr_issues_accepted, :nbr_issues_eligible,
+                           :total_par_amt_offered, :total_par_amt_accepted)""",
+                row,
+            )
+
+
+def load_treasury_buybacks() -> list[dict]:
+    """All stored settled buyback operations, oldest first."""
+    with connect() as conn:
+        df = pd.read_sql_query(
+            "SELECT * FROM treasury_buybacks ORDER BY operation_date", conn
+        )
+    return df.to_dict("records")
 
 
 def upsert_macro_vintages(df: pd.DataFrame) -> None:

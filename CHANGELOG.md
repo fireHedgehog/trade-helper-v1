@@ -2,6 +2,16 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.63.0
+
+Closed Cycle 6's three Fed put gaps. No preregistration, no strategy, no
+signal.
+
+- Ingested `TREAST`/`TREAS10Y` (Fed SOMA holdings, incl. long-end bucket) live via `macro_pit`.
+- New `app.treasury_buybacks`: ingests `fiscaldata.treasury.gov`'s buyback operations (free, keyless, not on FRED). Settled-only, `operation_date`-as-known PIT convention (disclosed, not ALFRED-vintage-indexed -- API exposes no per-field revision timestamp). `is_long_end` operationalizes the memo's open "30Y or belly-of-curve" question as maturity-bucket upper bound >=20Y. Live: 214 settled operations, 66 long-end, earliest 2024-04-03.
+- Added [thesis-track-small-n.md](docs/thesis-track-small-n.md): placebo-in-time randomization inference for ~3-5 dependent regime episodes, replacing block-bootstrap (which would pseudo-replicate on daily counts) for this shape of claim. Episodes dated by policy record, never by outcome-data changepoints. Mandatory power pre-commitment: likely underpowered by construction at this *n*, disclosed before any data use, not discovered after.
+- 15 new tests, 324 passed.
+
 ## 0.62.0
 
 Cycle 6: first use of `next-priority-evaluation.md`. Fed put scores

@@ -14,7 +14,7 @@ Core modules include `execution.py`, `rules.py`, `engine.py`, `portfolio*.py`, `
 
 `daily_pipeline.py` owns the pure dependency planner and explicit durable executor. `/api/daily-pipeline/plan` is read-only; `/api/daily-pipeline` requires confirmation, refreshes dependencies, re-plans, and runs only changed snapshots. `/api/daily-pipeline/status` reconstructs persisted state. Retry is a fresh plan, so completed current work is skipped. Scheduling remains out of scope.
 
-`macro_pit.py` ingests point-in-time macro vintage history (every historical FRED revision, not the final-revised series `fred.py` stores for display) per [ADR 0006](../docs/adr/0006-macro-data-contract.md); live-verified against the real FRED API (`0.61.0`). Requires a free `FRED_API_KEY`, either as an env var or stored once via `app.store.set_key` into the local, gitignored `key_library` table. Not wired into any strategy, endpoint, or scheduled job — a standalone ingestion path a future macro protocol calls explicitly.
+`macro_pit.py` ingests point-in-time macro vintage history (every historical FRED revision, not the final-revised series `fred.py` stores for display) per [ADR 0006](../docs/adr/0006-macro-data-contract.md); live-verified against the real FRED API (`0.61.0`). Requires a free `FRED_API_KEY`, either as an env var or stored once via `app.store.set_key` into the local, gitignored `key_library` table. `treasury_buybacks.py` (`0.63.0`) ingests Treasury buyback operations (`fiscaldata.treasury.gov`, free, keyless, not on FRED); settled operations only. Neither is wired into any strategy, endpoint, or scheduled job — standalone ingestion paths a future macro protocol calls explicitly.
 
 ## Commands
 

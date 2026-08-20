@@ -205,11 +205,12 @@ by itself.
   yield-shock idea above (this is about the yield's own reversal, not
   equity trend-entry failure); grounded in real term-premium literature
   (Gagnon et al. 2011; Krishnamurthy and Vissing-Jorgensen 2011; D'Amico
-  and King 2013), not folk pattern. Blocked on the same ADR 0006 gate, plus
-  two data sources not yet in this codebase (Fed H.4.1 SOMA holdings,
-  Treasury buyback operations — both free). Likely needs a Thesis Track
-  design (small-n regime episodes), not the block-bootstrap method used
-  for every candidate scored so far. Explicitly excludes any claim about a
+  and King 2013), not folk pattern. **Cycle 6 (`0.62.0`), sole eligible
+  candidate, 14/16 — not yet preregistered.** Both data sources now live
+  (`0.63.0`): `TREAST`/`TREAS10Y` via `macro_pit`, buybacks via
+  `app.treasury_buybacks`. [Thesis Track](../thesis-track-small-n.md)
+  (small-*n* regime-episode design) now exists, not the block-bootstrap
+  method used for every candidate scored so far. Explicitly excludes any claim about a
   specific Fed official's intentions — narrative, not quantifiable.
 
 ## Tier 4 — orthogonal, multidimensional, real cost

@@ -6,13 +6,13 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.62.0` |
+| Version | `0.63.0` |
 | Parent release | `0.37.0` (first Stage 8 acceptance candidate) |
-| Current state | Single-asset/time-series line **parked** — [stage-closures record](stage-closures/2026-08-20-single-asset-time-series-line.md), 10 closed results, all `not_material_or_not_consistent`/`rejected`, different reasons each. Both new engines proven: `app.macro_pit` live-verified against real FRED API (`0.61.0`); cross-sectional panel bootstrap scales `N=12→495`, `engine_feasible`. Neither authorizes a candidate. Cycle 6 (`0.62.0`): Fed put 14/16, sole eligible candidate, not yet preregistered |
-| Verification | `309 passed` at `0.61.0`+ (`0.58.0`/`0.59.0`/`0.61.1`/`0.62.0` docs-only) |
+| Current state | Single-asset/time-series line **parked** — [stage-closures record](stage-closures/2026-08-20-single-asset-time-series-line.md). Both new engines proven (`app.macro_pit`; cross-sectional bootstrap `N=12→495`, `engine_feasible`); neither authorizes a candidate. Cycle 6: Fed put 14/16, sole eligible candidate. Its 3 gaps now closed (`0.63.0`): `TREAST`/`TREAS10Y` and Treasury buybacks live-ingested; [Thesis Track](thesis-track-small-n.md) small-*n* method designed. Not yet preregistered |
+| Verification | `324 passed` at `0.63.0` |
 | Completed | Stage 8; Stage 9A Cycles 1–6; CTA v1/v2; TA Breakout, Wave Pull, ETF-12 rotation, both calendar candidates, Overnight Gap — all closed and indexed in [research-protocols/README.md](research-protocols/README.md) |
-| Next product work | Cycle 6 ([record](research-candidates/2026-08-20-cycle-6.md)): Fed put preregistration needs — (1) ingest `TREAST`/`TREAS10Y` via `macro_pit`, confirmed live on FRED; (2) new ingestion for Treasury buybacks (`fiscaldata.treasury.gov`, free, not on FRED); (3) design the small-*n* Thesis Track method, no precedent in this codebase. `S/R Bounce`, a reversal-framed overnight-gap candidate, MACD, Elliott Wave — see [pending checklist](brainstorm/2026-08-19-pending-candidate-checklist.md) |
-| Active research | None active. Fed put is the chosen next line (Cycle 6) pending the 3 gaps above. 6-variable [macro library](brainstorm/2026-08-20-macro-reaction-function-narrative-library.md): idea-stage. [Cross-sectional](brainstorm/2026-08-20-cross-sectional-experiment-ideas.md): disqualified this cycle (Tier 4 unpurchased). Stage 9B remains gated |
+| Next product work | Preregister Fed put: lock hypothesis/episode definitions (dated by policy record, not outcome data — [Thesis Track](thesis-track-small-n.md)), estimand, placebo-window null construction, fingerprint. `S/R Bounce`, a reversal-framed overnight-gap candidate, MACD, Elliott Wave remain separately parked — see [pending checklist](brainstorm/2026-08-19-pending-candidate-checklist.md) |
+| Active research | Fed put (Cycle 6), pending preregistration. 6-variable [macro library](brainstorm/2026-08-20-macro-reaction-function-narrative-library.md): idea-stage. [Cross-sectional](brainstorm/2026-08-20-cross-sectional-experiment-ideas.md): disqualified this cycle (Tier 4 unpurchased). Stage 9B remains gated |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 | Pending triage | 2026-08-19 methodology/implementation audit — H2 (non-atomic bar publication) fixed in `0.54.0`; 2 critical, 1 high (H1, the orphaned mutating `GET /api/today`), 5 medium, 4 low remain untriaged; see [audits/README.md](audits/README.md) |
 
@@ -59,6 +59,7 @@ On a checkout with no `data/market.db` rows, `pytest -q` fails exactly two tests
 | How is a candidate selected and allowed to advance? | [Model acceptance standard](model-acceptance-standard.md) |
 | How is candidate search governed? | [Exploration protocol](exploration-protocol.md) |
 | How to rank across multiple live candidates? | [Next-priority evaluation](next-priority-evaluation.md) |
+| How to test a claim with only a handful of regime episodes? | [Thesis Track](thesis-track-small-n.md) |
 | Which Stage 9A candidate was prioritised, and why? | [Candidate-selection index](research-candidates/README.md) and [Cycle 1 record](research-candidates/2026-08-19-cycle-1.md) |
 | Which new preregistrations exist? | [Research-protocol index](research-protocols/README.md) |
 | What did consolidation feasibility v1 establish? | [Result](research-results/consolidation-support-feasibility-v1.md) |

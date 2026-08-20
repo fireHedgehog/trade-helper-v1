@@ -27,13 +27,16 @@ form. Only realized purchase/buyback behavior is in scope.
 Open: 30Y or belly-of-curve? PIT source for SOMA holdings (Fed H.4.1) and
 Treasury buyback operations — neither exists in this codebase yet, both are
 free. Event definition for "yield extreme" ($h,L$, percentile vs. rolling
-z-score)? Sample size — likely $n \approx 5$–$10$ regime episodes across
-decades, not hundreds of daily crossings; this needs a Thesis Track design
-(immutable preregistered thesis, no bootstrap significance claimed), not the
-block-bootstrap method used for SMA Cross/RSI/TA Breakout. Blocked on
-[ADR 0006](../adr/0006-macro-data-contract.md) point-in-time data and a
-preregistered hypothesis before any signal use, same as every macro
-candidate.
+z-score)? Sample size — realistically $n \approx 3$–$5$ regime episodes (QE programs,
+the 2024– buyback program), not hundreds of daily crossings; use
+[Thesis Track](../thesis-track-small-n.md) (placebo-in-time randomization
+inference, episode-dated by policy record not by the outcome data), not
+the block-bootstrap method used for SMA Cross/RSI/TA Breakout. Data:
+`TREAST`/`TREAS10Y` (Fed SOMA holdings) live via `app.macro_pit`; Treasury
+buybacks live via `app.treasury_buybacks` (`0.63.0`), settled operations
+only, long-end defined as maturity-bucket upper bound $\ge 20$Y. Both
+ingested 2026-08-20. Preregistered hypothesis still required before any
+signal use, same as every macro candidate.
 
 ## Promotion status
 
