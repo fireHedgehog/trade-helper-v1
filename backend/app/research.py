@@ -2251,6 +2251,169 @@ def two_sample_block_bootstrap_confidence_interval(
     }
 
 
+# --- Calendar Day-of-Week breadth significance: correlation-aware joint null ---
+# calibrate_chapter4_eligibility.py calibrated the per-asset eligibility rule
+# against INDEPENDENT synthetic null assets -- but the real 12 Day-of-Week
+# assets are not independent of each other (score_chapter4_orthogonality.py
+# measured 3 pairs at |correlation| >= 0.5, all three among the 6 eligible
+# winners). Positive correlation inflates the variance of a COUNT statistic
+# like "6 of 12 eligible", making an extreme count more likely by chance, not
+# less -- so the independent-assets calibration cannot by itself settle
+# whether 6/12 is real. This measures the count statistic against a null that
+# preserves REAL joint cross-asset correlation instead: the same principle
+# etf12_rotation_bootstrap and overnight_gap_bootstrap already use (one
+# shared block-permuted date-index sequence applied to every asset
+# simultaneously, not independently per asset), extended here to a per-asset
+# eligibility COUNT rather than a pooled correlation or a paired-component
+# statistic.
+#
+# Hardened by an independent pre-lock adversarial review (2026-08-20, two of
+# three lenses completed -- statistical soundness, implementation
+# correctness; the third, adversarial-coverage, errored on a session limit
+# and was completed directly instead of retried) before any market data was
+# touched -- mirroring Overnight Gap Continuation v1's own pre-lock review
+# precedent. One real, non-obvious finding resulted and is fixed here: the
+# original single `block_bars=20` was reused for BOTH the outer joint
+# cross-asset shift AND the inner per-asset CI, and 20 is an exact multiple
+# of the 5-day trading week -- output block boundaries were therefore always
+# phase-locked to the same weekday position, so whenever a drawn block's
+# source start happened to land on a Monday (~1/5 of draws), that whole
+# block reproduced a genuine historical Monday-to-return pairing in the
+# resampled world instead of a scrambled one. Under a true null this does
+# not bias the test (a phase-aligned block is statistically indistinguishable
+# from a misaligned one when there is truly no weekday effect), but if a
+# real effect exists, this resonance dilutes it into ~1/5 of each null
+# replication, inflating null counts and biasing the resulting p-value
+# CONSERVATIVE (toward non-rejection) -- a significant result would remain
+# trustworthy, but a non-significant one would be less conclusive than it
+# looked. Fixed by giving the outer cross-asset shift its own block size,
+# deliberately NOT a multiple of 5, decoupled from the inner per-asset CI's
+# block size (left at Chapter 4's locked 20, matching real production
+# scoring exactly). `run_calendar_dow_breadth_significance.py` additionally
+# reruns with two more coprime-with-5 outer block sizes as a disclosed
+# robustness check on this fix, per the review's own recommendation.
+
+DOW_BREADTH_OUTER_BLOCK_BARS = 19  # prime, not a multiple of 5 -- avoids the
+# trading-week phase-lock described above. Deliberately different from every
+# other locked `block_bars=20` in this file; that difference is the fix, not
+# an inconsistency.
+DOW_BREADTH_INNER_BLOCK_BARS = 20  # matches Chapter 4's locked per-asset CI
+# block size exactly (CHAPTER4_BLOCK_BARS) -- the inner resampling operates
+# on already day-type-partitioned values (post-mask-split), which carry no
+# weekday periodicity, so it has no analogous resonance risk and is left
+# matching production rather than changed defensively.
+DOW_BREADTH_INNER_RESAMPLES = 500  # reduced from Chapter 4's locked 5,000,
+# the same disclosed deviation calibrate_chapter4_eligibility.py already
+# makes and for the same reason: an outer empirical count distribution
+# across many replications does not need the same per-replication inner
+# precision as one real, standalone eligibility score.
+DOW_BREADTH_OUTER_REPLICATIONS = 300
+DOW_BREADTH_SEED = 17_291
+DOW_BREADTH_SEED_STRIDE = 100_000  # spacing between outer replications'
+# inner-seed blocks; must exceed the symbol count so no (replication, symbol)
+# pair ever reuses a seed -- 100,000 comfortably covers any realistic asset
+# universe, not just today's 12.
+
+
+def dow_breadth_correlation_aware_null(
+    log_returns_by_symbol: dict[str, np.ndarray],
+    event_mask: np.ndarray,
+    *,
+    outer_block_bars: int = DOW_BREADTH_OUTER_BLOCK_BARS,
+    inner_block_bars: int = DOW_BREADTH_INNER_BLOCK_BARS,
+    inner_resamples: int = DOW_BREADTH_INNER_RESAMPLES,
+    outer_replications: int = DOW_BREADTH_OUTER_REPLICATIONS,
+    seed: int = DOW_BREADTH_SEED,
+) -> dict:
+    """Empirical null distribution and one-sided p-value for "how many of N
+    assets clear Chapter 4's 68% eligibility bar", preserving real joint
+    cross-asset correlation. Every value in `log_returns_by_symbol` (each
+    including the leading zero-padding entry from `log_returns_from_closes`)
+    and `event_mask` (the TRUE, fixed Monday mask -- never itself resampled;
+    coerced to bool so a non-boolean mask fails loudly rather than silently
+    corrupting the group split via bitwise-NOT) must share the same length,
+    aligned to one common date grid across every symbol
+    (`run_calendar_dow_breadth_significance.py`'s `load_aligned_closes`,
+    mirroring `run_etf12_rotation.py`'s own helper, produces this).
+
+    Each outer replication draws ONE circular-block-resampled index sequence
+    (block size `outer_block_bars`) and applies it to every asset's return
+    series at once -- preserving each real historical trading day's true
+    joint cross-asset outcome, only relabelling which days are grouped
+    together. Each asset's own eligibility is then computed independently on
+    that shared resampled world via the unmodified
+    `two_sample_block_bootstrap_confidence_interval` (its own, separate
+    `inner_block_bars`) + `chapter4_confidence_multiplier` pipeline (the same
+    pipeline `score_calendar_dow_chapter4.py` runs on real, unresampled
+    data) -- correlation enters only through the shared outer resample,
+    exactly matching how the real per-asset scores are themselves
+    computed."""
+    symbols = sorted(log_returns_by_symbol)
+    if len(symbols) >= DOW_BREADTH_SEED_STRIDE:
+        raise ValueError("symbol count must stay below the inner-seed stride to avoid seed collisions")
+    lengths = {len(log_returns_by_symbol[s]) for s in symbols}
+    if len(lengths) != 1:
+        raise ValueError("all assets must share the same aligned length")
+    n = lengths.pop()
+    event_mask = np.asarray(event_mask, dtype=bool)
+    if len(event_mask) != n:
+        raise ValueError("event_mask must match the aligned length")
+    if outer_replications <= 0:
+        raise ValueError("outer_replications must be positive")
+
+    values_by_symbol = {s: log_returns_by_symbol[s][1:] for s in symbols}
+    mask = event_mask[1:]
+    m = len(mask)
+    if outer_block_bars <= 0 or outer_block_bars > m:
+        raise ValueError("outer_block_bars must be between 1 and the sample length")
+
+    def _count_eligible(values_by_symbol_local: dict, seed_offset: int) -> tuple[int, list[str]]:
+        eligible_symbols = []
+        for i, symbol in enumerate(symbols):
+            values = values_by_symbol_local[symbol]
+            group_a = values[~mask]
+            group_b = values[mask]
+            ci = two_sample_block_bootstrap_confidence_interval(
+                group_a, group_b, block_bars=inner_block_bars, resamples=inner_resamples,
+                seed=seed + seed_offset + i,
+            )
+            multiplier = chapter4_confidence_multiplier(ci["observed_mean"], ci["lower_bound"])
+            if multiplier > 0.0:
+                eligible_symbols.append(symbol)
+        return len(eligible_symbols), eligible_symbols
+
+    observed_count, observed_eligible_symbols = _count_eligible(values_by_symbol, seed_offset=0)
+
+    blocks_needed = (m + outer_block_bars - 1) // outer_block_bars
+    offsets = np.arange(outer_block_bars)
+    rng = np.random.default_rng(seed)
+    null_counts = np.empty(outer_replications, dtype=int)
+    at_least = 0
+    for r in range(outer_replications):
+        starts = rng.integers(0, m, size=blocks_needed)
+        indexes = (starts[:, None] + offsets) % m  # same indexes for every asset
+        flat_indexes = indexes.ravel()[:m]
+        resampled = {s: values_by_symbol[s][flat_indexes] for s in symbols}
+        count, _ = _count_eligible(resampled, seed_offset=DOW_BREADTH_SEED_STRIDE * (r + 1))
+        null_counts[r] = count
+        if count >= observed_count:
+            at_least += 1
+
+    return {
+        "symbols": symbols,
+        "observed_count": observed_count,
+        "observed_eligible_symbols": observed_eligible_symbols,
+        "outer_block_bars": outer_block_bars,
+        "inner_block_bars": inner_block_bars,
+        "outer_replications": outer_replications,
+        "inner_resamples": inner_resamples,
+        "null_count_mean": float(null_counts.mean()),
+        "null_count_std": float(null_counts.std()),
+        "null_count_distribution": null_counts.tolist(),
+        "p_value": (at_least + 1) / (outer_replications + 1),
+    }
+
+
 # --- Chapter 4 orthogonality measurement --- Implements ADR 0007 clause 3:
 # "Measured, not assumed, orthogonality -- a return-correlation check
 # against every other signal already accepted into the same ensemble.

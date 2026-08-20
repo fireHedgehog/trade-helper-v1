@@ -1,0 +1,884 @@
+{
+  "universe": [
+    "DBC",
+    "EEM",
+    "EFA",
+    "GLD",
+    "IEF",
+    "IWM",
+    "QQQ",
+    "SPY",
+    "TLT",
+    "XLE",
+    "XLF",
+    "XLK"
+  ],
+  "eligible_symbols": [
+    "DBC",
+    "EFA",
+    "GLD",
+    "IEF",
+    "TLT",
+    "XLF"
+  ],
+  "total_pairs": 66,
+  "winner_vs_winner_pairs": 15,
+  "pairs_touching_a_non_winner": 51,
+  "redundancy_threshold": 0.5,
+  "pairwise_correlations": [
+    {
+      "pair": [
+        "DBC",
+        "EEM"
+      ],
+      "correlation": 0.5226923720298913,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "DBC",
+        "EFA"
+      ],
+      "correlation": 0.5068165271936835,
+      "redundant": true,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "DBC",
+        "GLD"
+      ],
+      "correlation": 0.3436413712664178,
+      "redundant": false,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "DBC",
+        "IEF"
+      ],
+      "correlation": -0.29476528260363244,
+      "redundant": false,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "DBC",
+        "IWM"
+      ],
+      "correlation": 0.47964412934871653,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "DBC",
+        "QQQ"
+      ],
+      "correlation": 0.41230143938451647,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "DBC",
+        "SPY"
+      ],
+      "correlation": 0.4958510140609035,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "DBC",
+        "TLT"
+      ],
+      "correlation": -0.30004232016384474,
+      "redundant": false,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "DBC",
+        "XLE"
+      ],
+      "correlation": 0.7075669334274032,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "DBC",
+        "XLF"
+      ],
+      "correlation": 0.4434389285087646,
+      "redundant": false,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "DBC",
+        "XLK"
+      ],
+      "correlation": 0.41357762475018006,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "EFA"
+      ],
+      "correlation": 0.8855497584040413,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "GLD"
+      ],
+      "correlation": 0.1331769133994647,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "IEF"
+      ],
+      "correlation": -0.3647118021291779,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "IWM"
+      ],
+      "correlation": 0.7943543199649237,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "QQQ"
+      ],
+      "correlation": 0.7967743805101823,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "SPY"
+      ],
+      "correlation": 0.8511403444832735,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "TLT"
+      ],
+      "correlation": -0.3641105689763316,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "XLE"
+      ],
+      "correlation": 0.6887265386557205,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "XLF"
+      ],
+      "correlation": 0.7349088201333889,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "XLK"
+      ],
+      "correlation": 0.7785497730019542,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EFA",
+        "GLD"
+      ],
+      "correlation": 0.10966809618503123,
+      "redundant": false,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "EFA",
+        "IEF"
+      ],
+      "correlation": -0.3985818939621164,
+      "redundant": false,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "EFA",
+        "IWM"
+      ],
+      "correlation": 0.8373562512023819,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EFA",
+        "QQQ"
+      ],
+      "correlation": 0.7844550886692266,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EFA",
+        "SPY"
+      ],
+      "correlation": 0.897415131785619,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EFA",
+        "TLT"
+      ],
+      "correlation": -0.4066515923372561,
+      "redundant": false,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "EFA",
+        "XLE"
+      ],
+      "correlation": 0.7169732078537229,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EFA",
+        "XLF"
+      ],
+      "correlation": 0.8093751782189686,
+      "redundant": true,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "EFA",
+        "XLK"
+      ],
+      "correlation": 0.7850176872022095,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "GLD",
+        "IEF"
+      ],
+      "correlation": 0.1589444895288709,
+      "redundant": false,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "GLD",
+        "IWM"
+      ],
+      "correlation": 0.058620375250988385,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "GLD",
+        "QQQ"
+      ],
+      "correlation": 0.05072402395292182,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "GLD",
+        "SPY"
+      ],
+      "correlation": 0.04446701859554912,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "GLD",
+        "TLT"
+      ],
+      "correlation": 0.12830365535798335,
+      "redundant": false,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "GLD",
+        "XLE"
+      ],
+      "correlation": 0.1156314858842293,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "GLD",
+        "XLF"
+      ],
+      "correlation": -0.010801377515959401,
+      "redundant": false,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "GLD",
+        "XLK"
+      ],
+      "correlation": 0.03928203859159535,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IEF",
+        "IWM"
+      ],
+      "correlation": -0.40442940185719994,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IEF",
+        "QQQ"
+      ],
+      "correlation": -0.37420965267690826,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IEF",
+        "SPY"
+      ],
+      "correlation": -0.421489196548624,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IEF",
+        "TLT"
+      ],
+      "correlation": 0.9170159041324584,
+      "redundant": true,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "IEF",
+        "XLE"
+      ],
+      "correlation": -0.3793188936798071,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IEF",
+        "XLF"
+      ],
+      "correlation": -0.44601284781252665,
+      "redundant": false,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "IEF",
+        "XLK"
+      ],
+      "correlation": -0.37612960217997227,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IWM",
+        "QQQ"
+      ],
+      "correlation": 0.8165017771645511,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IWM",
+        "SPY"
+      ],
+      "correlation": 0.8990863157503592,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IWM",
+        "TLT"
+      ],
+      "correlation": -0.416115057615754,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IWM",
+        "XLE"
+      ],
+      "correlation": 0.705798648015544,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IWM",
+        "XLF"
+      ],
+      "correlation": 0.8264855196225092,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IWM",
+        "XLK"
+      ],
+      "correlation": 0.8051300772226884,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "QQQ",
+        "SPY"
+      ],
+      "correlation": 0.8563715602827618,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "QQQ",
+        "TLT"
+      ],
+      "correlation": -0.36630511467054067,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "QQQ",
+        "XLE"
+      ],
+      "correlation": 0.480044824864692,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "QQQ",
+        "XLF"
+      ],
+      "correlation": 0.6169761832835509,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "QQQ",
+        "XLK"
+      ],
+      "correlation": 0.9434437291077298,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "SPY",
+        "TLT"
+      ],
+      "correlation": -0.423696200280622,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "SPY",
+        "XLE"
+      ],
+      "correlation": 0.7137939407457515,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "SPY",
+        "XLF"
+      ],
+      "correlation": 0.8472244064959641,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "SPY",
+        "XLK"
+      ],
+      "correlation": 0.8771441747871653,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "TLT",
+        "XLE"
+      ],
+      "correlation": -0.40643467862559457,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "TLT",
+        "XLF"
+      ],
+      "correlation": -0.4446715016345782,
+      "redundant": false,
+      "both_winners": true
+    },
+    {
+      "pair": [
+        "TLT",
+        "XLK"
+      ],
+      "correlation": -0.3698213075908075,
+      "redundant": false,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "XLE",
+        "XLF"
+      ],
+      "correlation": 0.6631840230558547,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "XLE",
+        "XLK"
+      ],
+      "correlation": 0.5170736802297737,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "XLF",
+        "XLK"
+      ],
+      "correlation": 0.6445785917786154,
+      "redundant": true,
+      "both_winners": false
+    }
+  ],
+  "redundant_pair_count": 31,
+  "redundant_pairs_touching_a_non_winner": [
+    {
+      "pair": [
+        "DBC",
+        "EEM"
+      ],
+      "correlation": 0.5226923720298913,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "DBC",
+        "XLE"
+      ],
+      "correlation": 0.7075669334274032,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "EFA"
+      ],
+      "correlation": 0.8855497584040413,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "IWM"
+      ],
+      "correlation": 0.7943543199649237,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "QQQ"
+      ],
+      "correlation": 0.7967743805101823,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "SPY"
+      ],
+      "correlation": 0.8511403444832735,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "XLE"
+      ],
+      "correlation": 0.6887265386557205,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "XLF"
+      ],
+      "correlation": 0.7349088201333889,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EEM",
+        "XLK"
+      ],
+      "correlation": 0.7785497730019542,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EFA",
+        "IWM"
+      ],
+      "correlation": 0.8373562512023819,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EFA",
+        "QQQ"
+      ],
+      "correlation": 0.7844550886692266,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EFA",
+        "SPY"
+      ],
+      "correlation": 0.897415131785619,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EFA",
+        "XLE"
+      ],
+      "correlation": 0.7169732078537229,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "EFA",
+        "XLK"
+      ],
+      "correlation": 0.7850176872022095,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IWM",
+        "QQQ"
+      ],
+      "correlation": 0.8165017771645511,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IWM",
+        "SPY"
+      ],
+      "correlation": 0.8990863157503592,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IWM",
+        "XLE"
+      ],
+      "correlation": 0.705798648015544,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IWM",
+        "XLF"
+      ],
+      "correlation": 0.8264855196225092,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "IWM",
+        "XLK"
+      ],
+      "correlation": 0.8051300772226884,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "QQQ",
+        "SPY"
+      ],
+      "correlation": 0.8563715602827618,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "QQQ",
+        "XLF"
+      ],
+      "correlation": 0.6169761832835509,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "QQQ",
+        "XLK"
+      ],
+      "correlation": 0.9434437291077298,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "SPY",
+        "XLE"
+      ],
+      "correlation": 0.7137939407457515,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "SPY",
+        "XLF"
+      ],
+      "correlation": 0.8472244064959641,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "SPY",
+        "XLK"
+      ],
+      "correlation": 0.8771441747871653,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "XLE",
+        "XLF"
+      ],
+      "correlation": 0.6631840230558547,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "XLE",
+        "XLK"
+      ],
+      "correlation": 0.5170736802297737,
+      "redundant": true,
+      "both_winners": false
+    },
+    {
+      "pair": [
+        "XLF",
+        "XLK"
+      ],
+      "correlation": 0.6445785917786154,
+      "redundant": true,
+      "both_winners": false
+    }
+  ],
+  "reading": "66 total pairs across all 12 Day-of-Week assets (15 winner-vs-winner, 51 touching at least one non-winning asset). 31 flagged redundant overall; 28 of those touch a non-winning asset -- meaning the previously-measured winner-only view (3 redundant pairs among 15) understated total redundancy in the universe, though this does not by itself change how many of the 6 winners' hits are independent of each other.",
+  "disclosed_limitations": [
+    "This is a descriptive correlation measurement, not a significance test. Whether 6/12 is distinguishable from chance given this correlation structure is answered separately by run_calendar_dow_breadth_significance.py's correlation-aware joint null, which resamples the real return data directly rather than relying on a design-effect approximation from this matrix.",
+    "dow_daily_contribution series are computed on each asset's own full history; correlation for any pair is over that pair's own overlapping date range only, not one shared calendar across all 12 (DBC's shorter history means its pairs have less overlap), matching score_chapter4_orthogonality.py's existing convention."
+  ]
+}

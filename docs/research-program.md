@@ -111,45 +111,168 @@ does not provide.
 | § | Candidate | Result |
 |---|---|---|
 | 1 | [CTA v2, primary variant](../../backend/app/score_cta_v2_chapter4.py) | **Not eligible.** `68%` confidence interval on the daily excess return: `[-0.0035%, +0.0204%]`, annualized lower bound `-0.88%`. Even at Chapter 4's deliberately loosened one-sigma bar, the interval still spans zero — confidence multiplier `0.0`, no position sized. Consistent with CTA v2's own raw `p=0.231` under the null test (not a contradiction, a cross-check: a raw p that far from significant implies a wide-enough interval to plausibly include zero at 68% coverage too). This is Chapter 4 working as designed, not failing — being the strongest candidate in Chapter 5's triage does not guarantee clearing even a lower bar, and checking that honestly was the entire point of building this before opening a new falsification thread. |
-| 2 | [Wave Pull, `TLT`](../../backend/app/score_wave_pull_tlt_chapter4.py) | **Eligible.** `68%` confidence interval on the 10-session forward return, case-resampled across the `20` qualifying events (ADR 0003's own convention — a small discrete event set, not a continuous series, so resampled directly rather than via block-resampled price-path reconstruction): `[+1.22%, +2.40%]`. The lower bound stays positive despite the thin sample. Confidence multiplier `0.674` — a real, if reduced, position size under Loss-based Quantity Determination. First candidate to actually clear Chapter 4, confirming the framework discriminates on real statistical strength (Wave Pull's raw `p=0.032` vs. CTA v2's `p=0.231`) rather than being either a blanket pass or a blanket reject. Still not deployable alone — ADR 0007's minimum-breadth floor (not yet decided) requires an ensemble, and one eligible signal is not one. |
-| 3 | [Calendar Day-of-Week, all 12 assets](../../backend/app/score_calendar_dow_chapter4.py) | **`6`/`12` eligible** (`DBC`, `EFA`, `GLD`, `IEF`, `TLT`, `XLF`). A third confidence-interval shape: a two-sample block bootstrap on Monday vs. non-Monday returns per asset (each side block-resampled independently, since both are long, potentially serially-correlated sequences — not `dow_bootstrap`'s existing null test, which fixes calendar positions and resamples values onto them). Directly tests the breadth question this framework exists for: does `9`/`12` assets pointing the same direction, with zero individually clearing Chapter 1–3's `95%` bar, translate into real per-asset eligibility at the loosened `68%` bar? Partially — half do, half don't (the `3` wrong-signed assets from the original result, `QQQ`/`SPY`/`XLK`, are among those that don't). The `6` eligible assets span genuinely different clusters (commodities, international equity, gold, two treasuries, one equity sector), not a single redundant bet — but ADR 0007 clause 3's orthogonality measurement is still not built, so "6 individually eligible" is not yet "6 real independent breadth units"; `IEF`/`TLT` in particular are both duration exposure and plausibly correlated. |
+| 2 | [Wave Pull, `TLT`](../../backend/app/score_wave_pull_tlt_chapter4.py) | **Eligible on paper, since walked back — see §2b/§4.** `68%` confidence interval on the 10-session forward return, case-resampled across the `20` qualifying events: `[+1.22%, +2.40%]`, multiplier `0.674`. `TLT` was pre-selected as the single best raw-`p` asset of `12` from Wave Pull v1's own Chapters 1–3 test *before* this score was run — a winner's-curse selection this report did not originally disclose or correct for. §2b and §4 below show that correction changes the read materially. |
+| 2b | [Wave Pull, all 12 assets](../../backend/app/score_wave_pull_chapter4.py) | **`2`/`11` eligible** (`GLD`, `TLT`; `IEF` had zero qualifying events, not scoreable). Symmetric rescoring of the full universe genuinely fixes the selection-bias objection an external critique (2026-08-20) correctly raised about §2's `TLT`-only report — no more cherry-picking which asset to show. But §4's calibration settles what this count is actually worth: `2/11` against a calibrated `19.08%` per-asset chance rate is **not distinguishable from noise** — `2` is in fact the single most probable outcome the null model predicts (`P(X≥2)≈65%`, mode `=2`). An earlier same-session read of this result ("a second independent hit is harder to explain by chance") was checked against the calibration and does not survive it; corrected here rather than left standing. `GLD`/`TLT`'s near-zero cross-correlation (`r=0.02`, see orthogonality below) is real but narrower evidence than that: it rules out `GLD` and `TLT` being a disguised double-count of one redundant artifact (the failure mode seen in Day-of-Week's correlated pairs below), not that either reflects a genuine effect — both "two real independent signals" and "two independent noise false-positives" predict low correlation equally well. Net: `GLD`/`TLT` remain clean, bias-free, decorrelated *candidates* appropriately queued for Chapters 1–3's strict bar or out-of-sample testing — the loosened `68%` screen doing its intended job of admitting candidates for further scrutiny, not a verdict that nothing is there. |
+| 3 | [Calendar Day-of-Week, all 12 assets](../../backend/app/score_calendar_dow_chapter4.py) | **`6`/`12` eligible** (`DBC`, `EFA`, `GLD`, `IEF`, `TLT`, `XLF`) on each asset's own full history — **tested directly and found not distinguishable from chance; see §4.** A third confidence-interval shape: a two-sample block bootstrap on Monday vs. non-Monday returns per asset. Under a naive independent-trials reading `6/12` looked like a striking anomaly (`p≈0.7%` against the `16.25%` calibrated per-asset base rate) — but a correlation-aware joint null built specifically to test this (§4) settles it directly rather than by approximation: `p≈0.13`–`0.14`, stable across three independent resampling grids. Not a rejection of the underlying French-1980 Monday-effect literature, but this specific `6/12` breadth reading does not clear even Chapter 4's loosened bar once real cross-asset correlation is properly accounted for. |
 
 Ensemble engine and minimum-breadth floor remain required decisions, not
-yet built — but the picture worth confirming has changed since Chapter 4
-opened: three sections in, the framework has now produced one clean
-rejection (CTA v2), one clean single-asset acceptance (Wave Pull `TLT`),
-and one genuinely mixed, partial-breadth result (Calendar Day-of-Week,
-`6/12`) — three different outcomes from three different statistical
-shapes, which is itself evidence the eligibility rule is discriminating on
-real structure rather than defaulting to any one answer.
+yet built — and the picture is less settled, not more, than it looked
+mid-chapter: three sections in, the framework has produced one clean
+rejection (CTA v2), one result that initially looked like a clean
+single-asset acceptance but did not survive selection-bias-corrected
+calibration (Wave Pull — walked back to "clean candidate," not "eligible
+signal"), and one breadth result that initially looked like a real anomaly
+but, once directly tested with a correlation-aware significance test rather
+than approximated, also came back not distinguishable from chance
+(Calendar Day-of-Week — full detail below). That is itself a meaningful
+outcome, not a failure of the exercise — a governance framework that
+catches its own selection-bias and correlation-blind-spot failure modes
+empirically, on its own first three candidates, before anything gets sized
+or combined, is doing exactly what ADR 0007's eligibility clauses and this
+chapter's calibration discipline exist to do.
 
-**Orthogonality (ADR 0007 clause 3) is now measured, not assumed** —
+**Orthogonality (ADR 0007 clause 3) is measured, not assumed, but this
+measures redundancy among nominally-eligible signals — it does not by
+itself establish that any of them are real** —
 [`score_chapter4_orthogonality.py`](../../backend/app/score_chapter4_orthogonality.py),
 pairwise Pearson correlation of each signal's own daily return
-contribution, aligned per pair to its overlapping date range. Of the `21`
-pairs across the `7` eligible signal-slots, `3` are flagged materially
-redundant (`|correlation| ≥ 0.5`, a disclosed, locked rule-of-thumb, not
-derived from this project's own data): `dow_IEF`/`dow_TLT` (`r=0.92`, two
-treasury-duration bets moving almost identically on Mondays — the exact
-suspicion named when Calendar Day-of-Week was first scored), `dow_EFA`/
-`dow_XLF` (`r=0.81`), and `dow_DBC`/`dow_EFA` (`r=0.51`, just over the
-line). `wave_pull_TLT` is genuinely independent of all six Day-of-Week
-signals — including `dow_TLT`, the same underlying asset under a different
-mechanism (`r=-0.12`), a real, reassuring confirmation that two distinct
-mechanisms on the same instrument can be close to orthogonal rather than
-automatically redundant. Net effect: `7` nominal eligible slots is closer
-to `4`–`5` effectively independent ones once redundancy is accounted for —
-a real, disclosed correction, not a rounding error, and exactly what
-clause 3 exists to catch before any ensemble is built on an inflated
-breadth count.
+contribution, aligned per pair to its overlapping date range. Of the `28`
+pairs across the `8` nominally-eligible signal-slots, `3` are flagged
+materially redundant (`|correlation| ≥ 0.5`, a disclosed, locked
+rule-of-thumb, not derived from this project's own data), and all `3` sit
+entirely among Calendar Day-of-Week's `6` winners: `dow_IEF`/`dow_TLT`
+(`r=0.92`, two treasury-duration bets moving almost identically on Mondays
+— the exact suspicion named when Calendar Day-of-Week was first scored),
+`dow_EFA`/`dow_XLF` (`r=0.81`), and `dow_DBC`/`dow_EFA` (`r=0.51`, just over
+the line) — forming two thematic clusters (bond-duration; commodities/
+international-equity/financials) plus `dow_GLD` standing alone. This
+redundancy concentration was the reason §4's Day-of-Week significance
+question needed a direct correlation-aware test rather than an
+approximation from this partial view — the `6` winners' apparent breadth
+could represent as few as `3`–`5` genuinely independent underlying effects,
+not `6`. §4 below reports that direct test's result: not distinguishable
+from chance. Both Wave Pull signals
+are, by contrast, cleanly independent of everything: `wave_pull_TLT` tops
+out at `r=-0.12` against all six `dow_` signals (including `dow_TLT`, the
+same underlying asset under a different mechanism), and `wave_pull_GLD`
+tops out at `r=-0.22`, including `r=0.02` against `wave_pull_TLT` itself —
+real, useful information about redundancy, but (per §2b) not itself
+evidence that either signal reflects a genuine effect.
+
+**§4 — Calibrating the eligibility rule itself, and what an adversarial
+verification pass changed.** A pasted external critique (2026-08-20) argued
+Calendar Day-of-Week's `6/12` is close to what pure chance would produce at
+a `68%` band, and separately that `TLT`'s solo report suffers "winner's
+curse." Rather than argue the arithmetic analytically,
+[`calibrate_chapter4_eligibility.py`](../../backend/app/calibrate_chapter4_eligibility.py)
+measures it directly — same Monte Carlo discipline as
+[event-bootstrap-calibration-v1](research-results/event-bootstrap-calibration-v1.md):
+`300` replications of zero-mean GARCH(1,1) synthetic null data, each
+eligibility construction run unmodified, empirical false-eligible rate
+reported with a Wilson `95%` CI. Full result:
+[chapter4-eligibility-calibration-v1](../../output/research/chapter4-eligibility-calibration-v1/calibration-report.json).
+
+- Two-sample (Day-of-Week-shape), single independent null asset: `16.25%`
+  false-eligible (`95%` CI `[15.08%, 17.49%]`, `n=3,600`) — matches a
+  one-sided-normal-tail approximation almost exactly, **not** the critique's
+  `32%` figure; the critique's own number does not survive this check.
+- Case-resample (Wave-Pull-shape), single independent null asset: `19.08%`
+  (`95%` CI `[17.70%, 20.54%]`, `n=2,945`).
+- Case-resample, *selected winner of 12* (the single best of `12`
+  independent null assets by observed mean — mirroring exactly how `TLT`
+  was chosen): `84.67%` false-eligible (`95%` CI `[80.15%, 88.30%]`,
+  `n=300`). This is the critique's winner's-curse concern, measured
+  directly, and it is worse than the critique itself estimated: a
+  best-of-`12` selection clears Chapter 4's bar under pure noise more often
+  than not.
+
+A first pass at interpreting these numbers against the real `6/12` and
+`2/11` results was itself run through independent adversarial verification
+(four reviewers, two per claim, working from the raw numbers rather than
+from each other's framing) before being written here, matching this
+project's standing practice of checking pasted critiques empirically rather
+than arguing about them — applied for once to a first-pass reading of its
+own results, not just to an outside critique. Two corrections resulted:
+
+1. **Wave Pull's `2/11` (§2b) is not distinguishable from the `19.08%`
+   calibrated null** — confirmed by direct binomial check (`P(X≥2 of 11)
+   ≈65%`, and `2` is the modal outcome). An earlier same-session claim that
+   a second hit (`GLD`) was "harder to explain by chance" than the original
+   selected winner was checked against this and does not hold; corrected in
+   §2b above rather than left standing.
+2. **Day-of-Week's `6/12` (§3) is not the settled "real, elevated" result
+   it initially looked like, either.** Positive correlation among the `6`
+   winners (the `3` flagged pairs above) inflates the variance of an
+   extreme count under the null — it makes `6` *more* likely by chance, not
+   less, the opposite of the direction needed to defend the naive
+   `p≈0.7%` reading. Correcting for only the `3` known winner-vs-winner
+   pairs (treating the other `51` of `66` possible pairs as uncorrelated,
+   an assumption not actually verified) still leaves the result notable
+   (`p≈1.5%–2.5%`), but that assumption is unverified and optimistic —
+   financial assets often cluster by category even below the `0.5`
+   flagging threshold, and if unmeasured correlation among the `9` non-
+   winning assets is non-trivial, a defensible correction pushes the
+   tail probability as high as `~17%–21%`, coin-flip range. **The honest
+   state is a real, unresolved range, not a settled answer either way.**
+
+**The concrete next step named above has now been run, and it settles the
+question.** [`score_calendar_dow_full_correlation.py`](../../backend/app/score_calendar_dow_full_correlation.py)
+measured all `66` pairs across the full `12`-asset universe (not just the
+`6` winners): `31` pairs flagged redundant overall, `28` of them touching a
+non-winning asset — the broader universe is saturated with ordinary
+equity-beta correlation (`EEM`/`EFA` `r=0.89`, `IWM`/`SPY` `r=0.90`, `QQQ`/
+`XLK` `r=0.94`), confirming correlation is pervasive enough that a
+hand-adjusted design-effect estimate from a partial matrix was never going
+to be precise enough to trust on its own. So rather than stop at the fuller
+matrix,
+[`run_calendar_dow_breadth_significance.py`](../../backend/app/run_calendar_dow_breadth_significance.py)
+built the rigorous version directly:
+[`dow_breadth_correlation_aware_null`](../../backend/app/research.py) is a
+joint circular-block-resampling null — one shared block-shift applied to
+all `12` assets' real return series simultaneously per replication (the
+same principle `etf12_rotation_bootstrap` and `overnight_gap_bootstrap`
+already use), preserving the *entire* real joint correlation structure
+automatically rather than approximating it from a handful of pairwise
+numbers. Pre-lock adversarially reviewed before touching real data (two of
+three lenses completed; the third hit a session limit mid-run and was
+completed directly) — the review caught one real, non-obvious bug: the
+original shared `block_bars=20` is an exact multiple of the `5`-day trading
+week, so resampled blocks could quietly reproduce genuine historical
+Monday-to-return pairings instead of scrambling them, biasing the test
+conservative. Fixed by giving the outer cross-asset shift its own block
+size, deliberately not a multiple of `5`, decoupled from the inner
+per-asset CI's block size (left matching production).
+
+**Result: `p≈0.13`–`0.14`, stable across three independent block-size
+checks (`19`, `17`, `23` bars — a disclosed robustness check on the fix
+itself).** Full record:
+[breadth-significance.json](../../output/research/chapter4-eligibility/calendar-day-of-week/breadth-significance.json).
+Calendar Day-of-Week's breadth result is **not distinguishable from
+chance** once the real correlation structure is properly preserved, not
+approximated — nowhere near conventional significance. One more disclosed
+wrinkle: on the common-date window all three checks require (bounded by
+`DBC`'s shorter history, `2006`–`2026`), the observed count itself comes out
+`5/12` with a *different* eligible set (`DBC`, `EEM`, `EFA`, `GLD`, `XLF` —
+`IEF` and `TLT` drop out, `EEM` enters) than the `6/12` reported against
+each asset's own full history — a real, disclosed sensitivity to the
+evaluation window, not a discrepancy that changes the significance
+conclusion either way.
 
 The remaining gap is the ensemble-construction engine and the
 minimum-breadth floor's exact number — both still named, required,
-unimplemented decisions. With real per-signal eligibility, real sizing,
-and now real measured orthogonality all in hand, that floor is no longer
-an abstract parameter to pick; it is the next and final piece standing
-between this chapter and something that could, in principle, be sized as
-an actual (paper) ensemble.
+unimplemented decisions, and now clearly premature rather than merely
+undersupported: of the three candidates scored so far, **none has a
+settled, adversarially-checked positive read** — CTA v2 cleanly rejected,
+Wave Pull walked back to candidate status (not distinguishable from
+chance), Calendar Day-of-Week now directly tested and also not
+distinguishable from chance. Building ensemble machinery ahead of that
+would be sizing infrastructure around signals that have not yet earned it.
+That is a real, complete answer for this pass of Chapter 4 — not a null
+result for the exercise itself, since a governance framework that
+correctly catches its own first three candidates failing a properly
+rigorous test, rather than waving them through on an approximation, is
+doing exactly what ADR 0007 and this chapter's calibration discipline exist
+to do.
 
 ## Chapter 5 — Discussion: what the ten closed nulls might still be worth
 

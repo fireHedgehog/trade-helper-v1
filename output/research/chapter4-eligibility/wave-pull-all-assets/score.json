@@ -1,0 +1,136 @@
+{
+  "candidate": "wave-pull-v1",
+  "chapter_1_3_decision": "not_material_or_not_consistent (unchanged, immutable)",
+  "per_asset": {
+    "DBC": {
+      "symbol": "DBC",
+      "event_count": 46,
+      "insufficient_events": false,
+      "observed_mean_forward_return": 0.005605834912773126,
+      "lower_bound_68pct": -0.000485900957687984,
+      "upper_bound_68pct": 0.011897947230385762,
+      "chapter4_confidence_multiplier": 0.0,
+      "eligible": false
+    },
+    "EEM": {
+      "symbol": "EEM",
+      "event_count": 92,
+      "insufficient_events": false,
+      "observed_mean_forward_return": -0.01031827460315326,
+      "lower_bound_68pct": -0.017030169985783675,
+      "upper_bound_68pct": -0.00396643298522863,
+      "chapter4_confidence_multiplier": 0.0,
+      "eligible": false
+    },
+    "EFA": {
+      "symbol": "EFA",
+      "event_count": 52,
+      "insufficient_events": false,
+      "observed_mean_forward_return": -0.001550601553579479,
+      "lower_bound_68pct": -0.007671815452729816,
+      "upper_bound_68pct": 0.0044764734998693845,
+      "chapter4_confidence_multiplier": 0.0,
+      "eligible": false
+    },
+    "GLD": {
+      "symbol": "GLD",
+      "event_count": 52,
+      "insufficient_events": false,
+      "observed_mean_forward_return": 0.008633911713041962,
+      "lower_bound_68pct": 0.0028012488733819905,
+      "upper_bound_68pct": 0.014341350763103194,
+      "chapter4_confidence_multiplier": 0.3244472455226247,
+      "eligible": true
+    },
+    "IEF": {
+      "symbol": "IEF",
+      "event_count": 0,
+      "insufficient_events": true,
+      "eligible": false
+    },
+    "IWM": {
+      "symbol": "IWM",
+      "event_count": 99,
+      "insufficient_events": false,
+      "observed_mean_forward_return": -0.001284451521407446,
+      "lower_bound_68pct": -0.005904413407318933,
+      "upper_bound_68pct": 0.003406301943266386,
+      "chapter4_confidence_multiplier": 0.0,
+      "eligible": false
+    },
+    "QQQ": {
+      "symbol": "QQQ",
+      "event_count": 111,
+      "insufficient_events": false,
+      "observed_mean_forward_return": -0.006285897795655965,
+      "lower_bound_68pct": -0.011597995166959982,
+      "upper_bound_68pct": -0.000990837365622066,
+      "chapter4_confidence_multiplier": 0.0,
+      "eligible": false
+    },
+    "SPY": {
+      "symbol": "SPY",
+      "event_count": 63,
+      "insufficient_events": false,
+      "observed_mean_forward_return": 0.0023266248484603816,
+      "lower_bound_68pct": -0.0031153960768091015,
+      "upper_bound_68pct": 0.0075748509760754455,
+      "chapter4_confidence_multiplier": 0.0,
+      "eligible": false
+    },
+    "TLT": {
+      "symbol": "TLT",
+      "event_count": 20,
+      "insufficient_events": false,
+      "observed_mean_forward_return": 0.01811941081785231,
+      "lower_bound_68pct": 0.012213464345414572,
+      "upper_bound_68pct": 0.023995399008240444,
+      "chapter4_confidence_multiplier": 0.674054165899321,
+      "eligible": true
+    },
+    "XLE": {
+      "symbol": "XLE",
+      "event_count": 140,
+      "insufficient_events": false,
+      "observed_mean_forward_return": 0.0028559322075998664,
+      "lower_bound_68pct": -0.0017289844829611308,
+      "upper_bound_68pct": 0.007427123083109387,
+      "chapter4_confidence_multiplier": 0.0,
+      "eligible": false
+    },
+    "XLF": {
+      "symbol": "XLF",
+      "event_count": 102,
+      "insufficient_events": false,
+      "observed_mean_forward_return": -0.012875588311266629,
+      "lower_bound_68pct": -0.01941256502420642,
+      "upper_bound_68pct": -0.006342413521688495,
+      "chapter4_confidence_multiplier": 0.0,
+      "eligible": false
+    },
+    "XLK": {
+      "symbol": "XLK",
+      "event_count": 109,
+      "insufficient_events": false,
+      "observed_mean_forward_return": -0.0058158807876024995,
+      "lower_bound_68pct": -0.011312762601750901,
+      "upper_bound_68pct": -0.0002595116225561307,
+      "chapter4_confidence_multiplier": 0.0,
+      "eligible": false
+    }
+  },
+  "scored_count": 11,
+  "eligible_count": 2,
+  "eligible_symbols": [
+    "GLD",
+    "TLT"
+  ],
+  "best_by_observed_mean": "TLT",
+  "selection_context": "TLT was the asset score_wave_pull_tlt_chapter4.py originally reported alone; across all 11 scored assets here, TLT is also the single best by observed mean forward return (best: TLT).",
+  "breadth_reading": "2/11 scored assets individually clear Chapter 4's 68% bar. Compare against calibrate_chapter4_eligibility.py's synthetic-null 'selected winner of 12' empirical rate before treating a single eligible asset among many tested as strong evidence on its own.",
+  "disclosed_limitations": [
+    "Per-asset scores here are NOT yet an ensemble -- ADR 0007 clause 3 (measured orthogonality) covers only the assets already fed into score_chapter4_orthogonality.py; if this run changes which Wave Pull assets are eligible, the orthogonality measurement needs re-running against the updated set.",
+    "Each per-asset confidence interval independently uses a 68% band; no family-wise adjustment across the assets scored here, consistent with Chapter 4's eligibility clause 4 (no significance claim) but this is exactly the selection-multiplicity question calibrate_chapter4_eligibility.py's 'winner of 12' measurement addresses.",
+    "Small per-asset event counts (Wave Pull's own protocol disclosed this as expected, given the compound impulse-AND-breakout precondition) -- case-resampling confidence intervals on a handful of events are inherently wide."
+  ]
+}

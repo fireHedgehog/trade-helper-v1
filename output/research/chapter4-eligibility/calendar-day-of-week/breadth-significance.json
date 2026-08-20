@@ -1,0 +1,80 @@
+{
+  "candidate": "calendar-day-of-week-v1",
+  "question": "Is the real 6/12 Chapter 4 breadth count distinguishable from a null that preserves the true joint cross-asset correlation structure of the real 12-asset universe, rather than assuming independence?",
+  "aligned_common_start": "2006-02-06",
+  "aligned_common_end": "2026-08-18",
+  "runs_by_outer_block_bars": [
+    {
+      "outer_block_bars": 19,
+      "observed_count": 5,
+      "observed_eligible_symbols": [
+        "DBC",
+        "EEM",
+        "EFA",
+        "GLD",
+        "XLF"
+      ],
+      "null_count_mean": 1.9566666666666668,
+      "null_count_std": 2.557626938307375,
+      "p_value": 0.14285714285714285,
+      "p_value_wilson_95_ci": [
+        0.10527132692360974,
+        0.18383161236228174
+      ],
+      "outer_replications": 300,
+      "inner_resamples": 500
+    },
+    {
+      "outer_block_bars": 17,
+      "observed_count": 5,
+      "observed_eligible_symbols": [
+        "DBC",
+        "EEM",
+        "EFA",
+        "GLD",
+        "XLF"
+      ],
+      "null_count_mean": 1.93,
+      "null_count_std": 2.374538551662898,
+      "p_value": 0.1362126245847176,
+      "p_value_wilson_95_ci": [
+        0.09946641682720969,
+        0.1764717620750872
+      ],
+      "outer_replications": 300,
+      "inner_resamples": 500
+    },
+    {
+      "outer_block_bars": 23,
+      "observed_count": 5,
+      "observed_eligible_symbols": [
+        "DBC",
+        "EEM",
+        "EFA",
+        "GLD",
+        "XLF"
+      ],
+      "null_count_mean": 1.8566666666666667,
+      "null_count_std": 2.2262349880958707,
+      "p_value": 0.12624584717607973,
+      "p_value_wilson_95_ci": [
+        0.09081731428709633,
+        0.1653737240398087
+      ],
+      "outer_replications": 300,
+      "inner_resamples": 500
+    }
+  ],
+  "p_value_range": [
+    0.12624584717607973,
+    0.14285714285714285
+  ],
+  "p_value_stable_across_block_bars": true,
+  "reading": "Observed count 5/12 (symbols: ['DBC', 'EEM', 'EFA', 'GLD', 'XLF']). Across 3 outer block sizes ([19, 17, 23]), p ranges 0.1262-0.1429. Stable across block sizes -- the result is not an artifact of one particular resampling grid.",
+  "disclosed_limitations": [
+    "Aligned to the common date range across all 12 assets (bounded by DBC's shorter history), not each asset's own full individual history used in score_calendar_dow_chapter4.py -- the observed_count here may differ slightly from the originally-reported 6/12 if the shorter shared window changes any borderline asset's eligibility; both counts are disclosed for direct comparison.",
+    "inner_resamples reduced from Chapter 4's locked 5,000 to 500 per replication (calibrate_chapter4_eligibility.py's own disclosed deviation, for the same reason: an outer empirical distribution across many replications does not need the same per-replication inner precision as one standalone score).",
+    "outer_replications=300 carries real Monte Carlo noise near conventional significance thresholds -- the Wilson 95% CI on each p-value should be read alongside the point estimate, not instead of it.",
+    "Pre-lock adversarially reviewed (2 of 3 lenses completed via independent review; the third, adversarial-coverage, was completed directly after the reviewing agent hit a session limit) -- see research.py's dow_breadth_correlation_aware_null comment for the one real finding (trading-week/block_bars resonance) and its fix; the multi-block-size run above is the disclosed robustness check that finding recommended."
+  ]
+}

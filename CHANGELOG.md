@@ -2,6 +2,28 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.71.0
+
+Calendar Day-of-Week's `6/12` Chapter 4 breadth result directly tested with a correlation-aware significance test and closed. No trade, no cost, no live sizing.
+
+- User-directed: rather than approximate whether cross-asset correlation explains `6/12` (the open question `0.70.0` left standing), build the rigorous test directly. `backend/app/research.py:dow_breadth_correlation_aware_null` (new) is a joint circular-block-resampling null -- one shared block-shift applied to all 12 assets' real return series at once per replication, the same principle `etf12_rotation_bootstrap`/`overnight_gap_bootstrap` already use, preserving the full real joint correlation structure rather than a hand-adjusted design-effect estimate from a partial correlation matrix.
+- `backend/app/score_calendar_dow_full_correlation.py` (new) first measured all 66 pairs across the full 12-asset universe (not just the 6 winners): `31/66` redundant, confirming the broader universe is saturated with ordinary equity-beta correlation.
+- Hardened by an independent pre-lock adversarial review before touching real data (2 of 3 lenses completed; the third hit a session usage limit mid-run and was completed directly rather than retried) -- mirroring Overnight Gap Continuation v1's own pre-lock-review precedent. One real, non-obvious bug found and fixed: the original shared `block_bars=20` is an exact multiple of the 5-day trading week, letting resampled blocks quietly reproduce genuine historical Monday-to-return pairings instead of scrambling them, biasing the test conservative. Fixed by decoupling the outer cross-asset block size (now 19, not a multiple of 5) from the inner per-asset CI's block size (left at production's locked 20).
+- `backend/app/run_calendar_dow_breadth_significance.py` (new) ran the fixed construction against real data, plus two more coprime-with-5 block sizes (17, 23) as a disclosed robustness check per the review's own recommendation.
+- Result: `p≈0.13-0.14`, stable across all three block sizes -- Calendar Day-of-Week's breadth is **not distinguishable from chance** once real correlation is properly preserved. Combined with `0.70.0`'s Wave Pull correction, none of Chapter 4's three scored candidates (CTA v2, Wave Pull, Calendar Day-of-Week) currently has a settled, adversarially-checked positive read.
+- See [research-program.md](docs/research-program.md) Chapter 4 §3/§4 for the full, corrected record. 367 passed (6 new tests for the joint-null primitive; one pre-existing, already-documented data-fingerprint drift failure on this machine's `data/market.db`, unrelated to this work).
+
+## 0.70.0
+
+Chapter 4 eligibility rule calibrated and its own first read-outs adversarially corrected. No trade, no cost, no live sizing.
+
+- User-directed: a pasted external critique argued Calendar Day-of-Week's `6/12` was close to chance, and that Wave Pull's `TLT`-only report suffered winner's curse -- rather than argue the arithmetic, `backend/app/calibrate_chapter4_eligibility.py` measures both directly via 300-replication Monte Carlo (same discipline as `event-bootstrap-calibration-v1`).
+- Result: two-sample (Day-of-Week-shape) false-eligible rate `16.25%` -- the critique's own `32%` figure does not survive the check. Case-resample (Wave-Pull-shape) single-asset rate `19.08%`; "selected winner of 12" rate `84.67%` -- worse than the critique estimated.
+- `backend/app/score_wave_pull_chapter4.py` (new) rescored all 12 Wave Pull assets symmetrically, closing the selection-bias gap in the `TLT`-only report: `2/11` eligible (`GLD`, `TLT`).
+- A first-pass reading of these results against the real `6/12` and `2/11` counts was itself run through independent adversarial verification (4 reviewers) before being written into docs -- this project's standing practice of checking critiques empirically, applied for once to its own results. Two corrections resulted: Wave Pull's `2/11` is not distinguishable from the calibrated null (`P(X≥2 of 11)≈65%`, the modal outcome) -- walked back to "clean candidate," not "eligible"; Calendar Day-of-Week's `6/12` remains genuinely open, not settled -- correlation among its own winners (measured, `dow_IEF`/`dow_TLT` `r=0.92`, `dow_EFA`/`dow_XLF` `r=0.81`, `dow_DBC`/`dow_EFA` `r=0.51`) could plausibly explain most or all of the apparent significance, and the correlation data needed to settle it (all 12 assets, not just the 6 winners) has not been measured.
+- `backend/app/score_chapter4_orthogonality.py` extended to all 8 nominally-eligible signal-slots (added `wave_pull_GLD`): `3/28` pairs redundant, all three among Day-of-Week's winners.
+- ADR 0007 status unchanged (accepted). See [research-program.md](docs/research-program.md) Chapter 4 §2, §2b, §3, §4 for the full, corrected record. 361 passed (no engine change; one pre-existing, already-documented data-fingerprint drift failure on this machine's `data/market.db`, unrelated to this work).
+
 ## 0.67.1
 
 Docs-only: brainstorm cleanup pass. Added

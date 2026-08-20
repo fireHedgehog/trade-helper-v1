@@ -7,11 +7,12 @@ included as if independent."
 Usage (from backend/):
     python -m app.score_chapter4_orthogonality
 
-Covers the 7 eligible signal-slots scored so far: Wave Pull's TLT, and the
-6 Calendar Day-of-Week assets (DBC, EFA, GLD, IEF, TLT, XLF). No trade, no
-cost, no live sizing -- contribution series are illustrative exposure
-proxies for correlation measurement only, not real, costed, executable
-positions.
+Covers all 8 eligible signal-slots scored so far: Wave Pull's TLT and GLD
+(score_wave_pull_chapter4.py, 2026-08-20, superseding the TLT-only script's
+partial coverage), and the 6 Calendar Day-of-Week assets (DBC, EFA, GLD,
+IEF, TLT, XLF). No trade, no cost, no live sizing -- contribution series
+are illustrative exposure proxies for correlation measurement only, not
+real, costed, executable positions.
 """
 
 from __future__ import annotations
@@ -30,18 +31,20 @@ from .store import load_bars
 ROOT = Path(__file__).parents[2]
 OUTPUT = ROOT / "output/research/chapter4-eligibility/orthogonality/score.json"
 
-# The 7 signal-slots eligible as of the two prior Chapter 4 scoring runs.
-WAVE_PULL_SYMBOL = "TLT"
+# The 8 signal-slots eligible as of score_wave_pull_chapter4.py (all 12
+# assets scored) and score_calendar_dow_chapter4.py.
+WAVE_PULL_ELIGIBLE_SYMBOLS = ["GLD", "TLT"]
 DOW_ELIGIBLE_SYMBOLS = ["DBC", "EFA", "GLD", "IEF", "TLT", "XLF"]
 
 
 def main() -> None:
     contributions = {}
 
-    bars = load_bars(WAVE_PULL_SYMBOL)
-    closes = bars["close"].to_numpy(dtype=float)
-    dates = bars["date"]
-    contributions["wave_pull_TLT"] = wave_pull_daily_contribution(closes, dates)
+    for symbol in WAVE_PULL_ELIGIBLE_SYMBOLS:
+        bars = load_bars(symbol)
+        closes = bars["close"].to_numpy(dtype=float)
+        dates = bars["date"]
+        contributions[f"wave_pull_{symbol}"] = wave_pull_daily_contribution(closes, dates)
 
     for symbol in DOW_ELIGIBLE_SYMBOLS:
         bars = load_bars(symbol)
@@ -91,7 +94,7 @@ def main() -> None:
             "not real, costed, executable positions.",
             "Correlation is computed pairwise over each pair's own "
             "overlapping date range, not a single shared calendar across all "
-            "7 signals -- DBC's shorter history means its pairs have less "
+            "signals -- DBC's shorter history means its pairs have less "
             "overlap than, e.g., TLT-vs-TLT-based pairs.",
             "0.5 is a disclosed, locked rule-of-thumb threshold, not derived "
             "from this project's own data -- treat the raw correlation "

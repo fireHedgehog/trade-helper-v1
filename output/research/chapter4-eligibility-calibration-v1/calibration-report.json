@@ -1,0 +1,40 @@
+{
+  "calibration_resamples": 500,
+  "case_resample_wave_pull_style": {
+    "real_result_for_comparison": "TLT (selected as the best-p-value asset of 12) = eligible, multiplier 0.674",
+    "selected_winner_of_12": {
+      "eligible_hits": 254,
+      "empirical_eligibility_rate": 0.8466666666666667,
+      "note": "This is the 'winner's curse' rate the critique named: among 12 independent NULL assets, how often does the single best-observed one alone show up eligible. If this materially exceeds the single-asset rate above, selection bias is real and TLT's solo report overstates confidence; if it's close to the single-asset rate, the eligibility construction is more selection-robust than the critique assumed.",
+      "trials": 300,
+      "wilson_95_ci": [
+        0.8015339429303161,
+        0.8830335970166032
+      ]
+    },
+    "single_asset": {
+      "eligible_hits": 562,
+      "empirical_eligibility_rate": 0.19083191850594228,
+      "trials": 2945,
+      "wilson_95_ci": [
+        0.17704598230367807,
+        0.20542336186813637
+      ]
+    }
+  },
+  "null_generator": "GARCH(1,1), zero mean, same generator as event-bootstrap-calibration-v1",
+  "replications_attempted": 300,
+  "series_length": 3000,
+  "two_sample_dow_style": {
+    "eligible_hits": 585,
+    "empirical_eligibility_rate": 0.1625,
+    "naive_one_sided_16pct_approximation_note": "A one-sided normal tail at ~1 SE (matching a 68%-coverage two-sided interval's lower bound) predicts ~15.9% under a true null, not the 32% two-sided-mass figure the critique used -- this measurement settles it empirically rather than by competing approximations.",
+    "real_result_for_comparison": "6/12 = 50.0% observed for Calendar Day-of-Week",
+    "trials": 3600,
+    "wilson_95_ci": [
+      0.15081000429887206,
+      0.17490950146596615
+    ]
+  },
+  "wall_clock_seconds": 324.82949447631836
+}

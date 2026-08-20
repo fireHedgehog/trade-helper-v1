@@ -1,5 +1,6 @@
 {
   "signals_scored": [
+    "wave_pull_GLD",
     "wave_pull_TLT",
     "dow_DBC",
     "dow_EFA",
@@ -8,9 +9,65 @@
     "dow_TLT",
     "dow_XLF"
   ],
-  "signal_count": 7,
+  "signal_count": 8,
   "redundancy_threshold": 0.5,
   "pairwise_correlations": [
+    {
+      "pair": [
+        "wave_pull_GLD",
+        "wave_pull_TLT"
+      ],
+      "correlation": 0.017466309519244026,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "wave_pull_GLD",
+        "dow_DBC"
+      ],
+      "correlation": -0.0986825447042108,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "wave_pull_GLD",
+        "dow_EFA"
+      ],
+      "correlation": -0.03688546060312439,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "wave_pull_GLD",
+        "dow_GLD"
+      ],
+      "correlation": -0.21730337805755892,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "wave_pull_GLD",
+        "dow_IEF"
+      ],
+      "correlation": 0.021043042696433957,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "wave_pull_GLD",
+        "dow_TLT"
+      ],
+      "correlation": 0.022212461214563623,
+      "redundant": false
+    },
+    {
+      "pair": [
+        "wave_pull_GLD",
+        "dow_XLF"
+      ],
+      "correlation": -0.029599539716149533,
+      "redundant": false
+    },
     {
       "pair": [
         "wave_pull_TLT",
@@ -204,10 +261,10 @@
     }
   ],
   "redundant_pair_count": 3,
-  "reading": "7 signal-slots scored eligible by Chapter 4 so far. 3 pair(s) flagged as materially redundant (|correlation| >= 0.5) -- these do not each count as independent breadth toward a future minimum-breadth floor, per ADR 0007 clause 3. This score does not itself authorize an ensemble; it is the measurement that clause 3 requires before one could be built honestly.",
+  "reading": "8 signal-slots scored eligible by Chapter 4 so far. 3 pair(s) flagged as materially redundant (|correlation| >= 0.5) -- these do not each count as independent breadth toward a future minimum-breadth floor, per ADR 0007 clause 3. This score does not itself authorize an ensemble; it is the measurement that clause 3 requires before one could be built honestly.",
   "disclosed_limitations": [
     "Contribution series are illustrative exposure proxies (asset return during Wave Pull's holding window; negative asset return on Monday for Day-of-Week) for correlation measurement only -- not real, costed, executable positions.",
-    "Correlation is computed pairwise over each pair's own overlapping date range, not a single shared calendar across all 7 signals -- DBC's shorter history means its pairs have less overlap than, e.g., TLT-vs-TLT-based pairs.",
+    "Correlation is computed pairwise over each pair's own overlapping date range, not a single shared calendar across all signals -- DBC's shorter history means its pairs have less overlap than, e.g., TLT-vs-TLT-based pairs.",
     "0.5 is a disclosed, locked rule-of-thumb threshold, not derived from this project's own data -- treat the raw correlation values as the primary evidence, the redundant/not-redundant label as one reasonable cut of it."
   ]
 }
