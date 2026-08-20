@@ -88,6 +88,36 @@ def test_case_resample_ci_rejects_too_few_values() -> None:
         research.case_resample_confidence_interval([0.01])
 
 
+def test_two_sample_ci_brackets_a_known_positive_difference() -> None:
+    rng = np.random.default_rng(8)
+    group_a = rng.normal(loc=0.005, scale=0.01, size=500)  # e.g. Monday returns
+    group_b = rng.normal(loc=0.0, scale=0.01, size=2000)  # e.g. non-Monday returns
+    result = research.two_sample_block_bootstrap_confidence_interval(
+        group_a, group_b, resamples=500, seed=1
+    )
+    assert result["lower_bound"] < result["observed_mean"] < result["upper_bound"]
+    assert result["observed_mean"] > 0
+    assert result["group_a_count"] == 500
+    assert result["group_b_count"] == 2000
+
+
+def test_two_sample_ci_is_roughly_symmetric_under_no_true_difference() -> None:
+    rng = np.random.default_rng(9)
+    group_a = rng.normal(loc=0.0, scale=0.01, size=800)
+    group_b = rng.normal(loc=0.0, scale=0.01, size=800)
+    result = research.two_sample_block_bootstrap_confidence_interval(
+        group_a, group_b, resamples=1000, seed=2
+    )
+    # No planted difference -- the interval should straddle zero, not sit
+    # entirely on one side.
+    assert result["lower_bound"] < 0 < result["upper_bound"]
+
+
+def test_two_sample_ci_rejects_too_few_values_in_either_group() -> None:
+    with pytest.raises(ValueError, match="at least two"):
+        research.two_sample_block_bootstrap_confidence_interval([0.01], [0.01, 0.02, 0.03])
+
+
 def test_wave_pull_event_forward_returns_array_matches_the_mean_it_feeds() -> None:
     rng = np.random.default_rng(7)
     log_returns = np.concatenate([[0.0], rng.normal(loc=0.0002, scale=0.01, size=999)])

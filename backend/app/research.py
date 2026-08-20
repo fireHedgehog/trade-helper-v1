@@ -2193,3 +2193,59 @@ def case_resample_confidence_interval(
         "resamples": resamples,
         "event_count": n,
     }
+
+
+def two_sample_block_bootstrap_confidence_interval(
+    group_a: np.ndarray,
+    group_b: np.ndarray,
+    *,
+    block_bars: int = CHAPTER4_BLOCK_BARS,
+    resamples: int = CHAPTER4_RESAMPLES,
+    seed: int = CHAPTER4_SEED,
+    lower_percentile: float = CHAPTER4_LOWER_PERCENTILE,
+    upper_percentile: float = CHAPTER4_UPPER_PERCENTILE,
+) -> dict:
+    """Block-bootstrap confidence interval on the DIFFERENCE of two groups'
+    means (`group_a` - `group_b`) -- a third Chapter 4 CI shape, for
+    calendar-position effects (e.g. Monday vs. non-Monday returns) where
+    each side is itself a long, potentially serially-correlated sequence
+    (consecutive Mondays, consecutive non-Mondays), unlike CTA v2's single
+    continuous series or Wave Pull's small discrete event set. Resamples
+    each group independently in circular blocks (preserving within-group
+    serial structure), recomputes the difference each resample -- a
+    standard two-sample block bootstrap, distinct from `dow_bootstrap`'s
+    existing null test: that test fixes calendar-day positions and
+    resamples VALUES onto them to see how often chance reproduces the
+    observed split (breaking the position-to-value link by construction);
+    this estimates uncertainty about the TRUE difference by resampling each
+    group's own realized values, and reusing the null test's distribution
+    here would conflate the two again, the same distinction already made
+    for CTA v2 and Wave Pull."""
+    group_a = np.asarray(group_a, dtype=float)
+    group_a = group_a[np.isfinite(group_a)]
+    group_b = np.asarray(group_b, dtype=float)
+    group_b = group_b[np.isfinite(group_b)]
+    if len(group_a) < 2 or len(group_b) < 2:
+        raise ValueError("confidence interval requires at least two finite values per group")
+    if block_bars <= 0 or block_bars > min(len(group_a), len(group_b)):
+        raise ValueError("block_bars must be between 1 and the smaller group's sample length")
+    if resamples <= 0:
+        raise ValueError("resamples must be positive")
+
+    observed = float(group_a.mean() - group_b.mean())
+    rng = np.random.default_rng(seed)
+    resampled_diffs = np.empty(resamples)
+    for i in range(resamples):
+        idx_a = _circular_block_resample_indexes(len(group_a), block_bars, rng)
+        idx_b = _circular_block_resample_indexes(len(group_b), block_bars, rng)
+        resampled_diffs[i] = group_a[idx_a].mean() - group_b[idx_b].mean()
+
+    return {
+        "observed_mean": observed,
+        "lower_bound": float(np.percentile(resampled_diffs, lower_percentile)),
+        "upper_bound": float(np.percentile(resampled_diffs, upper_percentile)),
+        "coverage_pct": upper_percentile - lower_percentile,
+        "resamples": resamples,
+        "group_a_count": len(group_a),
+        "group_b_count": len(group_b),
+    }

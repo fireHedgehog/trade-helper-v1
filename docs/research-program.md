@@ -112,16 +112,20 @@ does not provide.
 |---|---|---|
 | 1 | [CTA v2, primary variant](../../backend/app/score_cta_v2_chapter4.py) | **Not eligible.** `68%` confidence interval on the daily excess return: `[-0.0035%, +0.0204%]`, annualized lower bound `-0.88%`. Even at Chapter 4's deliberately loosened one-sigma bar, the interval still spans zero — confidence multiplier `0.0`, no position sized. Consistent with CTA v2's own raw `p=0.231` under the null test (not a contradiction, a cross-check: a raw p that far from significant implies a wide-enough interval to plausibly include zero at 68% coverage too). This is Chapter 4 working as designed, not failing — being the strongest candidate in Chapter 5's triage does not guarantee clearing even a lower bar, and checking that honestly was the entire point of building this before opening a new falsification thread. |
 | 2 | [Wave Pull, `TLT`](../../backend/app/score_wave_pull_tlt_chapter4.py) | **Eligible.** `68%` confidence interval on the 10-session forward return, case-resampled across the `20` qualifying events (ADR 0003's own convention — a small discrete event set, not a continuous series, so resampled directly rather than via block-resampled price-path reconstruction): `[+1.22%, +2.40%]`. The lower bound stays positive despite the thin sample. Confidence multiplier `0.674` — a real, if reduced, position size under Loss-based Quantity Determination. First candidate to actually clear Chapter 4, confirming the framework discriminates on real statistical strength (Wave Pull's raw `p=0.032` vs. CTA v2's `p=0.231`) rather than being either a blanket pass or a blanket reject. Still not deployable alone — ADR 0007's minimum-breadth floor (not yet decided) requires an ensemble, and one eligible signal is not one. |
+| 3 | [Calendar Day-of-Week, all 12 assets](../../backend/app/score_calendar_dow_chapter4.py) | **`6`/`12` eligible** (`DBC`, `EFA`, `GLD`, `IEF`, `TLT`, `XLF`). A third confidence-interval shape: a two-sample block bootstrap on Monday vs. non-Monday returns per asset (each side block-resampled independently, since both are long, potentially serially-correlated sequences — not `dow_bootstrap`'s existing null test, which fixes calendar positions and resamples values onto them). Directly tests the breadth question this framework exists for: does `9`/`12` assets pointing the same direction, with zero individually clearing Chapter 1–3's `95%` bar, translate into real per-asset eligibility at the loosened `68%` bar? Partially — half do, half don't (the `3` wrong-signed assets from the original result, `QQQ`/`SPY`/`XLK`, are among those that don't). The `6` eligible assets span genuinely different clusters (commodities, international equity, gold, two treasuries, one equity sector), not a single redundant bet — but ADR 0007 clause 3's orthogonality measurement is still not built, so "6 individually eligible" is not yet "6 real independent breadth units"; `IEF`/`TLT` in particular are both duration exposure and plausibly correlated. |
 
 Ensemble engine and minimum-breadth floor remain required decisions, not
-yet built — with one eligible signal now identified, the minimum-breadth
-floor's exact number has gone from an abstract parameter to something that
-will directly gate whether Wave Pull's `TLT` can actually be sized, once
-more Chapter 4 candidates are scored. Calendar Day-of-Week's directional
-tilt is the next natural section — a different statistical shape again
-(breadth across `9`/`12` assets, no single asset individually significant),
-worth checking whether Chapter 4's per-signal framing even applies cleanly
-to it or needs its own adaptation.
+yet built — but the picture worth confirming has changed since Chapter 4
+opened: three sections in, the framework has now produced one clean
+rejection (CTA v2), one clean single-asset acceptance (Wave Pull `TLT`),
+and one genuinely mixed, partial-breadth result (Calendar Day-of-Week,
+`6/12`) — three different outcomes from three different statistical
+shapes, which is itself evidence the eligibility rule is discriminating on
+real structure rather than defaulting to any one answer. The next real
+gap is no longer "do we have anything eligible" (there are now `7`
+eligible signal-slots across `2` candidates) — it is that orthogonality
+between them has never been measured, which is exactly what a minimum-
+breadth floor would need to be honest about before it means anything.
 
 ## Chapter 5 — Discussion: what the ten closed nulls might still be worth
 
