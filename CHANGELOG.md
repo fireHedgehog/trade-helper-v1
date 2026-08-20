@@ -2,6 +2,16 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.66.0
+
+Locked, executed, closed Fed put: yield-stress precursor v2 -- amends v1
+with a fuller, action-based episode inventory. No trade, no signal.
+
+- User-directed: real Fed action, not press-release branding, is what matters. v1's episodes were all Fed-branded "QE"; v2 adds two real episodes the Fed itself calls "not QE" -- 2019 bill purchases/repo ops (started 2019-10-15, verified live against NY Fed operating-policy record) and the 2025-12 Reserve Management Purchases (started 2025-12-12, the actual current episode). A mechanical alternative -- detecting action-onset directly from TREAST's own trailing growth rate -- was tried and rejected: it flagged ordinary 2003-2007 organic balance-sheet growth and mistimed 2022's active QT *shrinkage* as "rising" (lagged-window artifact). Official operational dates, sourced from the Desk's own record, proved more reliable.
+- Result: `not_evaluable`, `p=0.981`, `6`/`6` episodes negative -- including the current episode itself. Disclosed diagnostic: the 4 crisis episodes show both yields collapsing together (flight-to-safety, per v1); 2019 shows the long end falling more than the short end; 2025 RMP shows the short end easing (rate cuts priced) while the long end sits roughly *neutral* against its own 3-year trailing history, not elevated -- the reverse emphasis from the hypothesis.
+- Real limitation surfaced, disclosed rather than patched: 10Y at ~4% reads as extreme against a 20-year memory but near-average against this study's pre-committed 3-year lookback, because that window is itself mostly populated by the already-elevated 2023-2025 period. A longer-lookback design is new, separately-locked work, not a parameter tweak to this closed result. See [result](docs/research-results/fed-put-yield-stress-precursor-v2.md).
+- Closes the yield-stress-precursor line as framed across two independent designs (v1, v2). 332 passed (no engine change).
+
 ## 0.65.0
 
 Locked, executed, and closed Fed put: yield-stress precursor v1 --

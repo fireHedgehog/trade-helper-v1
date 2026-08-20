@@ -1,0 +1,10 @@
+{
+  "actual_costs_or_execution_accessed": false,
+  "common_date_count": 12550,
+  "common_date_end": "2026-08-18",
+  "common_date_start": "1976-06-01",
+  "data_sha256": "64d4b8883905c47869dc73dbe9508937e1a48dd2011ae8a0be3809d0b509fe49",
+  "experiment_id": "fed-put-yield-stress-precursor-v2",
+  "no_trade": true,
+  "spec_sha256": "59ef27791a68e7750848b772c070196d403c739d9539efd12f8f4d9e0d7e6e5f"
+}

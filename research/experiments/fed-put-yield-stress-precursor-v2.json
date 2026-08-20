@@ -1,0 +1,117 @@
+{
+  "experiment_id": "fed-put-yield-stress-precursor-v2",
+  "status": "preregistered_no_results",
+  "protocol": "docs/research-protocols/fed-put-yield-stress-precursor-v2.md",
+  "selection_record": "docs/research-candidates/2026-08-20-cycle-6.md",
+  "amends": "research/experiments/fed-put-yield-stress-precursor-v1.json",
+  "amendment_reason": "v1 episode set silently excluded real Fed action the Fed itself branded not QE (2019, 2025-12); v2 tests the same score against the fuller, action-based episode inventory. Not a retry -- score/lookback/window/resamples/seed all unchanged from v1.",
+  "base_code_commit": "92de6125f199aa1696d7da5f9e95f7b1d55cbff6",
+  "fingerprint_date": "2026-08-20",
+  "canonicalization": "UTF-8 JSON; recursively sorted keys; separators comma and colon; ensure_ascii=false; trailing newline excluded",
+  "permitted_decisions": [
+    "not_evaluable",
+    "weak_evidence",
+    "evidence_present"
+  ],
+  "forbidden_outputs": [
+    "reject",
+    "revise",
+    "continue_research",
+    "alpha",
+    "entry_signal",
+    "exit_signal",
+    "stop",
+    "position_size",
+    "sleeve",
+    "sharpe",
+    "material_and_consistent",
+    "not_material_or_not_consistent",
+    "engine_feasible",
+    "engine_not_feasible"
+  ],
+  "universe": [
+    "DGS2",
+    "DGS10"
+  ],
+  "data": {
+    "database": "data/market.db",
+    "source_table": "bars",
+    "contract": "docs/adr/0002-market-data-contract.md",
+    "pit_justification": "unchanged from v1 -- see docs/research-protocols/fed-put-yield-stress-precursor-v1.md section 2",
+    "fingerprint_method": "SHA-256 incremental ORDER BY symbol,date; symbol UTF-8 + NUL + date ASCII + NUL + big-endian IEEE-754 close double",
+    "development_sha256": null,
+    "development_rows": null,
+    "fingerprint_pending_reason": "specification locked before execution; fingerprint recorded fresh at execution time"
+  },
+  "score": {
+    "lookback_sessions": 756,
+    "zscore_definition": "z_s(t) = (y_s(t) - trailing_mean(y_s, 756)) / trailing_std(y_s, 756), strictly trailing (excludes t)",
+    "composite_definition": "score(t) = z_10Y(t) - abs(z_2Y(t))",
+    "rationale": "unchanged from v1"
+  },
+  "episodes": [
+    {
+      "name": "QE1",
+      "start": "2008-11-25",
+      "end": "2010-03-31",
+      "fed_framing": "QE"
+    },
+    {
+      "name": "QE2",
+      "start": "2010-11-03",
+      "end": "2011-06-30",
+      "fed_framing": "QE"
+    },
+    {
+      "name": "QE3",
+      "start": "2012-09-13",
+      "end": "2014-10-29",
+      "fed_framing": "QE"
+    },
+    {
+      "name": "COVID_QE",
+      "start": "2020-03-23",
+      "end": "2022-03-16",
+      "fed_framing": "QE"
+    },
+    {
+      "name": "BILL_PURCHASES_2019",
+      "start": "2019-10-15",
+      "end": "2020-03-22",
+      "fed_framing": "not QE (Powell)"
+    },
+    {
+      "name": "RMP_2025",
+      "start": "2025-12-12",
+      "end": null,
+      "fed_framing": "not QE (Fed communications)"
+    }
+  ],
+  "episodes_source": "NY Fed operating-policy record and contemporaneous reporting for actual operation start dates, verified live 2026-08-20 -- not derived from DGS2/DGS10 or from TREAST-based mechanical detection (tried and rejected, see protocol section 2)",
+  "estimand": {
+    "per_episode_statistic": "max(score(t)) over the 60 sessions immediately before the episode start date (excluding the start date itself)",
+    "precursor_window_sessions": 60,
+    "favourable_direction": "high"
+  },
+  "inference": {
+    "base_function": "backend/app/thesis_track.py:thesis_track_p_value",
+    "method": "placebo-in-time randomization, not block-bootstrap -- see docs/thesis-track-small-n.md",
+    "resamples": 5000,
+    "seed": 17291,
+    "exclusion_buffer_sessions": 60,
+    "exclusion_rule": "placebo windows may not overlap [episode_start_index - 60, episode_end_index + 60] for any real episode; RMP_2025 has no end date and is treated as extending through the last available session",
+    "p_value_convention": "one-sided; fraction of resamples with synthetic mean statistic >= observed mean, plus add-one correction"
+  },
+  "power_precommitment": {
+    "n_episodes": 6,
+    "expected_underpowered": true,
+    "reading_rule": "p<=0.10 -> evidence_present; 0.10<p<=0.30 -> weak_evidence; otherwise not_evaluable",
+    "commitment": "a null or inconclusive result is not_evaluable/insufficient evidence, never reframed as rejection"
+  },
+  "scope_exclusions": {
+    "no_trade": true,
+    "no_costs": "out of scope for this evidence-layer study",
+    "no_stage_9b_authorization": "this protocol produces Thesis Track evidence-layer output only, not a Stage 9B trade-eligibility decision",
+    "no_sleeve_or_executable_expression": "a real trading expression, if this clears evidence review, is separate, later, separately-locked work"
+  }
+}

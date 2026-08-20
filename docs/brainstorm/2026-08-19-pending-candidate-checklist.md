@@ -212,6 +212,15 @@ by itself.
   preceded by both `2Y` and `10Y` falling together (flight-to-safety), the
   opposite of the hypothesized "10Y high, 2Y contained" shape. QE
   historically follows a broad yield collapse, not a long-end spike.
+  **v2** (`0.66.0`, user-directed): added real "not QE" actions (2019
+  bill purchases, 2025-12 Reserve Management Purchases) since branding
+  shouldn't matter, only real action — `n=6`. Same conclusion,
+  [`not_evaluable`](../research-results/fed-put-yield-stress-precursor-v2.md),
+  `p=0.981`, `6`/`6` negative including the actual current episode.
+  Surfaced a real, disclosed limitation: the 3-year z-score lookback
+  reads today's `10Y` as near-average, while the "too high" narrative
+  implicitly compares to a much longer, pre-2022 reference period — a
+  longer-lookback design would be new, separately-locked work.
 
 ## Tier 4 — orthogonal, multidimensional, real cost
 
