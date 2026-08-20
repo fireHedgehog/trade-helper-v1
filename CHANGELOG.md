@@ -2,6 +2,17 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.73.0
+
+ADR 0008 (bounded paper trading + Track B) accepted. Docs-only; no implementation.
+
+- User-directed: accepted the same way ADR 0007 was -- draft, explicit acceptance, implementation as a separate later step. Zero strategies or candidates hold `eligible for operational validation` via any of the three approval paths (strict ladder, Chapter 4, Track B); none of ADR 0008's required infrastructure (`live_price_snapshots`, `paper_ledger_events`, the Alpaca integration module, the reconciliation action) is built.
+- `docs/identity.md` (v2 -> v3): new paragraph naming ADR 0008 as the operational-mechanics definition of `eligible for operational validation`, alongside ADR 0007's existing pointer.
+- `docs/adr/0008-bounded-paper-trading.md`, `docs/research-program.md` Chapter 5, `docs/README.md`, `docs/roadmap.md` §9C, `docs/product.md` all updated from `proposed` to `accepted`, `2026-08-21`.
+- Real next step (blocked): the user needs to create an Alpaca paper trading account and API keys before any live connectivity code can be tested end-to-end -- this project cannot do that step. Metrics-computation code and schema/module scaffolding can proceed without it.
+- Saved a brainstorm memo (`docs/brainstorm/2026-08-21-parallel-multi-agent-research-pipeline.md`, non-evidential): user's idea to parallelize research production across multiple concurrent agents, explicitly parked ~6 months out. Named the real risk (shared-ledger concurrent writes, not production work, is what breaks) and the safe shape if picked up later (parallel production, single sequential integration pass).
+- 367 passed (no code change).
+
 ## 0.72.0
 
 Docs-only: drafted ADR 0008 (bounded paper trading), status `proposed`. No implementation.

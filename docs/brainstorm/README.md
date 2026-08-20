@@ -22,3 +22,4 @@ Template: `YYYY-MM-DD-topic.md`, first line:
 | 2026-08-20 | Macro reaction-function narrative library (beyond "Fed put") | [2026-08-20-macro-reaction-function-narrative-library.md](2026-08-20-macro-reaction-function-narrative-library.md) |
 | 2026-08-20 | Policy exposure / industrial-policy factor | [2026-08-20-policy-exposure-industrial-factor.md](2026-08-20-policy-exposure-industrial-factor.md) |
 | 2026-08-20 | Trading folklore falsification list | [2026-08-20-trading-folklore-falsification-list.md](2026-08-20-trading-folklore-falsification-list.md) |
+| 2026-08-21 | Parallel multi-agent research pipeline ("industrialized assembly line") — parked, ~6mo out | [2026-08-21-parallel-multi-agent-research-pipeline.md](2026-08-21-parallel-multi-agent-research-pipeline.md) |

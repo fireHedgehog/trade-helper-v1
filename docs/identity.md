@@ -1,6 +1,6 @@
 # Product identity
 
-Status: v2 — canonical, distilled identity statement. Read immediately after the authoritative [resume checkpoint](README.md). Full contracts: [product.md](product.md), [hypothesis-engineering.md](hypothesis-engineering.md), [model-acceptance-standard.md](model-acceptance-standard.md), [exploration-protocol.md](exploration-protocol.md), [research-protocol.md](research-protocol.md), [ADRs](adr/). Edits require a version bump; the statement must stay precise and non-redundant.
+Status: v3 — canonical, distilled identity statement. Read immediately after the authoritative [resume checkpoint](README.md). Full contracts: [product.md](product.md), [hypothesis-engineering.md](hypothesis-engineering.md), [model-acceptance-standard.md](model-acceptance-standard.md), [exploration-protocol.md](exploration-protocol.md), [research-protocol.md](research-protocol.md), [ADRs](adr/). Edits require a version bump; the statement must stay precise and non-redundant.
 
 ## What we run (one line)
 
@@ -38,6 +38,24 @@ risk-controlled ensemble, rather than asked to prove itself alone at high
 confidence. Its own terminal state is the same one this ladder already
 names: `eligible for operational validation`, never profit claimed
 directly.
+
+**[ADR 0008](adr/0008-bounded-paper-trading.md) (status: accepted
+`2026-08-21`) defines what `eligible for operational validation` actually
+requires operationally** — point-in-time data (decoupled from the
+retroactively-adjustable backtesting series), risk-controlled sizing
+(reusing [ADR 0004](adr/0004-portfolio-risk-contract.md) unchanged),
+daily reconciliation against a broker's own paper-account state, and an
+approval gate — before any candidate that reaches this ladder's terminal
+state can actually be paper-traded. That gate now has **three** entry
+paths: this strict ladder, ADR 0007's parallel one, or ADR 0008's own
+Track B — a disclosed discretionary/common-sense-pattern basis, admitted
+without statistical proof but under the same unweakened sizing and a
+locked-in-advance kill rule. As of acceptance, zero strategies or
+candidates hold `eligible for operational validation` via any of the
+three paths, and none of ADR 0008's own required infrastructure
+(`live_price_snapshots`, `paper_ledger_events`, the broker integration,
+the reconciliation action) is built yet — acceptance settled the design,
+not the deployment.
 
 ## Anti-deceptions (re-read each session)
 

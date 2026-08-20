@@ -292,9 +292,9 @@ Only after 9A, implement the finite experiment. Apply the preregistered suitable
 
 This stage is deliberately business/research work, not parameter tuning. UI placeholders do not authorize model development.
 
-### 9C — Bounded paper trading: design drafted, nothing eligible yet
+### 9C — Bounded paper trading: design accepted, nothing eligible yet
 
-[ADR 0008](adr/0008-bounded-paper-trading.md) (2026-08-20, status `proposed`)
+[ADR 0008](adr/0008-bounded-paper-trading.md) (accepted `2026-08-21`)
 answers what Stage 9B's own gate names but does not itself define — passing
 9B means "eligible for the next validation stage," and this is that next
 stage's design: an approval gate sourced from `research_catalog.py` (now
@@ -307,12 +307,14 @@ sizing/drawdown formulas plus ADR 0007's confidence multiplier where
 applicable, and a daily reconciliation check against a broker's own
 paper-account state (build-vs-buy resolved in favour of Alpaca's free
 paper trading API over a custom fill simulator). See [the research
-program](research-program.md) Chapter 5. Drafting this design is not
-itself progress toward paper trading — the ADR remains `proposed` until
-explicitly reviewed and accepted, implementation is a separate step after
-that, and as of this draft zero strategies or candidates hold `eligible
-for operational validation` under any of the three paths, so nothing is
-currently positioned to use what this ADR defines even once built.
+program](research-program.md) Chapter 5. Acceptance is not itself
+progress toward paper trading — implementation
+(`live_price_snapshots`, `paper_ledger_events`, the Alpaca integration
+module, the reconciliation action, `research_catalog.py` corrections) is
+a separate, still-unstarted step, and as of acceptance zero strategies or
+candidates hold `eligible for operational validation` under any of the
+three paths, so nothing is currently positioned to use what this ADR
+defines even once built.
 
 ## Stage 10: Unattended data operation — parked
 

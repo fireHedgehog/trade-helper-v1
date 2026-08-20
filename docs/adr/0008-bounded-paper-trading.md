@@ -1,20 +1,24 @@
 # ADR 0008: Bounded paper trading — point-in-time data, operational risk, reconciliation, and approval design
 
-Status: **proposed**. Draft for review, not yet accepted. Answers the four
-requirements [product.md](../product.md) already names as prerequisites for
-paper trading ("a separate point-in-time data, operational risk,
-reconciliation, and approval design; it is not an implied next step") and
-the same gap [ADR 0004](0004-portfolio-risk-contract.md) names in its own
-closing line ("operational reconciliation and broker controls require a
-separate design"). This ADR authorizes the *design* of bounded paper
-trading. It does not itself authorize deployment, and it does not grant
-`eligible for operational validation` status to anything — as of this
-draft, zero strategies or candidates hold that status under
-[identity.md](../identity.md)'s epistemic ladder, [ADR 0007](0007-risk-budgeted-ensemble-acceptance.md)'s
-parallel Chapter 4 ladder, or this ADR's own Track B (a third, lighter
-entry path for disclosed discretionary/common-sense patterns, defined
-below — lighter on statistical proof, not on risk discipline). See [the
-research program](../research-program.md) Chapter 5 for the current,
+Status: **accepted**, `2026-08-21`. Answers the four requirements
+[product.md](../product.md) already names as prerequisites for paper
+trading ("a separate point-in-time data, operational risk, reconciliation,
+and approval design; it is not an implied next step") and the same gap
+[ADR 0004](0004-portfolio-risk-contract.md) names in its own closing line
+("operational reconciliation and broker controls require a separate
+design"). Acceptance means the *design* is settled enough to build on,
+mirroring exactly how [ADR 0007](0007-risk-budgeted-ensemble-acceptance.md)
+was accepted before Chapter 4 was built — it does not itself authorize
+deployment, and it does not grant `eligible for operational validation`
+status to anything. As of acceptance, zero strategies or candidates hold
+that status under [identity.md](../identity.md)'s epistemic ladder, ADR
+0007's parallel Chapter 4 ladder, or this ADR's own Track B (a third,
+lighter entry path for disclosed discretionary/common-sense patterns,
+defined below — lighter on statistical proof, not on risk discipline);
+`live_price_snapshots`, `paper_ledger_events`, the Alpaca integration
+module, and the reconciliation action remain named, required,
+unimplemented decisions (see Consequences). See [the research
+program](../research-program.md) Chapter 5 for the current,
 honest state of who (nobody, yet) is eligible to use what this ADR
 designs.
 

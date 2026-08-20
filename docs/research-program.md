@@ -271,7 +271,12 @@ either — a third, operational question: once a candidate *does* reach a
 terminal state on one of the three approval paths (the strict ladder,
 Chapter 4's ladder, or Track B below), what concretely has to be true
 before anything real gets tracked, sized, and reconciled. Governed by [ADR
-0008](adr/0008-bounded-paper-trading.md), status `proposed`.
+0008](adr/0008-bounded-paper-trading.md), status `accepted` `2026-08-21`.
+Acceptance settled the design; none of its required infrastructure
+(`live_price_snapshots`, `paper_ledger_events`, the Alpaca integration
+module, the reconciliation action) is built yet, and the actual real-data
+connectivity test is blocked on the user creating an Alpaca paper account
+and API keys — not something this project can do on its own.
 
 The gap this chapter names is a real, verified one, not a hypothetical:
 `positions` in `data/market.db` has zero rows; `backend/app/signals.py`'s
