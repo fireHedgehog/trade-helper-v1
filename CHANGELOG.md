@@ -2,6 +2,17 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.67.0
+
+Locked, executed, closed Fed put: yield-stress precursor v3 -- amends v2
+with a 20-year lookback (756->5,040 sessions), same score/episodes/
+machinery otherwise. No trade, no signal.
+
+- User-directed: v2's 3-year lookback read today's `10Y` as near-average, but "rocket high" means multi-decade, not 3-year. v3 tests that reading directly.
+- Result: `not_evaluable`, `p=0.885`. One real, concrete finding: `2025 RMP` -- the actual current episode -- is the only one of six to flip positive (`+0.13`), matching "2Y ok, 10Y too high" against a multi-decade reference. The 4 crisis episodes got *more* negative, not less, exactly as the protocol predicted before execution (their 20yr windows are dominated by the higher 1990s-2000s rate era, a secular-decline asymmetry disclosed in the locked protocol, not a post-hoc excuse).
+- Three independent designs (v1 n=4, v2 n=6, v3 20yr lookback) all close `not_evaluable` on the pooled, cross-episode claim. Whether today specifically is a genuine exception is real but not answerable by a 6-episode pooled test either way. See [result](docs/research-results/fed-put-yield-stress-precursor-v3.md).
+- Closes the yield-stress-precursor line. Byte-identical on rerun. 332 passed (no engine change).
+
 ## 0.66.0
 
 Locked, executed, closed Fed put: yield-stress precursor v2 -- amends v1

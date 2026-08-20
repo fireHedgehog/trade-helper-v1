@@ -221,6 +221,12 @@ by itself.
   reads today's `10Y` as near-average, while the "too high" narrative
   implicitly compares to a much longer, pre-2022 reference period — a
   longer-lookback design would be new, separately-locked work.
+  **v3** (`0.67.0`): 20yr lookback, same score/episodes otherwise. Still
+  `not_evaluable`, `p=0.885` — but `2025 RMP` (the actual current
+  episode) is the only one of six that flips positive, matching the
+  hypothesis, while the 4 crisis episodes got *more* negative (secular
+  1981-2020 rate-decline asymmetry, predicted in the protocol before
+  execution). Three independent designs now closed on this line.
 
 ## Tier 4 — orthogonal, multidimensional, real cost
 

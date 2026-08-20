@@ -1,0 +1,47 @@
+{
+  "episodes": [
+    {
+      "end": "2010-03-31",
+      "fed_framing": "QE",
+      "max_score_in_precursor_window": -2.7911365208624463,
+      "name": "QE1",
+      "start": "2008-11-25"
+    },
+    {
+      "end": "2011-06-30",
+      "fed_framing": "QE",
+      "max_score_in_precursor_window": -3.8127202510292344,
+      "name": "QE2",
+      "start": "2010-11-03"
+    },
+    {
+      "end": "2014-10-29",
+      "fed_framing": "QE",
+      "max_score_in_precursor_window": -3.872714681204835,
+      "name": "QE3",
+      "start": "2012-09-13"
+    },
+    {
+      "end": "2022-03-16",
+      "fed_framing": "QE",
+      "max_score_in_precursor_window": -1.5303143263837726,
+      "name": "COVID_QE",
+      "start": "2020-03-23"
+    },
+    {
+      "end": "2020-03-22",
+      "fed_framing": "not QE (Powell)",
+      "max_score_in_precursor_window": -1.348733135127901,
+      "name": "BILL_PURCHASES_2019",
+      "start": "2019-10-15"
+    },
+    {
+      "end": null,
+      "fed_framing": "not QE (Fed communications)",
+      "max_score_in_precursor_window": 0.13273377666672403,
+      "name": "RMP_2025",
+      "start": "2025-12-12"
+    }
+  ],
+  "n_episodes": 6
+}
