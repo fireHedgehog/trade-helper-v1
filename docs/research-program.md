@@ -105,6 +105,139 @@ No sections yet. ADR 0007 is a draft awaiting review; the ensemble engine,
 confidence-multiplier sizing function, and minimum-breadth floor are named
 as required decisions, not yet built.
 
+## Chapter 5 — Discussion: what the ten closed nulls might still be worth
+
+Not a protocol, not a claim, no decision vocabulary applies. A discussion
+chapter, explicitly preliminary — fifteen experiments is not a large enough
+sample to conclude anything about the discussion itself, only to state it
+clearly enough to test later. Written because a Chapter 1–3
+`not_material_or_not_consistent` answers one specific question — *is this
+distinguishable from noise, alone, at high confidence* — and it is a real
+error to silently read that as *this has no expected value and would
+contribute nothing to a diversified, sized ensemble*. Those are different
+claims. A null on the first does not resolve the second either way.
+
+### Two ways to build a strategy out of the same underlying facts
+
+$0.995^4 \approx 98.0\%$: four independent legs, each individually
+near-certain, compounded. This is what Chapters 1–3 are built to find —
+and finding four *independent*, structurally near-arbitrage effects,
+simultaneously, is supposed to be almost never possible in a liquid market.
+That every closed result so far has failed to clear this bar on cheap,
+famous, likely-already-arbitraged signals is the textbook-predicted
+outcome, not a broken test.
+
+$0.685^4 \approx 22.0\%$: four legs, each individually modest and
+uncertain, compounded the same naive way, looks much worse — but that
+arithmetic is the wrong model for how a real multi-factor book actually
+works. Diversified strategies do not need every leg to be simultaneously
+right; they need many weakly-correlated legs whose *individual* edge is
+real but small, combined so no one leg's failure is costly and the
+*portfolio's* risk-adjusted return, not the joint probability of every leg
+being correct, is what compounds favourably. This is Grinold and Kahn's
+Fundamental Law again (`IR ≈ IC × √breadth`), stated in probability
+language instead of information-coefficient language. Different survivability,
+different risk premium: a true near-arbitrage effect, if one existed, would
+carry a *small* risk premium (efficient markets price out genuinely riskless
+edges quickly) but would be robust once found; a risk-premium strategy
+carries a *larger* expected return specifically because it requires genuine
+risk-bearing through periods where the premium does not pay off — its
+survivability depends on sizing and diversification discipline, not on
+statistical proof.
+
+### An honest triage of the ten closed results, not a blanket rescue
+
+Chapter 4 is not a magic re-reading that turns every null into a hidden
+win — most of the closed set genuinely has nothing to carry forward even
+under a loosened lens, and saying so plainly matters more here than
+anywhere else in this document, because the temptation to retroactively
+rescue a disappointing result is exactly the failure mode this project's
+whole discipline exists to resist.
+
+**Shows a real, disclosed, modestly-sized point estimate worth a Chapter 4
+eligibility score later** — not proven, but not merely "failed," either:
+
+- [CTA v2](research-results/cta-v2-pooled-trend-overlay.md) — materiality
+  cleared (`+2.18pp` annualized), consistently signed across all three
+  locked lookbacks, beat the placebo point estimate. The clearest candidate
+  in the closed set. Its own disclosed 2008-dependency is exactly the kind
+  of regime-concentration risk a real ensemble/diversification framing
+  would have to confront directly, not one Chapter 4 makes disappear.
+- [Wave Pull](research-results/wave-pull-v1.md) — `TLT`'s raw `p=0.032` on
+  a thin `20`-event sample. A genuine near-miss, but the sample is small
+  enough that "real but unconfirmed" and "noise" remain nearly
+  indistinguishable either way.
+- [Calendar Day-of-Week](research-results/calendar-day-of-week-v1.md) —
+  `9/12` assets negative, matching the literature's predicted sign; no
+  single asset clears correction, but the breadth of the directional tilt
+  is real and disclosed, not cherry-picked.
+
+**Weaker version of the same shape, worth naming but not overselling:**
+
+- [Calendar Turn-of-Month](research-results/calendar-turn-of-month-v1.md) —
+  `EEM` raw `p=0.013` (the strongest single-asset raw signal of the
+  session) but only `7/12` assets positive, barely a majority. A real
+  near-miss on one asset inside a much less consistent whole.
+
+**Genuinely nothing to carry forward, said plainly rather than
+soft-pedaled:**
+
+- [Overnight Gap Continuation](research-results/overnight-gap-continuation-v1.md) —
+  `12/12` assets opposite-signed. Not "unconfirmed positive" — a clean
+  signal in the wrong direction. Fails Chapter 4's own positive-EV
+  eligibility clause outright, at any confidence level. (Its own disclosed
+  reversal diagnostic is a *different* hypothesis, a possible future
+  Chapter 1 section, not a rescue of this one.)
+- [ETF-12 rotation](research-results/etf12-cross-sectional-rotation-v1.md) —
+  a genuinely small point estimate (`0.045` vs. a `0.10` floor) on an ample,
+  well-separated sample. Not a near-miss, just small.
+- [Fed put v1/v2/v3](research-results/fed-put-yield-stress-precursor-v3.md) —
+  `p=0.885`–`0.989`, most episodes flatly opposite-signed on the pooled
+  claim tested. (The single 2025 episode's own reading remains a distinct,
+  unresolved thread — but `n=1` is not something a sizing decision can
+  safely act on regardless of framework.)
+- [TA Breakout](research-results/ta-breakout-v1.md) — a disclosed
+  weak-separation *design* flaw, not just an unconfirmed effect; closer to
+  an invalid test than a modest one.
+- [RSI oversold reversal](research-results/rsi-oversold-reversal-v1.md) — a
+  genuine power limitation (`36`–`56` events/asset); the design could not
+  have told either way, which is different from "told us it's small."
+- [SMA Cross v1](research-results/sma-cross-v1-exposure-reduction.md) —
+  `QQQ`'s near-miss (Holm `p=0.0506`) sits inside a *fully explained*
+  confound (a volatility-only placebo matched/beat it on `12/12` assets).
+  A near-miss with a clean alternative explanation is not the same shape as
+  CTA v2's near-miss with no alternative explanation offered.
+- [Consolidation support-recovery](research-results/consolidation-support-feasibility-v1.md) —
+  `not_evaluable`; no point estimate exists to discuss either way.
+
+### Risk preference as a spectrum, not a rule
+
+Where any future researcher sets the Chapter 4 confidence bar is a personal
+risk-tolerance choice, not something the statistics alone resolve — the
+same point [ADR 0007](adr/0007-risk-budgeted-ensemble-acceptance.md) makes
+about there being no third party to protect here. Sketched as a spectrum,
+not a locked scale:
+
+1. Chapters 1–3 only. Never touches Chapter 4. Accepts a near-zero hit
+   rate on cheap signals as the honest price of requiring proof.
+2. Chapter 4 eligible only for a *disclosed near-miss with no clean
+   alternative explanation* (CTA v2's shape) — the narrowest possible
+   opening.
+3. Chapter 4 eligible for any signal with a positive, cross-validated point
+   estimate and a stated mechanism, regardless of how wide its uncertainty
+   band is — sized down accordingly, never sized up.
+4. Actively seeks breadth — deliberately operationalizes more Chapter-4-shaped
+   candidates (weak mechanism, modest expected value) specifically to
+   increase ensemble breadth, on the Grinold-Kahn logic that breadth itself
+   is where the edge lives.
+5. Treats the diversification and sizing discipline as *the* risk control,
+   and is willing to run a genuinely wide zoo of individually-unconfirmed,
+   weakly-correlated signals, provided the live-attrition rule and drawdown
+   halt are real and enforced.
+
+No position is stated here on which level is correct — that is exactly the
+kind of conclusion this chapter is not yet entitled to reach.
+
 ## How a chapter's "why, not just whether" reads
 
 Every section within a chapter should be checkable against the two
