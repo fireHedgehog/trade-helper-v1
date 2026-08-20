@@ -51,19 +51,18 @@ information classification (own-asset market data; cross-asset market
 data; fundamentals; macro and policy; events and text; derived portfolio
 state) — same six buckets, new label names. No new governance concept here.
 
-## Two things worth tracking, not yet actioned
+## Two things worth tracking
 
-1. **Bootstrap Type-I calibration is unverified for the event-recomputing
-   variants specifically** — SMA Cross v1, RSI, TA Breakout, Wave Pull, and
-   Overnight-Gap all reconstruct a synthetic price path per resample and
-   recompute a state/event on it; each has a planted-effect sanity test,
-   which is not the same as a Monte Carlo check that the empirical
-   rejection rate matches nominal `α` under a true null with realistic
-   serial dependence. Turn-of-Month, Day-of-Week, ETF-12 rotation, and CTA
-   v2 don't carry this exposure — they resample an already-realized series,
-   closer to textbook Politis–Romano usage. Cheap to close (synthetic data,
-   no market fetch, no new protocol) whenever picked up; not yet scored or
-   scheduled.
+1. **Bootstrap Type-I calibration — checked 2026-08-20, see
+   [result](../research-results/event-bootstrap-calibration-v1.md).** No
+   candidate showed an inflated (anti-conservative) rejection rate under a
+   true null across 300 replications; several (SMA Cross v1, Wave Pull v1)
+   were measurably conservative. This answers the memo's specific concern.
+   It does not answer a related, still-open question the result itself
+   raises: conservative calibration is often associated with reduced
+   power, and no power calibration (planted-effect detection rate at
+   realistic effect sizes) has been run for these five candidates — a
+   natural companion study, not yet scheduled.
 2. **A Factor Lab, if ever adopted, is a product surface, not only a
    script.** [product.md](../product.md)'s surface table (Today, Symbol
    Research, Strategy Lab, Data Management, Macro, Research Record) has no

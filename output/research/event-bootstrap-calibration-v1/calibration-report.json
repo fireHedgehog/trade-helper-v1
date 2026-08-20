@@ -1,0 +1,88 @@
+{
+  "calibration_block_bars": 20,
+  "calibration_resamples": 1000,
+  "nominal_alpha": 0.05,
+  "null_generator": "GARCH(1,1), zero mean, alpha=0.08, beta=0.9, target unconditional daily vol 0.01",
+  "replications_attempted": 300,
+  "results": {
+    "overnight_gap": {
+      "insufficient_event_replications": 0,
+      "p_event": {
+        "empirical_type1_rate": 0.023333333333333334,
+        "rejections_at_alpha_0.05": 7,
+        "replications_used": 300,
+        "wilson_95_ci": [
+          0.011347660297277278,
+          0.047371972275708704
+        ]
+      },
+      "p_gap_vs_placebo": {
+        "empirical_type1_rate": 0.023333333333333334,
+        "rejections_at_alpha_0.05": 7,
+        "replications_used": 300,
+        "wilson_95_ci": [
+          0.011347660297277278,
+          0.047371972275708704
+        ]
+      }
+    },
+    "rsi": {
+      "insufficient_event_replications": 9,
+      "p_event": {
+        "empirical_type1_rate": 0.027491408934707903,
+        "rejections_at_alpha_0.05": 8,
+        "replications_used": 291,
+        "wilson_95_ci": [
+          0.01399480246216141,
+          0.05330054637289573
+        ]
+      }
+    },
+    "sma_cross": {
+      "p_delta_mdd": {
+        "empirical_type1_rate": 0.0033333333333333335,
+        "rejections_at_alpha_0.05": 1,
+        "replications_used": 300,
+        "wilson_95_ci": [
+          0.000588657721657733,
+          0.018636693700544448
+        ]
+      },
+      "p_delta_sigma": {
+        "empirical_type1_rate": 0.0033333333333333335,
+        "rejections_at_alpha_0.05": 1,
+        "replications_used": 300,
+        "wilson_95_ci": [
+          0.000588657721657733,
+          0.018636693700544448
+        ]
+      }
+    },
+    "ta_breakout": {
+      "insufficient_event_replications": 0,
+      "p_event": {
+        "empirical_type1_rate": 0.02666666666666667,
+        "rejections_at_alpha_0.05": 8,
+        "replications_used": 300,
+        "wilson_95_ci": [
+          0.013573069806564902,
+          0.05172894295821838
+        ]
+      }
+    },
+    "wave_pull": {
+      "insufficient_event_replications": 58,
+      "p_event": {
+        "empirical_type1_rate": 0.0,
+        "rejections_at_alpha_0.05": 0,
+        "replications_used": 242,
+        "wilson_95_ci": [
+          0.0,
+          0.015625756700665763
+        ]
+      }
+    }
+  },
+  "series_length": 3000,
+  "wall_clock_seconds": 2933.2708570957184
+}

@@ -1,6 +1,13 @@
 # Research backlog
 
-Status: active Stage 9A. Cycle 1 consolidation feasibility closed `not_evaluable`
+Status: active Stage 9A. The single-asset/time-series research line
+covering everything below through CTA v2 is formally **parked** (not
+rejected) as of 2026-08-20 — see
+[stage-closures/2026-08-20-single-asset-time-series-line.md](stage-closures/2026-08-20-single-asset-time-series-line.md)
+for the complete evidence inventory, lessons, and gate condition before
+proposing anything back into this line.
+
+Cycle 1 consolidation feasibility closed `not_evaluable`
 because the locked matcher admitted no controls; see the [selection
 record](research-candidates/2026-08-19-cycle-1.md) and [result](research-results/consolidation-support-feasibility-v1.md). Cycle 2 selected SMA Cross v1's
 exposure-reduction claim, jointly designed against a volatility-state placebo;

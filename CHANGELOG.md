@@ -2,6 +2,28 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.57.0
+
+Added the Stage Closure convention and formally parked the single-asset/
+time-series research line; no code, no market data, no new research
+result.
+
+- New `docs/stage-closures/` folder, same pattern as `audits/` and `brainstorm/` (indexed, templated, dated files): a durable paradigm-boundary record written only at a genuine research-line closure, distinct from a Stage 8/9/10/11 transition. Six fixed sections per record: the question asked, complete evidence inventory, lessons that must never be re-litigated, closed-vs-parked (never left ambiguous), the explicit substantive gate condition (never fatigue or token cost alone), and the next line's opening statement (never crowning an unscored successor).
+- Wrote [docs/stage-closures/2026-08-20-single-asset-time-series-line.md](docs/stage-closures/2026-08-20-single-asset-time-series-line.md): closes (parks, not rejects) the per-asset absolute-prediction line -- ten results (CTA v1, consolidation feasibility, SMA Cross v1, RSI, TA Breakout, Wave Pull, both calendar candidates, Overnight-Gap, CTA v2). Gate condition: mechanism-space exhaustion on the current 12-asset data shape across five-plus distinct, independently-falsified mechanism families, not cost or fatigue -- corroborated by the 0.56.0 calibration study ruling out a shared broken-machinery explanation. Explicitly does not crown cross-sectional momentum or Fed put as the next line; both remain live, unscored candidates.
+- Verified before writing: this closes a research line inside Stage 9A, not Stage 9A itself, and touches no ADR (none of them govern which research line is active) and no Stage 9A gate (which governs candidate selection, not a requirement to keep testing one mechanism family indefinitely).
+- Cross-referenced from the checkpoint, document-authority table, and the "Local-optimum guard" paragraph in `docs/README.md`.
+
+## 0.56.0
+
+Ran a Monte Carlo Type-I error calibration of the five event-recomputing
+bootstrap variants; no research candidate, no market data touched, no
+Stage 9A/9B decision.
+
+- Motivated by an external research memo's specific, checkable claim: the event-recomputing bootstrap extension (SMA Cross v1, RSI, TA Breakout, Wave Pull, Overnight-Gap) has planted-effect sanity tests but no verified Type-I error rate. Added [docs/brainstorm/2026-08-20-ensemble-factor-vocabulary.md](docs/brainstorm/2026-08-20-ensemble-factor-vocabulary.md) distilling that memo's genuinely new content (this finding, plus reusable IC/breadth vocabulary) separately from what the memo re-invented under new names (its Layer A-E taxonomy already exists as hypothesis-engineering.md's information classification).
+- Added `backend/app/calibrate_event_bootstraps.py`: 300 independent GARCH(1,1) zero-mean synthetic null series (realistic volatility clustering, no genuine directional predictability by construction), each candidate's own production bootstrap function called unmodified. Two disclosed deviations from locked production parameters (resamples 5,000 -> 1,000; series length fixed at 3,000 bars, both justified in the report), everything else unchanged.
+- Result: no candidate showed an inflated (anti-conservative) rejection rate. SMA Cross v1 (`0.33%`) and Wave Pull v1 (`0.00%`) were measurably conservative -- their entire Wilson 95% CI sits below the nominal `5%`; RSI (`2.75%`) and TA Breakout (`2.67%`) and Overnight-Gap (`2.33%` on both statistics) are consistent with correct calibration. Wave Pull's `58/300` (`~19%`) insufficient-event exclusion rate corroborates, with a number, what the real result already disclosed qualitatively (the impulse precondition is genuinely rare). Recorded in [docs/research-results/event-bootstrap-calibration-v1.md](docs/research-results/event-bootstrap-calibration-v1.md), which also states the honest caveat this raises rather than only the good news: conservative calibration is often associated with reduced power, and no power calibration has been run for these five candidates at their real effect sizes -- a natural companion study, not yet scheduled.
+- This does not reopen any of the five closed results; if anything it strengthens confidence their nulls were not false positives waiting to happen.
+
 ## 0.55.0
 
 Picked up CTA v2 (Cycle 2's Candidate C) directly, designed and locked its
