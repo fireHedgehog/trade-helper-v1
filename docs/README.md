@@ -6,7 +6,7 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.63.0` |
+| Version | `0.63.1` |
 | Parent release | `0.37.0` (first Stage 8 acceptance candidate) |
 | Current state | Single-asset/time-series line **parked** — [stage-closures record](stage-closures/2026-08-20-single-asset-time-series-line.md). Both new engines proven (`app.macro_pit`; cross-sectional bootstrap `N=12→495`, `engine_feasible`); neither authorizes a candidate. Cycle 6: Fed put 14/16, sole eligible candidate. Its 3 gaps now closed (`0.63.0`): `TREAST`/`TREAS10Y` and Treasury buybacks live-ingested; [Thesis Track](thesis-track-small-n.md) small-*n* method designed. Not yet preregistered |
 | Verification | `324 passed` at `0.63.0` |

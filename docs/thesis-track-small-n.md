@@ -16,10 +16,14 @@ episode case, not a new principle.
 The claim's own falsifier can only fire a handful of times in available
 history — e.g. "does long-end yield reversal follow sustained Fed
 support," where "sustained support" happens in a small number of
-multi-month regimes (QE programs, the 2024– buyback program), not
-hundreds of independent daily crossings. If a candidate's event count is
-in the hundreds+, use the standard block-bootstrap track instead — this
-is not a general substitute for it.
+multi-month regimes (QE1/2/3, COVID QE), not hundreds of independent
+daily crossings. If a candidate's event count is in the hundreds+, use
+the standard block-bootstrap track instead — this is not a general
+substitute for it. A data source that only recently restarted after a
+long pause (Treasury buybacks: one program 2000-2002, dormant since,
+restarted 2024-04) gives at most one usable episode on its own — not
+enough for this track; use it as corroboration for a recent episode, not
+as the primary episode source.
 
 ## Design
 

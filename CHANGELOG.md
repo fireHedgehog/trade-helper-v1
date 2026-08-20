@@ -2,6 +2,16 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.63.1
+
+Docs-only, user-caught correction. Buybacks (one program 2000-02, dormant
+since, restarted 2024-04) give ~1 usable episode alone -- not a co-equal
+episode source with SOMA/QE holdings (full history since 2008). Fixed
+[thesis-track-small-n.md](docs/thesis-track-small-n.md) and the
+[Fed put memo](docs/brainstorm/2026-08-19-fed-put-long-end-reversal.md):
+episodes come from QE program dates; buybacks are recent corroboration
+only.
+
 ## 0.63.0
 
 Closed Cycle 6's three Fed put gaps. No preregistration, no strategy, no
