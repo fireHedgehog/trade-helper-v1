@@ -1,0 +1,523 @@
+{
+  "common_date_count": 1929,
+  "common_date_end": "2026-08-14",
+  "common_date_start": "2018-12-07",
+  "errors": {},
+  "evidential_status": "non-evidential -- screening scan only, see module docstring",
+  "missing_symbols": [],
+  "n_factors_errored": 0,
+  "n_factors_evaluated": 17,
+  "orthogonality": [
+    {
+      "correlation": 0.718868424751759,
+      "n_overlap_days": 1927,
+      "pair": [
+        "alpha034",
+        "alpha033"
+      ],
+      "redundant": true
+    },
+    {
+      "correlation": 0.7908548873520497,
+      "n_overlap_days": 1927,
+      "pair": [
+        "alpha034",
+        "alpha009"
+      ],
+      "redundant": true
+    },
+    {
+      "correlation": 0.5817204291119722,
+      "n_overlap_days": 1927,
+      "pair": [
+        "alpha034",
+        "alpha028"
+      ],
+      "redundant": true
+    },
+    {
+      "correlation": 0.14695895977953455,
+      "n_overlap_days": 1926,
+      "pair": [
+        "alpha034",
+        "alpha026"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.3870878195722291,
+      "n_overlap_days": 1920,
+      "pair": [
+        "alpha034",
+        "alpha004"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.2532995179970288,
+      "n_overlap_days": 1927,
+      "pair": [
+        "alpha034",
+        "alpha002"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.28318998708631493,
+      "n_overlap_days": 1927,
+      "pair": [
+        "alpha034",
+        "alpha012"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.755664856185906,
+      "n_overlap_days": 1927,
+      "pair": [
+        "alpha033",
+        "alpha009"
+      ],
+      "redundant": true
+    },
+    {
+      "correlation": 0.7048815690520008,
+      "n_overlap_days": 1928,
+      "pair": [
+        "alpha033",
+        "alpha028"
+      ],
+      "redundant": true
+    },
+    {
+      "correlation": 0.17061828539452506,
+      "n_overlap_days": 1926,
+      "pair": [
+        "alpha033",
+        "alpha026"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.3852220842634071,
+      "n_overlap_days": 1920,
+      "pair": [
+        "alpha033",
+        "alpha004"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.2622938310440272,
+      "n_overlap_days": 1928,
+      "pair": [
+        "alpha033",
+        "alpha002"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.28287348193856626,
+      "n_overlap_days": 1927,
+      "pair": [
+        "alpha033",
+        "alpha012"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.6334115156350805,
+      "n_overlap_days": 1927,
+      "pair": [
+        "alpha009",
+        "alpha028"
+      ],
+      "redundant": true
+    },
+    {
+      "correlation": 0.11544108928347403,
+      "n_overlap_days": 1926,
+      "pair": [
+        "alpha009",
+        "alpha026"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.326478933126252,
+      "n_overlap_days": 1920,
+      "pair": [
+        "alpha009",
+        "alpha004"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.1752147631621412,
+      "n_overlap_days": 1927,
+      "pair": [
+        "alpha009",
+        "alpha002"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.27552330545127657,
+      "n_overlap_days": 1927,
+      "pair": [
+        "alpha009",
+        "alpha012"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.09131261867631708,
+      "n_overlap_days": 1926,
+      "pair": [
+        "alpha028",
+        "alpha026"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.19820507840742735,
+      "n_overlap_days": 1920,
+      "pair": [
+        "alpha028",
+        "alpha004"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.14744985950392203,
+      "n_overlap_days": 1928,
+      "pair": [
+        "alpha028",
+        "alpha002"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.20983066907193695,
+      "n_overlap_days": 1927,
+      "pair": [
+        "alpha028",
+        "alpha012"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.5162115522750208,
+      "n_overlap_days": 1920,
+      "pair": [
+        "alpha026",
+        "alpha004"
+      ],
+      "redundant": true
+    },
+    {
+      "correlation": 0.4224993777651184,
+      "n_overlap_days": 1926,
+      "pair": [
+        "alpha026",
+        "alpha002"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.12906799692528953,
+      "n_overlap_days": 1926,
+      "pair": [
+        "alpha026",
+        "alpha012"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.550370254776576,
+      "n_overlap_days": 1920,
+      "pair": [
+        "alpha004",
+        "alpha002"
+      ],
+      "redundant": true
+    },
+    {
+      "correlation": 0.3814225487561907,
+      "n_overlap_days": 1920,
+      "pair": [
+        "alpha004",
+        "alpha012"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.25780225249870503,
+      "n_overlap_days": 1927,
+      "pair": [
+        "alpha002",
+        "alpha012"
+      ],
+      "redundant": false
+    }
+  ],
+  "orthogonality_top_n": 8,
+  "results": [
+    {
+      "annual_volatility": 0.11964248931153074,
+      "cagr": 0.08769683499543302,
+      "calmar": 0.4614576645641049,
+      "ic_ir": 0.08831577960086577,
+      "ic_mean": 0.012224514586398116,
+      "ic_std": 0.13841823784657253,
+      "max_drawdown": -0.190043078119142,
+      "n_days": 1927,
+      "n_symbols_median": 495.0,
+      "name": "alpha034",
+      "sharpe": 0.7624936076068759,
+      "total_return": 0.9018193764912232,
+      "win_rate": 0.5210171250648676
+    },
+    {
+      "annual_volatility": 0.1759727463114689,
+      "cagr": 0.06996691313049963,
+      "calmar": 0.22969754309561533,
+      "ic_ir": 0.07753091640213433,
+      "ic_mean": 0.014241297424210328,
+      "ic_std": 0.18368540041941622,
+      "max_drawdown": -0.3046045342390744,
+      "n_days": 1928,
+      "n_symbols_median": 495.0,
+      "name": "alpha033",
+      "sharpe": 0.4717734152191227,
+      "total_return": 0.677669745495614,
+      "win_rate": 0.5217842323651453
+    },
+    {
+      "annual_volatility": 0.13331429793213478,
+      "cagr": 0.04526368939126857,
+      "calmar": 0.1993686980315957,
+      "ic_ir": 0.06768861584902432,
+      "ic_mean": 0.010575117262106849,
+      "ic_std": 0.1562318438553103,
+      "max_drawdown": -0.2270350854380121,
+      "n_days": 1927,
+      "n_symbols_median": 495.0,
+      "name": "alpha009",
+      "sharpe": 0.3988824892107258,
+      "total_return": 0.40286805328514586,
+      "win_rate": 0.5246497145822522
+    },
+    {
+      "annual_volatility": 0.11362218398807751,
+      "cagr": 0.07107024874415502,
+      "calmar": 0.4917977489673182,
+      "ic_ir": 0.06759118456963399,
+      "ic_mean": 0.008560246299914863,
+      "ic_std": 0.12664737797420758,
+      "max_drawdown": -0.14451113062918453,
+      "n_days": 1928,
+      "n_symbols_median": 495.0,
+      "name": "alpha028",
+      "sharpe": 0.6610450033027513,
+      "total_return": 0.6909510223529154,
+      "win_rate": 0.5280082987551867
+    },
+    {
+      "annual_volatility": 0.09054133471597782,
+      "cagr": 0.034771264708260086,
+      "calmar": 0.3026476616211338,
+      "ic_ir": 0.06273199205399212,
+      "ic_mean": 0.006084621383151404,
+      "ic_std": 0.09699391305658678,
+      "max_drawdown": -0.11489024736555908,
+      "n_days": 1926,
+      "n_symbols_median": 495.0,
+      "name": "alpha026",
+      "sharpe": 0.42262523320429357,
+      "total_return": 0.2985339919768435,
+      "win_rate": 0.5212876427829699
+    },
+    {
+      "annual_volatility": 0.14205796597965717,
+      "cagr": 0.09543311205720606,
+      "calmar": 0.34279419867704003,
+      "ic_ir": 0.06192203194068179,
+      "ic_mean": 0.010053667629553295,
+      "ic_std": 0.16236010535287676,
+      "max_drawdown": -0.2783976870831393,
+      "n_days": 1920,
+      "n_symbols_median": 495.0,
+      "name": "alpha004",
+      "sharpe": 0.7126207609508483,
+      "total_return": 1.002657058536633,
+      "win_rate": 0.5171875
+    },
+    {
+      "annual_volatility": 0.05862190908677874,
+      "cagr": 0.0019698097479001753,
+      "calmar": 0.014577277674700795,
+      "ic_ir": 0.0580474482775659,
+      "ic_mean": 0.0036860903575043702,
+      "ic_std": 0.06350133325204177,
+      "max_drawdown": -0.13512877999976813,
+      "n_days": 1928,
+      "n_symbols_median": 495.0,
+      "name": "alpha002",
+      "sharpe": 0.06285486396186965,
+      "total_return": 0.01516969352698383,
+      "win_rate": 0.5010373443983402
+    },
+    {
+      "annual_volatility": 0.07614120830251245,
+      "cagr": -0.014590684881898963,
+      "calmar": -0.08105067806921065,
+      "ic_ir": 0.05703284247076546,
+      "ic_mean": 0.005018766528297561,
+      "ic_std": 0.08799783266755706,
+      "max_drawdown": -0.18001928212666785,
+      "n_days": 1927,
+      "n_symbols_median": 495.0,
+      "name": "alpha012",
+      "sharpe": -0.1549395150974319,
+      "total_return": -0.10630826960951323,
+      "win_rate": 0.5033731188375714
+    },
+    {
+      "annual_volatility": 0.1221523253534297,
+      "cagr": -0.009643495078535569,
+      "calmar": -0.03311828606336642,
+      "ic_ir": 0.049149923449183536,
+      "ic_mean": 0.006464449515778938,
+      "ic_std": 0.1315251187005933,
+      "max_drawdown": -0.29118339820135375,
+      "n_days": 1905,
+      "n_symbols_median": 495.0,
+      "name": "alpha017",
+      "sharpe": -0.018103666040952524,
+      "total_return": -0.07063527111608392,
+      "win_rate": 0.5034120734908136
+    },
+    {
+      "annual_volatility": 0.0707314831634415,
+      "cagr": 0.0014930544284523783,
+      "calmar": 0.008163256936855899,
+      "ic_ir": 0.048144641024325995,
+      "ic_mean": 0.0031367855184567255,
+      "ic_std": 0.06515336809494135,
+      "max_drawdown": -0.18289935500026444,
+      "n_days": 1928,
+      "n_symbols_median": 495.0,
+      "name": "alpha013",
+      "sharpe": 0.05641779193429784,
+      "total_return": 0.011479926552578235,
+      "win_rate": 0.5134854771784232
+    },
+    {
+      "annual_volatility": 0.11087196940881892,
+      "cagr": 0.07169811184612573,
+      "calmar": 0.36182196186296134,
+      "ic_ir": 0.04712276688949109,
+      "ic_mean": 0.006715148062398282,
+      "ic_std": 0.1425032634044211,
+      "max_drawdown": -0.19815854039639835,
+      "n_days": 1928,
+      "n_symbols_median": 495.0,
+      "name": "alpha023",
+      "sharpe": 0.6799432355221133,
+      "total_return": 0.6985495810998992,
+      "win_rate": 0.5067427385892116
+    },
+    {
+      "annual_volatility": 0.13880587871713793,
+      "cagr": 0.05249204984650602,
+      "calmar": 0.20440540736588658,
+      "ic_ir": 0.03292608350182274,
+      "ic_mean": 0.005433203528513148,
+      "ic_std": 0.16501214085217195,
+      "max_drawdown": -0.25680362629812925,
+      "n_days": 1927,
+      "n_symbols_median": 495.0,
+      "name": "alpha020",
+      "sharpe": 0.43814790637613393,
+      "total_return": 0.4787796577769887,
+      "win_rate": 0.5168655941878568
+    },
+    {
+      "annual_volatility": 0.06927627878077244,
+      "cagr": 0.012547734101651775,
+      "calmar": 0.07344441707226843,
+      "ic_ir": 0.020574807001043503,
+      "ic_mean": 0.001287027014964109,
+      "ic_std": 0.06255354010848482,
+      "max_drawdown": -0.17084667020101685,
+      "n_days": 1928,
+      "n_symbols_median": 495.0,
+      "name": "alpha003",
+      "sharpe": 0.2146205085047069,
+      "total_return": 0.10010191300935012,
+      "win_rate": 0.49844398340248963
+    },
+    {
+      "annual_volatility": 0.10231784290873455,
+      "cagr": -0.008150578337250858,
+      "calmar": -0.030257940217393527,
+      "ic_ir": 0.003622773211316772,
+      "ic_mean": 0.0003972596952388866,
+      "ic_std": 0.10965624179783927,
+      "max_drawdown": -0.2693699002209531,
+      "n_days": 1928,
+      "n_symbols_median": 495.0,
+      "name": "alpha006",
+      "sharpe": -0.028988099046652258,
+      "total_return": -0.060693940419096815,
+      "win_rate": 0.5036307053941909
+    },
+    {
+      "annual_volatility": 0.09763602065548423,
+      "cagr": -0.0042302289086715295,
+      "calmar": -0.016443784647011007,
+      "ic_ir": -0.0026859283476767712,
+      "ic_mean": -0.0002908702111268198,
+      "ic_std": 0.10829410672046103,
+      "max_drawdown": -0.2572539716056461,
+      "n_days": 1924,
+      "n_symbols_median": 495.0,
+      "name": "alpha014",
+      "sharpe": 0.005106254557140352,
+      "total_return": -0.0318477955655484,
+      "win_rate": 0.4979209979209979
+    },
+    {
+      "annual_volatility": 0.14906289864200248,
+      "cagr": -0.054070759394973744,
+      "calmar": -0.10365125680330342,
+      "ic_ir": -0.06403802872813495,
+      "ic_mean": -0.010475077749174633,
+      "ic_std": 0.163575893218781,
+      "max_drawdown": -0.521660431938443,
+      "n_days": 1896,
+      "n_symbols_median": 495.0,
+      "name": "alpha035",
+      "sharpe": -0.298150894316003,
+      "total_return": -0.3417890764345862,
+      "win_rate": 0.4889240506329114
+    },
+    {
+      "annual_volatility": 0.12025729970288623,
+      "cagr": -0.05950579125937927,
+      "calmar": -0.12071889946123013,
+      "ic_ir": -0.06606771542920609,
+      "ic_mean": -0.009853548817547832,
+      "ic_std": 0.14914317459798138,
+      "max_drawdown": -0.4929285432931738,
+      "n_days": 1908,
+      "n_symbols_median": 495.0,
+      "name": "alpha001",
+      "sharpe": -0.4497858958967225,
+      "total_return": -0.3715542284095096,
+      "win_rate": 0.4868972746331237
+    }
+  ],
+  "universe_size": 495
+}

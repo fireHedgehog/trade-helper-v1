@@ -264,6 +264,65 @@ rigorous test, rather than waving them through on an approximation, is
 doing exactly what ADR 0007 and this chapter's calibration discipline exist
 to do.
 
+**§5 — Factor zoo v1: seventeen-formula screen, real Sharpe/IC, not itself
+a Chapter 4 candidate.** [`factor_zoo.py`](../backend/app/factor_zoo.py)
+ports 17 of the published WorldQuant "101 Formulaic Alphas" (Kakushadze
+2015; verified against
+[popbo/alphas](https://github.com/popbo/alphas/blob/main/alphas101.py)),
+restricted to formulas needing only OHLCV+volume — alpha191 and the
+vwap-heavy WQ101 formulas need fields this project's free Yahoo data
+doesn't have. Purpose: generate breadth cheaply instead of hand-picking one
+Chapter 1–3 candidate at a time into Chapter 4, generalizing the small,
+separately-parked idea in
+[parallel-multi-agent-research-pipeline.md](brainstorm/2026-08-21-parallel-multi-agent-research-pipeline.md)
+from "rank closed candidates" to "generate and rank a whole zoo." A
+screening scan, same non-evidential framing as
+[cross-sectional-equity-momentum-feasibility-v1](research-results/cross-sectional-equity-momentum-feasibility-v1.md):
+same disclosed-survivorship-biased 495-symbol universe, no cost/slippage
+modeled, 1-session forward return, IC t-stats informative only (overlapping
+draws, no multiple-comparisons correction across the 17). Screening well
+here confers nothing by itself — a factor still needs its own stated
+mechanism (ADR 0007 clause 1) before formal proposal into Chapter 4.
+
+Run: [`run_factor_zoo_scan.py`](../backend/app/run_factor_zoo_scan.py),
+`495`/`495` symbols, `2018-12-07`–`2026-08-14` (`1,929` common sessions).
+Full numbers:
+[scan-report.json](../output/research/factor-zoo-v1/scan-report.json);
+charts:
+[IC-IR ranking](../output/research/factor-zoo-v1/ic-ir-ranking.png),
+[top-6 equity curves](../output/research/factor-zoo-v1/top-factor-equity-curves.png).
+
+Top by IC-IR: `alpha034` (volatility-ratio/close-delta composite, Sharpe
+`0.76`, CAGR `8.8%`, max drawdown `-19.0%`), `alpha004` (low-rank
+persistence, Sharpe `0.71`), `alpha028` (volume-price scale composite,
+Sharpe `0.66`), `alpha033` (open/close reversal, Sharpe `0.47`),
+`alpha026`/`alpha009` (Sharpe `0.42`/`0.40`). Two were decisively negative:
+`alpha001` (Sharpe `-0.45`) and `alpha035` (Sharpe `-0.30`, max drawdown
+`-52%`) — both among the more cited WQ101 formulas, so a clean negative
+here is itself informative, not noise.
+
+Orthogonality (same `|r|≥0.5` rule as the screen above): `alpha034`/
+`alpha033`/`alpha009`/`alpha028` form one tightly-correlated cluster
+(`r=0.58`–`0.79`), and `alpha004`/`alpha026` touch parts of it too
+(`r=0.52`–`0.55`). **Disclosed risk, not yet resolved**: every top
+performer is some shape of short-horizon (1–10 session) price reversal —
+the classic setting for the bid-ask-bounce artifact (Jegadeesh 1990,
+Lehmann 1990), where raw daily closes alternating near the bid and ask can
+manufacture an apparent reversal profit with no real edge once realistic
+transaction costs are modeled, and this scan models zero cost. By the same
+design-effect logic Calendar Day-of-Week's correlated pairs established
+above, this cluster's real breadth is closer to `2`–`3` independent effects
+than `6` — until cost-adjusted, read the whole top cluster as one shared,
+unconfirmed hypothesis, not six.
+
+**Not yet done, named as the next concrete step**: propose the
+least-redundant survivors (`alpha028`, `alpha004`, `alpha026` — Sharpe
+`0.66`/`0.71`/`0.42`, mutual `|r|≤0.52`) as individual Chapter 4 candidates,
+each with its own stated mechanism and a cost-sensitivity check before any
+eligibility read is trusted. The reversal cluster (`alpha034`/`033`/`009`)
+needs a transaction-cost-aware rerun before it is even scan-worthy of
+further attention, given the bid-ask-bounce risk just disclosed.
+
 ## Chapter 5 — Operational bridge: from research verdict to bounded paper trading
 
 Not a falsification chapter, and not Chapter 4's risk-budgeting question

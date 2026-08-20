@@ -5,3 +5,4 @@ pandas==3.0.5
 lxml==6.1.1
 requests==2.34.2
 backtesting==0.6.6
+matplotlib==3.11.1

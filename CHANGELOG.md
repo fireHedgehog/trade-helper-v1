@@ -2,6 +2,19 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.74.0
+
+Factor zoo v1: 17-formula screen against the real 495-symbol universe -- real Sharpe ratios, real IC, real charts. Chapter 4 §5.
+
+- User-directed, after explicitly pushing back on Chapter 1-3's falsify-forever loop producing no product: build breadth cheaply (WorldQuant-style formulaic alphas) instead of hand-picking one candidate at a time into Chapter 4, and make Chapter 4's output tangible -- numbers and charts, not descriptions of unbuilt infrastructure.
+- `backend/app/factor_zoo.py` (new): cross-sectional/time-series operator vocabulary (rank, delay, correlation, ts_rank, decay_linear, scale, ...) plus 17 of the published WorldQuant "101 Formulaic Alphas" (Kakushadze 2015), verified against the reference implementation the user linked, restricted to OHLCV+volume-only formulas -- alpha191 and vwap-heavy WQ101 formulas need fields this project's free data doesn't have. `evaluate_factor` computes per-date rank-IC and a daily-rebalanced equal-weight top/bottom-quintile spread return; `factor_return_metrics` derives Sharpe/CAGR/max-drawdown/Calmar from that series -- deliberately parallel to `portfolio_metrics.py`'s formulas (same math, different input shape), a disclosed duplicate pending the still-open shared-metrics-engine idea.
+- `backend/app/run_factor_zoo_scan.py` (new): reuses the already-locked, disclosed-survivorship-biased 495-symbol universe from `cross-sectional-equity-momentum-feasibility-v1.json`. Real run: 495/495 symbols, 2018-12-07 to 2026-08-14 (1,929 common sessions), all 17 formulas evaluated with no errors, ~3 minutes.
+- Added `matplotlib` (new dependency) -- zero charting existed anywhere in this codebase before this. `factor_zoo.render_charts` writes two real PNGs: an IC-IR ranking bar chart and a top-6 quintile-spread equity-curve chart. Both are real, non-placeholder output written to `output/research/factor-zoo-v1/`.
+- Results: top by IC-IR `alpha034` (Sharpe 0.76, CAGR 8.8%), `alpha004` (0.71), `alpha028` (0.66); two decisively negative, `alpha001` (-0.45) and `alpha035` (-0.30, -52% max drawdown). Orthogonality screen (same `|r|>=0.5` rule as Chapter 4's existing check) found `alpha034`/`033`/`009`/`028` tightly clustered (r=0.58-0.79) -- disclosed as one shared, unconfirmed hypothesis, not four, and flagged as the classic bid-ask-bounce reversal-artifact risk (Jegadeesh 1990, Lehmann 1990) since this scan models zero transaction cost.
+- Explicitly framed as a screening pass, same non-evidential status as the engine-feasibility work it reuses -- confers no Chapter 4 eligibility by itself; next named step is proposing the least-redundant survivors (`alpha028`/`004`/`026`) as individual candidates with a stated mechanism and a cost-sensitivity check.
+- `docs/research-program.md` Chapter 4 §5 (new section, appended not rewritten, per the chapter's own living/extensible discipline).
+- 16 new tests (`backend/tests/test_factor_zoo.py`): operator correctness on hand-checkable synthetic panels, a planted-signal recovery check, a pure-noise near-zero-IC check. 384 passed.
+
 ## 0.73.0
 
 ADR 0008 (bounded paper trading + Track B) accepted. Docs-only; no implementation.
