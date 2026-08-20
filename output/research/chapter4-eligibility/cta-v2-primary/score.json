@@ -1,0 +1,26 @@
+{
+  "candidate": "cta-v2-pooled-trend-overlay",
+  "variant": "B",
+  "chapter_1_3_decision": "not_material_or_not_consistent (unchanged, immutable)",
+  "confidence_interval": {
+    "observed_mean_daily_excess_return": 8.643426790524356e-05,
+    "annualized_point_estimate": 0.021781435512121375,
+    "lower_bound_68pct": -3.495345529726541e-05,
+    "upper_bound_68pct": 0.00020446002377076637,
+    "annualized_lower_bound_68pct": -0.008808270734910882
+  },
+  "chapter4_confidence_multiplier": 0.0,
+  "eligible": false,
+  "eligibility_reasoning": "68% confidence interval's lower bound is not positive -- even at one-sigma coverage, cannot rule out a zero or negative true effect",
+  "illustrative_sizing_at_100k_equity": {
+    "note": "No trade authorized. Illustrates ADR 0004's entry-capacity formula scaled by the confidence multiplier, at an illustrative 2% stop distance -- not a real position.",
+    "base_risk_capital_unscaled": 500.0,
+    "confidence_scaled_risk_capital": 0.0,
+    "base_notional_cap_unscaled": 10000.0,
+    "confidence_scaled_notional_cap": 0.0
+  },
+  "disclosed_limitations": [
+    "Single candidate, not an ensemble -- ADR 0007's minimum-breadth floor is not met by one signal alone; this score characterizes eligibility only, it does not authorize deployment.",
+    "CTA v2's own disclosed 2008-dependency (regime concentration) is unresolved by this score and would need direct confrontation before any real ensemble inclusion."
+  ]
+}

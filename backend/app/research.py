@@ -2037,3 +2037,74 @@ def cta_v2_bootstrap(
         },
         "regime_diagnostics": regime_diagnostics,
     }
+
+
+# --- Chapter 4: risk-budgeted ensemble eligibility scoring --- Implements
+# docs/adr/0007-risk-budgeted-ensemble-acceptance.md. Distinct from every
+# bootstrap above: those test a NULL hypothesis (center the data, then ask
+# how often chance reproduces the observed statistic -- a p-value). This
+# characterizes the plausible RANGE of the true effect size itself (no
+# centering), which a p-value does not provide and Loss-based Quantity
+# Determination sizing needs. Reuses _circular_block_resample_indexes
+# unchanged (the same block-resampling primitive Overnight Gap Continuation
+# v1 introduced), only the statistic collected per resample differs.
+
+CHAPTER4_BLOCK_BARS = 20
+CHAPTER4_RESAMPLES = 5_000
+CHAPTER4_SEED = 17_291
+CHAPTER4_LOWER_PERCENTILE = 16.0
+CHAPTER4_UPPER_PERCENTILE = 84.0
+
+
+def block_bootstrap_confidence_interval(
+    values: list[float] | np.ndarray,
+    *,
+    block_bars: int = CHAPTER4_BLOCK_BARS,
+    resamples: int = CHAPTER4_RESAMPLES,
+    seed: int = CHAPTER4_SEED,
+    lower_percentile: float = CHAPTER4_LOWER_PERCENTILE,
+    upper_percentile: float = CHAPTER4_UPPER_PERCENTILE,
+) -> dict:
+    """Block-bootstrap confidence interval on the MEAN of `values` -- NOT a
+    null-hypothesis test. Resamples the data exactly as observed (no
+    centering, no permutation) to characterize the plausible range of the
+    true mean itself. Default 16th/84th percentiles approximate a `68%`
+    ("one-sigma") coverage interval, matching ADR 0007's own framing of
+    lenient-but-real evidence -- deliberately not the `95%` bar Chapters
+    1-3 require."""
+    values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values)]
+    if len(values) < 2:
+        raise ValueError("confidence interval requires at least two finite values")
+    if block_bars <= 0 or block_bars > len(values):
+        raise ValueError("block_bars must be between 1 and the sample length")
+    if resamples <= 0:
+        raise ValueError("resamples must be positive")
+
+    observed = float(values.mean())
+    rng = np.random.default_rng(seed)
+    resampled_means = np.empty(resamples)
+    for i in range(resamples):
+        flat_indexes = _circular_block_resample_indexes(len(values), block_bars, rng)
+        resampled_means[i] = values[flat_indexes].mean()
+
+    return {
+        "observed_mean": observed,
+        "lower_bound": float(np.percentile(resampled_means, lower_percentile)),
+        "upper_bound": float(np.percentile(resampled_means, upper_percentile)),
+        "coverage_pct": upper_percentile - lower_percentile,
+        "resamples": resamples,
+    }
+
+
+def chapter4_confidence_multiplier(observed_mean: float, lower_bound: float) -> float:
+    """Loss-based Quantity Determination confidence multiplier, per ADR
+    0007: the ratio of the confidence interval's lower bound to the point
+    estimate, floored at `0` (a lower bound at or below zero means no
+    confident positive edge to size at all -- the signal fails Chapter 4
+    eligibility outright) and capped at `1` (a Chapter 4 signal may never
+    be sized as large as a fully Chapter 1-3-validated one, by
+    construction, since it has not cleared that bar)."""
+    if observed_mean <= 0:
+        return 0.0
+    return float(np.clip(lower_bound / observed_mean, 0.0, 1.0))

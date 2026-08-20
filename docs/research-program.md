@@ -101,9 +101,23 @@ themselves alone at high confidence. Chapters 1–3's falsification standard
 is unchanged and unweakened by this chapter's existence — a candidate that
 clears Chapter 1–3's full bar graduates there, not here.
 
-No sections yet. ADR 0007 is a draft awaiting review; the ensemble engine,
-confidence-multiplier sizing function, and minimum-breadth floor are named
-as required decisions, not yet built.
+The confidence-multiplier sizing function is now built and tested
+(`block_bootstrap_confidence_interval`, `chapter4_confidence_multiplier` in
+`backend/app/research.py`) — a genuine second bootstrap procedure, distinct
+from every null-hypothesis test this session: it characterizes the
+plausible *range* of the true effect size (no centering), which a p-value
+does not provide.
+
+| § | Candidate | Result |
+|---|---|---|
+| 1 | [CTA v2, primary variant](../../backend/app/score_cta_v2_chapter4.py) | **Not eligible.** `68%` confidence interval on the daily excess return: `[-0.0035%, +0.0204%]`, annualized lower bound `-0.88%`. Even at Chapter 4's deliberately loosened one-sigma bar, the interval still spans zero — confidence multiplier `0.0`, no position sized. Consistent with CTA v2's own raw `p=0.231` under the null test (not a contradiction, a cross-check: a raw p that far from significant implies a wide-enough interval to plausibly include zero at 68% coverage too). This is Chapter 4 working as designed, not failing — being the strongest candidate in Chapter 5's triage does not guarantee clearing even a lower bar, and checking that honestly was the entire point of building this before opening a new falsification thread. |
+
+Ensemble engine and minimum-breadth floor remain required decisions, not
+yet built — moot for now since the first scored candidate isn't eligible
+to enter an ensemble. Wave Pull's `TLT` (raw `p=0.032`, a materially
+stronger raw signal than CTA v2's) is the natural next section to score,
+since its narrower implied uncertainty makes a positive lower bound
+plausible where CTA v2's did not hold.
 
 ## Chapter 5 — Discussion: what the ten closed nulls might still be worth
 
