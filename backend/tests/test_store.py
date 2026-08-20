@@ -292,3 +292,60 @@ def test_strategy_runs_append_and_latest_read_does_not_recalculate(isolated_stor
     assert latest_full_scan["set"] == "saved"
     assert isolated_store.get_strategy_run(first)["params"] == {"n": 1}
     assert isolated_store.latest_strategy_run("SMA Cross") is None
+
+
+def _macro_vintage_row(**overrides) -> pd.DataFrame:
+    row = {
+        "series_id": "DFII10",
+        "reference_period": "2024-01-02",
+        "revision_index": 0,
+        "release_datetime": "2024-01-02",
+        "value": 1.50,
+    }
+    row.update(overrides)
+    return pd.DataFrame([row])
+
+
+def test_upsert_macro_vintages_is_idempotent(isolated_store) -> None:
+    isolated_store.upsert_macro_vintages(_macro_vintage_row())
+    isolated_store.upsert_macro_vintages(_macro_vintage_row())
+    assert isolated_store.macro_vintage_rows("DFII10") == [
+        {"reference_period": "2024-01-02", "revision_index": 0,
+         "release_datetime": "2024-01-02", "value": 1.50}
+    ]
+
+
+def test_upsert_macro_vintages_accumulates_later_revisions(isolated_store) -> None:
+    isolated_store.upsert_macro_vintages(_macro_vintage_row())
+    isolated_store.upsert_macro_vintages(
+        _macro_vintage_row(revision_index=1, release_datetime="2024-02-01", value=1.55)
+    )
+    rows = isolated_store.macro_vintage_rows("DFII10")
+    assert [r["revision_index"] for r in rows] == [0, 1]
+    assert [r["value"] for r in rows] == [1.50, 1.55]
+
+
+def test_upsert_macro_vintages_rejects_a_conflicting_value_and_rolls_back_the_whole_batch(
+    isolated_store,
+) -> None:
+    isolated_store.upsert_macro_vintages(_macro_vintage_row())
+    conflicting_batch = pd.concat(
+        [
+            _macro_vintage_row(reference_period="2024-01-03", value=9.99),  # would-be-new row
+            _macro_vintage_row(value=1.75),  # conflicts with what's already stored
+        ],
+        ignore_index=True,
+    )
+    with pytest.raises(ValueError, match="immutable"):
+        isolated_store.upsert_macro_vintages(conflicting_batch)
+    # Neither the conflicting row nor the otherwise-valid new row in the same
+    # batch was published -- one bad row rolls back the whole call.
+    assert isolated_store.macro_vintage_rows("DFII10") == [
+        {"reference_period": "2024-01-02", "revision_index": 0,
+         "release_datetime": "2024-01-02", "value": 1.50}
+    ]
+
+
+def test_upsert_macro_vintages_rejects_a_batch_missing_required_columns(isolated_store) -> None:
+    with pytest.raises(ValueError, match="missing columns"):
+        isolated_store.upsert_macro_vintages(pd.DataFrame([{"series_id": "DFII10"}]))

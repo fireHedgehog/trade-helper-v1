@@ -185,7 +185,14 @@ FRED's live series are already fetched (`0.44.0`) but are display-only,
 final-revised values — not usable as a signal input under
 [ADR 0006](../adr/0006-macro-data-contract.md) until point-in-time vintage
 data exists. FRED's own ALFRED archive provides that vintage history for
-free; nobody has wired it up yet.
+free. **Ingestion now exists (`0.60.0`):** `app.macro_pit` implements ADR
+0006 clauses 2-4 (vintage storage, timestamp discipline, revision
+immutability) and a `value_asof` point-in-time query function — see the
+ADR's updated Consequences section. This unblocks the engineering gap, not
+the governance one: no live ingestion has been run (needs a free,
+self-registered `FRED_API_KEY` nobody has obtained yet), and every item
+below still needs its own preregistered hypothesis and Stage 9A score
+before any signal use — ingestion existing authorizes nothing by itself.
 
 - [ ] **Any macro-conditioned strategy** — e.g. the parked [long-end yield
   shock](2026-08-19-long-end-yield-shock.md) idea. Blocked on: ALFRED

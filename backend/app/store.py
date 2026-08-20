@@ -94,6 +94,15 @@ CREATE TABLE IF NOT EXISTS daily_pipeline_state (
     payload      TEXT NOT NULL,
     updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS macro_vintages (
+    series_id        TEXT    NOT NULL,
+    reference_period  TEXT    NOT NULL,  -- YYYY-MM-DD, the period the value describes
+    revision_index    INTEGER NOT NULL,  -- k: 0 = initial release, k>0 = later revision
+    release_datetime  TEXT    NOT NULL,  -- ADR 0006 tau_i + Delta_i^(k), ISO date/time
+    value             REAL    NOT NULL,
+    PRIMARY KEY (series_id, reference_period, revision_index)
+);
 """
 
 
@@ -186,6 +195,64 @@ def upsert_bars(df: pd.DataFrame, *, allow_shrink: bool = False) -> None:
                    VALUES (:symbol, :date, :open, :high, :low, :close, :volume)""",
                 group.to_dict("records"),
             )
+
+
+def upsert_macro_vintages(df: pd.DataFrame) -> None:
+    """Store point-in-time macro revisions, ADR 0006 clause 4 (never overwrite).
+
+    Expects columns: series_id, reference_period (YYYY-MM-DD), revision_index
+    (int, k=0 is the initial release), release_datetime (ISO date/time), value.
+    A (series_id, reference_period, revision_index) tuple is immutable once
+    stored: re-ingesting the same vintage is a no-op, but a conflicting value
+    at an already-stored tuple raises rather than silently overwriting
+    history, and aborts the whole batch rather than partially publishing it.
+    """
+    required = ["series_id", "reference_period", "revision_index", "release_datetime", "value"]
+    missing = set(required) - set(df.columns)
+    if missing:
+        raise ValueError(f"macro vintages missing columns: {', '.join(sorted(missing))}")
+    df = df[required].copy()
+    if df.empty:
+        raise ValueError("no macro vintages to store")
+    df["reference_period"] = df["reference_period"].astype(str)
+    df["release_datetime"] = df["release_datetime"].astype(str)
+    df = df.astype({"revision_index": int, "value": float})
+    with connect() as conn:
+        for row in df.to_dict("records"):
+            existing = conn.execute(
+                "SELECT value FROM macro_vintages "
+                "WHERE series_id = ? AND reference_period = ? AND revision_index = ?",
+                (row["series_id"], row["reference_period"], row["revision_index"]),
+            ).fetchone()
+            if existing is not None:
+                if existing[0] != row["value"]:
+                    raise ValueError(
+                        f"{row['series_id']} {row['reference_period']} "
+                        f"revision {row['revision_index']}: stored value "
+                        f"{existing[0]} conflicts with incoming {row['value']} -- "
+                        "a (series, reference_period, revision_index) tuple is "
+                        "immutable once published; refusing to overwrite history."
+                    )
+                continue
+            conn.execute(
+                """INSERT INTO macro_vintages
+                   (series_id, reference_period, revision_index, release_datetime, value)
+                   VALUES (:series_id, :reference_period, :revision_index, :release_datetime, :value)""",
+                row,
+            )
+
+
+def macro_vintage_rows(series_id: str) -> list[dict]:
+    """All stored revisions of one series, oldest reference period and revision first."""
+    with connect() as conn:
+        df = pd.read_sql_query(
+            "SELECT reference_period, revision_index, release_datetime, value "
+            "FROM macro_vintages WHERE series_id = ? "
+            "ORDER BY reference_period, revision_index",
+            conn,
+            params=(series_id,),
+        )
+    return df.to_dict("records")
 
 
 def load_bars(symbol: str) -> pd.DataFrame:

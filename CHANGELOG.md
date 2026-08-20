@@ -2,6 +2,19 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.60.0
+
+Built the point-in-time macro data engine ADR 0006 has required since
+`0.44.0`; no strategy, no signal, no research decision — infrastructure
+only, unblocking the macro-narrative line, not authorizing it.
+
+- Added `backend/app/macro_pit.py`: ingests every historical FRED revision of a series via the official FRED API's `realtime_start`/`realtime_end` vintage mechanism (`1776-07-04`-`9999-12-31`, the same convention the `mortada/fredapi` reference client's `get_series_all_releases` uses -- verified against FRED's own docs and that client's source before writing this, not from memory), distinct from `fred.py`'s final-revised `fredgraph.csv` display path. `to_revision_indexed` assigns `revision_index` k=0,1,2,... per reference period ordered by `realtime_start`; `value_asof(series_id, decision_datetime)` returns ADR 0006's vintage $\mathcal{V}_t$ directly -- the latest revision per reference period visible at or before a decision time.
+- Added `macro_vintages` table (`store.py`) and `upsert_macro_vintages`/`macro_vintage_rows`: a `(series_id, reference_period, revision_index)` tuple is immutable once stored -- re-ingesting the same vintage is a no-op, a conflicting value at an already-stored tuple raises and rolls back the whole batch, same atomicity discipline `upsert_bars` already established for market bars.
+- No new fingerprint store: a macro protocol's `value_asof` output feeds the same `data_sha256`-at-execution-time pattern every `run_*.py` script already uses, satisfying ADR 0006 clause 4's provenance requirement without new machinery.
+- Requires a free, self-registered `FRED_API_KEY` (not obtainable by an agent); no live ingestion has been run against the real API yet. 12 new tests (`test_macro_pit.py`, `test_store.py`) are fully mocked -- they verify the parsing/indexing/immutability logic, not the real API's live response shape. `301 passed`.
+- Updated [ADR 0006](docs/adr/0006-macro-data-contract.md)'s status and Consequences: clauses 2-4 implemented; clause 8 (scheduled-release calendar) explicitly scoped out (not needed for historical backtesting, only live freshness monitoring); clauses 5-7 and 9 remain per-hypothesis obligations this engine does not and cannot satisfy on its own. Cross-referenced from `backend/README.md` and the [pending candidate checklist](docs/brainstorm/2026-08-19-pending-candidate-checklist.md)'s Tier 3 entry.
+- This unblocks the engineering gap behind both the [Fed put](docs/brainstorm/2026-08-19-fed-put-long-end-reversal.md) memo and the wider [macro reaction-function narrative library](docs/brainstorm/2026-08-20-macro-reaction-function-narrative-library.md) (`0.59.0`) at once, per that memo's own point about shared-gate leverage -- it authorizes none of them. The next step for any of them is still exploration-protocol -> Stage 9A scoring -> preregistration, unchanged.
+
 ## 0.59.0
 
 Added a brainstorm memo broadening "Fed put" into a named macro

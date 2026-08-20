@@ -1,6 +1,12 @@
 # ADR 0006: Macro data contract
 
-Status: accepted; display-only presentation implemented in `0.33.0`; point-in-time research upgrade pending.
+Status: accepted; display-only presentation implemented in `0.33.0`;
+clauses 2-4 (point-in-time vintage ingestion, timestamp discipline,
+revision immutability) implemented in `0.60.0` via `app.macro_pit` — see
+Consequences. Clauses 5-9 (estimand declaration, small-sample discipline,
+non-stationarity, release calendar, upgrade-path scoring/preregistration)
+remain a per-hypothesis obligation, not something ingestion alone
+satisfies.
 
 ## Context
 
@@ -76,9 +82,12 @@ where $\hat\gamma_j$ is the $j$-th sample autocovariance and $L$ is the lag leng
 
 ## Consequences
 
-- Currently stored final-revised series (e.g. `DGS2`, `DGS10`, `CPIAUCSL`, `PAYEMS`) are display-only; they carry no research-evidential status.
+- Currently stored final-revised series (e.g. `DGS2`, `DGS10`, `CPIAUCSL`, `PAYEMS`) via `app.fred` are display-only; they carry no research-evidential status and are never a legitimate input to a macro hypothesis test.
 - Any future macro hypothesis must cite the clauses of this contract.
-- Satisfying clauses 2–4 requires a new ingestion path (ALFRED), a schema extension (release/revision columns), and a fingerprint extension.
+- `app.macro_pit` (`0.60.0`) implements clauses 2–4: `macro_vintages` (new table, `store.py`) stores every historical revision keyed `(series_id, reference_period, revision_index)`, immutable once written — `upsert_macro_vintages` raises rather than overwrites a conflicting value at an already-stored tuple, and rolls back the whole batch on any conflict, same discipline as `upsert_bars`. `value_asof(series_id, decision_datetime)` implements the vintage $\mathcal{V}_t$ directly: the latest revision per reference period with `release_datetime <= decision_datetime`. No separate fingerprint store was added — every locked protocol already computes its own `data_sha256` over its exact query result at execution time (the `run_*.py` pattern); the same discipline applies to a macro protocol's `value_asof` output, satisfying clause 4's provenance requirement without new machinery.
+- Requires a free `FRED_API_KEY` (self-registered, not obtainable by an agent); no live ingestion has been run yet — `app.macro_pit` is built and unit-tested against a mocked FRED response only, not verified against the real API's live shape.
+- Clause 8 (a machine-readable *scheduled*-release calendar, for forward-looking freshness monitoring) is explicitly **not** built. It is not required to run a historical point-in-time backtest — only clauses 2–4 are — so it was scoped out rather than silently skipped; a future macro protocol needing live freshness checks (not backtesting) would need it.
+- Clauses 5–7 and 9 remain unimplemented by design: they are per-hypothesis obligations (estimand declaration, small-sample/regime discipline, structural-break checks, Stage 9A scoring and preregistration), not something an ingestion engine can satisfy on its own. Ingestion existing does not authorize any macro candidate — the upgrade path (clause 9) still requires 9(b)–9(d) separately for whichever hypothesis uses it first.
 
 ## References
 

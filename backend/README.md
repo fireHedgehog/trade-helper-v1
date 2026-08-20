@@ -14,6 +14,8 @@ Core modules include `execution.py`, `rules.py`, `engine.py`, `portfolio*.py`, `
 
 `daily_pipeline.py` owns the pure dependency planner and explicit durable executor. `/api/daily-pipeline/plan` is read-only; `/api/daily-pipeline` requires confirmation, refreshes dependencies, re-plans, and runs only changed snapshots. `/api/daily-pipeline/status` reconstructs persisted state. Retry is a fresh plan, so completed current work is skipped. Scheduling remains out of scope.
 
+`macro_pit.py` ingests point-in-time macro vintage history (every historical FRED revision, not the final-revised series `fred.py` stores for display) per [ADR 0006](../docs/adr/0006-macro-data-contract.md). Requires a free `FRED_API_KEY` env var; not wired into any strategy, endpoint, or scheduled job — a standalone ingestion path a future macro protocol calls explicitly.
+
 ## Commands
 
 From the repository root:
