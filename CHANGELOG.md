@@ -2,6 +2,16 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.59.0
+
+Added a brainstorm memo broadening "Fed put" into a named macro
+reaction-function narrative family; no code, no market data, no research
+decision.
+
+- Added [docs/brainstorm/2026-08-20-macro-reaction-function-narrative-library.md](docs/brainstorm/2026-08-20-macro-reaction-function-narrative-library.md): the user's own narrative cluster (yield curve, oil, gold as a "Fed incompetency trade," a DCF/discount-rate transmission mechanism, CPI-target flexibility under economic stress) named against real literature -- equity duration (Dechow, Sloan & Soliman 2004; Weber 2018) as the mechanical, intent-free channel; a 7-row free-data state-variable table (real yields/breakevens, 2s10s, HY OAS/NFCI, gold, oil, DXY, Taylor-rule gap); and the ADR 0006 clause-5 level-vs-surprise distinction, flagging that a surprise-based estimand needs a consensus-forecast history that is typically a paid feed.
+- Cross-referenced from the two existing narrower macro brainstorm notes ([fed-put-long-end-reversal.md](docs/brainstorm/2026-08-19-fed-put-long-end-reversal.md), [long-end-yield-shock.md](docs/brainstorm/2026-08-19-long-end-yield-shock.md)) as the wider family both sit inside, rather than duplicating or replacing either.
+- Named a repeating shape across both of today's idea libraries: a single free/cheap engineering gate (here, ADR 0006's ALFRED point-in-time ingestion; in [0.58.0](docs/brainstorm/2026-08-20-cross-sectional-experiment-ideas.md), Tier 4 point-in-time equity data) unlocks a whole narrative cluster at once, not one candidate -- a materially different cost/benefit case than scoring any single item in isolation.
+
 ## 0.58.0
 
 Added a brainstorm memo distilling an external cross-sectional-experiment

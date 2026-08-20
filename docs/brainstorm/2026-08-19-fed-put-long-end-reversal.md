@@ -6,6 +6,10 @@
 > about the yield's own reversal, conditioned on Fed support. Grounded, not
 > folk: Gagnon et al. (2011), Krishnamurthy and Vissing-Jorgensen (2011), and
 > D'Amico and King (2013) establish the term-premium-compression mechanism.
+> One narrow instance of a wider family — see the [macro reaction-function
+> narrative library](2026-08-20-macro-reaction-function-narrative-library.md)
+> for the broader set (real yields, credit stress, gold, oil, DXY,
+> Taylor-rule gap) this one sits inside.
 
 $$FP_t(w) = f\big(\Delta\text{SOMA holdings}_t^{(w)},\ \text{buyback}_t^{(w)}\big)\;?$$
 

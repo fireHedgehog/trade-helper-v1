@@ -1,6 +1,10 @@
 # Long-end yield shock
 
 > Brainstorm · non-evidential · loaded only on explicit request · no acceptance weight.
+> See also the [macro reaction-function narrative
+> library](2026-08-20-macro-reaction-function-narrative-library.md) for the
+> wider family of free-data macro state variables (real yields, credit
+> stress, gold, oil, DXY, Taylor-rule gap) this shock variable sits inside.
 
 $$YS_t(h,L)=\frac{y_t-y_{t-h}}{\sigma_L(y_t-y_{t-h})}\;?$$
 
