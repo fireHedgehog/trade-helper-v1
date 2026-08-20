@@ -4,9 +4,9 @@ Local, long-only systematic-research workspace for testing whether a strategy ad
 
 ## Current state
 
-Version `0.53.0`. Stage 9A Cycle 1 closed `not_evaluable` in `0.40.0`: the locked consolidation detector found 274 broad, non-concentrated events, but its exact matcher admitted zero controls; power and actual-event outcomes were therefore not run. This is not a rejection of consolidation support recovery. Eight subsequent protocols each closed `not_material_or_not_consistent`, each for a different reason: SMA Cross v1 (`0.45.0`) on a confound; RSI(14) oversold reversal (`0.46.0`) on a power limitation; TA Breakout v1 (`0.47.0`) on a disclosed design weakness; Wave Pull v1 (`0.49.0`) on a clean-separation-but-null result with one small-sample near-miss; ETF-12 cross-sectional rotation v1 (`0.50.0`) on a clean, decisive null with no caveat at all — pooled rank correlation 0.045 against a 0.10 floor; Calendar Turn-of-Month v1 (`0.51.0`), the first time-based (not price-derived) mechanism tested, on a well-powered null — `987`-`1,612` events per asset ruled out a power limitation; Calendar Day-of-Week v1 (`0.52.0`) on a well-powered, directionally consistent (`9`/`12` assets negative) but statistically uncorrected null — `DBC`'s raw `p=0.048` did not survive Holm correction; Overnight Gap Continuation v1 (`0.53.0`), the first candidate whose event depends on two return components resampled jointly, on the session's most decisive negative — `12`/`12` assets showed a signed forward return opposite the continuation hypothesis, after a new joint-paired resampling design passed independent adversarial pre-lock code review. This closes Cycle 5 in full, every Tier 0/1 item, and one Tier 2 item on the pending checklist. CTA v2 remains eligible but parked pending a pooled-portfolio engine. CTA v1 remains rejected under its locked protocol; no paper trading, broker integration, unattended refresh, or deployment is enabled.
+This file is not the version source of truth and is not bumped every release — start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint (current version, active research, next task) and document map.
 
-Start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint, next task, and document map.
+As a fixed landmark rather than a live status: research is organized into a chaptered, living program (Chapters 1-3 falsification, Chapter 4 risk-budgeted ensemble sizing, Chapter 5 the operational bridge to bounded paper trading, Chapter 6 discussion) — see [docs/research-program.md](docs/research-program.md). No paper trading, broker integration, unattended refresh, or deployment is enabled yet; ADR 0008 (accepted) defines the design for bounded paper trading, not its implementation. CTA v1 remains rejected under its locked protocol.
 
 ## Run locally
 
@@ -45,7 +45,7 @@ It uses local/injected API states and never starts data refresh or strategy comp
 
 ## Safety boundary
 
-- Historical and local only; no order routing or broker credentials.
+- Historical and local only; no order routing or broker credentials — a sandboxed paper-trading design is accepted ([ADR 0008](docs/adr/0008-bounded-paper-trading.md)) but not implemented.
 - Adjusted Yahoo OHLCV is suitable for research, not execution-grade accounting.
 - A backtest result is conditional on its data, universe, costs, timing, and statistical design.
 - Strategy changes require a new preregistered hypothesis; retrospective tuning cannot rehabilitate CTA v1.

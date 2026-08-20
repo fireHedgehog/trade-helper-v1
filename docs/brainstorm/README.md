@@ -23,3 +23,4 @@ Template: `YYYY-MM-DD-topic.md`, first line:
 | 2026-08-20 | Policy exposure / industrial-policy factor | [2026-08-20-policy-exposure-industrial-factor.md](2026-08-20-policy-exposure-industrial-factor.md) |
 | 2026-08-20 | Trading folklore falsification list | [2026-08-20-trading-folklore-falsification-list.md](2026-08-20-trading-folklore-falsification-list.md) |
 | 2026-08-21 | Parallel multi-agent research pipeline ("industrialized assembly line") — parked, ~6mo out | [2026-08-21-parallel-multi-agent-research-pipeline.md](2026-08-21-parallel-multi-agent-research-pipeline.md) |
+| 2026-08-21 | Shared metrics/charting engine — backtest ranking + paper-trading metrics, one engine, one chart | [2026-08-21-shared-metrics-and-charting-engine.md](2026-08-21-shared-metrics-and-charting-engine.md) |
