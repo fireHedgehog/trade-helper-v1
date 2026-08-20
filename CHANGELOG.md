@@ -2,6 +2,20 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.63.2
+
+Docs-only, user-directed. Fed put reframed: claim is now "yield stress
+precedes Fed QE" (forward-looking precursor), not "Fed support causes
+yield reversal" (well-known, not a real edge). Treasury buybacks dropped
+entirely from this candidate -- different institution/mandate than the
+Fed; `app.treasury_buybacks` stays built and live-verified, just unused
+for now. Score unaffected (14/16, Cycle 6 update appended, not rewritten).
+
+Added [policy-exposure-industrial-factor.md](docs/brainstorm/2026-08-20-policy-exposure-industrial-factor.md):
+distilled from an external note (CHIPS Act/Intel-motivated), explicitly
+idea-stage, no ADR blocking it -- not yet a formed hypothesis. Distinct
+future line from Fed put.
+
 ## 0.63.1
 
 Docs-only, user-caught correction. Buybacks (one program 2000-02, dormant

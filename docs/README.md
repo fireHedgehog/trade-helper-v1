@@ -6,9 +6,9 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.63.1` |
+| Version | `0.63.2` |
 | Parent release | `0.37.0` (first Stage 8 acceptance candidate) |
-| Current state | Single-asset/time-series line **parked** — [stage-closures record](stage-closures/2026-08-20-single-asset-time-series-line.md). Both new engines proven (`app.macro_pit`; cross-sectional bootstrap `N=12→495`, `engine_feasible`); neither authorizes a candidate. Cycle 6: Fed put 14/16, sole eligible candidate. Its 3 gaps now closed (`0.63.0`): `TREAST`/`TREAS10Y` and Treasury buybacks live-ingested; [Thesis Track](thesis-track-small-n.md) small-*n* method designed. Not yet preregistered |
+| Current state | Single-asset/time-series line **parked** — [stage-closures record](stage-closures/2026-08-20-single-asset-time-series-line.md). Both new engines proven (`app.macro_pit`; cross-sectional bootstrap `N=12→495`, `engine_feasible`); neither authorizes a candidate. Cycle 6: Fed put 14/16, sole eligible candidate, reframed (`0.63.1`) as yield-stress-precedes-QE, not QE-precedes-reversal — the well-known direction isn't a real edge. `TREAST`/`TREAS10Y` live-ingested; [Thesis Track](thesis-track-small-n.md) small-*n* method designed. Treasury buybacks dropped from this candidate entirely (different institution/mandate than the Fed) — `app.treasury_buybacks` remains built and live-verified infrastructure, unused by any candidate for now. Not yet preregistered |
 | Verification | `324 passed` at `0.63.0` |
 | Completed | Stage 8; Stage 9A Cycles 1–6; CTA v1/v2; TA Breakout, Wave Pull, ETF-12 rotation, both calendar candidates, Overnight Gap — all closed and indexed in [research-protocols/README.md](research-protocols/README.md) |
 | Next product work | Preregister Fed put: lock hypothesis/episode definitions (dated by policy record, not outcome data — [Thesis Track](thesis-track-small-n.md)), estimand, placebo-window null construction, fingerprint. `S/R Bounce`, a reversal-framed overnight-gap candidate, MACD, Elliott Wave remain separately parked — see [pending checklist](brainstorm/2026-08-19-pending-candidate-checklist.md) |
