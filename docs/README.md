@@ -6,13 +6,13 @@ This file is the authoritative entry point for a new agent or work session. Do n
 
 | Field | Value |
 |---|---|
-| Version | `0.67.1` |
+| Version | `0.68.0` |
 | Parent release | `0.37.0` (first Stage 8 acceptance candidate) |
-| Current state | Single-asset/time-series line **parked**; Fed put (Cycle 6) now closed too, across three independent designs (v1 n=4 crisis-only, v2 n=6 adds real "not QE" actions, v3 20yr lookback) — see below. Both new engines proven; [Thesis Track](thesis-track-small-n.md) got three real uses. No active research line remains chosen |
-| Verification | `332 passed` at `0.67.0` |
-| Completed | Stage 8; Stage 9A Cycles 1–6; CTA v1/v2; TA Breakout, Wave Pull, ETF-12 rotation, both calendar candidates, Overnight Gap, Fed put yield-stress precursor v1+v2+v3 — all closed and indexed in [research-protocols/README.md](research-protocols/README.md) |
-| Next product work | No queued research task. Fed put closed [`not_evaluable`](research-results/fed-put-yield-stress-precursor-v3.md) three times (p=0.989 n=4; p=0.981 n=6; p=0.885 20yr lookback) — all pooled/cross-episode nulls. One real, standing finding: the actual current episode (2025 RMP) is the only one of six that matches the hypothesized pattern under a 20yr lookback — real, but not something a 6-episode pooled test can confirm as more than one data point. A follow-up needs a new, independently-justified mechanism, not a retry. Next line undecided: 6-variable [macro library](brainstorm/2026-08-20-macro-reaction-function-narrative-library.md), [cross-sectional](brainstorm/2026-08-20-cross-sectional-experiment-ideas.md) (Tier 4, unpurchased), [policy-exposure factor](brainstorm/2026-08-20-policy-exposure-industrial-factor.md), [trading folklore list](brainstorm/2026-08-20-trading-folklore-falsification-list.md) — all idea-stage, run [next-priority-evaluation.md](next-priority-evaluation.md) before picking. See [pending checklist](brainstorm/2026-08-19-pending-candidate-checklist.md) for what's already closed |
-| Active research | None. Fed put closed this cycle across 3 designs; see stage-closures precedent for whether this line should be formally parked too. Stage 9B remains gated |
+| Current state | Research reorganized into a chaptered, living program — see [research-program.md](research-program.md). Chapters 1-3 (single-asset/TA+calendar, cross-sectional, macro/event-driven) hold the existing strict falsification standard unchanged; a new, parallel Chapter 4 (risk-budgeted ensemble construction, [ADR 0007](adr/0007-risk-budgeted-ensemble-acceptance.md), draft/proposed) answers a different question — not "is this proven," but "is this worth a small, sized, loss-controlled bet" — reusing ADR 0004's existing loss-based sizing formula and drawdown halt rather than inventing new risk machinery |
+| Verification | `332 passed` at `0.67.0`; not re-run for this doc-only 0.68.0 change — re-run before touching code |
+| Completed | Stage 8; Stage 9A Cycles 1–6; CTA v1/v2; TA Breakout, Wave Pull, ETF-12 rotation, both calendar candidates, Overnight Gap, Fed put yield-stress precursor v1+v2+v3 — all closed and indexed in [research-protocols/README.md](research-protocols/README.md); labor-market claims lead-lag operationalized and bounded-explored (not yet scored) |
+| Next product work | No queued Stage 9A candidate. ADR 0007 is a draft awaiting review, not yet accepted — the ensemble-construction engine, confidence-multiplier sizing function, and minimum-breadth floor it names are required decisions, not yet built. Chapter 1-3 open threads (not yet sections): Dow theory swing structure, Fibonacci, golden/death cross, 52-week-high anchoring (Ch.1); the six Tier-4-blocked cross-sectional ideas (Ch.2); the 7-variable macro library, PEAD/earnings-gap (needs an earnings-date ingestion module — `yfinance.get_earnings_dates()` confirmed working, free, 1987-2026 depth), policy-exposure factor (Ch.3) — see [research-program.md](research-program.md) for the full inventory |
+| Active research | None active. Next step is a deliberate choice: accept/revise ADR 0007 and start building Chapter 4's engine, or pick a Chapter 1-3 open thread via [next-priority-evaluation.md](next-priority-evaluation.md). Stage 9B remains gated |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 | Pending triage | 2026-08-19 methodology/implementation audit — H2 (non-atomic bar publication) fixed in `0.54.0`; 2 critical, 1 high (H1, the orphaned mutating `GET /api/today`), 5 medium, 4 low remain untriaged; see [audits/README.md](audits/README.md) |
 
@@ -55,6 +55,8 @@ On a checkout with no `data/market.db` rows, `pytest -q` fails exactly two tests
 | How was CTA v1 tested? | [Research protocol](research-protocol.md) |
 | What did CTA v1 show? | [Result](research-results/cta-trend-wf-v1.md) and [audit](research-results/cta-trend-wf-v1-audit.md) |
 | What research may follow? | [Research backlog](research-backlog.md) |
+| What's the whole research program's shape, and how does a closed line get reopened honestly? | [Research program index](research-program.md) |
+| Can a signal that hasn't cleared the strict falsification bar ever be sized and traded? | [ADR 0007 (draft)](adr/0007-risk-budgeted-ensemble-acceptance.md) |
 | How does a narrative become a measurable hypothesis? | [Hypothesis engineering](hypothesis-engineering.md) |
 | How is a candidate selected and allowed to advance? | [Model acceptance standard](model-acceptance-standard.md) |
 | How is candidate search governed? | [Exploration protocol](exploration-protocol.md) |
