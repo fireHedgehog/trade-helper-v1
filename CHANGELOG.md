@@ -2,6 +2,17 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.62.0
+
+Cycle 6: first use of `next-priority-evaluation.md`. Fed put scores
+14/16, sole eligible candidate — [record](docs/research-candidates/2026-08-20-cycle-6.md).
+Cross-sectional disqualified (Data readiness 0, Tier 4 unpurchased);
+6-variable macro library not yet operationalized. Verified live: Fed
+SOMA holdings (`TREAST`/`TREAS10Y`) are on FRED, ingestible today;
+Treasury buybacks are not, need a new `fiscaldata.treasury.gov` module.
+Not preregistered -- data/Thesis-Track design gaps remain. No code, no
+market data touched.
+
 ## 0.61.1
 
 Docs-only. Two gaps found by cold-reading the checkpoint as a fresh agent
