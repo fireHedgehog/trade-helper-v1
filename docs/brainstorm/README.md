@@ -18,3 +18,4 @@ Template: `YYYY-MM-DD-topic.md`, first line:
 | 2026-08-19 | Pending candidate checklist, cheap to orthogonal | [2026-08-19-pending-candidate-checklist.md](2026-08-19-pending-candidate-checklist.md) |
 | 2026-08-19 | Fed put: purchase-conditioned long-end yield reversal | [2026-08-19-fed-put-long-end-reversal.md](2026-08-19-fed-put-long-end-reversal.md) |
 | 2026-08-20 | Ensemble/factor vocabulary and open questions | [2026-08-20-ensemble-factor-vocabulary.md](2026-08-20-ensemble-factor-vocabulary.md) |
+| 2026-08-20 | Cross-sectional experiment idea library | [2026-08-20-cross-sectional-experiment-ideas.md](2026-08-20-cross-sectional-experiment-ideas.md) |

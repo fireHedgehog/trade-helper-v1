@@ -218,7 +218,12 @@ not before.
   cross-sectional equity momentum, value, quality, and any broad-universe
   factor work. The current ~500-symbol list is today's Wikipedia snapshot
   only (`universe.py`'s own docstring warns of this) — structurally
-  survivorship-biased, not fixable by more fetching.
+  survivorship-biased, not fixable by more fetching. **Leverage note
+  (2026-08-20):** checked against the [cross-sectional idea
+  library](2026-08-20-cross-sectional-experiment-ideas.md), this single item
+  is the shared blocker behind six distinct candidate ideas, not one — the
+  cost/benefit case for this line item is materially different read that
+  way than as a gate on any single factor test.
 - [ ] **Futures continuous-contract and roll data** — unlocks a genuine
   diversified futures-trend candidate in the original Moskowitz/Ooi/Pedersen
   shape. Nothing in `fetch.py` constructs continuous contracts or rolls

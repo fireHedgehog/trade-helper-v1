@@ -2,6 +2,15 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.58.0
+
+Added a brainstorm memo distilling an external cross-sectional-experiment
+idea note; no code, no market data, no research decision.
+
+- Added [docs/brainstorm/2026-08-20-cross-sectional-experiment-ideas.md](docs/brainstorm/2026-08-20-cross-sectional-experiment-ideas.md): eleven cross-sectional/relative-value ideas (residual momentum, momentum fragility, quiet-vs-loud winner, breadth, dispersion regime, correlation crowding, leadership diffusion, drawdown recovery, macro sensitivity rotation, factor conflict) reduced to a compact table, kept as a freely-editable idea library rather than the source note's own prose.
+- Flagged that the note's own "positive control" (CS-01, raw cross-sectional momentum) is not untested ground: [ETF-12 rotation](docs/research-results/etf12-cross-sectional-rotation-v1.md) already ran the same estimand shape at `N=12` and closed a clean, decisive null (`ρ=0.045`, `p=0.266`) -- informative, but not a verdict on the same claim at real equity-universe breadth (Grinold-Kahn's whole premise is that breadth changes the answer).
+- Reframed the "do we need finer cost-tier granularity" question the user raised: checked against all eleven ideas, the existing informal `T0`-`T4` ladder in [docs/brainstorm/2026-08-19-pending-candidate-checklist.md](docs/brainstorm/2026-08-19-pending-candidate-checklist.md) is fine-grained enough already. Six of the eleven ideas (CS-01, 02, 03, 04, 05, 09) collapse onto the *same* single blocker -- Tier 4's point-in-time equity universe data, no new data type needed since volume is already stored -- which is a materially higher-leverage read of that one backlog line than treating it as gating just one candidate. Two ideas (leadership diffusion, correlation-crowding-via-labeled-groups) surface a data gap not previously named: sector/industry classification. One (macro sensitivity rotation) is not new at all -- it is Fed put's existing ADR 0006 gate under a different name.
+
 ## 0.57.0
 
 Added the Stage Closure convention and formally parked the single-asset/
