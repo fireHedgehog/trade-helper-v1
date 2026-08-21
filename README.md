@@ -2,8 +2,6 @@
 
 Local, long-only systematic-research workspace for testing whether a strategy adds value over explicit passive benchmarks after costs. It is a research decision aid, not an execution system or investment recommendation.
 
-That line is a public-repository liability disclaimer, not a mission statement — this repo is public, and the disclaimer exists so a stranger who downloads this code doesn't mistake an early-stage backtest for validated advice. The author's own research goal is finding real, tradeable edges for their own private, unlevered, paper-traded capital — see [docs/identity.md](docs/identity.md)'s "What that sentence is actually for" note before treating this line as a reason to avoid actually seeking one.
-
 ## Current state
 
 This file is not the version source of truth and is not bumped every release — start every new work session at [docs/README.md](docs/README.md). It contains the authoritative checkpoint (current version, active research, next task) and document map.

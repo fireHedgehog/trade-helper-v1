@@ -2,6 +2,16 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.86.2
+
+Reverted `0.86.1`'s README fix -- it fixed the disclaimer confusion but introduced a worse problem, caught immediately by the user: the root README now had one paragraph speaking to a public reader, then the next addressed to an agent, then back again. Docs-only.
+
+- User-directed: pointed out the root `README.md` is the one file a stranger actually lands on, and mixing an agent-directed process note into it (referencing "a prior agent session," pointing at `identity.md`'s internal reasoning) is jarring and unprofessional there, regardless of whether the content itself was correct.
+- Root `README.md`: reverted to its original single-tone, human-only form. The disclaimer-vs-mission clarification stays exactly where it already correctly lived -- `docs/identity.md` only.
+- `docs/README.md`: new explicit rule stating the actual, already-existing split -- root README is public/human-only, everything under `docs/` is the internal operating manual; calibration and process notes belong there, never in the root README.
+- New persistent memory (`feedback_readme_single_tone_human_only.md`) alongside the existing disclaimer one, since this is a distinct lesson about *where* agent-facing content belongs, not *what* it should say.
+- No code changed. 432 passed, 1 known unrelated failure.
+
 ## 0.86.1
 
 Clarified that "not an alpha finder" is a public-repo liability disclaimer, not a mission statement. Docs-only.
