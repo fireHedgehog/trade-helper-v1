@@ -31,9 +31,17 @@
   }
   .nav-item.active { background: #1f2634; color: var(--text); }
   .nav-item .tag { float: right; font-size: 10px; background: #374151; padding: 1px 6px; border-radius: 6px; }
-  main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  main { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding-bottom: 26px; }
   .view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .view[hidden] { display: none; }
+  #site-footer {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; height: 26px;
+    background: var(--panel); border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--muted);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  #site-footer a { color: #93c5fd; text-decoration: none; }
+  #site-footer a:hover { text-decoration: underline; }
   .today-body, .macro-body {
     flex: 1; overflow-y: auto; padding: 24px;
     display: flex; flex-direction: column; gap: 20px;
@@ -626,6 +634,11 @@
     </div>
   </div>
 </main>
+
+<footer id="site-footer">
+  <span>📖 Research Program — a chaptered working paper (Ch 1–6), not a finished result</span>
+  <a href="https://github.com/fireHedgehog/trade-helper-v1/blob/main/docs/research-program.md" target="_blank" rel="noopener">full record on GitHub</a>
+</footer>
 
 <script>
 const $ = (sel) => document.querySelector(sel);

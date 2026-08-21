@@ -2,6 +2,14 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.80.1
+
+Sitewide footer: a persistent pointer to the chaptered research program, on every page. Frontend-only.
+
+- User-directed: browsing the app cold, the research vocabulary (Tier A/B, ADR numbers, chapter references) reads as confusing without a map first -- asked for something that points to the "book, chaptered" framing that's been this project's own vision all along, referencing how a public GitHub research/working-paper page is laid out. Placement was deliberately not the left nav (that's app navigation, and collapses to a top bar on mobile) -- landed on a slim, persistent footer instead, present on every view regardless of viewport.
+- `frontend/index.html`: new `#site-footer`, `position: fixed` to the viewport bottom, one line linking straight to `research-program.md` on GitHub (Chapters 1-6). `main` gained matching `padding-bottom` so it never covers the last row of scrolled content -- verified by scrolling Strategy Management's full table to its end and by scrolling the mobile layout, both confirmed clear.
+- 417 passed (unchanged), live-verified in a headless browser: footer renders on all six views, stays pinned through scroll at both desktop and a 400px mobile viewport, zero console errors.
+
 ## 0.80.0
 
 Macro page: restored a labeled, disclosed "equity read" hypothesis chip per event, fixed the missing Gold card, and decluttered the events table. Backend + frontend + one ADR addendum.
