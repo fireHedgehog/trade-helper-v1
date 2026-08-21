@@ -108,6 +108,15 @@ async def test_research_record_excludes_deferred_studies(client) -> None:
     )
     fed_put = next(study for study in studies if study["study_id"] == "fed-put-yield-stress-precursor-v1")
     assert fed_put["type"] == "Macro"
+    cost_sensitivity = next(
+        study for study in studies if study["study_id"] == "factor-zoo-cost-sensitivity-v1"
+    )
+    assert cost_sensitivity["decision"] == "not_material_after_cost"
+    assert cost_sensitivity["type"] == "Cross-Sectional"
+    regime = next(
+        study for study in studies if study["study_id"] == "factor-zoo-regime-concentration-v1"
+    )
+    assert regime["decision"] == "regime_concentration_clear"
 
 
 async def test_macro_contract_forbids_signal_inference(client, monkeypatch) -> None:

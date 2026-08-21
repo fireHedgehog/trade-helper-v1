@@ -444,18 +444,33 @@ class FactorEvaluation:
 
 
 def evaluate_factor(
-    name: str, factor: pd.DataFrame, close: pd.DataFrame, min_symbols: int = 30
+    name: str, factor: pd.DataFrame, close: pd.DataFrame, min_symbols: int = 30,
+    round_trip_cost_bps: float = 0.0,
 ) -> FactorEvaluation:
-    """Screening pass: 1-session forward close-to-close return, no cost/
-    slippage modeled. Rank-IC per date (Pearson correlation of ranks) and a
-    daily-rebalanced, equal-weight top-quintile-minus-bottom-quintile spread
-    return, both non-evidential -- see run_factor_zoo_scan.py's module
-    docstring for the full disclosure (overlapping-draw IC t-stats, no
-    multiple-comparisons correction across the zoo)."""
+    """Screening pass: 1-session forward close-to-close return. Rank-IC per
+    date (Pearson correlation of ranks) and a daily-rebalanced, equal-weight
+    top-quintile-minus-bottom-quintile spread return, both non-evidential --
+    see run_factor_zoo_scan.py's module docstring for the full disclosure
+    (overlapping-draw IC t-stats, no multiple-comparisons correction across
+    the zoo).
+
+    round_trip_cost_bps: charged on quintile turnover, not a flat daily drag
+    -- each day, the fraction of the top/bottom quintile whose membership
+    changed since yesterday pays this rate once (one full buy+sell on that
+    slot's capital); the first valid day of any run is always turnover-free
+    (nothing to compare against yet). Default 0.0 reproduces the original
+    zero-cost screen exactly, unchanged -- every existing factor-zoo-v1
+    number stays reproducible. See
+    docs/research-results/factor-zoo-cost-sensitivity-v1.md for this
+    project's own standard rate (derived from engine.py's own
+    COMMISSION/SPREAD/SLIPPAGE, not invented fresh) and the reversal-cluster
+    result it produced. Reusable by any future factor, WQ101 or new."""
     forward_return = close.shift(-1) / close - 1.0
     ic_values: list[float] = []
     spread_returns: dict[str, float] = {}
     symbol_counts: list[int] = []
+    previous_top: frozenset | None = None
+    previous_bottom: frozenset | None = None
     for current_date in factor.index[:-1]:
         factor_row = factor.loc[current_date]
         forward_row = forward_return.loc[current_date]
@@ -473,9 +488,19 @@ def evaluate_factor(
                 ic_values.append(ic)
         quintile_size = max(int(len(symbols) * 0.2), 1)
         ordered = f.sort_values()
-        bottom = ordered.index[:quintile_size]
-        top = ordered.index[-quintile_size:]
-        spread_returns[str(current_date)] = float(r[top].mean() - r[bottom].mean())
+        bottom_index = ordered.index[:quintile_size]
+        top_index = ordered.index[-quintile_size:]
+        raw_spread = float(r[top_index].mean() - r[bottom_index].mean())
+        cost_drag = 0.0
+        if round_trip_cost_bps:
+            top_set = frozenset(top_index)
+            bottom_set = frozenset(bottom_index)
+            if previous_top is not None:
+                top_turnover = len(top_set - previous_top) / quintile_size
+                bottom_turnover = len(bottom_set - previous_bottom) / quintile_size
+                cost_drag = (top_turnover + bottom_turnover) * (round_trip_cost_bps / 10_000.0)
+            previous_top, previous_bottom = top_set, bottom_set
+        spread_returns[str(current_date)] = raw_spread - cost_drag
         symbol_counts.append(len(symbols))
 
     if len(ic_values) < 2 or len(spread_returns) < 2:
@@ -501,6 +526,46 @@ def evaluate_factor(
         win_rate=metrics["win_rate"],
         total_return=metrics["total_return"],
     )
+
+
+def regime_concentration_by_year(daily_returns: pd.Series) -> dict:
+    """ADR 0007 clause 5's regime-concentration check -- the same
+    calculation already disclosed in cta-v2-pooled-trend-overlay.md
+    ("excluding 2008 ... flips its mean daily excess return ... negative"),
+    generalized to sweep every calendar year in the sample rather than a
+    few hand-picked ones. For each year present: the mean daily return
+    with that year excluded, and whether excluding it flips the sign of
+    the full-sample mean. Reusable by any future Chapter 4 candidate, not
+    specific to one factor."""
+    if daily_returns.empty:
+        raise ValueError("regime_concentration_by_year requires at least one daily return")
+    year_labels = pd.Series(
+        [str(idx)[:4] for idx in daily_returns.index], index=daily_returns.index
+    )
+    full_mean = float(daily_returns.mean())
+    by_year = []
+    for year in sorted(year_labels.unique()):
+        in_year = daily_returns[year_labels == year]
+        excluding = daily_returns[year_labels != year]
+        mean_excluding = float(excluding.mean()) if len(excluding) else None
+        flips_sign = (
+            mean_excluding is not None
+            and full_mean != 0
+            and (mean_excluding > 0) != (full_mean > 0)
+        )
+        by_year.append({
+            "year": year,
+            "n_days": int(len(in_year)),
+            "year_mean": float(in_year.mean()),
+            "mean_excluding_year": mean_excluding,
+            "flips_sign": flips_sign,
+        })
+    return {
+        "full_sample_mean": full_mean,
+        "n_days": len(daily_returns),
+        "by_year": by_year,
+        "any_year_flips_sign": any(row["flips_sign"] for row in by_year),
+    }
 
 
 def pairwise_orthogonality(

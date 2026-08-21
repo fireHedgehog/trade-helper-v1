@@ -1,0 +1,191 @@
+{
+  "cluster_factors": [
+    "alpha034",
+    "alpha033",
+    "alpha009",
+    "alpha028",
+    "alpha004",
+    "alpha026"
+  ],
+  "common_date_count": 1931,
+  "common_date_end": "2026-08-18",
+  "common_date_start": "2018-12-07",
+  "control_factors": [
+    "atr_normalized"
+  ],
+  "cost_levels_bps": [
+    0.0,
+    32.0,
+    64.0
+  ],
+  "cost_model": "round-trip cost charged on quintile turnover (factor_zoo.evaluate_factor's round_trip_cost_bps); standard rate derived from engine.py's own COMMISSION/SPREAD/SLIPPAGE, not invented for this report",
+  "evidential_status": "non-evidential -- screening scan only, same standing as factor-zoo-v1",
+  "missing_symbols": [
+    "HUBB"
+  ],
+  "results": {
+    "alpha004": [
+      {
+        "cagr": 0.08312380819769616,
+        "cost_bps": 0.0,
+        "max_drawdown": -0.26779593038289606,
+        "sharpe": 0.6325422282862225,
+        "total_return": 0.8386088022028773
+      },
+      {
+        "cagr": -0.4961743444903065,
+        "cost_bps": 32.0,
+        "max_drawdown": -0.9946460086896597,
+        "sharpe": -4.734090776329311,
+        "total_return": -0.9946383753066859
+      },
+      {
+        "cagr": -0.7661953464804355,
+        "cost_bps": 64.0,
+        "max_drawdown": -0.9999845835769063,
+        "sharpe": -10.061157553371153,
+        "total_return": -0.9999846448875981
+      }
+    ],
+    "alpha009": [
+      {
+        "cagr": 0.04608957361108179,
+        "cost_bps": 0.0,
+        "max_drawdown": -0.22814917072142382,
+        "sharpe": 0.4036092698779447,
+        "total_return": 0.41187116097304144
+      },
+      {
+        "cagr": -0.6739019608199737,
+        "cost_bps": 32.0,
+        "max_drawdown": -0.9998145388250449,
+        "sharpe": -8.258175071078936,
+        "total_return": -0.9998117234445969
+      },
+      {
+        "cagr": -0.8989037660263178,
+        "cost_bps": 64.0,
+        "max_drawdown": -0.9999999760678191,
+        "sharpe": -16.787968089866038,
+        "total_return": -0.9999999759296048
+      }
+    ],
+    "alpha026": [
+      {
+        "cagr": 0.037137186408857215,
+        "cost_bps": 0.0,
+        "max_drawdown": -0.11746257851397923,
+        "sharpe": 0.443512592529173,
+        "total_return": 0.32178112283292304
+      },
+      {
+        "cagr": -0.3356705545388864,
+        "cost_bps": 32.0,
+        "max_drawdown": -0.9572346863301,
+        "sharpe": -4.3911356510369695,
+        "total_return": -0.9562384367418129
+      },
+      {
+        "cagr": -0.5748231165886799,
+        "cost_bps": 64.0,
+        "max_drawdown": -0.9985720971588566,
+        "sharpe": -9.134678421587145,
+        "total_return": -0.998560329876816
+      }
+    ],
+    "alpha028": [
+      {
+        "cagr": 0.0739673076770917,
+        "cost_bps": 0.0,
+        "max_drawdown": -0.1448424645506694,
+        "sharpe": 0.6832429089342845,
+        "total_return": 0.7272379681397525
+      },
+      {
+        "cagr": -0.6332601413080989,
+        "cost_bps": 32.0,
+        "max_drawdown": -0.9995469975758956,
+        "sharpe": -8.69386292687268,
+        "total_return": -0.9995391746686615
+      },
+      {
+        "cagr": -0.8753533763914122,
+        "cost_bps": 64.0,
+        "max_drawdown": -0.9999998829169762,
+        "sharpe": -17.85480916335606,
+        "total_return": -0.9999998814064369
+      }
+    ],
+    "alpha033": [
+      {
+        "cagr": 0.07068443797160295,
+        "cost_bps": 0.0,
+        "max_drawdown": -0.3067078147249094,
+        "sharpe": 0.4739953351385745,
+        "total_return": 0.6872108170361491
+      },
+      {
+        "cagr": -0.6955006014409649,
+        "cost_bps": 32.0,
+        "max_drawdown": -0.9998908448906766,
+        "sharpe": -6.611194776761947,
+        "total_return": -0.9998891009343284
+      },
+      {
+        "cagr": -0.9139508426206027,
+        "cost_bps": 64.0,
+        "max_drawdown": -0.9999999931373321,
+        "sharpe": -13.658834799529352,
+        "total_return": -0.9999999930575649
+      }
+    ],
+    "alpha034": [
+      {
+        "cagr": 0.09014347701805803,
+        "cost_bps": 0.0,
+        "max_drawdown": -0.19295348950157798,
+        "sharpe": 0.7783392538833538,
+        "total_return": 0.936103171425196
+      },
+      {
+        "cagr": -0.685977393607532,
+        "cost_bps": 32.0,
+        "max_drawdown": -0.9998624797987599,
+        "sharpe": -9.441493144562735,
+        "total_return": -0.9998589556910534
+      },
+      {
+        "cagr": -0.9101095090758171,
+        "cost_bps": 64.0,
+        "max_drawdown": -0.9999999902524075,
+        "sharpe": -19.3082066055822,
+        "total_return": -0.9999999902067264
+      }
+    ],
+    "atr_normalized": [
+      {
+        "cagr": 0.1960242339044631,
+        "cost_bps": 0.0,
+        "max_drawdown": -0.3964828143409037,
+        "sharpe": 0.8240264217186309,
+        "total_return": 2.9000541528981816
+      },
+      {
+        "cagr": 0.06361475718916787,
+        "cost_bps": 32.0,
+        "max_drawdown": -0.42454471171061137,
+        "sharpe": 0.36796094138787483,
+        "total_return": 0.598255187592881
+      },
+      {
+        "cagr": -0.05419192704478126,
+        "cost_bps": 64.0,
+        "max_drawdown": -0.6032667056630753,
+        "sharpe": -0.08857262049054486,
+        "total_return": -0.34532446694993635
+      }
+    ]
+  },
+  "standard_round_trip_bps": 32.0,
+  "universe_size": 494
+}

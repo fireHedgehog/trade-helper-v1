@@ -1,0 +1,83 @@
+{
+  "cagr": 0.1960242339044631,
+  "common_date_end": "2026-08-18",
+  "common_date_start": "2018-12-07",
+  "evidential_status": "non-evidential -- screening scan only, same standing as factor-zoo-v1",
+  "factor": "atr_normalized",
+  "max_drawdown": -0.3964828143409037,
+  "missing_symbols": [
+    "HUBB"
+  ],
+  "regime_concentration": {
+    "any_year_flips_sign": false,
+    "by_year": [
+      {
+        "flips_sign": false,
+        "mean_excluding_year": 0.0008275476487813165,
+        "n_days": 2,
+        "year": "2018",
+        "year_mean": 0.014114340122602667
+      },
+      {
+        "flips_sign": false,
+        "mean_excluding_year": 0.0008626781331863705,
+        "n_days": 252,
+        "year": "2019",
+        "year_mean": 0.0007010256602798589
+      },
+      {
+        "flips_sign": false,
+        "mean_excluding_year": 0.0007902655414213132,
+        "n_days": 253,
+        "year": "2020",
+        "year_mean": 0.0011776414412213482
+      },
+      {
+        "flips_sign": false,
+        "mean_excluding_year": 0.0008617556997428948,
+        "n_days": 252,
+        "year": "2021",
+        "year_mean": 0.0007071166493669374
+      },
+      {
+        "flips_sign": false,
+        "mean_excluding_year": 0.0010310973027724635,
+        "n_days": 251,
+        "year": "2022",
+        "year_mean": -0.0004168212314880741
+      },
+      {
+        "flips_sign": false,
+        "mean_excluding_year": 0.0007250689727928548,
+        "n_days": 250,
+        "year": "2023",
+        "year_mean": 0.0016167598853589946
+      },
+      {
+        "flips_sign": false,
+        "mean_excluding_year": 0.0009189979570202067,
+        "n_days": 252,
+        "year": "2024",
+        "year_mean": 0.0003291360298850029
+      },
+      {
+        "flips_sign": false,
+        "mean_excluding_year": 0.0007628717085814845,
+        "n_days": 249,
+        "year": "2025",
+        "year_mean": 0.0013672600072582738
+      },
+      {
+        "flips_sign": false,
+        "mean_excluding_year": 0.0007972638787505803,
+        "n_days": 155,
+        "year": "2026",
+        "year_mean": 0.0013430528356959547
+      }
+    ],
+    "full_sample_mean": 0.0008414169519898981,
+    "n_days": 1916
+  },
+  "sharpe": 0.8240264217186309,
+  "universe_size": 494
+}

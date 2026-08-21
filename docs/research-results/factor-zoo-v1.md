@@ -85,14 +85,23 @@ low-vol/defensive one — the economically expected shape, not a red flag
 by itself, but a real regime-concentration question (ADR 0007 clause 5)
 still to check before proposing it.
 
-**Not yet done, named as the next concrete step**: propose the
-least-redundant survivors — `alpha028`, `alpha004`, `alpha026`, and
-`atr_normalized` — as individual Chapter 4 candidates, each with its own
-stated mechanism, regime-concentration check, and a cost-sensitivity check
-before any eligibility read is trusted. The reversal cluster
-(`alpha034`/`033`/`009`/RSI/Stochastic/Williams-%R/CCI/MACD/ROC/OBV, all
-one hypothesis) needs a transaction-cost-aware rerun before it is even
-scan-worthy of further attention.
+**Done**: the transaction-cost-aware rerun this section named as the next
+step is now [factor-zoo-cost-sensitivity-v1](factor-zoo-cost-sensitivity-v1.md)
+— the reversal cluster (`alpha034`/`033`/`009`/`028`/`004`/`026`) is not
+material after this project's own standard round-trip cost; every member
+flips to a deeply negative Sharpe, the bid-ask-bounce artifact confirmed
+by measurement, not just cited. `atr_normalized` survives that same check
+(degrades mildly, does not collapse), a second, different confirmation of
+its independence beyond the correlation check below.
+
+**Also done**: `atr_normalized`'s regime-concentration check (ADR 0007
+clause 5) is now
+[factor-zoo-regime-concentration-v1](factor-zoo-regime-concentration-v1.md)
+— unlike CTA v2, no single year's exclusion flips the sign; the effect is
+spread across all 8 sample years. Clause 5 is closed for it. Still open:
+clause 2 (a cross-validated point estimate with an explicit uncertainty
+band) and clause 1 (a written mechanism claim) before any formal Chapter 4
+proposal.
 
 [Chapter 4 index](../research-program.md) ·
 [Source backlog](../brainstorm/2026-08-21-open-source-factor-source-backlog.md)

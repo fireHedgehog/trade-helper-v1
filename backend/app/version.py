@@ -1,3 +1,3 @@
 """Single application-version source for API and UI checkpoints."""
 
-APP_VERSION = "0.76.6"
+APP_VERSION = "0.77.1"

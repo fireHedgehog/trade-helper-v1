@@ -353,6 +353,38 @@ CHARACTERIZATION_STUDIES = {
             "p≈0.13-0.14 -- not distinguishable from chance."
         ),
     },
+    "factor-zoo-regime-concentration-v1": {
+        "chapter": "4 §5c",
+        "type": "Cross-Sectional",
+        "decision": "regime_concentration_clear",
+        "result_doc": "docs/research-results/factor-zoo-regime-concentration-v1.md",
+        "artifact": "output/research/factor-zoo-regime-concentration-v1/regime-concentration-report.json",
+        "name": "Factor Zoo — Regime Concentration (atr_normalized)",
+        "summary": (
+            "ADR 0007 clause 5 check, same calculation as CTA v2's own "
+            "closed result: unlike CTA v2 (where excluding 2008 flipped "
+            "the sign), no single year's exclusion flips atr_normalized's "
+            "positive mean across all 8 sample years -- clause 5 closed "
+            "cleanly, clauses 1 and 2 remain before a Chapter 4 proposal."
+        ),
+    },
+    "factor-zoo-cost-sensitivity-v1": {
+        "chapter": "4 §5b",
+        "type": "Cross-Sectional",
+        "decision": "not_material_after_cost",
+        "result_doc": "docs/research-results/factor-zoo-cost-sensitivity-v1.md",
+        "artifact": "output/research/factor-zoo-cost-sensitivity-v1/cost-sensitivity-report.json",
+        "name": "Factor Zoo — Cost Sensitivity (Reversal Cluster)",
+        "summary": (
+            "Charges this project's own standard round-trip cost on "
+            "quintile turnover; every reversal-cluster factor "
+            "(alpha034/033/009/028/004/026) flips to a deeply negative "
+            "Sharpe -- confirms the bid-ask-bounce artifact by "
+            "measurement. atr_normalized survives the same check, "
+            "degrading mildly -- a second, independent confirmation "
+            "beyond its earlier orthogonality check."
+        ),
+    },
     "chapter4-eligibility-calibration-v1": {
         "chapter": "4 §4",
         "type": "Time-Series",

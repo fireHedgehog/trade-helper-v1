@@ -2,6 +2,31 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.77.1
+
+Factor zoo regime concentration v1 (Chapter 4 §5c): `atr_normalized`'s ADR 0007 clause 5 check closes clean — unlike CTA v2, no single year carries the result.
+
+- User-directed: the next named step after `0.77.0`'s cost-sensitivity result, framed as a natural checkpoint to commit once done.
+- `backend/app/factor_zoo.py`: new `regime_concentration_by_year` function -- the exact calculation `cta-v2-pooled-trend-overlay.md` already disclosed (exclude a year, see whether the sample mean flips sign), generalized to sweep every year in a sample instead of a few hand-picked ones, and reusable by any future Chapter 4 candidate. 1 new hand-checked test (5-point synthetic series with one year constructed to flip the sign and one constructed not to).
+- `backend/app/run_factor_zoo_regime_concentration.py` (new): real run against current `data/market.db` for `atr_normalized`. Result: full-sample mean `+8.41bps`/day (Sharpe `0.82`); excluding any single year of the 8-year sample, the mean stays positive in a `+7.25` to `+10.31bps` band -- no year flips the sign, unlike CTA v2's 2008 dependency.
+- `docs/research-results/factor-zoo-regime-concentration-v1.md` (new immutable result). `factor-zoo-v1.md` and `factor-zoo-cost-sensitivity-v1.md`'s forward pointers updated to close the loop; `research-program.md` Chapter 4 gained `§5c`, and its "next concrete step" narrowed to clauses 1 (mechanism) and 2 (cross-validated point estimate + uncertainty band) -- the two still open before `atr_normalized` can be formally proposed.
+- Onboarded via `strategy-library.md`'s playbook a third time (18 studies now on Strategy Management) -- routine at this point, which is the point of having written it down.
+- A units error caught before it reached the immutable doc: first draft misread the daily-return decimal as already being in bps (100x off); recomputed and verified against the raw JSON before writing anything down.
+- 402 passed (1 new), 1 known unrelated failure (data-fingerprint drift).
+
+## 0.77.0
+
+Factor zoo cost-sensitivity v1 (Chapter 4 §5b): the reversal cluster is not material after this project's own standard transaction cost; `atr_normalized` survives the same check. Built as a reusable engine parameter, not a one-off script.
+
+- User-directed: asked for the promised cost-sensitivity check, and specifically how to build it so it lands in the right chapter, surfaces on the UI, and is reusable by future experiments -- not a bespoke, siloed one-off.
+- `backend/app/factor_zoo.py`: `evaluate_factor` gained a `round_trip_cost_bps` parameter (default `0.0`, byte-for-byte unchanged behavior -- unit-tested) that charges cost on quintile turnover (the fraction of the top/bottom quintile whose membership changed since the prior day pays a round-trip rate once). Reusable by any future factor, WQ101 or new -- not specific to this report. 2 new hand-checked tests (a 5-symbol, hand-computed turnover example landing on an exact-zero result by construction).
+- The cost rate is this project's own already-decided standard, not invented: derived from `engine.py`'s own `COMMISSION`/`SPREAD`/`SLIPPAGE` ("deliberate, so results aren't fantasy") -- 2 commission fills + 1 quoted spread + 2 slippage fills = 32bps round trip.
+- `backend/app/run_factor_zoo_cost_sensitivity.py` (new): re-runs the six-factor reversal cluster (`alpha034/033/009/028/004/026`) plus `atr_normalized` as a control at 0/32/64bps. Real run against current `data/market.db`: every cluster factor flips from a positive Sharpe (0.40-0.78) to deeply negative (-4.4 to -19.3) at the standard rate -- confirms factor-zoo-v1's disclosed bid-ask-bounce suspicion by measurement. `atr_normalized` degrades mildly and monotonically (0.82 -> 0.37 -> -0.09), a second, different confirmation of its independence beyond the earlier correlation check.
+- `docs/research-results/factor-zoo-cost-sensitivity-v1.md` (new immutable result): full method, table, and reading. `factor-zoo-v1.md`'s "not yet done" pointer updated to close the loop (original evidence untouched). `docs/research-program.md` Chapter 4 gained `§5b`, appended not rewritten, and its "next concrete step" narrowed to just `atr_normalized`.
+- Onboarded via `strategy-library.md`'s own playbook, proving it end-to-end for a genuinely new result, not just the existing backlog: one `CHARACTERIZATION_STUDIES` entry, appeared on Strategy Management and every unified dropdown automatically, no UI code touched. Live-verified.
+- Found and fixed along the way: `matplotlib` was declared in `requirements.txt` since `0.74.0` but not actually installed in this machine's venv -- synced it (`pip install -r requirements.txt`), not a new dependency.
+- 401 passed (2 new), 1 known unrelated failure (data-fingerprint drift).
+
 ## 0.76.6
 
 Closed a real vocabulary gap in docs/README.md, found by testing the question directly rather than assuming: user's own recurring term "trade desk" appeared nowhere in `docs/`. Docs-only.

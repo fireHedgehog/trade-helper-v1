@@ -115,6 +115,8 @@ and tested.
 | 4 | [Eligibility-rule calibration v1](research-results/chapter4-eligibility-calibration-v1.md) | false-eligible rates measured directly; a pasted critique's `32%` figure did not survive, but its winner's-curse concern (`84.67%`) was confirmed and was worse than estimated |
 | — | [Orthogonality screen v1](research-results/chapter4-orthogonality-v1.md) | `3`/`28` nominally-eligible pairs redundant, all within Day-of-Week's winners |
 | 5 | [Factor zoo v1 — 27-formula screen](research-results/factor-zoo-v1.md) | `atr_normalized` independent, Sharpe `0.84`; the top-cluster reversal shape (`10` factors) flagged as one shared bid-ask-bounce hypothesis, not ten |
+| 5b | [Factor zoo cost sensitivity v1](research-results/factor-zoo-cost-sensitivity-v1.md) | §5's reversal cluster (`6` factors) not material at this project's own standard cost — every Sharpe flips deeply negative; `atr_normalized` survives the same check, degrading mildly, a second independent confirmation by a different mechanism |
+| 5c | [Factor zoo regime concentration v1](research-results/factor-zoo-regime-concentration-v1.md) | `atr_normalized`'s ADR 0007 clause 5 check: unlike CTA v2, no single year's exclusion flips the sign — the effect spreads across all `8` sample years, clause 5 closed |
 
 None of §1–3's hand-picked candidates has a settled, adversarially-checked
 positive read — a governance framework that correctly catches its own
@@ -124,11 +126,15 @@ calibration discipline (§4) exist to do. The ensemble-construction engine
 and minimum-breadth floor remain named, unbuilt (ADR 0007 Consequences) —
 premature ahead of a settled positive candidate, not merely undersupported.
 
-**Not yet done, next concrete step**: propose §5's least-redundant
-survivors (`alpha028`, `alpha004`, `alpha026`, `atr_normalized`) as
-individual Chapter 4 candidates, each with a stated mechanism, and run a
-transaction-cost-sensitivity check on the reversal cluster before trusting
-its Sharpe numbers at all.
+**Not yet done, next concrete step**: `atr_normalized` is the one
+survivor of §5/§5b, and §5c closed its regime-concentration gate cleanly.
+Two clauses remain before a formal Chapter 4 proposal: clause 1 (a
+written economic mechanism for a volatility-level factor, not yet
+drafted) and clause 2 (a cross-validated point estimate with an explicit
+uncertainty band — the confidence-multiplier scoring already built and
+used for CTA v2/Wave Pull/Calendar-DOW, not yet run for this candidate).
+`alpha028`/`alpha004`/`alpha026` are answered (not material after cost,
+per §5b) and not carried forward.
 
 ## Chapter 5 — Operational bridge: from research verdict to bounded paper trading
 

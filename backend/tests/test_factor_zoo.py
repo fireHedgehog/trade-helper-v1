@@ -145,6 +145,65 @@ def test_evaluate_factor_on_pure_noise_shows_near_zero_ic():
     assert abs(evaluation.ic_mean) < 0.15
 
 
+def test_evaluate_factor_zero_cost_default_is_unchanged():
+    """round_trip_cost_bps defaults to 0.0 -- every existing factor-zoo-v1
+    number must stay reproducible after this parameter was added."""
+    rng = np.random.default_rng(7)
+    close = _synthetic_close_panel(rng, 60, 20)
+    forward_return = close.shift(-1) / close - 1.0
+    factor = forward_return + rng.normal(0, 0.001, size=forward_return.shape)
+    with_default = fz.evaluate_factor("planted", factor, close, min_symbols=10)
+    explicit_zero = fz.evaluate_factor(
+        "planted", factor, close, min_symbols=10, round_trip_cost_bps=0.0
+    )
+    pd.testing.assert_series_equal(
+        with_default.daily_spread_returns, explicit_zero.daily_spread_returns
+    )
+
+
+def test_evaluate_factor_cost_charges_only_quintile_turnover():
+    """Hand-constructed panel, quintile_size=1 (5 symbols): day 0 has no
+    prior day to compare against, so it is turnover-free regardless of
+    cost. Day 1's top AND bottom both fully turn over (A/E -> B/A), so at
+    round_trip_cost_bps=100 (1%) the cost drag is exactly
+    (1.0 + 1.0) * 0.01 = 0.02 -- chosen so it exactly cancels day 1's
+    0.01 - (-0.01) = 0.02 raw spread, landing on a hand-checkable zero."""
+    dates = ["2024-01-01", "2024-01-02", "2024-01-03"]
+    close = _panel(
+        {
+            # Day 0 -> day 1 closes vary slightly across C/D/E so day 0 also
+            # has a valid (non-tied) rank-IC; A/B are what day 1's spread
+            # actually prices, via day 1 -> day 2 below.
+            "A": [100.0, 100.0, 101.0],
+            "B": [100.0, 100.0, 99.0],
+            "C": [100.0, 100.0, 100.0],
+            "D": [100.0, 100.5, 100.0],
+            "E": [100.0, 99.5, 100.0],
+        },
+        dates=dates,
+    )
+    factor = _panel(
+        {
+            "A": [1.0, 5.0, 5.0],
+            "B": [2.0, 1.0, 1.0],
+            "C": [3.0, 3.0, 3.0],
+            "D": [4.0, 4.0, 4.0],
+            "E": [5.0, 2.0, 2.0],
+        },
+        dates=dates,
+    )
+    zero_cost = fz.evaluate_factor("turnover", factor, close, min_symbols=5)
+    costed = fz.evaluate_factor(
+        "turnover", factor, close, min_symbols=5, round_trip_cost_bps=100.0
+    )
+    day0, day1 = dates[0], dates[1]
+    # Day 0 has no prior day to compare against -- turnover-free regardless
+    # of cost, whatever its raw spread happens to be.
+    assert costed.daily_spread_returns[day0] == pytest.approx(zero_cost.daily_spread_returns[day0])
+    assert zero_cost.daily_spread_returns[day1] == pytest.approx(0.02)
+    assert costed.daily_spread_returns[day1] == pytest.approx(0.0, abs=1e-9)
+
+
 def test_evaluate_factor_raises_on_insufficient_cross_section():
     close = _panel({"A": [100.0, 101.0, 102.0]})
     factor = _panel({"A": [1.0, 2.0, 3.0]})
@@ -159,6 +218,25 @@ def test_factor_return_metrics_matches_hand_computed_sharpe():
     expected_sharpe = daily_returns.mean() / daily_returns.std() * math.sqrt(252)
     assert metrics["sharpe"] == pytest.approx(expected_sharpe)
     assert metrics["win_rate"] == pytest.approx(2 / 5)
+
+
+def test_regime_concentration_flags_the_year_that_flips_the_sign():
+    """Hand-constructed: 2023 (3 days, all +0.01) and 2024 (2 days, both
+    -0.10). Full mean = (0.03 - 0.20) / 5 = -0.034 (negative). Excluding
+    2024 leaves only the +0.01 days -> mean flips to positive. Excluding
+    2023 leaves only the -0.10 days -> stays negative, no flip."""
+    daily_returns = pd.Series(
+        [0.01, 0.01, 0.01, -0.10, -0.10],
+        index=["2023-01-01", "2023-01-02", "2023-01-03", "2024-01-01", "2024-01-02"],
+    )
+    result = fz.regime_concentration_by_year(daily_returns)
+    assert result["full_sample_mean"] == pytest.approx(-0.034)
+    by_year = {row["year"]: row for row in result["by_year"]}
+    assert by_year["2023"]["mean_excluding_year"] == pytest.approx(-0.10)
+    assert by_year["2023"]["flips_sign"] is False
+    assert by_year["2024"]["mean_excluding_year"] == pytest.approx(0.01)
+    assert by_year["2024"]["flips_sign"] is True
+    assert result["any_year_flips_sign"] is True
 
 
 def test_pairwise_orthogonality_flags_identical_series_as_redundant():
