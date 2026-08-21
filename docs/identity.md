@@ -1,6 +1,6 @@
 # Product identity
 
-Status: v6 — canonical, distilled identity statement. Read immediately after the authoritative [resume checkpoint](README.md). Full contracts: [product.md](product.md), [hypothesis-engineering.md](hypothesis-engineering.md), [model-acceptance-standard.md](model-acceptance-standard.md), [exploration-protocol.md](exploration-protocol.md), [research-protocol.md](research-protocol.md), [ADRs](adr/). Edits require a version bump; the statement must stay precise and non-redundant.
+Status: v7 — canonical, distilled identity statement. Read immediately after the authoritative [resume checkpoint](README.md). Full contracts: [product.md](product.md), [hypothesis-engineering.md](hypothesis-engineering.md), [model-acceptance-standard.md](model-acceptance-standard.md), [exploration-protocol.md](exploration-protocol.md), [research-protocol.md](research-protocol.md), [ADRs](adr/). Edits require a version bump; the statement must stay precise and non-redundant.
 
 ## Calibration (read this before the rest — it changes how to read everything below)
 
@@ -16,6 +16,8 @@ A long, well-run p-value study that outputs another `not_material_or_not_consist
 ## What we run (one line)
 
 A systematic research process that adjudicates trading-strategy hypotheses and outputs evidence decisions — `reject`, `revise`, `continue research`, or (Chapter 4) risk-budgeted paper-trade observation — against passive ownership after costs. A research and execution-preparation aid; not an alpha finder, not a trading recommendation, not a live-capital execution system.
+
+**What that sentence is actually for, stated once so it stops being misread (`2026-08-21`):** this repository is public on GitHub. "Not an alpha finder / not a trading recommendation" is a liability disclaimer for a stranger who downloads this code and might otherwise mistake an early-stage, exploratory backtest for validated investment advice — it protects *them*, not a statement that the user's own research goal is anything other than finding real, tradeable edges for their own private, unlevered, paper-traded capital. The user's own words: work like this session's factor screening, real backtests, and Chapter 4 candidate-finding *is* seeking alpha, plainly, and that is correct and intended. Reading the disclaimer as "therefore don't actually try to find anything tradeable" is exactly the misread that produced this session's repeated drift toward reflexive falsification (see the Calibration section above) — a fresh session should not re-derive caution from this sentence's first line alone.
 
 ## The four layers
 

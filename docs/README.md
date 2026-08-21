@@ -8,10 +8,10 @@ Detail lives in [CHANGELOG.md](../CHANGELOG.md) (per-version) and [research-prog
 
 | Field | Value |
 |---|---|
-| Version | `0.86.0` |
+| Version | `0.86.1` |
 | Parent release | `0.37.0` (first Stage 8 acceptance candidate) |
 | Current state | [Chaptered research program](research-program.md) — see CHANGELOG for detail per version. **Chapter 4 is the default evaluation for any new candidate now** (hard rule, [identity.md](identity.md)): real backtest, Sharpe/CAGR/drawdown/Calmar, `block_bootstrap_confidence_interval` — falsification (Chapters 1-3) only on explicit request. `amihud_illiquidity` is the strongest live candidate — masked to real point-in-time S&P 500 membership plus real cost, Sharpe `0.29`, confidence multiplier `0.33` (entirely positive CI), the first genuinely positive candidate this program has produced — [result](research-results/amihud-illiquidity-chapter4-v1.md). `atr_normalized` (Tier A "ATR Vol Premium") also live and surveyed — [result](research-results/atr-vol-premium-survey-v1.md). Sector rotation closed a converging double-null (Chapter 2 + Chapter 4). [ADR 0010](adr/0010-long-short-ensemble-construction.md) + [ensemble-construction-engine-v1.md](ensemble-construction-engine-v1.md): accepted design for Chapter 4's long-short engine, not yet implemented. Chapters 1/3 paused. Chapter 5 ([ADR 0008](adr/0008-bounded-paper-trading.md)) accepted, not built. |
-| Verification | `432 passed` at `0.86.0` |
+| Verification | `432 passed` at `0.86.1` |
 | Next product work | (1) `amihud_illiquidity`: clause 1 (mechanism) + clause 2 (EV + uncertainty band, §9's numbers are the raw material) before a formal Chapter 4 proposal — the strongest candidate to prioritize. (2) Implement [ensemble-construction-engine-v1.md](ensemble-construction-engine-v1.md) (`backend/app/ensemble.py`) to combine `atr_normalized` + `amihud_illiquidity` into a real book. (3) `atr_normalized`: same clause 1/2 writeup. (4) Chapter 2 non-sector ideas (CS-02/03/04/05/09) if picked back up. (5) `factor-zoo-v1` still deferred from Strategy Management. (6) Earnings-dates or SEC EDGAR fundamentals data layer — neither started, [data-layers.md](data-layers.md). (7) ADR 0008 implementation — blocked on an Alpaca account. |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 | Pending triage | 2026-08-19 audit — 2 critical, 1 high, 5 medium, 4 low untriaged; see [audits/README.md](audits/README.md) |

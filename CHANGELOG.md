@@ -2,6 +2,15 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.86.1
+
+Clarified that "not an alpha finder" is a public-repo liability disclaimer, not a mission statement. Docs-only.
+
+- User-directed: pointed out that a prior agent session (this project's original setup, ~5 days before this one) converged on the disclaimer language as if it were the project's actual research goal, purely because it was the first line of a README it read cold -- when it was written specifically as a public-GitHub liability disclaimer (protecting a stranger who downloads the code from mistaking exploratory research for validated advice), not a statement that the user's own research intent isn't finding real, tradeable edges for their own private capital.
+- `docs/identity.md` (v6 -> v7): "What we run" section gets an explicit note stating this distinction directly, naming it as a cause of this session's own repeated drift toward reflexive over-caution. Root `README.md`: same clarification added right after the disclaimer line itself, where the confusion originated.
+- Persistent memory: new `feedback_disclaimer_is_not_a_mission_statement.md`, since this is the kind of root-cause-in-the-docs lesson that needs to survive across sessions the same way the Chapter 4 priority rule did.
+- No code changed. 432 passed, 1 known unrelated failure.
+
 ## 0.86.0
 
 First genuinely positive Chapter 4 candidate: amihud_illiquidity survives real point-in-time universe correction and real transaction cost.
