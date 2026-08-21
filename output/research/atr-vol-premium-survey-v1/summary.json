@@ -1,0 +1,16 @@
+{
+  "mean_sharpe": 0.29274354823121407,
+  "median_cagr_pct": 3.7362844902572467,
+  "median_calmar": 0.0800734436649155,
+  "median_excess_vs_buy_hold_pct": -214.9635083095585,
+  "median_max_drawdown_pct": -46.592829824286525,
+  "median_profit_factor": 1.613834280200565,
+  "median_sharpe": 0.29110738905445055,
+  "median_trade_count": 26.0,
+  "median_win_rate_pct": 62.857142857142854,
+  "pct_beat_buy_hold": 10.642570281124499,
+  "pct_positive_sharpe": 93.17269076305222,
+  "symbols_run": 498,
+  "symbols_skipped": 3,
+  "worst_max_drawdown_pct": -96.58636294384753
+}

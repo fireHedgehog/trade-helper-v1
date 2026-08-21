@@ -1,0 +1,20 @@
+{
+  "annualized_return": -0.015016870936966476,
+  "annualized_vol": 0.08766127654884283,
+  "benchmark_cagr": 0.13579172101748704,
+  "cagr": -0.018696397628911843,
+  "calmar": -0.03599780410476196,
+  "chapter4_confidence_multiplier": 0.0,
+  "daily_ev_confidence_interval": {
+    "coverage_pct": 68.0,
+    "lower_bound": -0.00012364395022451078,
+    "observed_mean": -5.959075768637491e-05,
+    "resamples": 5000,
+    "upper_bound": 3.290610833104042e-06
+  },
+  "max_drawdown": -0.5193760590090715,
+  "rebalance_count": 1879,
+  "session_count": 6193,
+  "sharpe": -0.17130563834077212,
+  "total_return": -0.3711238363776278
+}

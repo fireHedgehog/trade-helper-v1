@@ -1,0 +1,64 @@
+{
+  "coverage": {
+    "Communication Services": {
+      "member_count": 23,
+      "min_eligible_on_any_date": 5,
+      "sparse_date_count": 0
+    },
+    "Consumer Discretionary": {
+      "member_count": 47,
+      "min_eligible_on_any_date": 16,
+      "sparse_date_count": 0
+    },
+    "Consumer Staples": {
+      "member_count": 34,
+      "min_eligible_on_any_date": 17,
+      "sparse_date_count": 0
+    },
+    "Energy": {
+      "member_count": 21,
+      "min_eligible_on_any_date": 10,
+      "sparse_date_count": 0
+    },
+    "Financials": {
+      "member_count": 76,
+      "min_eligible_on_any_date": 31,
+      "sparse_date_count": 0
+    },
+    "Health Care": {
+      "member_count": 59,
+      "min_eligible_on_any_date": 21,
+      "sparse_date_count": 0
+    },
+    "Industrials": {
+      "member_count": 81,
+      "min_eligible_on_any_date": 33,
+      "sparse_date_count": 0
+    },
+    "Information Technology": {
+      "member_count": 73,
+      "min_eligible_on_any_date": 22,
+      "sparse_date_count": 0
+    },
+    "Materials": {
+      "member_count": 25,
+      "min_eligible_on_any_date": 11,
+      "sparse_date_count": 0
+    },
+    "Real Estate": {
+      "member_count": 29,
+      "min_eligible_on_any_date": 1,
+      "sparse_date_count": 368
+    },
+    "Utilities": {
+      "member_count": 31,
+      "min_eligible_on_any_date": 22,
+      "sparse_date_count": 0
+    }
+  },
+  "evidential_status": "ahead of ADR 0007 clauses 1/2 formal sign-off",
+  "experiment_id": "sector-rotation-chapter4-v1",
+  "no_cost_model": true,
+  "rule": "long top-3, short bottom-3 GICS sectors by trailing 252-session return, rebalance on rank-set change only",
+  "status": "exploratory"
+}
