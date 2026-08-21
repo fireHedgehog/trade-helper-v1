@@ -2,6 +2,16 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.88.0
+
+Two new independent Chapter 4 candidates found; ensemble engine proven at real 3-signal breadth. "Keep enumerating" (user's words) paid off same day.
+
+- User-directed: after the ensemble smoke test ended up single-signal (atr_normalized's cross-sectional form failed point-in-time correction), explicitly said to keep searching -- "research is about enumeration, keep doing next, we will eventually seek alpha." Re-scored the 2 academic anomalies (`low_volatility`, `max_effect`) previously closed only as "redundant with atr_normalized" (a reasoning that broke once atr_normalized itself failed), plus the 2 already-closed nulls (`corwin_schultz_spread`, `expected_skewness_proxy`), all masked to point-in-time membership, via Sharpe/CAGR/Calmar and a block-bootstrap EV confidence interval -- no p-value.
+- `backend/app/run_academic_anomalies_chapter4.py`: `max_effect` confidence multiplier `0.56` (new live candidate), `expected_skewness_proxy` `0.81` (new live candidate, strongest yet), `low_volatility` confirmed still not a candidate (CI straddles zero). `corwin_schultz_spread`: investigated directly before writeup, not assumed safe -- Sharpe `-11.07` looked implausible at face value, but no single day is worse than `-6.9%`; `77` days worse than `-2%`, concentrated in real crisis periods (2001, 2008-09, 2020, 2025), compound into genuine near-total ruin. A real, decisive finding (buying illiquid-by-quoted-spread stocks was a real disaster in crises), not a data bug -- and a genuine contrast with `amihud_illiquidity`'s own (different) illiquidity proxy, which showed the expected positive premium.
+- Pairwise correlation confirmed `amihud_illiquidity`/`max_effect`/`expected_skewness_proxy` all below this project's own `|r| >= 0.5` redundancy threshold (max `|r|=0.42`, `amihud` vs `max_effect`, and negatively correlated -- genuinely diversifying).
+- `backend/app/run_ensemble_smoke_test_v2.py`: combined all three for real. Unlike the single-signal v1 run, no signal zeroed out this time -- all three contributed genuine weight. Every ADR 0010 constraint still held exactly: `100.00%` gross exposure, `~0%` net, symmetric `98`/`98` groups.
+- 444 passed, 1 known unrelated failure. No test files changed -- exploratory survey scripts, same untested-by-design status as every other `run_*.py` in this project.
+
 ## 0.87.0
 
 Ensemble-construction engine implemented and smoke-tested on real data -- ADR 0010's design is now real code, not just a spec.

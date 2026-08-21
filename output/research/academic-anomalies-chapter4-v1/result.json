@@ -1,0 +1,78 @@
+{
+  "corwin_schultz_spread": {
+    "cagr_raw_direction": -0.6809271681271403,
+    "calmar_raw_direction": -0.6809271681272776,
+    "chapter4_confidence_multiplier": 0.0,
+    "daily_ev_confidence_interval_correct_direction": {
+      "coverage_pct": 68.0,
+      "lower_bound": -0.004577312318043681,
+      "observed_mean": -0.0045019223395676815,
+      "resamples": 5000,
+      "upper_bound": -0.004429854178250821
+    },
+    "ic_mean": 0.0011950144848209964,
+    "max_drawdown_raw_direction": -0.9999999999997983,
+    "n_days": 6444,
+    "n_symbols_median": 297.0,
+    "round_trip_cost_bps": 32.0,
+    "sharpe_raw_direction": -11.067439991259482,
+    "sign_flipped_for_expected_direction": false
+  },
+  "expected_skewness_proxy": {
+    "cagr_raw_direction": -0.08944924559492129,
+    "calmar_raw_direction": -0.0977105611244484,
+    "chapter4_confidence_multiplier": 0.8117343671923802,
+    "daily_ev_confidence_interval_correct_direction": {
+      "coverage_pct": 68.0,
+      "lower_bound": 0.00028661708410032867,
+      "observed_mean": 0.00035309221302490533,
+      "resamples": 5000,
+      "upper_bound": 0.0004222905792514261
+    },
+    "ic_mean": -0.003015909945613445,
+    "max_drawdown_raw_direction": -0.9154511504748689,
+    "n_days": 6385,
+    "n_symbols_median": 297.0,
+    "round_trip_cost_bps": 32.0,
+    "sharpe_raw_direction": -0.9187878921949073,
+    "sign_flipped_for_expected_direction": true
+  },
+  "low_volatility": {
+    "cagr_raw_direction": -0.0644769662648984,
+    "calmar_raw_direction": -0.07299467352432353,
+    "chapter4_confidence_multiplier": 0.0,
+    "daily_ev_confidence_interval_correct_direction": {
+      "coverage_pct": 68.0,
+      "lower_bound": -0.0003198578357723692,
+      "observed_mean": -0.00014916196821785054,
+      "resamples": 5000,
+      "upper_bound": 1.6989481845902472e-05
+    },
+    "ic_mean": -0.004661649067137894,
+    "max_drawdown_raw_direction": -0.8833105643443036,
+    "n_days": 6424,
+    "n_symbols_median": 297.0,
+    "round_trip_cost_bps": 32.0,
+    "sharpe_raw_direction": -0.15551940391914715,
+    "sign_flipped_for_expected_direction": false
+  },
+  "max_effect": {
+    "cagr_raw_direction": -0.10704103600871817,
+    "calmar_raw_direction": -0.11180104109679445,
+    "chapter4_confidence_multiplier": 0.5621208257647574,
+    "daily_ev_confidence_interval_correct_direction": {
+      "coverage_pct": 68.0,
+      "lower_bound": 0.00019844350364363943,
+      "observed_mean": 0.0003530264216303672,
+      "resamples": 5000,
+      "upper_bound": 0.0005122170524517156
+    },
+    "ic_mean": -0.00780005253313249,
+    "max_drawdown_raw_direction": -0.9574243223374352,
+    "n_days": 6424,
+    "n_symbols_median": 297.0,
+    "round_trip_cost_bps": 32.0,
+    "sharpe_raw_direction": -0.403360867162828,
+    "sign_flipped_for_expected_direction": true
+  }
+}

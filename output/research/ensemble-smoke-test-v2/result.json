@@ -1,0 +1,77 @@
+{
+  "as_of_date": "2026-08-20",
+  "eligible_universe_size": 494,
+  "gross_exposure_pct_of_equity": 99.99999999999997,
+  "long_count": 98,
+  "net_exposure_pct_of_equity": 1.149658146459842e-14,
+  "short_count": 98,
+  "signal_confidence": {
+    "amihud_illiquidity": {
+      "confidence_multiplier": 0.3307803086147965,
+      "lower_bound": 4.323742782487141e-05,
+      "observed_mean": 0.00013071342730749635,
+      "sharpe_correct_direction": 0.2859633695425204
+    },
+    "expected_skewness_proxy": {
+      "confidence_multiplier": 0.8117343671923802,
+      "lower_bound": 0.00028661708410032867,
+      "observed_mean": 0.00035309221302490533,
+      "sharpe_correct_direction": 0.9187878921949073
+    },
+    "max_effect": {
+      "confidence_multiplier": 0.5621208257647574,
+      "lower_bound": 0.00019844350364363943,
+      "observed_mean": 0.0003530264216303672,
+      "sharpe_correct_direction": 0.403360867162828
+    }
+  },
+  "signals_used": [
+    "amihud_illiquidity",
+    "max_effect",
+    "expected_skewness_proxy"
+  ],
+  "top_5_long": [
+    [
+      "FE",
+      867.3895798372713
+    ],
+    [
+      "EVRG",
+      858.0494439617049
+    ],
+    [
+      "L",
+      842.8901536245596
+    ],
+    [
+      "PNW",
+      820.8599363814791
+    ],
+    [
+      "CNP",
+      815.4248751031075
+    ]
+  ],
+  "top_5_short": [
+    [
+      "TRV",
+      979.09347106604
+    ],
+    [
+      "AIZ",
+      917.9852726807931
+    ],
+    [
+      "CSX",
+      889.468668072609
+    ],
+    [
+      "DGX",
+      859.0914597467553
+    ],
+    [
+      "MSI",
+      781.4831427680507
+    ]
+  ]
+}
