@@ -8,7 +8,14 @@ from memory. Selected for portability: OHLCV + volume only, no vwap/amount/
 turnover/industry fields this project's free Yahoo data doesn't have (rules
 out most of alpha191, a China-A-share set with different required fields).
 
-None of these 17 are individually validated -- that is the point of a zoo:
+Also includes CLASSIC_INDICATORS: 10 hand-implemented classic technical
+indicators (RSI, MACD, Bollinger %B, Stochastic, CCI, Williams %R, ROC,
+ATR, OBV flow, MFI) -- the most battle-tested OHLCV-only factor family in
+the ecosystem, not previously in this codebase. See
+docs/brainstorm/2026-08-21-open-source-factor-source-backlog.md for the
+source survey behind both batches and what's queued/excluded next.
+
+None of these are individually validated -- that is the point of a zoo:
 breadth over interpretability, screened cheaply, with the strongest, most
 orthogonal survivors proposed individually into Chapter 4 (each then needs
 its own stated mechanism per ADR 0007 clause 1 -- this module only screens).
@@ -254,6 +261,108 @@ def alpha035(p: Panel) -> pd.DataFrame:
         * (1 - ts_rank(p.close + p.high - p.low, 16))
         * (1 - ts_rank(p.returns, 32))
     )
+
+
+def rsi14(p: Panel) -> pd.DataFrame:
+    """RSI(14), Wilder smoothing (EMA with alpha=1/14): 100 - 100/(1+RS)."""
+    diff = p.close.diff()
+    gain = diff.clip(lower=0.0)
+    loss = -diff.clip(upper=0.0)
+    avg_gain = gain.ewm(alpha=1 / 14, adjust=False, min_periods=14).mean()
+    avg_loss = loss.ewm(alpha=1 / 14, adjust=False, min_periods=14).mean()
+    rs = avg_gain / avg_loss.replace(0.0, np.nan)
+    return (100 - 100 / (1 + rs)).fillna(100.0)
+
+
+def macd_histogram(p: Panel) -> pd.DataFrame:
+    """MACD(12,26) histogram normalized by close: (macd_line - signal_line) / close."""
+    ema12 = p.close.ewm(span=12, adjust=False).mean()
+    ema26 = p.close.ewm(span=26, adjust=False).mean()
+    macd_line = ema12 - ema26
+    signal_line = macd_line.ewm(span=9, adjust=False).mean()
+    return (macd_line - signal_line) / p.close
+
+
+def bollinger_pct_b(p: Panel) -> pd.DataFrame:
+    """Bollinger %B(20, 2sigma): (close - lower_band) / (upper_band - lower_band)."""
+    mid = sma(p.close, 20)
+    band = 2 * stddev(p.close, 20)
+    upper, lower = mid + band, mid - band
+    return (p.close - lower) / (upper - lower).replace(0.0, np.nan)
+
+
+def stochastic_k(p: Panel) -> pd.DataFrame:
+    """Stochastic %K(14): (close - low_14) / (high_14 - low_14)."""
+    low14 = ts_min(p.low, 14)
+    high14 = ts_max(p.high, 14)
+    return (p.close - low14) / (high14 - low14).replace(0.0, np.nan)
+
+
+def _mean_abs_deviation(window: np.ndarray) -> float:
+    return float(np.mean(np.abs(window - window.mean())))
+
+
+def cci20(p: Panel) -> pd.DataFrame:
+    """CCI(20): (typical_price - sma(typical_price,20)) / (0.015 * mean_abs_deviation)."""
+    typical = (p.high + p.low + p.close) / 3
+    sma_tp = sma(typical, 20)
+    mad = typical.rolling(20).apply(_mean_abs_deviation, raw=True)
+    return (typical - sma_tp) / (0.015 * mad.replace(0.0, np.nan))
+
+
+def williams_r(p: Panel) -> pd.DataFrame:
+    """Williams %R(14): -100 * (high_14 - close) / (high_14 - low_14)."""
+    low14 = ts_min(p.low, 14)
+    high14 = ts_max(p.high, 14)
+    return -100 * (high14 - p.close) / (high14 - low14).replace(0.0, np.nan)
+
+
+def roc12(p: Panel) -> pd.DataFrame:
+    """Rate of change(12): close / close.shift(12) - 1."""
+    return p.close / delay(p.close, 12) - 1.0
+
+
+def atr_normalized(p: Panel) -> pd.DataFrame:
+    """ATR(14) / close -- true range averaged over 14 sessions, scaled by price."""
+    prior_close = delay(p.close, 1)
+    true_range = (p.high - p.low).abs()
+    true_range = true_range.combine((p.high - prior_close).abs(), np.maximum)
+    true_range = true_range.combine((p.low - prior_close).abs(), np.maximum)
+    return sma(true_range, 14) / p.close
+
+
+def obv_flow(p: Panel) -> pd.DataFrame:
+    """On-balance-volume net change over 20 sessions, normalized by trailing volume sum."""
+    signed_volume = sign(delta(p.close, 1)) * p.volume
+    obv = signed_volume.cumsum()
+    return delta(obv, 20) / ts_sum(p.volume, 20).replace(0.0, np.nan)
+
+
+def mfi14(p: Panel) -> pd.DataFrame:
+    """Money Flow Index(14): volume-weighted RSI analog on typical price."""
+    typical = (p.high + p.low + p.close) / 3
+    money_flow = typical * p.volume
+    typical_diff = delta(typical, 1)
+    positive_flow = money_flow.where(typical_diff > 0, 0.0)
+    negative_flow = money_flow.where(typical_diff < 0, 0.0)
+    positive_sum = ts_sum(positive_flow, 14)
+    negative_sum = ts_sum(negative_flow, 14)
+    money_ratio = positive_sum / negative_sum.replace(0.0, np.nan)
+    return (100 - 100 / (1 + money_ratio)).fillna(100.0)
+
+
+CLASSIC_INDICATORS: dict[str, Callable[[Panel], pd.DataFrame]] = {
+    "rsi14": rsi14,
+    "macd_histogram": macd_histogram,
+    "bollinger_pct_b": bollinger_pct_b,
+    "stochastic_k": stochastic_k,
+    "cci20": cci20,
+    "williams_r": williams_r,
+    "roc12": roc12,
+    "atr_normalized": atr_normalized,
+    "obv_flow": obv_flow,
+    "mfi14": mfi14,
+}
 
 
 ALPHAS: dict[str, Callable[[Panel], pd.DataFrame]] = {

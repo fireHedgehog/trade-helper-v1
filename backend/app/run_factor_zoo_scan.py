@@ -71,9 +71,15 @@ def load_universe_panels() -> tuple[factor_zoo.Panel, list[str], list[str]]:
 def main() -> None:
     panel, present_symbols, missing_symbols = load_universe_panels()
 
+    all_formulas = {
+        **{name: ("wq101", fn) for name, fn in factor_zoo.ALPHAS.items()},
+        **{name: ("classic_indicator", fn) for name, fn in factor_zoo.CLASSIC_INDICATORS.items()},
+    }
+    family_by_name: dict[str, str] = {name: family for name, (family, _) in all_formulas.items()}
+
     evaluations: list[factor_zoo.FactorEvaluation] = []
     errors: dict[str, str] = {}
-    for name, formula in factor_zoo.ALPHAS.items():
+    for name, (_, formula) in all_formulas.items():
         try:
             factor_values = formula(panel)
             evaluation = factor_zoo.evaluate_factor(
@@ -101,6 +107,7 @@ def main() -> None:
         "results": [
             {
                 "name": e.name,
+                "family": family_by_name[e.name],
                 "n_days": e.n_days,
                 "n_symbols_median": e.n_symbols_median,
                 "ic_mean": e.ic_mean,

@@ -180,9 +180,7 @@ def test_pairwise_orthogonality_flags_identical_series_as_redundant():
     assert results[0]["correlation"] == pytest.approx(1.0)
 
 
-def test_all_registered_alphas_run_without_error_on_synthetic_panel():
-    rng = np.random.default_rng(3)
-    n_days, n_symbols = 60, 15
+def _synthetic_panel(rng: np.random.Generator, n_days: int, n_symbols: int) -> fz.Panel:
     dates = [f"2024-{1 + i // 28:02d}-{1 + i % 28:02d}" for i in range(n_days)]
     symbols = [f"S{i:03d}" for i in range(n_symbols)]
     close = _synthetic_close_panel(rng, n_days, n_symbols)
@@ -196,8 +194,93 @@ def test_all_registered_alphas_run_without_error_on_synthetic_panel():
     volume = pd.DataFrame(
         rng.integers(1000, 100000, size=close.shape), index=dates, columns=symbols
     ).astype(float)
-    panel = fz.Panel.build(open_, high, low, close, volume)
+    return fz.Panel.build(open_, high, low, close, volume)
+
+
+def test_all_registered_alphas_run_without_error_on_synthetic_panel():
+    rng = np.random.default_rng(3)
+    panel = _synthetic_panel(rng, 60, 15)
     for name, formula in fz.ALPHAS.items():
         result = formula(panel)
         assert isinstance(result, pd.DataFrame), name
-        assert result.shape == close.shape, name
+        assert result.shape == panel.close.shape, name
+
+
+def test_all_classic_indicators_run_without_error_on_synthetic_panel():
+    rng = np.random.default_rng(5)
+    panel = _synthetic_panel(rng, 60, 15)
+    for name, formula in fz.CLASSIC_INDICATORS.items():
+        result = formula(panel)
+        assert isinstance(result, pd.DataFrame), name
+        assert result.shape == panel.close.shape, name
+
+
+# ---------------------------------------------------------------------------
+# Classic indicators -- hand-checkable correctness
+# ---------------------------------------------------------------------------
+
+
+def _flat_panel(close_values: list[float]) -> fz.Panel:
+    dates = [f"2024-01-{i + 1:02d}" for i in range(len(close_values))]
+    close = pd.DataFrame({"A": close_values}, index=dates)
+    high = close * 1.01
+    low = close * 0.99
+    open_ = close.shift(1).fillna(close.iloc[0])
+    volume = pd.DataFrame({"A": [10000.0] * len(close_values)}, index=dates)
+    return fz.Panel.build(open_, high, low, close, volume)
+
+
+def test_rsi14_is_100_when_no_losses_in_the_window():
+    panel = _flat_panel([100.0 + i for i in range(20)])  # strictly increasing
+    result = fz.rsi14(panel)["A"]
+    assert result.iloc[-1] == pytest.approx(100.0)
+
+
+def test_rsi14_is_bounded_0_to_100():
+    rng = np.random.default_rng(1)
+    panel = _synthetic_panel(rng, 60, 5)
+    result = fz.rsi14(panel)
+    valid = result.dropna()
+    assert (valid >= 0).all().all()
+    assert (valid <= 100).all().all()
+
+
+def test_bollinger_pct_b_is_one_at_the_upper_band():
+    values = [100.0] * 19 + [130.0]  # a sharp spike after a flat run
+    panel = _flat_panel(values)
+    result = fz.bollinger_pct_b(panel)["A"]
+    mid = np.mean(values[-20:])
+    std = np.std(values[-20:], ddof=1)
+    expected = (values[-1] - (mid - 2 * std)) / (4 * std)
+    assert result.iloc[-1] == pytest.approx(expected)
+
+
+def _flat_hlc_panel(close_values: list[float]) -> fz.Panel:
+    """Like _flat_panel but high == low == close, for tests where the
+    high/low series (not close) must exactly reach the window extreme."""
+    dates = [f"2024-01-{i + 1:02d}" for i in range(len(close_values))]
+    close = pd.DataFrame({"A": close_values}, index=dates)
+    open_ = close.shift(1).fillna(close.iloc[0])
+    volume = pd.DataFrame({"A": [10000.0] * len(close_values)}, index=dates)
+    return fz.Panel.build(open_, close.copy(), close.copy(), close, volume)
+
+
+def test_stochastic_k_is_zero_at_the_14_day_low():
+    values = [110.0 - i for i in range(15)]  # strictly falling, last value is the low
+    panel = _flat_hlc_panel(values)
+    result = fz.stochastic_k(panel)["A"]
+    assert result.iloc[-1] == pytest.approx(0.0)
+
+
+def test_williams_r_is_zero_at_the_14_day_high():
+    values = [100.0 + i for i in range(15)]  # strictly rising, last value is the high
+    panel = _flat_hlc_panel(values)
+    result = fz.williams_r(panel)["A"]
+    assert result.iloc[-1] == pytest.approx(0.0)
+
+
+def test_roc12_matches_hand_computed_rate_of_change():
+    values = [100.0] * 12 + [110.0]
+    panel = _flat_panel(values)
+    result = fz.roc12(panel)["A"]
+    assert result.iloc[-1] == pytest.approx(0.10)

@@ -2,6 +2,18 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.75.0
+
+Factor zoo enriched to 27 formulas (classic TA indicators added); new data-layers catalog; Chapter 1-3 explicitly paused in favor of Chapter 4.
+
+- User-directed: web-researched (5 parallel angles, 76 sources) open-source daily-OHLCV-only factor libraries beyond WQ101/191 -- Qlib Alpha158/360, curated awesome-quant lists, academic price-volume-only anomalies (Amihud, MAX effect, low-vol/BAB, Corwin-Schultz spread, overnight/intraday decomposition), maintained backtest frameworks, and a direct check on whether any free point-in-time equity fundamentals source exists (verdict: no ready-to-use free vendor; SEC EDGAR raw XBRL is the one genuinely free option but needs real ETL). Findings documented in `docs/brainstorm/2026-08-21-open-source-factor-source-backlog.md` -- acted on, queued, and excluded items each with reasons.
+- `backend/app/factor_zoo.py`: added `CLASSIC_INDICATORS` (RSI14, MACD histogram, Bollinger %B, Stochastic %K, CCI20, Williams %R, ROC12, ATR-normalized range, OBV flow, MFI14) -- hand-implemented, not a new dependency, same evaluation harness as the WQ101 subset. 12 new tests (hand-checkable correctness: RSI=100 with no losses, Bollinger %B at the band, Stochastic/Williams %R at the window extreme, ROC arithmetic).
+- Real rerun against the same 495-symbol universe: 27/27 factors evaluated, no errors. Every classic indicator scored negative IC-IR under its conventional "high reading = long" direction -- correctly read as the same short-horizon reversal effect the WQ101 cluster already surfaced, from the opposite side, not a new independent finding, and folded into the existing bid-ask-bounce disclosure rather than presented as six more wins.
+- One genuine exception: `atr_normalized` (pure volatility-level factor) posted the best raw Sharpe in the whole zoo (0.84, CAGR 20.0%) and was specifically checked for orthogonality against the reversal cluster (fell outside the default top-8 screen) -- confirmed independent (`|r|<=0.34` against all five cluster members), though with a much larger drawdown (-39.4%), the economically expected shape for a volatility-premium factor.
+- `docs/data-layers.md` (new): user asked for "a layered, evolving framework" cataloging data sources (macro/bars/future layers) with rich attributes, explicitly as scaffolding, not a build commitment ("we are not at this stage yet"). One row per layer -- built (macro PIT, macro final-revised, daily bars, universe membership, treasury buybacks, credentials) and planned (earnings dates -- confirmed-free `yfinance.get_earnings_dates()`, PIT fundamentals -- confirmed-free-but-real-ETL via SEC EDGAR) -- each with status/PIT-correctness/cost/coverage/used-by. Intraday/tick explicitly marked excluded by design: this project only ever reaches bounded paper trading, never live/HFT execution.
+- User-directed pivot, recorded plainly rather than left implicit: Chapter 1-3's full preregistration ceremony is deliberately paused, not abandoned -- reserved for when something needs rigorous verification, appropriate to unfunded self-research rather than a funded institution. Current focus is Chapter 4 breadth on the free data already in hand; Chapter 1-3 resumes once that's exhausted and/or better data (the planned layers above) arrives. `docs/README.md` checkpoint states this explicitly so a future session doesn't read the pause as neglect.
+- 391 passed (12 new).
+
 ## 0.74.0
 
 Factor zoo v1: 17-formula screen against the real 495-symbol universe -- real Sharpe ratios, real IC, real charts. Chapter 4 §5.

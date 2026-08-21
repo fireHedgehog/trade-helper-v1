@@ -315,13 +315,48 @@ above, this cluster's real breadth is closer to `2`–`3` independent effects
 than `6` — until cost-adjusted, read the whole top cluster as one shared,
 unconfirmed hypothesis, not six.
 
+**Enriched same day**: 10 hand-implemented classic technical indicators
+(RSI, MACD, Bollinger %B, Stochastic %K, CCI, Williams %R, ROC, ATR,
+OBV-flow, MFI — same non-evidential screen, no new dependency, see
+[open-source-factor-source-backlog.md](brainstorm/2026-08-21-open-source-factor-source-backlog.md)
+for the source survey) joined the scan: `27` factors total, same universe
+and run. Every classic indicator scored **negative** IC-IR under its
+conventional "high reading = long" direction — RSI, Stochastic, Williams
+%R, CCI, MFI, MACD histogram, ROC, OBV-flow all lose money long-the-high-
+reading at this 1-session horizon. Read correctly, not as a failure: this
+is the same short-horizon reversal effect the WQ101 cluster already
+surfaced, from the other direction — a naive contrarian reading (long the
+*lowest* RSI/Stochastic/MACD names) would show the mirrored positive
+number. Treat this as one more data point for the disclosed bid-ask-bounce
+risk above, not a second independent finding — it is the same hypothesis
+restated, and the caution about zero-cost-modeled 1-day reversal applies
+to it equally.
+
+One genuine exception, checked for orthogonality specifically because it
+fell outside the default top-8 screen: **`atr_normalized`** (ATR(14)/close
+— a pure volatility-level factor, not a reversal shape) posted the best
+raw Sharpe of the entire `27`-factor zoo (`0.84`, CAGR `20.0%`), and a
+targeted check against the whole reversal cluster
+(`alpha034`/`033`/`028`/`004`/`023`) found it genuinely independent
+(`|r|≤0.34` against all five). Its drawdown is much worse than the
+cluster's (`-39.4%` vs. `-19%` to `-31%`), consistent with a real
+volatility-premium-style factor rather than a low-vol/defensive one — the
+economically expected shape, not a red flag by itself, but a real
+regime-concentration question (ADR 0007 clause 5) still to check before
+proposing it.
+
 **Not yet done, named as the next concrete step**: propose the
-least-redundant survivors (`alpha028`, `alpha004`, `alpha026` — Sharpe
-`0.66`/`0.71`/`0.42`, mutual `|r|≤0.52`) as individual Chapter 4 candidates,
-each with its own stated mechanism and a cost-sensitivity check before any
-eligibility read is trusted. The reversal cluster (`alpha034`/`033`/`009`)
-needs a transaction-cost-aware rerun before it is even scan-worthy of
-further attention, given the bid-ask-bounce risk just disclosed.
+least-redundant survivors — `alpha028`, `alpha004`, `alpha026` (Sharpe
+`0.66`/`0.71`/`0.42`, mutual `|r|≤0.52`) and now `atr_normalized` (Sharpe
+`0.84`, confirmed orthogonal to the reversal cluster) — as individual
+Chapter 4 candidates, each with its own stated mechanism, regime-
+concentration check, and a cost-sensitivity check before any eligibility
+read is trusted. The reversal cluster (`alpha034`/`033`/`009`/RSI/
+Stochastic/Williams-%R/CCI/MACD/ROC/OBV, all one hypothesis) needs a
+transaction-cost-aware rerun before it is even scan-worthy of further
+attention, given the bid-ask-bounce risk disclosed above. Full numbers:
+[scan-report.json](../output/research/factor-zoo-v1/scan-report.json)
+(now `27` rows, each tagged `family: wq101` or `classic_indicator`).
 
 ## Chapter 5 — Operational bridge: from research verdict to bounded paper trading
 

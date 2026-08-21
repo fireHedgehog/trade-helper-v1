@@ -24,3 +24,4 @@ Template: `YYYY-MM-DD-topic.md`, first line:
 | 2026-08-20 | Trading folklore falsification list | [2026-08-20-trading-folklore-falsification-list.md](2026-08-20-trading-folklore-falsification-list.md) |
 | 2026-08-21 | Parallel multi-agent research pipeline ("industrialized assembly line") — parked, ~6mo out | [2026-08-21-parallel-multi-agent-research-pipeline.md](2026-08-21-parallel-multi-agent-research-pipeline.md) |
 | 2026-08-21 | Shared metrics/charting engine — backtest ranking + paper-trading metrics, one engine, one chart | [2026-08-21-shared-metrics-and-charting-engine.md](2026-08-21-shared-metrics-and-charting-engine.md) |
+| 2026-08-21 | Open-source factor source backlog — 76 sources, queued/excluded, OHLCV-only scope | [2026-08-21-open-source-factor-source-backlog.md](2026-08-21-open-source-factor-source-backlog.md) |
