@@ -2,6 +2,18 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.76.0
+
+ADR 0009: strategy onboarding contract (Tier A executable / Tier B characterization-only). Fixed a real staleness bug found while investigating.
+
+- User-directed: asked to register CTA v2 as a live strategy and to formalize how future research results get onboarded across Today/Symbol Research/Strategy Lab, "agent-recallable" for next time.
+- Investigation found the premise wrong: CTA v2's own locked protocol authorizes no cost, execution, or portfolio simulation (`run_cta_v2.py` docstring) -- it has no per-symbol entry/exit function and cannot get one without a new, independently justified protocol per this project's own standing rule. `GET /api/strategies` iterates strictly `backend/app/strategies.py`'s executable `STRATEGIES` dict; there was no honest path for a no-execution-authorized study to appear anywhere in the live app.
+- Separately found: `research_catalog.py`'s `research_contract.decision` field was hardcoded to `"rejected"` (CTA Trend only) or `"not evaluable"` (every other strategy) regardless of each strategy's real evidence -- SMA Cross, RSI Reversion, and Wave Pull each have a genuine closed Chapter 1 verdict (`not_material_or_not_consistent`, each confirmed tied to the live prototype's own default parameters via its protocol's "Parent design" line) that the app has been reporting as `not evaluable`. This is the exact staleness ADR 0008 already named as a required, unbuilt safeguard.
+- `docs/adr/0009-strategy-onboarding-contract.md` (new, accepted): defines the two-tier contract precisely, with the CTA v2/`research_catalog.py` findings as the motivating evidence.
+- `backend/app/research_catalog.py`: `decision`/`evidence` corrected for SMA Cross, RSI Reversion, Wave Pull; the hardcoded two-value loop replaced with a `DECISIONS` registry (real decision + artifact per strategy, derived not guessed); new `CHARACTERIZATION_STUDIES` dict (Tier B) populated with all 16 closed Tier B studies this project currently has (CTA v2, both calendar candidates, ETF-12 rotation, cross-sectional feasibility, consolidation feasibility, overnight gap, TA breakout, Fed put v1-v3, all 3 Chapter 4 candidate scores, the eligibility calibration and orthogonality studies, and factor zoo v1) plus a `characterization_studies()` accessor.
+- Not built yet, named in the ADR's Consequences: the `GET /api/research-record` endpoint and frontend page that would actually render Tier B entries. This closes the contract and data gap, not the UI.
+- 9 new/rewritten tests in `test_research_catalog.py`, including the ADR's own core invariant: no Tier B study may ever appear in the executable `STRATEGIES` registry, and every result-doc/artifact path referenced is verified to exist on disk. 396 passed.
+
 ## 0.75.1
 
 Chapter 4 compacted to match Chapters 1-3's table shape. Docs-only.
