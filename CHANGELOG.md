@@ -2,6 +2,15 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.83.2
+
+Ensemble-construction engine: a real, disciplined design, not just named prose. Docs-only.
+
+- User-directed, a direct and correct critique: ADR 0010's §3 named the alpha model/risk model/optimizer shape in prose but never actually specified them precisely enough to implement without guessing -- "no design how to be disciplined."
+- `docs/ensemble-construction-engine-v1.md` (new): exact formulas (composite alpha score with cross-sectional z-scoring and confidence weighting; fixed-intensity Ledoit-Wolf-style shrinkage covariance; a step-by-step rank-and-weight optimizer with an ADR-0004-stop-distance-cap reconciliation -- "optimizer proposes, risk cap disposes"), Python function signatures for a new `backend/app/ensemble.py`, a fully worked 6-asset numeric example, explicit constraint-by-constraint verification against ADR 0010 §1, and a test/acceptance checklist. Same relationship to ADR 0010 that `strategy-library.md` has to ADR 0009 -- the ADR is the decision, this is the exact procedure.
+- `docs/adr/0010-long-short-ensemble-construction.md` §3 now points to this document explicitly rather than repeating the same prose.
+- No code yet -- design only, against its own written acceptance checklist.
+
 ## 0.83.1
 
 Documented real vendor research for options data (IV/Greeks/open interest) and Level 2, per the user's explicit ask for "the cheapest way to get a full real dataset." Docs-only, no purchase made.

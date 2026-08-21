@@ -123,7 +123,13 @@ Within Chapter 4's ensemble only:
 ## 3. The ensemble-construction engine — required design decisions
 
 This is what ADR 0007 named and deferred. Building it requires three
-components, all new to this codebase:
+components, all new to this codebase. **This section states the shape and
+reasoning; [ensemble-construction-engine-v1.md](../ensemble-construction-engine-v1.md)
+is the exact, disciplined design** — formulas, function signatures, a
+worked numeric example, and a test/acceptance checklist, the same
+relationship [strategy-library.md](../strategy-library.md) has to [ADR
+0009](0009-strategy-onboarding-contract.md). Read that document before
+implementing anything from this section.
 
 ### 3a. Alpha model
 
