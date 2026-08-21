@@ -40,7 +40,7 @@ Tier A now has two provenances, both still Tier A under ADR 0009's same test (a 
 - **`preset`** — the original 7 (CTA Trend, SMA Cross, Donchian Trend, S/R Bounce, Fib Retrace, Wave Pull, RSI Reversion): classic/textbook patterns, the kind a retail broker app ships by default. Most are already closed `not_material_or_not_consistent` or `rejected` — familiar, not validated.
 - **`chapter4_screen`** — sourced from a real factor-zoo finding that cleared independence/cost/regime checks first (e.g. `ATR Vol Premium`, from `atr_normalized`). A higher bar of provenance than a preset, still not a validated claim (`evidence.status` says so honestly either way).
 
-This is a label, not an architectural split — don't build a third tier around it. It exists so a dropdown or table can group "familiar baseline" from "actually screened here" without pretending either is proven.
+This is a label, not an architectural split — don't build a third tier around it. It exists so a dropdown or table can group "familiar baseline" from "actually screened here" without pretending either is proven. The group labels themselves say only "Classic presets" / "Chapter 4 — screened candidates" — deliberately without a "(Tier A)" suffix, so the grouping doesn't read as a competing tier system next to Strategy Management's actual Tier A/B column. Wired into every place Tier A appears as a list: `#strategy`/`#today-strategy`/`#lab-watch-strategy`'s `<optgroup>`s, Today's discovery-tab sub-groups, and Strategy Lab's scoreboard (a group-header row between the two, order preserved: presets first, screened candidates after).
 
 ## The full library — Strategy Management shows every tier, not Tier B alone
 

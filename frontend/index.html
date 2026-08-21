@@ -470,7 +470,14 @@
         <div class="model-tabs" id="model-discovery-tabs-fixed"></div>
         <details class="workflow-collapsible" id="model-discovery-more">
           <summary><div><h2>All models &amp; studies</h2><p id="model-discovery-more-summary">Validated models plus Tier B research studies (ADR 0009) — open to pick a particular one.</p></div></summary>
-          <div class="collapsible-body"><div class="model-tabs" id="model-discovery-tabs-all"></div></div>
+          <div class="collapsible-body">
+            <div class="sample-note">Classic presets</div>
+            <div class="model-tabs" id="model-discovery-tabs-presets"></div>
+            <div class="sample-note">Chapter 4 — screened candidates</div>
+            <div class="model-tabs" id="model-discovery-tabs-screened"></div>
+            <div class="sample-note">Research studies — read-only (Tier B)</div>
+            <div class="model-tabs" id="model-discovery-tabs-tierb"></div>
+          </div>
         </details>
         <div class="sample-note" id="model-discovery-note"></div>
         <div class="table-wrap"><table class="today-table">
@@ -902,6 +909,26 @@ async function loadSymbols() {
   closeMenu();
 }
 
+const ORIGIN_GROUP_LABELS = {
+  preset: 'Classic presets',
+  chapter4_screen: 'Chapter 4 — screened candidates',
+};
+
+function tierAOptionGroups(strategies) {
+  let firstSet = false;
+  const renderGroup = (originKey) => {
+    const list = strategies.filter((s) => s.origin === originKey);
+    if (!list.length) return '';
+    const options = list.map((s) => {
+      const selected = !firstSet ? ' selected' : '';
+      firstSet = true;
+      return `<option value="${escapeHtml(s.name)}"${selected}>${escapeHtml(strategyDisplayName(s.name))}</option>`;
+    }).join('');
+    return `<optgroup label="${escapeHtml(ORIGIN_GROUP_LABELS[originKey])}">${options}</optgroup>`;
+  };
+  return renderGroup('preset') + renderGroup('chapter4_screen');
+}
+
 async function loadStrategies() {
   const [{ strategies }, { studies }] = await Promise.all([
     api('/api/strategies'),
@@ -909,15 +936,14 @@ async function loadStrategies() {
   ]);
   strategiesMeta = strategies;
   researchRecordMeta = studies;
-  const tierAOptions = strategies.map((s, i) =>
-    `<option value="${escapeHtml(s.name)}" ${i === 0 ? 'selected' : ''}>${escapeHtml(strategyDisplayName(s.name))}</option>`).join('');
+  const tierAGroups = tierAOptionGroups(strategies);
   const tierBOptions = studies.map((s) =>
     `<option value="${escapeHtml(s.study_id)}">${escapeHtml(s.name)}</option>`).join('');
   const tierBGroup = tierBOptions
     ? `<optgroup label="Research studies — read-only (Tier B)">${tierBOptions}</optgroup>` : '';
-  $('#strategy').innerHTML = tierAOptions + tierBGroup;
-  $('#today-strategy').innerHTML = tierAOptions; // action-driving dropdown: live Tier A only
-  $('#lab-watch-strategy').innerHTML = tierAOptions + tierBGroup;
+  $('#strategy').innerHTML = tierAGroups + tierBGroup;
+  $('#today-strategy').innerHTML = tierAGroups; // action-driving dropdown: live Tier A only
+  $('#lab-watch-strategy').innerHTML = tierAGroups + tierBGroup;
   resetParams();
   renderParams();
   renderLabStrategyContract();
@@ -1394,14 +1420,21 @@ async function loadLab(force = false) {
     return;
   }
   const { strategies } = await api('/api/strategies');
-  $('#scoreboard').innerHTML = strategies.map((s) =>
-    `<tr data-strategy="${s.name}"><td>${s.name}</td><td>${escapeHtml(s.research_contract?.decision || 'not evaluable')}</td><td colspan="8" class="muted">…</td></tr>`
-  ).join('');
+  const presetRows = strategies.filter((s) => s.origin === 'preset');
+  const screenedRows = strategies.filter((s) => s.origin === 'chapter4_screen');
+  const groupRow = (label) => `<tr><td colspan="10" class="muted"><b>${escapeHtml(label)}</b></td></tr>`;
+  const scoreboardRow = (s) =>
+    `<tr data-strategy="${s.name}"><td>${s.name}</td><td>${escapeHtml(s.research_contract?.decision || 'not evaluable')}</td><td colspan="8" class="muted">…</td></tr>`;
+  $('#scoreboard').innerHTML =
+    (presetRows.length ? groupRow('Classic presets') : '') +
+    presetRows.map(scoreboardRow).join('') +
+    (screenedRows.length ? groupRow('Chapter 4 — screened candidates') : '') +
+    screenedRows.map(scoreboardRow).join('');
   $('#lab-run-state').textContent = 'Running';
   loading(true, 'computing confidence…');
   try {
     // 3-way pool: keeps the CPU load laptop-safe while all rows compute.
-    const queue = [...strategies];
+    const queue = [...presetRows, ...screenedRows];
     let failures = 0;
     const workers = Array.from({ length: Math.min(3, queue.length) }, async () => {
       while (queue.length) {
@@ -1732,22 +1765,22 @@ function modelCandidateRows(run) {
 }
 
 function modelDiscoveryTabs() {
+  const strategyTab = (strategy) => ({
+    id: `strategy:${strategy.name}`,
+    label: strategyDisplayName(strategy.name),
+  });
   return {
     fixed: [
       { id: 'intersection', label: 'Intersections' },
       { id: 'momentum', label: 'Momentum' },
       { id: 'new-breakouts', label: 'New Breakouts' },
     ],
-    all: [
-      ...strategiesMeta.map((strategy) => ({
-        id: `strategy:${strategy.name}`,
-        label: strategyDisplayName(strategy.name),
-      })),
-      ...researchRecordMeta.map((study) => ({
-        id: `study:${study.study_id}`,
-        label: study.name,
-      })),
-    ],
+    presets: strategiesMeta.filter((s) => s.origin === 'preset').map(strategyTab),
+    screened: strategiesMeta.filter((s) => s.origin === 'chapter4_screen').map(strategyTab),
+    tierB: researchRecordMeta.map((study) => ({
+      id: `study:${study.study_id}`,
+      label: study.name,
+    })),
   };
 }
 
@@ -1783,12 +1816,15 @@ function renderModelDiscoveryTabGroup(container, tabs) {
 }
 
 function renderModelDiscoveryTabs() {
-  const { fixed, all } = modelDiscoveryTabs();
+  const { fixed, presets, screened, tierB } = modelDiscoveryTabs();
+  const all = [...presets, ...screened, ...tierB];
   if (![...fixed, ...all].some((tab) => tab.id === activeDiscoveryTab)) {
     activeDiscoveryTab = 'intersection';
   }
   renderModelDiscoveryTabGroup($('#model-discovery-tabs-fixed'), fixed);
-  renderModelDiscoveryTabGroup($('#model-discovery-tabs-all'), all);
+  renderModelDiscoveryTabGroup($('#model-discovery-tabs-presets'), presets);
+  renderModelDiscoveryTabGroup($('#model-discovery-tabs-screened'), screened);
+  renderModelDiscoveryTabGroup($('#model-discovery-tabs-tierb'), tierB);
   const activeInAll = all.find((tab) => tab.id === activeDiscoveryTab);
   $('#model-discovery-more-summary').textContent = activeInAll
     ? `Currently viewing: ${activeInAll.label}. ${all.length} models & studies total — open to pick another.`

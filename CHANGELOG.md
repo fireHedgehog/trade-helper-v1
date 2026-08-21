@@ -2,6 +2,14 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.79.1
+
+Actually grouped the origin distinction in the UI, not just the data. Frontend-only.
+
+- User-directed: `0.79.0` added the `origin` field on the backend but every dropdown/tab/scoreboard still rendered Tier A as one flat list -- `ATR Vol Premium` just looked tacked onto the old 7, not visibly grouped. Also corrected mid-turn: group labels should say "Classic presets" / "Chapter 4 — screened candidates" only, no "(Tier A)" suffix -- that read as a competing tier system next to Strategy Management's real Tier A/B column.
+- `frontend/index.html`: `#strategy`, `#today-strategy`, `#lab-watch-strategy` now render real `<optgroup>`s (presets, then screened candidates, then Tier B where that dropdown includes it). Today's "All models & studies" collapsible split into three sub-lists with their own headers instead of one flat 27-button block. Strategy Lab's scoreboard gained a group-header row between presets and screened candidates.
+- 415 passed (unchanged, no backend touched), live-verified in a headless browser across all three surfaces: correct optgroup contents, correct tab sub-groups, correct scoreboard grouping, zero console errors.
+
 ## 0.79.0
 
 Strategy Management becomes the full library: every Tier A strategy and every onboarded Tier B study, one table, GitHub-traceable. New `origin` grouping within Tier A (classic preset vs. Chapter 4 screened) so the two provenances don't blur together.
