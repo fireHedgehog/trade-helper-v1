@@ -35,6 +35,10 @@ def fetch_symbol(symbol: str, period: str) -> pd.DataFrame:
     df["symbol"] = symbol
     df = df[["symbol", "date", "open", "high", "low", "close", "volume"]]
     df = df.dropna(subset=["open", "high", "low", "close"])  # Yahoo can return NaN rows
+    bad_envelope = df["low"] > df["high"]  # Yahoo occasionally returns a corrupt tick (rare, seen on GC=F)
+    if bad_envelope.any():
+        print(f"  [WARN] {symbol}: dropping {int(bad_envelope.sum())} row(s) with low > high", file=sys.stderr)
+        df = df[~bad_envelope]
     if df.empty:
         raise RuntimeError(f"Yahoo returned no valid bars for {symbol}")
     return df

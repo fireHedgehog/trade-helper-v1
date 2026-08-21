@@ -39,6 +39,36 @@ CATALOG = [
     ("ism", "ISM Manufacturing PMI", "Activity", ("ism manufacturing",), None, "none"),
 ]
 
+# Textbook heuristic direction per category: the sign of change a financial-press
+# convention would call "bullish" for equities. -1 (Fed, Inflation): a hotter/higher
+# print is conventionally read as bearish (rate-hike worry). +1 (Growth, Consumption,
+# Activity): a stronger print is conventionally read as bullish. 0 (Labor): no stable
+# convention exists — "bad news is good news" rate-cut regimes flip the sign, so it is
+# left unscored on purpose rather than asserting a direction nobody actually agrees on.
+# This is disclosed common market convention, not a research finding: no point-in-time
+# data (ADR 0006 clause 2), no declared estimand (clause 5), no preregistration
+# (clause 9). See ADR 0006 Consequences for the standing exception this implements.
+_HEURISTIC_DIRECTION = {
+    "Fed": -1,
+    "Inflation": -1,
+    "Growth": 1,
+    "Consumption": 1,
+    "Activity": 1,
+    "Labor": 0,
+}
+
+
+def _heuristic_read(category: str, change: float | None) -> dict | None:
+    direction = _HEURISTIC_DIRECTION.get(category, 0)
+    if not direction or change is None or change == 0:
+        return None
+    return {
+        "read": "bullish" if direction * change > 0 else "bearish",
+        "basis": "textbook heuristic (common financial-press convention), not a research finding",
+        "adr_0006_status": "clauses 2/5/9 unmet: not point-in-time, no declared estimand, not preregistered",
+    }
+
+
 _cache: dict = {"at": 0.0, "events": []}
 
 
@@ -138,6 +168,7 @@ def macro_events(force: bool = False) -> list[dict]:
                 "forecast_history_available": False,
             }
         last_info = _fred_last(fred, mode) if fred else None
+        heuristic = _heuristic_read(category, last_info["change"]) if last_info else None
         events.append(
             {
                 "key": key,
@@ -145,6 +176,7 @@ def macro_events(force: bool = False) -> list[dict]:
                 "category": category,
                 "next": next_info,
                 "last": last_info,
+                "heuristic": heuristic,
                 "signal_eligible": False,
                 "availability_note": (
                     "current schedule display and final-revised observation; "

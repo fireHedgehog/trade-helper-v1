@@ -68,6 +68,12 @@
   }
   .ev-name { flex: 1.2; font-weight: 600; }
   .ev-cell { flex: 1; font-size: 12px; color: var(--muted); }
+  .ev-actual { color: var(--text); font-weight: 600; font-size: 13px; }
+  .event-row-head {
+    text-transform: uppercase; font-size: 10px; letter-spacing: .04em;
+    color: var(--muted); border-bottom: 1px solid var(--border);
+  }
+  .event-row-head .ev-name { font-weight: 600; }
   .chip.forecast { background: #234; color: #93c5fd; }
   .chip.warning { background: #3a2d1f; color: var(--accent); }
   .ev-prev { color: var(--muted); }
@@ -105,6 +111,11 @@
   .plan-legend .target { color: var(--green); }
   tr.muted td { opacity: .55; }
   .sample-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .macro-footnote {
+    border: 1px solid #3a2d1f; background: #221a12; border-radius: 8px;
+    padding: 8px 10px; margin-top: 10px; line-height: 1.6;
+  }
+  .macro-footnote a { color: #93c5fd; }
   .dimmer {
     position: fixed; inset: 0; background: rgba(10, 12, 18, .65); z-index: 50;
     display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center;
@@ -2280,6 +2291,12 @@ async function loadMacro() {
 const CAT_ICONS = { Fed: '🏛', Inflation: '📈', Labor: '👷', Growth: '🏭', Consumption: '🛒', Activity: '📊' };
 
 function renderEvents(events) {
+  const header = `<div class="event-row event-row-head">
+      <span class="ev-name">Event</span>
+      <span class="ev-cell">Next scheduled</span>
+      <span class="ev-cell">Latest observation</span>
+      <span class="ev-cell">Equity read</span>
+    </div>`;
   const rows = events.map((e) => {
     let next = '—';
     if (e.next) {
@@ -2288,19 +2305,34 @@ function renderEvents(events) {
     }
     let last = '—';
     if (e.last && e.last.actual != null) {
-      last = `<span>${e.last.actual}</span>` +
-        (e.last.previous != null ? `<span class="ev-prev"> (prev ${e.last.previous})</span>` : '');
-      last += `<span class="sample-note"> · observation ${e.last.observation_date} · final revised · release time n/a · consensus history n/a</span>`;
+      last = `<span class="ev-actual">${e.last.actual}</span>` +
+        (e.last.previous != null ? `<span class="ev-prev"> (prev ${e.last.previous})</span>` : '') +
+        `<span class="sample-note"> · obs ${e.last.observation_date}</span>`;
     }
+    const h = e.heuristic;
+    const hypothesis = h
+      ? `<span class="chip ${h.read === 'bullish' ? 'entry' : 'exit'}" title="${escapeHtml(h.basis)} — ${escapeHtml(h.adr_0006_status)}">Hypothesis: ${h.read} (untested)</span>`
+      : '<span class="sample-note">no stable convention</span>';
     return `<div class="event-row">
       <span class="ev-name">${CAT_ICONS[e.category] || '●'} ${e.name}</span>
-      <span class="ev-cell">Schedule display: ${next}</span>
-      <span class="ev-cell">Latest observation: ${last}</span>
-      <span class="ev-cell">Research status: display only · not signal eligible</span>
+      <span class="ev-cell">${next}</span>
+      <span class="ev-cell">${last}</span>
+      <span class="ev-cell">${hypothesis}</span>
     </div>`;
   }).join('');
-  return rows +
-    '<div class="sample-note">A scheduled date is not a canonical release timestamp. A current forecast is not historical forecast evidence. No macro surprise, regime, or equity-direction claim is computed.</div>';
+  return header + rows +
+    `<div class="sample-note macro-footnote">
+      <b>Equity read is a textbook hypothesis, not a research result.</b>
+      A scheduled date is not a canonical release timestamp; a current forecast is not historical forecast evidence;
+      the "Equity read" chip is the common financial-press convention for this category's direction, disclosed as-is —
+      not this app's finding, not point-in-time data, not a signal.
+      <br>Checklist before this could become a real result (<a href="https://github.com/fireHedgehog/trade-helper-v1/blob/main/docs/adr/0006-macro-data-contract.md" target="_blank">ADR 0006</a>):
+      ☐ point-in-time vintages used for this series (clause 2) ·
+      ☐ estimand declared, surprise vs. level (clause 5) ·
+      ☐ small-sample/regime discipline applied (clauses 6-7) ·
+      ☐ preregistered and Stage 9A scored (clause 9).
+      When a series clears that checklist, this hypothesis chip is replaced by the real decision — including "rejected."
+    </div>`;
 }
 
 /* ---------- Strategy Management (full library: every tier, one index) ---------- */

@@ -144,12 +144,16 @@ def test_metadata_is_rendered_from_backend_contracts() -> None:
     assert "const STRATEGY_EVIDENCE" not in HTML
 
 
-def test_macro_is_display_only_and_has_no_equity_direction_claim() -> None:
+def test_macro_is_display_only_with_labeled_untested_heuristic_only() -> None:
     assert 'id="macro-contract"' in HTML
     assert "Point-in-time vintages: unavailable" in HTML
     assert "provenance per card" in HTML
     assert "revision_status" in HTML
     assert "not signal eligible" in HTML
-    assert "No macro surprise, regime, or equity-direction claim is computed." in HTML
+    # An equity-direction chip may appear, but only ever as a disclosed, labeled
+    # hypothesis (ADR 0006 Consequences, "Textbook heuristic display") — never as
+    # a bare, unqualified claim of fact.
+    assert "Equity read is a textbook hypothesis, not a research result." in HTML
+    assert "Hypothesis: ${h.read} (untested)" in HTML
     assert "good for equities" not in HTML
     assert "bad for equities" not in HTML

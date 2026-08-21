@@ -2,6 +2,17 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.80.0
+
+Macro page: restored a labeled, disclosed "equity read" hypothesis chip per event, fixed the missing Gold card, and decluttered the events table. Backend + frontend + one ADR addendum.
+
+- User-directed, resolving a real tension: the user wanted the pre-`0.33.0` "good/bad for equities" read back, explicitly overriding the ADR 0006 explanation for why it was removed. Direct disclaimer-only compromise ("just add a disclaimer... in the table footer") was rejected as insufficient on its own -- final-revised FRED data used for a bare directional claim is a look-ahead-biased inference (ADR 0006 clause 2), not just an unproven one, so a caption alone doesn't fix it. Landed on the user's own refinement instead: frame it explicitly as an untested **hypothesis** (never a conclusion), with a checklist footer naming exactly which ADR 0006 clauses remain unmet, so it can't be read as a validated claim, isn't blocked by the existing contract, and gets replaced by the real decision (including "rejected") the day a category is actually studied.
+- `backend/app/calendar.py`: new `_HEURISTIC_DIRECTION` per category (Fed/Inflation: hotter = bearish; Growth/Consumption/Activity: stronger = bullish; Labor: deliberately unscored -- "bad news is good news" rate-cut regimes make the sign unstable, so asserting one would be exactly the kind of unfounded claim this ADR forbids) and `_heuristic_read()`, wired into `macro_events()`'s `heuristic` field.
+- `docs/adr/0006-macro-data-contract.md`: new Consequences bullet documenting this as a scoped, explicit exception to clause 2 -- disclosed common market convention, always labeled "Hypothesis... (untested)", never layered alongside a real result -- so a future session finds the intentional design here instead of rediscovering and re-removing it.
+- `frontend/index.html`: events table gained a header row, an "Equity read" column (color-coded hypothesis chip, tooltip with the full disclaimer), and a standing footer explaining the chip and listing the unmet-clause checklist. Decluttered repeated per-row boilerplate (`final revised · release time n/a · consensus history n/a`) since the footer already covers it once; latest-observation values now bold for readability.
+- `backend/app/fetch.py`: fixed the Gold (`GC=F`) card being stuck at 2/5 cards -- one real Yahoo data row (2009-11-23, `low > high`) failed the OHLC-envelope check; now dropped and logged, same posture as the existing NaN-row drop, not a validator weakening.
+- Tests updated to match the new, intentional design rather than the stale one: `test_macro_calendar.py` (renamed, asserts the heuristic is labeled and Labor stays unscored), `test_frontend_contract.py` (asserts the disclaimer text, still forbids a bare "good/bad for equities" claim), `scripts/browser-smoke.sh` (fixture exercises the heuristic chip and footer). 417 passed, 1 known unrelated failure.
+
 ## 0.79.1
 
 Actually grouped the origin distinction in the UI, not just the data. Frontend-only.

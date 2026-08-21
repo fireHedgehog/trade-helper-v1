@@ -105,12 +105,13 @@ assert_js "document.documentElement.scrollWidth <= window.innerWidth" "Strategy 
 echo "smoke: Strategy Lab not-run and empty states"
 
 # Macro response is injected to avoid a live Trading Economics request.
-run_js "(() => { window.__smokeApi = window.api; window.api = async (path, options) => path === '/api/macro' ? ({contract:{status:'display_only',permitted_use:'fixture display only',upgrade_requires:'fixture upgrade gate'},cards:[{label:'US 2Y yield',symbol:'DGS2',close:4.2,change_pct:0.1,provider:'FRED',dataset_id:'fred-final-revised-display-v1',observation_date:'2026-08-01',revision_status:'final_revised_current_FRED',release_datetime:null}],events:[{key:'cpi',name:'CPI',category:'Inflation',next:null,last:{actual:2.7,previous:2.8,observation_date:'2026-07-01'},signal_eligible:false}]}) : window.__smokeApi(path, options); location.hash = '#macro'; return 'macro fixture installed'; })()" "Could not install the deterministic Macro fixture"
+run_js "(() => { window.__smokeApi = window.api; window.api = async (path, options) => path === '/api/macro' ? ({contract:{status:'display_only',permitted_use:'fixture display only',upgrade_requires:'fixture upgrade gate'},cards:[{label:'US 2Y yield',symbol:'DGS2',close:4.2,change_pct:0.1,provider:'FRED',dataset_id:'fred-final-revised-display-v1',observation_date:'2026-08-01',revision_status:'final_revised_current_FRED',release_datetime:null}],events:[{key:'cpi',name:'CPI',category:'Inflation',next:null,last:{actual:2.7,previous:2.8,observation_date:'2026-07-01'},heuristic:{read:'bullish',basis:'textbook heuristic (common financial-press convention), not a research finding',adr_0006_status:'clauses 2/5/9 unmet'},signal_eligible:false}]}) : window.__smokeApi(path, options); location.hash = '#macro'; return 'macro fixture installed'; })()" "Could not install the deterministic Macro fixture"
 sleep 1
 snapshot
 assert_js "document.querySelector('#macro-contract').textContent.includes('Point-in-time vintages: unavailable')" "Macro availability boundary was not rendered"
-assert_js "!document.querySelector('#macro-events').textContent.includes('good for equities')" "Macro rendered a prohibited equity-direction claim"
-assert_js "document.querySelector('#macro-events').textContent.includes('not signal eligible')" "Macro eligibility warning is missing"
+assert_js "!document.querySelector('#macro-events').textContent.includes('good for equities')" "Macro rendered a prohibited bare equity-direction claim"
+assert_js "document.querySelector('#macro-events').textContent.includes('Hypothesis: bullish (untested)')" "Macro heuristic chip did not render as a labeled hypothesis"
+assert_js "document.querySelector('#macro-events').textContent.includes('Equity read is a textbook hypothesis, not a research result.')" "Macro heuristic footer disclaimer is missing"
 assert_js "document.documentElement.scrollWidth <= window.innerWidth" "Macro causes page-level narrow overflow"
 echo "smoke: Macro display-only state"
 
