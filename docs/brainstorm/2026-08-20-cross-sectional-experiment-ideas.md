@@ -69,12 +69,32 @@ existing blocker**, not eleven separate ones:
   the data blocker, not the hypothesis-engineering/Stage-9A/preregistration
   steps every one of them still needs individually.
 - **CS-08 and CS-07** (leadership diffusion, correlation crowding via named
-  peer groups) surface a data gap not yet named on the Tier 3/4 list:
-  sector/industry classification labels. Not currently fetched anywhere in
-  this codebase. Correlation crowding could sidestep this — define a peer
-  group by rolling correlation clustering instead of a labeled sector — but
-  leadership diffusion's "sector leader" language needs real labels or is a
-  different claim.
+  peer groups) — **cleared, `0.83.0`.** GICS Sector/Sub-Industry labels
+  ingested via [`universe_sectors.py`](../../backend/app/universe_sectors.py),
+  free, from the same Wikipedia table `universe.py` already scrapes
+  (`503` symbols, `11` sectors, current-classification snapshot only — no
+  history of sector reassignment is tracked). Correlation crowding could
+  have sidestepped this via rolling correlation clustering instead; real
+  labels are used regardless since they're now free.
+
+  **A sharper, separate bias this does not fix**, user-identified
+  `2026-08-21`: index membership is itself endogenous to size/performance —
+  committees add companies that grow big/successful enough and remove ones
+  that shrink or underperform enough. A real example: a company can fall
+  out of Nasdaq-100 (removed by reconstitution) while remaining listed and
+  traded — invisible to any universe built from "ever an index member,"
+  point-in-time or not. This means CS-01's universe (and any sector test
+  built the same way) can only compare groups *among names that stayed
+  prominent enough to remain index members* — it cannot capture the true
+  spread between winners and names that shrank enough to be removed. This is
+  the same reason serious academic momentum studies use CRSP's full
+  listed-universe, not an index-membership list. No free source at that
+  depth (full US-listed history including non-index delistings) is known to
+  exist — this is very plausibly a real, justified Tier 4 vendor-data case
+  (CRSP academic access, or a vendor like Sharadar with broader delisted
+  coverage) if the sharp version of a leader-vs-abandoned-laggard claim is
+  ever pursued, distinct from the sector-rotation-among-survivors claim
+  CS-07/CS-08 can test today.
 - **CS-10** (macro sensitivity rotation) is not a new blocker at all — it is
   Fed put's own ADR 0006 point-in-time-vintage gate, already Tier 3, already
   scoped in the [Fed put memo](2026-08-19-fed-put-long-end-reversal.md).

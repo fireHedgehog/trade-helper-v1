@@ -130,6 +130,13 @@ CREATE TABLE IF NOT EXISTS universe_membership (
     end_date    TEXT,           -- YYYY-MM-DD, last date; NULL = still a member
     PRIMARY KEY (symbol, index_name, start_date)
 );
+
+CREATE TABLE IF NOT EXISTS equity_sectors (
+    symbol           TEXT NOT NULL PRIMARY KEY,
+    gics_sector      TEXT NOT NULL,
+    gics_sub_industry TEXT NOT NULL,
+    as_of_date       TEXT NOT NULL  -- ingestion date; current classification only, not point-in-time
+);
 """
 
 
@@ -418,6 +425,39 @@ def members_asof(date: str, index_name: str = "SP500") -> list[str]:
             (index_name, date, date),
         ).fetchall()
     return [row[0] for row in rows]
+
+
+def upsert_equity_sectors(df: pd.DataFrame, as_of_date: str) -> None:
+    """Replace the whole GICS sector table atomically -- current
+    classification snapshot, not point-in-time (a company's sector can be
+    reassigned; no history of that is tracked here, same disclosed
+    limitation as `app.universe`'s own today's-snapshot posture).
+
+    Expects columns: symbol, gics_sector, gics_sub_industry.
+    """
+    required = ["symbol", "gics_sector", "gics_sub_industry"]
+    missing = set(required) - set(df.columns)
+    if missing:
+        raise ValueError(f"sector rows missing columns: {', '.join(sorted(missing))}")
+    df = df[required].copy()
+    if df.empty:
+        raise ValueError("no sector rows to store")
+    with connect() as conn:
+        conn.execute("DELETE FROM equity_sectors")
+        conn.executemany(
+            """INSERT INTO equity_sectors (symbol, gics_sector, gics_sub_industry, as_of_date)
+               VALUES (:symbol, :gics_sector, :gics_sub_industry, :as_of_date)""",
+            [{**row, "as_of_date": as_of_date} for row in df.to_dict("records")],
+        )
+
+
+def load_equity_sectors() -> dict[str, dict]:
+    """{symbol: {gics_sector, gics_sub_industry, as_of_date}} for every stored symbol."""
+    with connect() as conn:
+        df = pd.read_sql_query(
+            "SELECT symbol, gics_sector, gics_sub_industry, as_of_date FROM equity_sectors", conn
+        )
+    return {row["symbol"]: row for row in df.to_dict("records")}
 
 
 def load_bars(symbol: str) -> pd.DataFrame:

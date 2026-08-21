@@ -61,20 +61,42 @@ def _normalize(ticker: str) -> str:
     return ticker.strip().upper().replace(".", "-")
 
 
-def _tickers_from_wikipedia(url: str, columns: tuple[str, ...]) -> list[str]:
-    """Find the first table on the page that has a ticker column and extract it."""
+def _fetch_table(url: str, columns: tuple[str, ...]) -> pd.DataFrame:
+    """Find the first table on the page that has one of the given columns."""
     response = requests.get(url, headers=HEADERS, timeout=30)
     response.raise_for_status()
     tables = pd.read_html(io.StringIO(response.text))
     for table in tables:
         for column in columns:
             if column in table.columns:
-                return [
-                    _normalize(value)
-                    for value in table[column].astype(str).tolist()
-                    if value.strip() and value.strip().lower() != "nan"
-                ]
+                return table
     raise RuntimeError(f"no ticker column {columns} found on {url}")
+
+
+def _tickers_from_wikipedia(url: str, columns: tuple[str, ...]) -> list[str]:
+    """Find the first table on the page that has a ticker column and extract it."""
+    table = _fetch_table(url, columns)
+    for column in columns:
+        if column in table.columns:
+            return [
+                _normalize(value)
+                for value in table[column].astype(str).tolist()
+                if value.strip() and value.strip().lower() != "nan"
+            ]
+    raise RuntimeError(f"no ticker column {columns} found on {url}")
+
+
+def get_sp500_sectors() -> pd.DataFrame:
+    """Today's GICS Sector/Sub-Industry per S&P 500 symbol -- current
+    classification only, not point-in-time (a company's GICS classification
+    can be reassigned over time; Wikipedia carries no history of that,
+    same disclosed-limitation posture as this module's own ticker list).
+    Same free Wikipedia table `get_sp500_tickers` already fetches."""
+    table = _fetch_table(SP500_URL, ("Symbol",))
+    out = table[["Symbol", "GICS Sector", "GICS Sub-Industry"]].copy()
+    out["Symbol"] = out["Symbol"].astype(str).map(_normalize)
+    out.columns = ["symbol", "gics_sector", "gics_sub_industry"]
+    return out
 
 
 def get_sp500_tickers() -> list[str]:

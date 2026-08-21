@@ -1,6 +1,6 @@
 # ADR 0010: Long-short ensemble construction — amending the account model, building Chapter 4's engine
 
-Status: **proposed**, `2026-08-21`, pending explicit acceptance. Amends
+Status: **accepted**, `2026-08-21`. Amends
 [ADR 0004](0004-portfolio-risk-contract.md)'s account model and fills the
 gap [ADR 0007](0007-risk-budgeted-ensemble-acceptance.md) already named and
 left unimplemented: *"The ensemble-construction engine, the

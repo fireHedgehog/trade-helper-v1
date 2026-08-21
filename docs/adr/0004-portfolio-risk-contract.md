@@ -2,7 +2,7 @@
 
 Status: accepted and implemented for historical simulation only. Amended
 for Chapter 4 only by [ADR 0010](0010-long-short-ensemble-construction.md)
-(proposed, `2026-08-21`): a Chapter-4 ensemble may hold short positions
+(accepted, `2026-08-21`): a Chapter-4 ensemble may hold short positions
 under a disclosed, simplified backtest-only account model. The long-only
 account model below remains unchanged and exclusive for Chapters 1-3.
 

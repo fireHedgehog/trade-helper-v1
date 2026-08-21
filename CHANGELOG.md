@@ -2,6 +2,16 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.83.0
+
+GICS sector/sub-industry data layer -- free, unblocks CS-07/CS-08 (sector rotation). Also names a sharper, separate survivorship bias that this does not fix.
+
+- User-directed: pushed back on CS-01's null with a real, specific example (sector-level leadership -- "long chips, short software" -- not individual-stock momentum), and pointed out a real, sharp problem: a company can be removed from Nasdaq-100 by reconstitution while remaining listed and traded (their Atlassian example) -- invisible to any universe built from "ever an index member." Confirmed this is a real, different, and deeper bias than the one `universe_pit.py` fixed: point-in-time *entry/exit timing* within an index vs. the index's own *selection* being endogenous to size/performance. No free source is known to exist at CRSP/Sharadar's depth (full US-listed history including non-index delistings) -- named as a likely-real Tier 4 vendor-data case if the sharp version of this claim is ever pursued.
+- `backend/app/universe.py`: new `get_sp500_sectors()`, `_fetch_table()` (refactored out of `_tickers_from_wikipedia`) -- GICS Sector/Sub-Industry columns were already sitting unused in the same Wikipedia table the ticker list comes from. `backend/app/universe_sectors.py` (new): ingestion CLI. `backend/app/store.py`: new `equity_sectors` table, `upsert_equity_sectors()`/`load_equity_sectors()`. Live-verified: `503` symbols across all `11` GICS sectors; confirmed real "Semiconductors"/"Semiconductor Materials & Equipment" vs. "Application Software"/"Systems Software" sub-industry granularity -- the exact distinction the user's example needs.
+- Disclosed limitation, explicit: today's classification snapshot only, no history of GICS reassignment; inherits the same index-membership selection bias as CS-01 (only compares groups among names that stayed prominent enough to remain index members).
+- `docs/brainstorm/2026-08-20-cross-sectional-experiment-ideas.md` updated: CS-07/CS-08's data blocker marked cleared; the sharper index-selection-bias limitation written down as its own named point, not left only in chat.
+- 4 new tests. 432 passed, 1 known unrelated failure.
+
 ## 0.82.0
 
 Chapter 2 §3 closed: cross-sectional momentum v1 (CS-01), the first confirmatory rank-correlation test at real point-in-time S&P 500 breadth. `not_material_or_not_consistent` -- a genuine, well-earned null, not a bug.
