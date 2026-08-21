@@ -2,6 +2,14 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.83.1
+
+Documented real vendor research for options data (IV/Greeks/open interest) and Level 2, per the user's explicit ask for "the cheapest way to get a full real dataset." Docs-only, no purchase made.
+
+- User-directed: after accepting the sector-rotation direction, asked for real cost research on deeper data -- historical IV curves, options open interest (source of "call wall/put wall"), and Level 2 order-book depth.
+- `docs/data-layers.md` and `docs/brainstorm/2026-08-19-pending-candidate-checklist.md`: options (IV/Greeks/OI) -- cheapest real option is EODHD's US options API, `$99.99/mo`, but only `Q4 2023`-present depth; deeper history means OptionMetrics/CBOE DataShop, no public pricing, real four-figure/year territory. Not purchased -- no queued hypothesis needs it yet. "Call wall/put wall" clarified as a derived metric from OI-by-strike, not a separate purchase. Level 2 explicitly marked excluded by design, not a pending item -- this project never reaches live/HFT execution (already disclosed in data-layers.md's Intraday/tick row), so microstructure-priced data buys nothing it would use; researched anyway (Databento's metered pricing is the cheapest access model) so the "why not" is a researched answer, not an assumption.
+- No code, no tests affected.
+
 ## 0.83.0
 
 GICS sector/sub-industry data layer -- free, unblocks CS-07/CS-08 (sector rotation). Also names a sharper, separate survivorship bias that this does not fix.
