@@ -2,6 +2,15 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.75.1
+
+Chapter 4 compacted to match Chapters 1-3's table shape. Docs-only.
+
+- User-directed: Chapter 4 in `research-program.md` had grown to ~263 lines of inline prose (vs. Chapters 1-3's compact `| § | Result |` tables linking out to individual result files) -- "an all abstracts" table, not the working document itself.
+- Extracted six new `docs/research-results/` files: `cta-v2-chapter4-eligibility.md`, `wave-pull-chapter4-eligibility.md`, `calendar-dow-chapter4-eligibility.md`, `chapter4-eligibility-calibration-v1.md`, `chapter4-orthogonality-v1.md`, `factor-zoo-v1.md` -- same structure as every other result doc (decision line, Result, Reading this result). No content lost, only relocated.
+- Chapter 4 in `research-program.md` rewritten to the same `| § | Candidate | Result |` shape as Chapters 1-3, one-line-per-row. 578 -> 349 total lines in `research-program.md`.
+- 391 passed (no code change).
+
 ## 0.75.0
 
 Factor zoo enriched to 27 formulas (classic TA indicators added); new data-layers catalog; Chapter 1-3 explicitly paused in favor of Chapter 4.

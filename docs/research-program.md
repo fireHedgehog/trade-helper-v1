@@ -102,261 +102,33 @@ disclosed, modest, *uncertain* expected value — not proven, not rejected —
 sized small via Loss-based Quantity Determination and combined into a
 diversified, risk-controlled ensemble instead of being asked to prove
 themselves alone at high confidence. Chapters 1–3's falsification standard
-is unchanged and unweakened by this chapter's existence — a candidate that
-clears Chapter 1–3's full bar graduates there, not here.
-
-The confidence-multiplier sizing function is now built and tested
-(`block_bootstrap_confidence_interval`, `chapter4_confidence_multiplier` in
-`backend/app/research.py`) — a genuine second bootstrap procedure, distinct
-from every null-hypothesis test this session: it characterizes the
-plausible *range* of the true effect size (no centering), which a p-value
-does not provide.
+is unchanged and unweakened by this chapter's existence. Confidence-
+multiplier sizing (`block_bootstrap_confidence_interval`,
+`chapter4_confidence_multiplier` in `backend/app/research.py`) is built
+and tested.
 
 | § | Candidate | Result |
 |---|---|---|
-| 1 | [CTA v2, primary variant](../backend/app/score_cta_v2_chapter4.py) | **Not eligible.** `68%` confidence interval on the daily excess return: `[-0.0035%, +0.0204%]`, annualized lower bound `-0.88%`. Even at Chapter 4's deliberately loosened one-sigma bar, the interval still spans zero — confidence multiplier `0.0`, no position sized. Consistent with CTA v2's own raw `p=0.231` under the null test (not a contradiction, a cross-check: a raw p that far from significant implies a wide-enough interval to plausibly include zero at 68% coverage too). This is Chapter 4 working as designed, not failing — being the strongest candidate in Chapter 6's triage does not guarantee clearing even a lower bar, and checking that honestly was the entire point of building this before opening a new falsification thread. |
-| 2 | [Wave Pull, `TLT`](../backend/app/score_wave_pull_tlt_chapter4.py) | **Eligible on paper, since walked back — see §2b/§4.** `68%` confidence interval on the 10-session forward return, case-resampled across the `20` qualifying events: `[+1.22%, +2.40%]`, multiplier `0.674`. `TLT` was pre-selected as the single best raw-`p` asset of `12` from Wave Pull v1's own Chapters 1–3 test *before* this score was run — a winner's-curse selection this report did not originally disclose or correct for. §2b and §4 below show that correction changes the read materially. |
-| 2b | [Wave Pull, all 12 assets](../backend/app/score_wave_pull_chapter4.py) | **`2`/`11` eligible** (`GLD`, `TLT`; `IEF` had zero qualifying events, not scoreable). Symmetric rescoring of the full universe genuinely fixes the selection-bias objection an external critique (2026-08-20) correctly raised about §2's `TLT`-only report — no more cherry-picking which asset to show. But §4's calibration settles what this count is actually worth: `2/11` against a calibrated `19.08%` per-asset chance rate is **not distinguishable from noise** — `2` is in fact the single most probable outcome the null model predicts (`P(X≥2)≈65%`, mode `=2`). An earlier same-session read of this result ("a second independent hit is harder to explain by chance") was checked against the calibration and does not survive it; corrected here rather than left standing. `GLD`/`TLT`'s near-zero cross-correlation (`r=0.02`, see orthogonality below) is real but narrower evidence than that: it rules out `GLD` and `TLT` being a disguised double-count of one redundant artifact (the failure mode seen in Day-of-Week's correlated pairs below), not that either reflects a genuine effect — both "two real independent signals" and "two independent noise false-positives" predict low correlation equally well. Net: `GLD`/`TLT` remain clean, bias-free, decorrelated *candidates* appropriately queued for Chapters 1–3's strict bar or out-of-sample testing — the loosened `68%` screen doing its intended job of admitting candidates for further scrutiny, not a verdict that nothing is there. |
-| 3 | [Calendar Day-of-Week, all 12 assets](../backend/app/score_calendar_dow_chapter4.py) | **`6`/`12` eligible** (`DBC`, `EFA`, `GLD`, `IEF`, `TLT`, `XLF`) on each asset's own full history — **tested directly and found not distinguishable from chance; see §4.** A third confidence-interval shape: a two-sample block bootstrap on Monday vs. non-Monday returns per asset. Under a naive independent-trials reading `6/12` looked like a striking anomaly (`p≈0.7%` against the `16.25%` calibrated per-asset base rate) — but a correlation-aware joint null built specifically to test this (§4) settles it directly rather than by approximation: `p≈0.13`–`0.14`, stable across three independent resampling grids. Not a rejection of the underlying French-1980 Monday-effect literature, but this specific `6/12` breadth reading does not clear even Chapter 4's loosened bar once real cross-asset correlation is properly accounted for. |
+| 1 | [CTA v2, primary variant](research-results/cta-v2-chapter4-eligibility.md) | `not eligible`, `68%` CI spans zero |
+| 2 | [Wave Pull, `TLT` solo → all 12 assets](research-results/wave-pull-chapter4-eligibility.md) | eligible on paper, walked back — `2/11` not distinguishable from chance |
+| 3 | [Calendar Day-of-Week, all 12 assets](research-results/calendar-dow-chapter4-eligibility.md) | naive `6/12`; correlation-aware joint-null test settles it — `p≈0.13–0.14`, not distinguishable from chance |
+| 4 | [Eligibility-rule calibration v1](research-results/chapter4-eligibility-calibration-v1.md) | false-eligible rates measured directly; a pasted critique's `32%` figure did not survive, but its winner's-curse concern (`84.67%`) was confirmed and was worse than estimated |
+| — | [Orthogonality screen v1](research-results/chapter4-orthogonality-v1.md) | `3`/`28` nominally-eligible pairs redundant, all within Day-of-Week's winners |
+| 5 | [Factor zoo v1 — 27-formula screen](research-results/factor-zoo-v1.md) | `atr_normalized` independent, Sharpe `0.84`; the top-cluster reversal shape (`10` factors) flagged as one shared bid-ask-bounce hypothesis, not ten |
 
-Three sections scored so far (§1–§3), each initially looking more
-promising than it turned out to be under further scrutiny — full detail,
-the calibration that settled it, and the final conclusion are below (§4
-and the closing summary at the end of this chapter).
+None of §1–3's hand-picked candidates has a settled, adversarially-checked
+positive read — a governance framework that correctly catches its own
+candidates failing a properly rigorous test, rather than waving them
+through on an approximation, is doing exactly what ADR 0007 and the
+calibration discipline (§4) exist to do. The ensemble-construction engine
+and minimum-breadth floor remain named, unbuilt (ADR 0007 Consequences) —
+premature ahead of a settled positive candidate, not merely undersupported.
 
-**Orthogonality (ADR 0007 clause 3) is measured, not assumed, but this
-measures redundancy among nominally-eligible signals — it does not by
-itself establish that any of them are real** —
-[`score_chapter4_orthogonality.py`](../backend/app/score_chapter4_orthogonality.py),
-pairwise Pearson correlation of each signal's own daily return
-contribution, aligned per pair to its overlapping date range. Of the `28`
-pairs across the `8` nominally-eligible signal-slots, `3` are flagged
-materially redundant (`|correlation| ≥ 0.5`, a disclosed, locked
-rule-of-thumb, not derived from this project's own data), and all `3` sit
-entirely among Calendar Day-of-Week's `6` winners: `dow_IEF`/`dow_TLT`
-(`r=0.92`, two treasury-duration bets moving almost identically on Mondays
-— the exact suspicion named when Calendar Day-of-Week was first scored),
-`dow_EFA`/`dow_XLF` (`r=0.81`), and `dow_DBC`/`dow_EFA` (`r=0.51`, just over
-the line) — forming two thematic clusters (bond-duration; commodities/
-international-equity/financials) plus `dow_GLD` standing alone. This
-redundancy concentration was the reason §4's Day-of-Week significance
-question needed a direct correlation-aware test rather than an
-approximation from this partial view — the `6` winners' apparent breadth
-could represent as few as `3`–`5` genuinely independent underlying effects,
-not `6`. §4 below reports that direct test's result: not distinguishable
-from chance. Both Wave Pull signals
-are, by contrast, cleanly independent of everything: `wave_pull_TLT` tops
-out at `r=-0.12` against all six `dow_` signals (including `dow_TLT`, the
-same underlying asset under a different mechanism), and `wave_pull_GLD`
-tops out at `r=-0.22`, including `r=0.02` against `wave_pull_TLT` itself —
-real, useful information about redundancy, but (per §2b) not itself
-evidence that either signal reflects a genuine effect.
-
-**§4 — Calibrating the eligibility rule itself, and what an adversarial
-verification pass changed.** A pasted external critique (2026-08-20) argued
-Calendar Day-of-Week's `6/12` is close to what pure chance would produce at
-a `68%` band, and separately that `TLT`'s solo report suffers "winner's
-curse." Rather than argue the arithmetic analytically,
-[`calibrate_chapter4_eligibility.py`](../backend/app/calibrate_chapter4_eligibility.py)
-measures it directly — same Monte Carlo discipline as
-[event-bootstrap-calibration-v1](research-results/event-bootstrap-calibration-v1.md):
-`300` replications of zero-mean GARCH(1,1) synthetic null data, each
-eligibility construction run unmodified, empirical false-eligible rate
-reported with a Wilson `95%` CI. Full result:
-[chapter4-eligibility-calibration-v1](../output/research/chapter4-eligibility-calibration-v1/calibration-report.json).
-
-- Two-sample (Day-of-Week-shape), single independent null asset: `16.25%`
-  false-eligible (`95%` CI `[15.08%, 17.49%]`, `n=3,600`) — matches a
-  one-sided-normal-tail approximation almost exactly, **not** the critique's
-  `32%` figure; the critique's own number does not survive this check.
-- Case-resample (Wave-Pull-shape), single independent null asset: `19.08%`
-  (`95%` CI `[17.70%, 20.54%]`, `n=2,945`).
-- Case-resample, *selected winner of 12* (the single best of `12`
-  independent null assets by observed mean — mirroring exactly how `TLT`
-  was chosen): `84.67%` false-eligible (`95%` CI `[80.15%, 88.30%]`,
-  `n=300`). This is the critique's winner's-curse concern, measured
-  directly, and it is worse than the critique itself estimated: a
-  best-of-`12` selection clears Chapter 4's bar under pure noise more often
-  than not.
-
-A first pass at interpreting these numbers against the real `6/12` and
-`2/11` results was itself run through independent adversarial verification
-(four reviewers, two per claim, working from the raw numbers rather than
-from each other's framing) before being written here, matching this
-project's standing practice of checking pasted critiques empirically rather
-than arguing about them — applied for once to a first-pass reading of its
-own results, not just to an outside critique. Two corrections resulted:
-
-1. **Wave Pull's `2/11` (§2b)** — already corrected there against the
-   `19.08%` calibrated null (`P(X≥2 of 11)≈65%`, modal outcome); see that
-   cell for the full numbers, not restated here.
-2. **Day-of-Week's `6/12` (§3) is not the settled "real, elevated" result
-   it initially looked like, either.** Positive correlation among the `6`
-   winners (the `3` flagged pairs above) inflates the variance of an
-   extreme count under the null — it makes `6` *more* likely by chance, not
-   less, the opposite of the direction needed to defend the naive
-   `p≈0.7%` reading. Correcting for only the `3` known winner-vs-winner
-   pairs (treating the other `51` of `66` possible pairs as uncorrelated,
-   an assumption not actually verified) still leaves the result notable
-   (`p≈1.5%–2.5%`), but that assumption is unverified and optimistic —
-   financial assets often cluster by category even below the `0.5`
-   flagging threshold, and if unmeasured correlation among the `9` non-
-   winning assets is non-trivial, a defensible correction pushes the
-   tail probability as high as `~17%–21%`, coin-flip range. **The honest
-   state is a real, unresolved range, not a settled answer either way.**
-
-**The concrete next step named above has now been run, and it settles the
-question.** [`score_calendar_dow_full_correlation.py`](../backend/app/score_calendar_dow_full_correlation.py)
-measured all `66` pairs across the full `12`-asset universe (not just the
-`6` winners): `31` pairs flagged redundant overall, `28` of them touching a
-non-winning asset — the broader universe is saturated with ordinary
-equity-beta correlation (`EEM`/`EFA` `r=0.89`, `IWM`/`SPY` `r=0.90`, `QQQ`/
-`XLK` `r=0.94`), confirming correlation is pervasive enough that a
-hand-adjusted design-effect estimate from a partial matrix was never going
-to be precise enough to trust on its own. So rather than stop at the fuller
-matrix,
-[`run_calendar_dow_breadth_significance.py`](../backend/app/run_calendar_dow_breadth_significance.py)
-built the rigorous version directly:
-[`dow_breadth_correlation_aware_null`](../backend/app/research.py) is a
-joint circular-block-resampling null — one shared block-shift applied to
-all `12` assets' real return series simultaneously per replication (the
-same principle `etf12_rotation_bootstrap` and `overnight_gap_bootstrap`
-already use), preserving the *entire* real joint correlation structure
-automatically rather than approximating it from a handful of pairwise
-numbers. Pre-lock adversarially reviewed before touching real data (two of
-three lenses completed; the third hit a session limit mid-run and was
-completed directly) — the review caught one real, non-obvious bug: the
-original shared `block_bars=20` is an exact multiple of the `5`-day trading
-week, so resampled blocks could quietly reproduce genuine historical
-Monday-to-return pairings instead of scrambling them, biasing the test
-conservative. Fixed by giving the outer cross-asset shift its own block
-size, deliberately not a multiple of `5`, decoupled from the inner
-per-asset CI's block size (left matching production).
-
-**Result: `p≈0.13`–`0.14`, stable across three independent block-size
-checks (`19`, `17`, `23` bars — a disclosed robustness check on the fix
-itself).** Full record:
-[breadth-significance.json](../output/research/chapter4-eligibility/calendar-day-of-week/breadth-significance.json).
-Calendar Day-of-Week's breadth result is **not distinguishable from
-chance** once the real correlation structure is properly preserved, not
-approximated — nowhere near conventional significance. One more disclosed
-wrinkle: on the common-date window all three checks require (bounded by
-`DBC`'s shorter history, `2006`–`2026`), the observed count itself comes out
-`5/12` with a *different* eligible set (`DBC`, `EEM`, `EFA`, `GLD`, `XLF` —
-`IEF` and `TLT` drop out, `EEM` enters) than the `6/12` reported against
-each asset's own full history — a real, disclosed sensitivity to the
-evaluation window, not a discrepancy that changes the significance
-conclusion either way.
-
-The remaining gap is the ensemble-construction engine and the
-minimum-breadth floor's exact number — both still named, required,
-unimplemented decisions, and now clearly premature rather than merely
-undersupported: of the three candidates scored so far, **none has a
-settled, adversarially-checked positive read** — CTA v2 cleanly rejected,
-Wave Pull walked back to candidate status (not distinguishable from
-chance), Calendar Day-of-Week now directly tested and also not
-distinguishable from chance. Building ensemble machinery ahead of that
-would be sizing infrastructure around signals that have not yet earned it.
-That is a real, complete answer for this pass of Chapter 4 — not a null
-result for the exercise itself, since a governance framework that
-correctly catches its own first three candidates failing a properly
-rigorous test, rather than waving them through on an approximation, is
-doing exactly what ADR 0007 and this chapter's calibration discipline exist
-to do.
-
-**§5 — Factor zoo v1: seventeen-formula screen, real Sharpe/IC, not itself
-a Chapter 4 candidate.** [`factor_zoo.py`](../backend/app/factor_zoo.py)
-ports 17 of the published WorldQuant "101 Formulaic Alphas" (Kakushadze
-2015; verified against
-[popbo/alphas](https://github.com/popbo/alphas/blob/main/alphas101.py)),
-restricted to formulas needing only OHLCV+volume — alpha191 and the
-vwap-heavy WQ101 formulas need fields this project's free Yahoo data
-doesn't have. Purpose: generate breadth cheaply instead of hand-picking one
-Chapter 1–3 candidate at a time into Chapter 4, generalizing the small,
-separately-parked idea in
-[parallel-multi-agent-research-pipeline.md](brainstorm/2026-08-21-parallel-multi-agent-research-pipeline.md)
-from "rank closed candidates" to "generate and rank a whole zoo." A
-screening scan, same non-evidential framing as
-[cross-sectional-equity-momentum-feasibility-v1](research-results/cross-sectional-equity-momentum-feasibility-v1.md):
-same disclosed-survivorship-biased 495-symbol universe, no cost/slippage
-modeled, 1-session forward return, IC t-stats informative only (overlapping
-draws, no multiple-comparisons correction across the 17). Screening well
-here confers nothing by itself — a factor still needs its own stated
-mechanism (ADR 0007 clause 1) before formal proposal into Chapter 4.
-
-Run: [`run_factor_zoo_scan.py`](../backend/app/run_factor_zoo_scan.py),
-`495`/`495` symbols, `2018-12-07`–`2026-08-14` (`1,929` common sessions).
-Full numbers:
-[scan-report.json](../output/research/factor-zoo-v1/scan-report.json);
-charts:
-[IC-IR ranking](../output/research/factor-zoo-v1/ic-ir-ranking.png),
-[top-6 equity curves](../output/research/factor-zoo-v1/top-factor-equity-curves.png).
-
-Top by IC-IR: `alpha034` (volatility-ratio/close-delta composite, Sharpe
-`0.76`, CAGR `8.8%`, max drawdown `-19.0%`), `alpha004` (low-rank
-persistence, Sharpe `0.71`), `alpha028` (volume-price scale composite,
-Sharpe `0.66`), `alpha033` (open/close reversal, Sharpe `0.47`),
-`alpha026`/`alpha009` (Sharpe `0.42`/`0.40`). Two were decisively negative:
-`alpha001` (Sharpe `-0.45`) and `alpha035` (Sharpe `-0.30`, max drawdown
-`-52%`) — both among the more cited WQ101 formulas, so a clean negative
-here is itself informative, not noise.
-
-Orthogonality (same `|r|≥0.5` rule as the screen above): `alpha034`/
-`alpha033`/`alpha009`/`alpha028` form one tightly-correlated cluster
-(`r=0.58`–`0.79`), and `alpha004`/`alpha026` touch parts of it too
-(`r=0.52`–`0.55`). **Disclosed risk, not yet resolved**: every top
-performer is some shape of short-horizon (1–10 session) price reversal —
-the classic setting for the bid-ask-bounce artifact (Jegadeesh 1990,
-Lehmann 1990), where raw daily closes alternating near the bid and ask can
-manufacture an apparent reversal profit with no real edge once realistic
-transaction costs are modeled, and this scan models zero cost. By the same
-design-effect logic Calendar Day-of-Week's correlated pairs established
-above, this cluster's real breadth is closer to `2`–`3` independent effects
-than `6` — until cost-adjusted, read the whole top cluster as one shared,
-unconfirmed hypothesis, not six.
-
-**Enriched same day**: 10 hand-implemented classic technical indicators
-(RSI, MACD, Bollinger %B, Stochastic %K, CCI, Williams %R, ROC, ATR,
-OBV-flow, MFI — same non-evidential screen, no new dependency, see
-[open-source-factor-source-backlog.md](brainstorm/2026-08-21-open-source-factor-source-backlog.md)
-for the source survey) joined the scan: `27` factors total, same universe
-and run. Every classic indicator scored **negative** IC-IR under its
-conventional "high reading = long" direction — RSI, Stochastic, Williams
-%R, CCI, MFI, MACD histogram, ROC, OBV-flow all lose money long-the-high-
-reading at this 1-session horizon. Read correctly, not as a failure: this
-is the same short-horizon reversal effect the WQ101 cluster already
-surfaced, from the other direction — a naive contrarian reading (long the
-*lowest* RSI/Stochastic/MACD names) would show the mirrored positive
-number. Treat this as one more data point for the disclosed bid-ask-bounce
-risk above, not a second independent finding — it is the same hypothesis
-restated, and the caution about zero-cost-modeled 1-day reversal applies
-to it equally.
-
-One genuine exception, checked for orthogonality specifically because it
-fell outside the default top-8 screen: **`atr_normalized`** (ATR(14)/close
-— a pure volatility-level factor, not a reversal shape) posted the best
-raw Sharpe of the entire `27`-factor zoo (`0.84`, CAGR `20.0%`), and a
-targeted check against the whole reversal cluster
-(`alpha034`/`033`/`028`/`004`/`023`) found it genuinely independent
-(`|r|≤0.34` against all five). Its drawdown is much worse than the
-cluster's (`-39.4%` vs. `-19%` to `-31%`), consistent with a real
-volatility-premium-style factor rather than a low-vol/defensive one — the
-economically expected shape, not a red flag by itself, but a real
-regime-concentration question (ADR 0007 clause 5) still to check before
-proposing it.
-
-**Not yet done, named as the next concrete step**: propose the
-least-redundant survivors — `alpha028`, `alpha004`, `alpha026` (Sharpe
-`0.66`/`0.71`/`0.42`, mutual `|r|≤0.52`) and now `atr_normalized` (Sharpe
-`0.84`, confirmed orthogonal to the reversal cluster) — as individual
-Chapter 4 candidates, each with its own stated mechanism, regime-
-concentration check, and a cost-sensitivity check before any eligibility
-read is trusted. The reversal cluster (`alpha034`/`033`/`009`/RSI/
-Stochastic/Williams-%R/CCI/MACD/ROC/OBV, all one hypothesis) needs a
-transaction-cost-aware rerun before it is even scan-worthy of further
-attention, given the bid-ask-bounce risk disclosed above. Full numbers:
-[scan-report.json](../output/research/factor-zoo-v1/scan-report.json)
-(now `27` rows, each tagged `family: wq101` or `classic_indicator`).
+**Not yet done, next concrete step**: propose §5's least-redundant
+survivors (`alpha028`, `alpha004`, `alpha026`, `atr_normalized`) as
+individual Chapter 4 candidates, each with a stated mechanism, and run a
+transaction-cost-sensitivity check on the reversal cluster before trusting
+its Sharpe numbers at all.
 
 ## Chapter 5 — Operational bridge: from research verdict to bounded paper trading
 
