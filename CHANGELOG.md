@@ -2,6 +2,19 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.78.0
+
+Second live Chapter 4 candidate (`amihud_illiquidity`), and the factor zoo's first real Tier A execution ("ATR Vol Premium") -- a genuinely tradable (paper) model, not another verification report.
+
+- User-directed, two-part: (1) enrich the factor zoo with genuinely *different* effects rather than more reversal variants -- 5 named academic anomalies (Amihud illiquidity, MAX/lottery-demand, low-volatility, Corwin-Schultz spread, expected idiosyncratic skewness), chosen over a broader open-source search after two fresh web searches during this session confirmed the bigger options found (Qlib Alpha158, a 335-indicator OHLCV repo) were either not yet queued or mostly redundant with families already screened. (2) A direct, fair challenge that verification work had displaced actionable output: build something runnable, not another check.
+- `backend/app/factor_zoo.py`: new `ACADEMIC_ANOMALIES` dict (5 formulas, each with its own citation and expected-direction disclosure -- 2 are expected to score negative IC-IR, the literature's own predicted sign, not a misdirection).
+- `backend/app/run_factor_zoo_academic_anomalies.py` (new): real run found `low_volatility` and `max_effect` redundant with `atr_normalized` (r=0.81-0.98) -- the same effect, different formula, not new breadth. `amihud_illiquidity` is independent of everything (|r|<0.45 vs. all four) and survives this project's standard transaction cost (Sharpe 0.70->0.29, graceful decay, not the reversal cluster's collapse) -- a second live Chapter 4 candidate. `corwin_schultz_spread` and `expected_skewness_proxy` are clean, honest nulls.
+- `backend/app/strategies.py`: new `AtrVolPremium` Tier A strategy (8th registered strategy) -- an own-history, single-asset execution of factor-zoo-v1's cross-sectional `atr_normalized` finding, a new independently-designed protocol, not a retry (a per-symbol rule never existed for the cross-sectional version). Wired through all three parallel implementations this required, found only by running the full test suite: `strategies.py` (backtest engine), `rules.py` (vectorized live-signal computation), `signals.py` (display/"Now:" state) -- confirmed identical across all three via the existing cross-cutting parity tests.
+- Live-verified end to end: real backtest on SPY's full history (59 trades, Return 252% vs. Buy & Hold 3083%, Sharpe 0.33 -- a real, honest reject against buy-and-hold, same pattern as the other trend-following strategies over this multi-decade bull run) and in a headless browser (selectable in the dropdown, real entry/exit chart markers, real metrics, zero console errors).
+- 8 new tests: 5 hand-checked academic-anomaly formulas (turnover/sign-flip/top-k/two-day-spread arithmetic verified independently, not just re-derived from the same code), 1 new-strategy baseline snapshot, 2 cross-cutting parity fixes already covered by existing parametrized tests.
+- Onboarded the academic-anomalies result via `strategy-library.md`'s playbook (19 Tier B studies now); the new Tier A strategy via the same playbook's Step 2a.
+- 412 passed (8 new), 1 known unrelated failure (data-fingerprint drift).
+
 ## 0.77.1
 
 Factor zoo regime concentration v1 (Chapter 4 §5c): `atr_normalized`'s ADR 0007 clause 5 check closes clean — unlike CTA v2, no single year carries the result.

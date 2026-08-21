@@ -1,0 +1,225 @@
+{
+  "common_date_end": "2026-08-18",
+  "common_date_start": "2018-12-07",
+  "control_atr_normalized": {
+    "cagr": 0.1960242339044631,
+    "ic_ir": 0.02744919244424978,
+    "sharpe": 0.8240264217186309
+  },
+  "errors": {},
+  "evidential_status": "non-evidential -- screening scan only, same standing as factor-zoo-v1",
+  "expected_negative_direction": [
+    "expected_skewness_proxy",
+    "max_effect"
+  ],
+  "missing_symbols": [
+    "HUBB"
+  ],
+  "n_factors_errored": 0,
+  "n_factors_evaluated": 5,
+  "orthogonality_vs_each_other_and_atr_normalized": [
+    {
+      "correlation": 0.4342807162225747,
+      "n_overlap_days": 1909,
+      "pair": [
+        "low_volatility",
+        "amihud_illiquidity"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.8777484779494177,
+      "n_overlap_days": 1909,
+      "pair": [
+        "low_volatility",
+        "max_effect"
+      ],
+      "redundant": true
+    },
+    {
+      "correlation": -0.05838590336278751,
+      "n_overlap_days": 1870,
+      "pair": [
+        "low_volatility",
+        "expected_skewness_proxy"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.3040469372921273,
+      "n_overlap_days": 1909,
+      "pair": [
+        "low_volatility",
+        "corwin_schultz_spread"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.9803915165989,
+      "n_overlap_days": 1909,
+      "pair": [
+        "low_volatility",
+        "atr_normalized"
+      ],
+      "redundant": true
+    },
+    {
+      "correlation": 0.3296733488342162,
+      "n_overlap_days": 1909,
+      "pair": [
+        "amihud_illiquidity",
+        "max_effect"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": -0.1407240539166807,
+      "n_overlap_days": 1870,
+      "pair": [
+        "amihud_illiquidity",
+        "expected_skewness_proxy"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.10377722461096568,
+      "n_overlap_days": 1909,
+      "pair": [
+        "amihud_illiquidity",
+        "corwin_schultz_spread"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.4430798917199384,
+      "n_overlap_days": 1909,
+      "pair": [
+        "amihud_illiquidity",
+        "atr_normalized"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.28187935293605587,
+      "n_overlap_days": 1870,
+      "pair": [
+        "max_effect",
+        "expected_skewness_proxy"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.3413410210447971,
+      "n_overlap_days": 1909,
+      "pair": [
+        "max_effect",
+        "corwin_schultz_spread"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.814627291179568,
+      "n_overlap_days": 1909,
+      "pair": [
+        "max_effect",
+        "atr_normalized"
+      ],
+      "redundant": true
+    },
+    {
+      "correlation": 0.14542333338872973,
+      "n_overlap_days": 1870,
+      "pair": [
+        "expected_skewness_proxy",
+        "corwin_schultz_spread"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": -0.13387183705534525,
+      "n_overlap_days": 1870,
+      "pair": [
+        "expected_skewness_proxy",
+        "atr_normalized"
+      ],
+      "redundant": false
+    },
+    {
+      "correlation": 0.2981429715272648,
+      "n_overlap_days": 1916,
+      "pair": [
+        "corwin_schultz_spread",
+        "atr_normalized"
+      ],
+      "redundant": false
+    }
+  ],
+  "results": [
+    {
+      "annual_volatility": 0.2355466863099589,
+      "cagr": 0.16876504079556676,
+      "calmar": 0.562251399522843,
+      "ic_ir": 0.015301458333724089,
+      "ic_mean": 0.003786639836206883,
+      "max_drawdown": -0.30015939655959933,
+      "n_days": 1909,
+      "name": "low_volatility",
+      "sharpe": 0.7797234318828251,
+      "total_return": 2.258821051430138,
+      "win_rate": 0.5259298061812467
+    },
+    {
+      "annual_volatility": 0.11250830165511733,
+      "cagr": 0.07521061809187124,
+      "calmar": 0.41533945916584813,
+      "ic_ir": 0.015209233330555037,
+      "ic_mean": 0.002042447196018969,
+      "max_drawdown": -0.18108228445937058,
+      "n_days": 1909,
+      "name": "amihud_illiquidity",
+      "sharpe": 0.70066086330595,
+      "total_return": 0.7321125060697946,
+      "win_rate": 0.502357255107386
+    },
+    {
+      "annual_volatility": 0.2082048605344415,
+      "cagr": 0.13908150561993726,
+      "calmar": 0.43961178540360873,
+      "ic_ir": 0.0017883597519357296,
+      "ic_mean": 0.000413206602979386,
+      "max_drawdown": -0.3163734691331038,
+      "n_days": 1909,
+      "name": "max_effect",
+      "sharpe": 0.7297631587054223,
+      "total_return": 1.6817917908724258,
+      "win_rate": 0.5217391304347826
+    },
+    {
+      "annual_volatility": 0.11271418317654402,
+      "cagr": 0.03154335634394667,
+      "calmar": 0.10258206670362825,
+      "ic_ir": -0.006764156139527251,
+      "ic_mean": -0.0007521915335325671,
+      "max_drawdown": -0.3074938666919157,
+      "n_days": 1870,
+      "name": "expected_skewness_proxy",
+      "sharpe": 0.3323785327759347,
+      "total_return": 0.25917389700027726,
+      "win_rate": 0.5149732620320856
+    },
+    {
+      "annual_volatility": 0.09783199392687472,
+      "cagr": -0.005257021693602204,
+      "calmar": -0.01937589969188646,
+      "ic_ir": -0.018094790112424635,
+      "ic_mean": -0.002114929240713677,
+      "max_drawdown": -0.27131755310456884,
+      "n_days": 1929,
+      "name": "corwin_schultz_spread",
+      "sharpe": -0.004946923965849996,
+      "total_return": -0.03954427740851896,
+      "win_rate": 0.4950751684810783
+    }
+  ],
+  "universe_size": 494
+}

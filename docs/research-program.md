@@ -117,6 +117,7 @@ and tested.
 | 5 | [Factor zoo v1 — 27-formula screen](research-results/factor-zoo-v1.md) | `atr_normalized` independent, Sharpe `0.84`; the top-cluster reversal shape (`10` factors) flagged as one shared bid-ask-bounce hypothesis, not ten |
 | 5b | [Factor zoo cost sensitivity v1](research-results/factor-zoo-cost-sensitivity-v1.md) | §5's reversal cluster (`6` factors) not material at this project's own standard cost — every Sharpe flips deeply negative; `atr_normalized` survives the same check, degrading mildly, a second independent confirmation by a different mechanism |
 | 5c | [Factor zoo regime concentration v1](research-results/factor-zoo-regime-concentration-v1.md) | `atr_normalized`'s ADR 0007 clause 5 check: unlike CTA v2, no single year's exclusion flips the sign — the effect spreads across all `8` sample years, clause 5 closed |
+| 5d | [Factor zoo academic anomalies v1](research-results/factor-zoo-academic-anomalies-v1.md) | 5 named anomalies, a different family from the reversal cluster: `2` (`low_volatility`, `max_effect`) turned out redundant with `atr_normalized` (`r=0.81`–`0.98`); `amihud_illiquidity` is genuinely independent and survives standard cost (`0.70→0.29` Sharpe) — a second live candidate; the other `2` are clean nulls |
 
 None of §1–3's hand-picked candidates has a settled, adversarially-checked
 positive read — a governance framework that correctly catches its own
@@ -126,15 +127,25 @@ calibration discipline (§4) exist to do. The ensemble-construction engine
 and minimum-breadth floor remain named, unbuilt (ADR 0007 Consequences) —
 premature ahead of a settled positive candidate, not merely undersupported.
 
-**Not yet done, next concrete step**: `atr_normalized` is the one
-survivor of §5/§5b, and §5c closed its regime-concentration gate cleanly.
-Two clauses remain before a formal Chapter 4 proposal: clause 1 (a
-written economic mechanism for a volatility-level factor, not yet
-drafted) and clause 2 (a cross-validated point estimate with an explicit
-uncertainty band — the confidence-multiplier scoring already built and
-used for CTA v2/Wave Pull/Calendar-DOW, not yet run for this candidate).
-`alpha028`/`alpha004`/`alpha026` are answered (not material after cost,
-per §5b) and not carried forward.
+**Not yet done, next concrete step**: two live candidates now, `atr_normalized`
+(§5/§5b/§5c all cleared) and `amihud_illiquidity` (§5d, independent of
+everything, cost-checked, regime-concentration not yet run). Both still
+need clause 1 (a written economic mechanism) and clause 2 (a
+cross-validated point estimate with an explicit uncertainty band — the
+confidence-multiplier scoring already built and used for CTA v2/Wave
+Pull/Calendar-DOW) before a formal Chapter 4 proposal.
+`alpha028`/`alpha004`/`alpha026`/`low_volatility`/`max_effect` are all
+answered (redundant or not material after cost) and not carried forward.
+
+**Also done, ahead of clauses 1/2**: `atr_normalized`'s own-history,
+single-asset execution now exists as a real Tier A strategy — "ATR Vol
+Premium" in `backend/app/strategies.py` — selectable everywhere alongside
+the other 7, running a real backtest with real entry/exit markers. This
+is a new, independently-designed protocol (a per-symbol rule never
+existed for the cross-sectional finding), not a shortcut around clauses
+1/2 for the ensemble-sizing question ADR 0007 governs — it answers a
+different, product-facing question ("does a runnable version of this
+exist"), evidence status `exploratory`, not yet a validated claim.
 
 ## Chapter 5 — Operational bridge: from research verdict to bounded paper trading
 

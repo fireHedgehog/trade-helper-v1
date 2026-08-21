@@ -117,6 +117,10 @@ async def test_research_record_excludes_deferred_studies(client) -> None:
         study for study in studies if study["study_id"] == "factor-zoo-regime-concentration-v1"
     )
     assert regime["decision"] == "regime_concentration_clear"
+    anomalies = next(
+        study for study in studies if study["study_id"] == "factor-zoo-academic-anomalies-v1"
+    )
+    assert "amihud_illiquidity" in anomalies["summary"]
 
 
 async def test_macro_contract_forbids_signal_inference(client, monkeypatch) -> None:

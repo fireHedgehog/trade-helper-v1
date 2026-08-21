@@ -256,6 +256,38 @@ def compute_signal(bars: pd.DataFrame, strategy_name: str, params: dict) -> dict
         }
         entry_index = _last_entry_index(crossed) if long_now else None
 
+    elif strategy_name == "ATR Vol Premium":
+        atr_period = int(params.get("atr_period", 14))
+        lookback = int(params.get("lookback", 252))
+        entry_percentile = int(params.get("entry_percentile", 80))
+        true_range = pd.concat(
+            [
+                bars["high"] - bars["low"],
+                (bars["high"] - close.shift(1)).abs(),
+                (bars["low"] - close.shift(1)).abs(),
+            ],
+            axis=1,
+        ).max(axis=1)
+        ratio = true_range.rolling(atr_period).mean() / close
+        rank_pct = ratio.rolling(lookback).rank(pct=True) * 100
+        elevated = rank_pct >= entry_percentile
+        crossed = elevated & ~elevated.shift(1, fill_value=False)
+        current_rank = rank_pct.iloc[-1]
+        long_now = bool(elevated.iloc[-1]) if pd.notna(current_rank) else False
+        result["state"] = "long" if long_now else "flat"
+        result["event"] = "entry" if bool(crossed.iloc[-1]) else "none"
+        if pd.isna(current_rank):
+            result["note"] = "insufficient history for an own-history percentile rank yet"
+        elif long_now:
+            result["note"] = f"ATR/close at the {current_rank:.0f}th percentile of its own 1-year range — elevated"
+        else:
+            result["note"] = f"ATR/close at the {current_rank:.0f}th percentile of its own range — not elevated"
+        result["indicators"] = {
+            "ATR/close": round(float(ratio.iloc[-1]), 4) if pd.notna(ratio.iloc[-1]) else None,
+            "own-history percentile": round(float(current_rank), 1) if pd.notna(current_rank) else None,
+        }
+        entry_index = _last_entry_index(crossed) if long_now else None
+
     else:
         return None
 

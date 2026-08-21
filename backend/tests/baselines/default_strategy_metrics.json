@@ -1,4 +1,11 @@
 {
+  "ATR Vol Premium": {
+    "buy_hold_pct": 56.228018,
+    "max_drawdown_pct": -1.580822,
+    "return_pct": 1.428828,
+    "trades": 1,
+    "win_rate_pct": 100.0
+  },
   "CTA Trend": {
     "buy_hold_pct": 57.702139,
     "max_drawdown_pct": -6.165853,

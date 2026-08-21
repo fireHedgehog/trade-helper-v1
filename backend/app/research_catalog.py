@@ -160,6 +160,27 @@ STRATEGIES = {
             ),
         },
     },
+    "ATR Vol Premium": {
+        "strategy_id": "atr-vol-premium",
+        "type": "Time-Series",
+        "version": "prototype-v1",
+        "family": "time-series volatility premium",
+        "information_profile": ["own-asset market data"],
+        "required_datasets": ["yahoo-adjusted-daily-ohlcv-v1"],
+        "evidence": {
+            "status": "exploratory",
+            "label": "Exploratory — own-history execution of a screened factor",
+            "summary": (
+                "Own-history, single-asset translation of factor-zoo-v1's "
+                "cross-sectional atr_normalized finding (Sharpe 0.84, "
+                "cost-checked and regime-checked clean, Chapter 4 Sec.5/Sec.5c) "
+                "-- a new, independently-designed protocol, not a retry: no "
+                "per-symbol entry/exit rule existed before this. No "
+                "preregistered falsification experiment has run against this "
+                "specific design yet."
+            ),
+        },
+    },
 }
 
 # (decision, artifact) per strategy for research_contract below -- the real
@@ -183,6 +204,7 @@ DECISIONS: dict[str, tuple[str, str | None]] = {
         "not_material_or_not_consistent",
         "docs/research-results/rsi-oversold-reversal-v1.md",
     ),
+    "ATR Vol Premium": ("not evaluable", None),
 }
 
 
@@ -353,6 +375,24 @@ CHARACTERIZATION_STUDIES = {
             "p≈0.13-0.14 -- not distinguishable from chance."
         ),
     },
+    "factor-zoo-academic-anomalies-v1": {
+        "chapter": "4 §5d",
+        "type": "Cross-Sectional",
+        "decision": "screening_scan_non_evidential",
+        "result_doc": "docs/research-results/factor-zoo-academic-anomalies-v1.md",
+        "artifact": "output/research/factor-zoo-academic-anomalies-v1/academic-anomalies-report.json",
+        "name": "Factor Zoo — Academic Anomalies (Illiquidity, Lottery-Demand, Low-Vol, Spread, Skewness)",
+        "summary": (
+            "5 named academic anomalies, a different family from the "
+            "reversal cluster. 2 of 5 (low_volatility, max_effect) turned "
+            "out redundant with atr_normalized (r=0.81-0.98) -- same "
+            "effect, different formula. amihud_illiquidity is genuinely "
+            "independent and survives this project's standard "
+            "transaction cost (Sharpe 0.70->0.29) -- a second live "
+            "Chapter 4 candidate. corwin_schultz_spread and "
+            "expected_skewness_proxy are clean, honest nulls."
+        ),
+    },
     "factor-zoo-regime-concentration-v1": {
         "chapter": "4 §5c",
         "type": "Cross-Sectional",
@@ -493,6 +533,7 @@ HYPOTHESES = {
     "Fib Retrace": "A quantified retracement after an impulse may identify a repeatable next-open long entry.",
     "Wave Pull": "A quantified impulse and pullback sequence may identify a repeatable next-open long entry.",
     "RSI Reversion": "An oversold RSI state may identify a repeatable short-horizon long mean-reversion entry.",
+    "ATR Vol Premium": "A symbol's own volatility rising into the elevated end of its trailing range may identify a repeatable long entry, capturing the same volatility-premium effect factor-zoo-v1 found cross-sectionally.",
 }
 
 

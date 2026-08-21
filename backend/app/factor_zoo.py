@@ -11,9 +11,21 @@ out most of alpha191, a China-A-share set with different required fields).
 Also includes CLASSIC_INDICATORS: 10 hand-implemented classic technical
 indicators (RSI, MACD, Bollinger %B, Stochastic, CCI, Williams %R, ROC,
 ATR, OBV flow, MFI) -- the most battle-tested OHLCV-only factor family in
-the ecosystem, not previously in this codebase. See
-docs/brainstorm/2026-08-21-open-source-factor-source-backlog.md for the
-source survey behind both batches and what's queued/excluded next.
+the ecosystem, not previously in this codebase.
+
+Also includes ACADEMIC_ANOMALIES: 5 named, real-citation price/volume-only
+cross-sectional anomalies (Amihud illiquidity, MAX/lottery-demand,
+low-volatility, Corwin-Schultz spread, expected idiosyncratic skewness) --
+deliberately a *different* family from the reversal-shaped WQ101/classic-
+indicator cluster already screened, not more variants of it. Two of these
+(MAX, skewness) are expected to score a NEGATIVE IC-IR under this module's
+"high reading = long" rank-IC convention -- that is each paper's own
+predicted sign (lottery-demand overpricing), not a misdirection needing
+correction the way the classic indicators needed one.
+
+See docs/brainstorm/2026-08-21-open-source-factor-source-backlog.md for
+the source survey behind all three batches and what's queued/excluded
+next (Qlib Alpha158 is the next queued batch, not yet built).
 
 None of these are individually validated -- that is the point of a zoo:
 breadth over interpretability, screened cheaply, with the strongest, most
@@ -351,6 +363,74 @@ def mfi14(p: Panel) -> pd.DataFrame:
     return (100 - 100 / (1 + money_ratio)).fillna(100.0)
 
 
+# ---------------------------------------------------------------------------
+# ACADEMIC_ANOMALIES -- 5 named, real-citation anomalies, a different family
+# from the reversal-shaped clusters above. See module docstring.
+# ---------------------------------------------------------------------------
+
+
+def amihud_illiquidity(p: Panel) -> pd.DataFrame:
+    """Amihud (2002) illiquidity: 21-session mean of |daily return| /
+    dollar volume. Expected direction: HIGHER illiquidity predicts HIGHER
+    forward return (a compensation-for-risk premium), the same sign
+    convention as this module's other factors -- no direction flip needed."""
+    dollar_volume = p.close * p.volume
+    daily_illiquidity = p.returns.abs() / dollar_volume.replace(0.0, np.nan)
+    return sma(daily_illiquidity, 21)
+
+
+def _mean_of_top5(window: np.ndarray) -> float:
+    return float(np.sort(window)[-5:].mean())
+
+
+def max_effect(p: Panel) -> pd.DataFrame:
+    """MAX effect (Bali-Cakici-Whitelaw 2011): mean of the 5 highest daily
+    returns in the trailing 21 sessions. Expected direction: HIGH MAX
+    predicts LOWER forward returns (lottery-demand overpricing) -- a
+    negative IC-IR here is the paper's own predicted sign, not a
+    misdirection the way the classic indicators needed correcting."""
+    return p.returns.rolling(21).apply(_mean_of_top5, raw=True)
+
+
+def low_volatility(p: Panel) -> pd.DataFrame:
+    """Low-volatility anomaly proxy (Blitz-van Vliet 2007 / Frazzini-
+    Pedersen 2014's Betting-Against-Beta, simplified to realized
+    volatility -- a true rolling beta needs a benchmark return series this
+    Panel does not carry): 21-session realized volatility of daily
+    returns. Expected direction: HIGH volatility predicts LOWER forward
+    returns -- again the literature's own predicted sign."""
+    return stddev(p.returns, 21)
+
+
+def corwin_schultz_spread(p: Panel) -> pd.DataFrame:
+    """Corwin-Schultz (2012) high-low spread estimator, paired with the
+    prior session (not the next one) to use only already-known data. The
+    standard daily-OHLC-only liquidity proxy, more refined than a raw
+    high-low range. Expected direction: same as Amihud -- higher
+    estimated spread (more illiquid) predicts higher forward return."""
+    prior_high, prior_low = delay(p.high, 1), delay(p.low, 1)
+    beta = np.log(p.high / p.low) ** 2 + np.log(prior_high / prior_low) ** 2
+    two_day_high = p.high.combine(prior_high, np.maximum)
+    two_day_low = p.low.combine(prior_low, np.minimum)
+    gamma = np.log(two_day_high / two_day_low) ** 2
+    denom = 3 - 2 * math.sqrt(2)
+    alpha = (np.sqrt(2 * beta) - np.sqrt(beta)) / denom - np.sqrt(gamma / denom)
+    spread = 2 * (np.exp(alpha) - 1) / (1 + np.exp(alpha))
+    return spread.clip(lower=0.0)  # conventionally floored -- negative estimates are noise, not real
+
+
+def expected_skewness_proxy(p: Panel) -> pd.DataFrame:
+    """Idiosyncratic skewness, simplified (Boyer-Mitton-Vorkink 2010's
+    economic story -- lottery-demand overpricing of positively-skewed
+    stocks -- via a persistence-based proxy, not the paper's own fitted
+    cross-sectional expected-skewness model, which needs lagged
+    characteristics and a benchmark series this OHLCV-only project does
+    not have): 60-session rolling skewness of raw daily returns. Expected
+    direction: HIGH skewness predicts LOWER forward returns, same story
+    as MAX."""
+    return p.returns.rolling(60).skew()
+
+
 CLASSIC_INDICATORS: dict[str, Callable[[Panel], pd.DataFrame]] = {
     "rsi14": rsi14,
     "macd_histogram": macd_histogram,
@@ -363,6 +443,21 @@ CLASSIC_INDICATORS: dict[str, Callable[[Panel], pd.DataFrame]] = {
     "obv_flow": obv_flow,
     "mfi14": mfi14,
 }
+
+
+ACADEMIC_ANOMALIES: dict[str, Callable[[Panel], pd.DataFrame]] = {
+    "amihud_illiquidity": amihud_illiquidity,
+    "max_effect": max_effect,
+    "low_volatility": low_volatility,
+    "corwin_schultz_spread": corwin_schultz_spread,
+    "expected_skewness_proxy": expected_skewness_proxy,
+}
+
+# Factors whose literature-predicted direction is a negative IC-IR under
+# this module's "high reading = long" convention -- disclosed here once so
+# every consumer (scan script, tests, result docs) reads the same list
+# instead of re-deriving it.
+NEGATIVE_EXPECTED_DIRECTION = {"max_effect", "expected_skewness_proxy"}
 
 
 ALPHAS: dict[str, Callable[[Panel], pd.DataFrame]] = {

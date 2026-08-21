@@ -280,6 +280,45 @@ class WavePull(Strategy):
             self.position.close()
 
 
+class AtrVolPremium(Strategy):
+    """Volatility-premium capture: go long once this symbol's own ATR/close
+    ratio rises into the elevated end of its own trailing history, exit
+    once it normalizes back down. An own-history, single-asset execution
+    of factor-zoo-v1's cross-sectional atr_normalized finding (Sharpe
+    0.84, cost-checked, regime-checked clean -- Chapter 4 Sec.5/Sec.5c) --
+    a new, independently-designed protocol, not a reflexive retry of that
+    cross-sectional result: a per-symbol entry/exit rule was never part
+    of the original screen, which ranked across the whole universe each
+    day rather than trading any one symbol's own history.
+    """
+
+    atr_period = 14
+    lookback = 252
+    entry_percentile = 80
+    exit_percentile = 50
+
+    def init(self):
+        high = pd.Series(self.data.High)
+        low = pd.Series(self.data.Low)
+        close = pd.Series(self.data.Close)
+        prev_close = close.shift(1)
+        true_range = pd.concat(
+            [high - low, (high - prev_close).abs(), (low - prev_close).abs()], axis=1
+        ).max(axis=1)
+        ratio = true_range.rolling(self.atr_period).mean() / close
+        self.ratio = self.I(lambda: ratio, name="ATR/close")
+        self.rank_pct = self.I(
+            lambda: ratio.rolling(self.lookback).rank(pct=True) * 100,
+            name="own-history percentile",
+        )
+
+    def next(self):
+        if not self.position and self.rank_pct[-1] >= self.entry_percentile:
+            self.buy()
+        elif self.position and self.rank_pct[-1] <= self.exit_percentile:
+            self.position.close()
+
+
 # Registry used by the backtest CLI, the API, and the Strategy Lab.
 # Order matters: the first entry is the default selection everywhere.
 STRATEGIES = {
@@ -290,6 +329,7 @@ STRATEGIES = {
     "Fib Retrace": FibRetrace,
     "Wave Pull": WavePull,
     "RSI Reversion": RsiReversion,
+    "ATR Vol Premium": AtrVolPremium,
 }
 
 
@@ -339,6 +379,12 @@ STRATEGY_PARAMS = {
         "period": _int(14, 2, 50),
         "buy_below": _int(30, 5, 49),
         "sell_above": _int(70, 51, 95),
+    },
+    "ATR Vol Premium": {
+        "atr_period": _int(14, 2, 50),
+        "lookback": _int(252, 60, 504),
+        "entry_percentile": _int(80, 51, 99),
+        "exit_percentile": _int(50, 5, 79),
     },
 }
 
@@ -423,6 +469,18 @@ STRATEGY_INFO = {
             "period": "RSI smoothing period (2 = very sensitive, 14 = classic).",
             "buy_below": "Oversold threshold.",
             "sell_above": "Overbought exit threshold.",
+        },
+    },
+    "ATR Vol Premium": {
+        "tagline": "Volatility premium: buy when this symbol's own volatility is unusually high for it, not low.",
+        "entry": "ATR/close ratio rises into the top 20% of its own trailing 1-year range → buy at the next open (the opposite of a low-volatility filter, by design).",
+        "exit": "ATR/close ratio falls back to its own trailing median → exit at the next open.",
+        "chart": "ATR/close and its own rolling percentile are not drawn on the price chart — entry markers cluster during episodes of unusually high volatility for this specific symbol, not the market as a whole.",
+        "params": {
+            "atr_period": "ATR smoothing period.",
+            "lookback": "Trailing window (days) used to rank today's ATR/close against this symbol's own history.",
+            "entry_percentile": "Own-history percentile that counts as \"elevated\" volatility.",
+            "exit_percentile": "Own-history percentile that counts as \"normalized\" volatility.",
         },
     },
 }

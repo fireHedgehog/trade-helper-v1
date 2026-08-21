@@ -118,6 +118,26 @@ def build_rules(bars: pd.DataFrame, strategy_name: str, params: dict) -> RuleSet
         stop_levels = low
         target_levels = high + 2 * risk
 
+    elif strategy_name == "ATR Vol Premium":
+        # Simple rolling-mean ATR (not this file's shared ewm-based atr()) --
+        # must match strategies.AtrVolPremium's own ratio exactly, since that
+        # is what factor_zoo.atr_normalized itself uses (sma, not ewm).
+        lookback = int(params.get("lookback", 252))
+        entry_percentile = int(params.get("entry_percentile", 80))
+        exit_percentile = int(params.get("exit_percentile", 50))
+        true_range = pd.concat(
+            [
+                bars["high"] - bars["low"],
+                (bars["high"] - close.shift(1)).abs(),
+                (bars["low"] - close.shift(1)).abs(),
+            ],
+            axis=1,
+        ).max(axis=1)
+        ratio = true_range.rolling(period).mean() / close
+        rank_pct = ratio.rolling(lookback).rank(pct=True) * 100
+        entries = rank_pct >= entry_percentile
+        exits = rank_pct <= exit_percentile
+
     else:
         raise KeyError(f"unknown strategy: {strategy_name}")
 

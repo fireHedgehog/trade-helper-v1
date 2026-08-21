@@ -293,6 +293,15 @@ def test_all_classic_indicators_run_without_error_on_synthetic_panel():
         assert result.shape == panel.close.shape, name
 
 
+def test_all_academic_anomalies_run_without_error_on_synthetic_panel():
+    rng = np.random.default_rng(9)
+    panel = _synthetic_panel(rng, 70, 15)
+    for name, formula in fz.ACADEMIC_ANOMALIES.items():
+        result = formula(panel)
+        assert isinstance(result, pd.DataFrame), name
+        assert result.shape == panel.close.shape, name
+
+
 # ---------------------------------------------------------------------------
 # Classic indicators -- hand-checkable correctness
 # ---------------------------------------------------------------------------
@@ -362,3 +371,73 @@ def test_roc12_matches_hand_computed_rate_of_change():
     panel = _flat_panel(values)
     result = fz.roc12(panel)["A"]
     assert result.iloc[-1] == pytest.approx(0.10)
+
+
+# ---------------------------------------------------------------------------
+# Academic anomalies -- hand-checkable correctness
+# ---------------------------------------------------------------------------
+
+
+def test_amihud_illiquidity_matches_hand_computed_mean():
+    values = [100.0 + (1 if i % 2 == 0 else -1) for i in range(22)]
+    panel = _flat_panel(values)  # constant volume 10000, per _flat_panel
+    result = fz.amihud_illiquidity(panel)["A"]
+    close = pd.Series(values)
+    daily_illiq = close.pct_change().abs() / (close * 10000.0)
+    expected = daily_illiq.iloc[1:22].mean()  # the 21 valid values ending at the last date
+    assert result.iloc[-1] == pytest.approx(expected)
+
+
+def test_low_volatility_matches_hand_computed_stdev():
+    values = [100.0, 102.0, 99.0, 103.0, 98.0] * 5  # 25 closes -> 24 returns
+    panel = _flat_panel(values)
+    result = fz.low_volatility(panel)["A"]
+    returns = pd.Series(values).pct_change().dropna()
+    expected = returns.iloc[-21:].std()  # sample std (ddof=1), matches pandas .std() default
+    assert result.iloc[-1] == pytest.approx(expected)
+
+
+def test_max_effect_matches_hand_computed_top5_mean():
+    returns_seq = [
+        0.05, -0.01, 0.03, 0.10, -0.02, 0.01, 0.02, -0.03, 0.04, 0.00,
+        0.01, -0.01, 0.02, 0.03, -0.05, 0.06, 0.01, -0.02, 0.02, 0.01, 0.015,
+    ]
+    assert len(returns_seq) == 21
+    close_values = [100.0]
+    for r in returns_seq:
+        close_values.append(close_values[-1] * (1 + r))
+    panel = _flat_panel(close_values)
+    result = fz.max_effect(panel)["A"]
+    expected = float(np.sort(np.array(returns_seq))[-5:].mean())
+    assert result.iloc[-1] == pytest.approx(expected, rel=1e-6)
+
+
+def test_corwin_schultz_spread_matches_hand_computed_two_day_estimate():
+    import math
+
+    dates = ["2024-01-01", "2024-01-02"]
+    high = pd.DataFrame({"A": [105.0, 110.0]}, index=dates)
+    low = pd.DataFrame({"A": [95.0, 90.0]}, index=dates)
+    close = pd.DataFrame({"A": [100.0, 100.0]}, index=dates)
+    volume = pd.DataFrame({"A": [10000.0, 10000.0]}, index=dates)
+    panel = fz.Panel.build(close.copy(), high, low, close, volume)
+    result = fz.corwin_schultz_spread(panel)["A"]
+
+    beta = math.log(110.0 / 90.0) ** 2 + math.log(105.0 / 95.0) ** 2
+    gamma = math.log(110.0 / 90.0) ** 2
+    denom = 3 - 2 * math.sqrt(2)
+    alpha = (math.sqrt(2 * beta) - math.sqrt(beta)) / denom - math.sqrt(gamma / denom)
+    expected = max(0.0, 2 * (math.exp(alpha) - 1) / (1 + math.exp(alpha)))
+    assert result.iloc[-1] == pytest.approx(expected)
+
+
+def test_expected_skewness_proxy_is_positive_for_right_skewed_returns():
+    # Mostly small negative returns with a few large positive spikes -- right-skewed.
+    returns_seq = ([-0.01] * 55) + [0.20, 0.15, 0.18, 0.22, 0.19]
+    assert len(returns_seq) == 60
+    close_values = [100.0]
+    for r in returns_seq:
+        close_values.append(close_values[-1] * (1 + r))
+    panel = _flat_panel(close_values)
+    result = fz.expected_skewness_proxy(panel)["A"]
+    assert result.iloc[-1] > 1.0  # clearly right-skewed, not noise around 0
