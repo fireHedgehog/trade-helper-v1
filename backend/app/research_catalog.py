@@ -58,6 +58,7 @@ DATASETS = {
 STRATEGIES = {
     "CTA Trend": {
         "strategy_id": "cta-trend",
+        "type": "Time-Series",
         "version": "v1-rejected",
         "family": "time-series trend / breakout",
         "information_profile": ["own-asset market data"],
@@ -70,6 +71,7 @@ STRATEGIES = {
     },
     "SMA Cross": {
         "strategy_id": "sma-cross",
+        "type": "Time-Series",
         "version": "prototype-v1",
         "family": "time-series trend / moving average",
         "information_profile": ["own-asset market data"],
@@ -86,6 +88,7 @@ STRATEGIES = {
     },
     "Donchian Trend": {
         "strategy_id": "donchian-trend",
+        "type": "Time-Series",
         "version": "prototype-v1",
         "family": "time-series trend / breakout",
         "information_profile": ["own-asset market data"],
@@ -98,6 +101,7 @@ STRATEGIES = {
     },
     "S/R Bounce": {
         "strategy_id": "support-resistance-bounce",
+        "type": "Time-Series",
         "version": "prototype-v1",
         "family": "classical technical analysis / support-resistance",
         "information_profile": ["own-asset market data"],
@@ -110,6 +114,7 @@ STRATEGIES = {
     },
     "Fib Retrace": {
         "strategy_id": "fib-retrace",
+        "type": "Time-Series",
         "version": "prototype-v1",
         "family": "classical technical analysis / retracement",
         "information_profile": ["own-asset market data"],
@@ -122,6 +127,7 @@ STRATEGIES = {
     },
     "Wave Pull": {
         "strategy_id": "wave-pull",
+        "type": "Time-Series",
         "version": "prototype-v1",
         "family": "price action / impulse-pullback",
         "information_profile": ["own-asset market data"],
@@ -139,6 +145,7 @@ STRATEGIES = {
     },
     "RSI Reversion": {
         "strategy_id": "rsi-reversion",
+        "type": "Time-Series",
         "version": "prototype-v1",
         "family": "time-series mean reversion",
         "information_profile": ["own-asset market data"],
@@ -179,114 +186,271 @@ DECISIONS: dict[str, tuple[str, str | None]] = {
 }
 
 
+# Professional taxonomy (docs/strategy-library.md "Type taxonomy"), exactly
+# these three -- no fourth bucket. A methodology/meta-study (calibration,
+# orthogonality) inherits its type from what it evaluates, not from its own
+# machinery: both existing ones evaluate time-series Chapter 1 candidates,
+# so both are "Time-Series".
+STUDY_TYPES = {"Time-Series", "Cross-Sectional", "Macro"}
+
 # Tier B (ADR 0009): studies whose own locked protocol authorizes no cost,
 # execution, or live position. Never eligible for STRATEGIES/live signals --
 # adding one here is the entire onboarding step for a closed characterization
 # result; it must never also appear in backend/app/strategies.py.
+#
+# "type" (one of STUDY_TYPES): every entry has one, deferred or not --
+# it is registry metadata, not a display-readiness gate. "name"/"summary"
+# (docs/strategy-library.md Step 2b): human-facing fields for the Strategy
+# Management record surface. Present only on studies actually onboarded
+# there -- see DEFERRED_FROM_RECORD below for the ones intentionally left
+# out for now, and why.
 CHARACTERIZATION_STUDIES = {
     "cta-v2-pooled-trend-overlay": {
         "chapter": "1 §10",
+        "type": "Time-Series",
         "decision": "not_material_or_not_consistent",
         "result_doc": "docs/research-results/cta-v2-pooled-trend-overlay.md",
         "artifact": "output/research/cta-v2-pooled-trend-overlay/958a3c838778f32cfb562090309b21f42826394517f0f5f68020ac0067f2382e/variant-results.json",
+        "name": "CTA v2 — Pooled Vol-Scaled Trend Overlay",
+        "summary": (
+            "Properly-powered pooled retest of CTA v1's own trend-following "
+            "thesis across 12 instruments and the full sample; beats the "
+            "benchmark and placebo on point estimate, but fails the "
+            "bootstrap significance test and depends materially on 2008."
+        ),
     },
     "consolidation-support-feasibility-v1": {
         "chapter": "1 §2",
+        "type": "Time-Series",
         "decision": "not_evaluable",
         "result_doc": "docs/research-results/consolidation-support-feasibility-v1.md",
         "artifact": None,
+        "name": "Consolidation Support-Recovery Feasibility",
+        "summary": (
+            "Not a rejection -- the locked comparison design could not "
+            "construct an admissible matched-control set (0/274 events had "
+            "3+ controls), so prospective power was never evaluated."
+        ),
     },
     "ta-breakout-v1": {
         "chapter": "1 §5",
+        "type": "Time-Series",
         "decision": "not_material_or_not_consistent",
         "result_doc": "docs/research-results/ta-breakout-v1.md",
         "artifact": None,
+        "name": "TA Breakout — Resistance Breakout vs. Placebo",
+        "summary": (
+            "Rejected-resistance breakout vs. a raw new-high placebo, "
+            "1,477 events across 12 assets; 0/12 cleared materiality and "
+            "significance after correction."
+        ),
     },
     "calendar-turn-of-month-v1": {
         "chapter": "1 §7",
+        "type": "Time-Series",
         "decision": "not_material_or_not_consistent",
         "result_doc": "docs/research-results/calendar-turn-of-month-v1.md",
         "artifact": None,
+        "name": "Calendar — Turn-of-Month Effect",
+        "summary": (
+            "Turn-of-month daily-return differential vs. a block-resampled "
+            "null; 0/12 assets cleared materiality and significance "
+            "together -- a mixed-sign, null result."
+        ),
     },
     "calendar-day-of-week-v1": {
         "chapter": "1 §8",
+        "type": "Time-Series",
         "decision": "not_material_or_not_consistent",
         "result_doc": "docs/research-results/calendar-day-of-week-v1.md",
         "artifact": None,
+        "name": "Calendar — Day-of-Week (Monday) Effect",
+        "summary": (
+            "Monday return differential vs. a block-resampled null; "
+            "direction matched the literature (9/12 assets negative) but "
+            "0/12 survived correction."
+        ),
     },
     "overnight-gap-continuation-v1": {
         "chapter": "1 §9",
+        "type": "Time-Series",
         "decision": "not_material_or_not_consistent",
         "result_doc": "docs/research-results/overnight-gap-continuation-v1.md",
         "artifact": None,
+        "name": "Overnight Gap Continuation",
+        "summary": (
+            "Tests whether an overnight gap continues into the next "
+            "session -- the most decisive negative of its batch: 12/12 "
+            "assets moved opposite the hypothesized direction."
+        ),
     },
     "etf12-cross-sectional-rotation-v1": {
         "chapter": "2 §1",
+        "type": "Cross-Sectional",
         "decision": "not_material_or_not_consistent",
         "result_doc": "docs/research-results/etf12-cross-sectional-rotation-v1.md",
         "artifact": None,
+        "name": "ETF-12 Cross-Sectional Rotation",
+        "summary": (
+            "Rank-continuation (relative-strength rotation) across the 12 "
+            "locked ETFs; pooled rank correlation was small (0.045) and "
+            "statistically unremarkable (p=0.266) -- the cleanest negative "
+            "of its batch."
+        ),
     },
     "cross-sectional-equity-momentum-feasibility-v1": {
         "chapter": "2 §2",
+        "type": "Cross-Sectional",
         "decision": "engine_feasible",
         "result_doc": "docs/research-results/cross-sectional-equity-momentum-feasibility-v1.md",
         "artifact": None,
-    },
-    "fed-put-yield-stress-precursor-v1": {
-        "chapter": "3 §1",
-        "decision": "not_evaluable",
-        "result_doc": "docs/research-results/fed-put-yield-stress-precursor-v1.md",
-        "artifact": None,
-    },
-    "fed-put-yield-stress-precursor-v2": {
-        "chapter": "3 §2",
-        "decision": "not_evaluable",
-        "result_doc": "docs/research-results/fed-put-yield-stress-precursor-v2.md",
-        "artifact": None,
-    },
-    "fed-put-yield-stress-precursor-v3": {
-        "chapter": "3 §3",
-        "decision": "not_evaluable",
-        "result_doc": "docs/research-results/fed-put-yield-stress-precursor-v3.md",
-        "artifact": None,
+        "name": "Cross-Sectional Equity Momentum — Engine Feasibility",
+        "summary": (
+            "Not a claim about real momentum -- confirms the same "
+            "rotation-testing engine proven at 12 ETFs also runs correctly "
+            "at real 495-symbol equity scale, ahead of a properly disclosed "
+            "confirmatory run."
+        ),
     },
     "cta-v2-chapter4-eligibility": {
         "chapter": "4 §1",
+        "type": "Time-Series",
         "decision": "not_eligible",
         "result_doc": "docs/research-results/cta-v2-chapter4-eligibility.md",
         "artifact": None,
+        "name": "CTA v2 — Chapter 4 Eligibility Score",
+        "summary": (
+            "Sized under ADR 0007's looser one-sigma bar instead of a "
+            "full-proof standard; the confidence interval still spans "
+            "zero, so no position was sized."
+        ),
     },
     "wave-pull-chapter4-eligibility": {
         "chapter": "4 §2",
+        "type": "Time-Series",
         "decision": "not_distinguishable_from_chance",
         "result_doc": "docs/research-results/wave-pull-chapter4-eligibility.md",
         "artifact": None,
+        "name": "Wave Pull — Chapter 4 Eligibility Score",
+        "summary": (
+            "Re-scored across all 12 assets (not just the pre-selected "
+            "best one) to fix a winner's-curse critique; 2/11 eligible on "
+            "paper, but the calibration study below shows that rate falls "
+            "within pure-chance range."
+        ),
     },
     "calendar-dow-chapter4-eligibility": {
         "chapter": "4 §3",
+        "type": "Time-Series",
         "decision": "not_distinguishable_from_chance",
         "result_doc": "docs/research-results/calendar-dow-chapter4-eligibility.md",
         "artifact": None,
+        "name": "Calendar Day-of-Week — Chapter 4 Eligibility Score",
+        "summary": (
+            "6/12 assets look eligible individually, but a "
+            "correlation-aware joint-null test (accounting for overlap "
+            "among the winners) puts the real chance of this at "
+            "p≈0.13-0.14 -- not distinguishable from chance."
+        ),
     },
     "chapter4-eligibility-calibration-v1": {
         "chapter": "4 §4",
+        "type": "Time-Series",
         "decision": "methodology_validation",
         "result_doc": "docs/research-results/chapter4-eligibility-calibration-v1.md",
         "artifact": "output/research/chapter4-eligibility-calibration-v1/calibration-report.json",
+        "name": "Chapter 4 Eligibility Rule — Calibration Check",
+        "summary": (
+            "Methodology check, not a strategy: measures the eligibility "
+            "test's own false-positive rate on 300 synthetic null "
+            "replications (16-19% false-eligible) -- answers an external "
+            "critique by measurement instead of argument."
+        ),
     },
     "chapter4-orthogonality-v1": {
         "chapter": "4 §—",
+        "type": "Time-Series",
         "decision": "methodology_measurement",
         "result_doc": "docs/research-results/chapter4-orthogonality-v1.md",
         "artifact": None,
+        "name": "Chapter 4 Orthogonality Screen",
+        "summary": (
+            "Methodology check, not a strategy: pairwise-correlates every "
+            "nominally-eligible Chapter 4 signal; found 3 of 28 pairs "
+            "materially redundant, mostly within Calendar Day-of-Week's "
+            "own winners."
+        ),
     },
     "factor-zoo-v1": {
         "chapter": "4 §5",
+        "type": "Cross-Sectional",
         "decision": "screening_scan_non_evidential",
         "result_doc": "docs/research-results/factor-zoo-v1.md",
         "artifact": "output/research/factor-zoo-v1/scan-report.json",
     },
+    "fed-put-yield-stress-precursor-v1": {
+        "chapter": "3 §1",
+        "type": "Macro",
+        "decision": "not_evaluable",
+        "result_doc": "docs/research-results/fed-put-yield-stress-precursor-v1.md",
+        "artifact": None,
+        "name": "Fed Put — Yield-Stress Precursor v1",
+        "summary": (
+            "Tests whether a yield-curve stress score rises before a Fed QE "
+            "launch (4 episodes, 2008-2020); not evaluable (p=0.989) -- "
+            "every real QE was preceded by a LOW score, the opposite of the "
+            "hypothesis, not a null."
+        ),
+    },
+    "fed-put-yield-stress-precursor-v2": {
+        "chapter": "3 §2",
+        "type": "Macro",
+        "decision": "not_evaluable",
+        "result_doc": "docs/research-results/fed-put-yield-stress-precursor-v2.md",
+        "artifact": None,
+        "name": "Fed Put — Yield-Stress Precursor v2",
+        "summary": (
+            "Same test extended to 6 episodes, including 2 actions the Fed "
+            "itself did not brand \"QE\"; not evaluable (p=0.981) -- still "
+            "6/6 opposite-signed, unchanged by the two additions."
+        ),
+    },
+    "fed-put-yield-stress-precursor-v3": {
+        "chapter": "3 §3",
+        "type": "Macro",
+        "decision": "not_evaluable",
+        "result_doc": "docs/research-results/fed-put-yield-stress-precursor-v3.md",
+        "artifact": None,
+        "name": "Fed Put — Yield-Stress Precursor v3",
+        "summary": (
+            "Same 6 episodes rescored with a 20-year lookback instead of "
+            "3-year; not evaluable (p=0.885) -- one episode (2025 RMP) "
+            "flipped sign exactly as a disclosed structural note predicted, "
+            "the other five did not."
+        ),
+    },
 }
+
+# User-directed (0.76.2): postponing macro ever meant postponing it from
+# Today/Symbol Research/Strategy Lab -- those pages require a real,
+# dense, per-day executable signal to draw chart markers against, and
+# these precursor studies score a handful of discrete historical QE-launch
+# episodes (4-6 across ~18 years), not a daily series -- there is nothing
+# to mark on a daily chart, not a reason to hide the result. Strategy
+# Management carries no such requirement, so all 3 Fed put studies are
+# onboarded there now. Only factor-zoo-v1 (27-factor screen) stays
+# deferred -- not yet clearly explained to the user, not a rejection.
+# Revisit and give it "name"/"summary" plus drop it from this set when
+# it's actually time.
+DEFERRED_FROM_RECORD = {
+    "factor-zoo-v1",
+}
+
+# GitHub blob base for Strategy Management's "source" links -- so a result
+# doc is reachable even from a shared/deployed instance, not just a local
+# checkout. Branch-relative (not commit-pinned) like every other in-repo
+# doc cross-link; update if the repo ever moves or renames its default branch.
+RESEARCH_REPO_BASE = "https://github.com/fireHedgehog/trade-helper-v1/blob/main"
 
 
 HYPOTHESES = {
@@ -335,9 +499,25 @@ def strategy_metadata(name: str) -> dict:
 
 def characterization_studies() -> list[dict]:
     """Tier B (ADR 0009): read-only, non-executable research studies --
-    no live signal, no API route yet. Registry only until the Research
-    Record surface named in ADR 0009's Consequences is built."""
+    no live signal. Full registry, including entries deferred from the
+    Strategy Management surface -- see research_record_entries()."""
     return [
         {"study_id": key, **deepcopy(value)}
         for key, value in CHARACTERIZATION_STUDIES.items()
+    ]
+
+
+def research_record_entries() -> list[dict]:
+    """Strategy Management / Research Record surface (ADR 0009's named
+    gap, docs/strategy-library.md Step 2b): every onboarded Tier B study
+    -- excludes DEFERRED_FROM_RECORD -- with a ready-to-use github_url so
+    the frontend never has to know the repo's shape."""
+    return [
+        {
+            "study_id": key,
+            "github_url": f"{RESEARCH_REPO_BASE}/{value['result_doc']}",
+            **deepcopy(value),
+        }
+        for key, value in CHARACTERIZATION_STUDIES.items()
+        if key not in DEFERRED_FROM_RECORD
     ]

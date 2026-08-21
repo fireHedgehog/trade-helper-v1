@@ -41,7 +41,7 @@ from .signals import (
     scan,
 )
 from .strategies import STRATEGIES, STRATEGY_INFO, STRATEGY_PARAMS
-from .research_catalog import strategy_metadata
+from .research_catalog import research_record_entries, strategy_metadata
 from .universe import DEFAULT_BASKET
 from .version import APP_VERSION
 from .workspace import create_strategy_snapshot
@@ -239,6 +239,13 @@ def strategies():
             for name in STRATEGIES
         ]
     }
+
+
+@app.get("/api/research-record")
+def research_record():
+    """Tier B (ADR 0009) read-only record -- docs/strategy-library.md
+    Step 2b. Never live-computed, never carries a hold/exit state."""
+    return {"studies": research_record_entries()}
 
 
 @app.get("/api/strategy-watchlist")

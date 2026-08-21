@@ -7,9 +7,13 @@ from app.research_catalog import (
     CHARACTERIZATION_STUDIES,
     DATASETS,
     DECISIONS,
+    DEFERRED_FROM_RECORD,
+    RESEARCH_REPO_BASE,
     STRATEGIES,
+    STUDY_TYPES,
     characterization_studies,
     dataset_for_provider,
+    research_record_entries,
 )
 from app.strategies import STRATEGIES as EXECUTABLE_STRATEGIES
 
@@ -26,6 +30,7 @@ def test_every_executable_strategy_has_versioned_metadata() -> None:
     assert set(STRATEGIES) == set(EXECUTABLE_STRATEGIES)
     for name, metadata in STRATEGIES.items():
         assert metadata["strategy_id"]
+        assert metadata["type"] in STUDY_TYPES, name
         assert metadata["version"]
         assert metadata["family"]
         assert metadata["information_profile"]
@@ -80,6 +85,7 @@ def test_characterization_studies_never_overlap_executable_strategies() -> None:
 def test_characterization_studies_result_docs_and_artifacts_exist() -> None:
     for study_id, entry in CHARACTERIZATION_STUDIES.items():
         assert entry["chapter"], study_id
+        assert entry["type"] in STUDY_TYPES, study_id
         assert entry["decision"], study_id
         result_doc = REPO_ROOT / entry["result_doc"]
         assert result_doc.is_file(), study_id
@@ -92,6 +98,37 @@ def test_characterization_studies_accessor_matches_registry() -> None:
     assert {s["study_id"] for s in studies} == set(CHARACTERIZATION_STUDIES)
     for study in studies:
         assert study["result_doc"] == CHARACTERIZATION_STUDIES[study["study_id"]]["result_doc"]
+
+
+def test_deferred_studies_are_exactly_the_undocumented_ones() -> None:
+    """docs/strategy-library.md Step 2b: a study is either onboarded (has
+    name+summary, not deferred) or explicitly deferred (named in
+    DEFERRED_FROM_RECORD) -- never silently missing one or the other."""
+    for study_id, entry in CHARACTERIZATION_STUDIES.items():
+        if study_id in DEFERRED_FROM_RECORD:
+            assert "name" not in entry, study_id
+            assert "summary" not in entry, study_id
+        else:
+            assert entry.get("name"), study_id
+            assert entry.get("summary"), study_id
+
+
+def test_research_record_excludes_deferred_studies() -> None:
+    entries = research_record_entries()
+    ids = {entry["study_id"] for entry in entries}
+    assert ids == set(CHARACTERIZATION_STUDIES) - DEFERRED_FROM_RECORD
+    assert ids.isdisjoint(DEFERRED_FROM_RECORD)
+
+
+def test_research_record_entries_are_display_ready() -> None:
+    for entry in research_record_entries():
+        assert entry["name"], entry["study_id"]
+        assert entry["summary"], entry["study_id"]
+        assert entry["chapter"], entry["study_id"]
+        assert entry["type"] in STUDY_TYPES, entry["study_id"]
+        assert entry["decision"], entry["study_id"]
+        assert entry["github_url"] == f"{RESEARCH_REPO_BASE}/{entry['result_doc']}"
+        assert entry["github_url"].startswith("https://github.com/")
 
 
 def test_current_provider_mapping_is_explicit() -> None:

@@ -24,7 +24,7 @@ The primary user is a technically capable individual researcher who needs to ans
 | Strategy Lab | Configure, run, compare, and inspect versioned historical experiments |
 | Data Management | Inspect coverage/freshness and explicitly refresh selected data with throttling and progress |
 | Macro | Descriptive, non-tradable economic context under [ADR 0006](adr/0006-macro-data-contract.md): release-based freshness; never a signal or candidate source |
-| Research Record | Immutable protocols, artifacts, decisions, and rejection reasons in `docs/` and `output/research/` (documentation surface; no separate UI page) |
+| Strategy Management (Research Record) | Immutable protocols, artifacts, decisions, and rejection reasons in `docs/` and `output/research/` — Tier B (ADR 0009) studies only, read-only, never a live signal. UI page shipped `0.76.2` at `#records`; onboarding one study is one registry entry per [strategy-library.md](strategy-library.md) |
 
 Detailed interaction and presentation rules live in [workspace-redesign.md](workspace-redesign.md).
 

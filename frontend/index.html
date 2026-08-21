@@ -311,6 +311,7 @@
   <div class="nav-item" data-view="lab">Strategy Lab</div>
   <div class="nav-item" data-view="macro">Macro</div>
   <div class="nav-item" data-view="data">Data Management</div>
+  <div class="nav-item" data-view="records">Strategy Management</div>
 </aside>
 <main>
   <div id="view-explorer" class="view" hidden>
@@ -466,7 +467,11 @@
           <div><h2>New-entry candidates by model</h2><p>Full stored universe; tab changes never calculate or replace your watchlist.</p></div>
           <span class="state-pill state-warning">Evidence varies by model</span>
         </div>
-        <div class="model-tabs" id="model-discovery-tabs"></div>
+        <div class="model-tabs" id="model-discovery-tabs-fixed"></div>
+        <details class="workflow-collapsible" id="model-discovery-more">
+          <summary><div><h2>All models &amp; studies</h2><p id="model-discovery-more-summary">Validated models plus Tier B research studies (ADR 0009) — open to pick a particular one.</p></div></summary>
+          <div class="collapsible-body"><div class="model-tabs" id="model-discovery-tabs-all"></div></div>
+        </details>
         <div class="sample-note" id="model-discovery-note"></div>
         <div class="table-wrap"><table class="today-table">
           <thead><tr><th>#</th><th>Symbol</th><th>Model(s)</th><th>Rule event</th><th>Score</th><th>Why it appeared</th><th>Evaluated through</th></tr></thead>
@@ -582,6 +587,23 @@
           </table>
         </div>
         <div id="data-result-count" class="sample-note"></div>
+      </section>
+    </div>
+  </div>
+
+  <div id="view-records" class="view" hidden>
+    <div class="safety-banner">Read-only research record. No study below has a live signal, a chart, or a "hold/exit today" state — Tier B (ADR 0009): each row is a closed study's own already-computed verdict, rendered as-is and linked to its full immutable write-up. A visible negative result is this working correctly, not a fault.</div>
+    <div class="macro-body">
+      <section class="panel">
+        <div class="section-heading">
+          <div><h2>Strategy Management</h2><p>Every closed Tier B research study onboarded so far — name, chapter, real verdict, and a link to the full record on GitHub.</p></div>
+          <span class="state-pill state-info" id="records-count">loading…</span>
+        </div>
+        <div class="table-wrap"><table class="today-table">
+          <thead><tr><th>Name</th><th>Type</th><th>Chapter</th><th>Decision</th><th>Summary</th><th>Source</th></tr></thead>
+          <tbody id="records-rows"></tbody>
+        </table></div>
+        <div class="sample-note">Deferred, on purpose, not by oversight: the 27-factor zoo screen and the three Fed put macro-precursor studies are not yet onboarded here — factor zoo pending a clearer explanation, macro work parked for a later pass. Neither is a rejection of either line.</div>
       </section>
     </div>
   </div>
@@ -852,6 +874,19 @@ let symbolList = [];
 let selectedSymbol = 'SPY';
 let highlightIndex = -1;
 let strategiesMeta = [];
+let researchRecordMeta = []; // Tier B (ADR 0009): same dropdowns as Tier A, read-only when selected
+function findTierB(id) {
+  return researchRecordMeta.find((s) => s.study_id === id);
+}
+function recordCardHtml(study) {
+  const cls = researchRecordDecisionClass(study.decision);
+  return `<div class="dataset-card"><h3>${escapeHtml(study.name)} ` +
+    `<span class="state-pill ${cls}">${escapeHtml(study.decision)}</span></h3>` +
+    `<p><b>Type:</b> ${escapeHtml(study.type)} · <b>Chapter:</b> ${escapeHtml(study.chapter)}</p>` +
+    `<p>${escapeHtml(study.summary)}</p>` +
+    `<p><a href="${escapeHtml(study.github_url)}" target="_blank" rel="noopener">Full record on GitHub ↗</a></p>` +
+    `<p class="sample-note">Tier B (ADR 0009): this study's own locked protocol authorizes no per-symbol entry/exit — nothing to run, no chart, no watchlist. The record above is complete as shown.</p></div>`;
+}
 let currentParams = {};
 const barsCache = {};
 const btCache = new Map();
@@ -868,14 +903,21 @@ async function loadSymbols() {
 }
 
 async function loadStrategies() {
-  const { strategies } = await api('/api/strategies');
+  const [{ strategies }, { studies }] = await Promise.all([
+    api('/api/strategies'),
+    api('/api/research-record'),
+  ]);
   strategiesMeta = strategies;
-  $('#strategy').innerHTML = strategies.map((s, i) =>
+  researchRecordMeta = studies;
+  const tierAOptions = strategies.map((s, i) =>
     `<option value="${escapeHtml(s.name)}" ${i === 0 ? 'selected' : ''}>${escapeHtml(strategyDisplayName(s.name))}</option>`).join('');
-  $('#today-strategy').innerHTML = strategies.map((s, i) =>
-    `<option value="${escapeHtml(s.name)}" ${i === 0 ? 'selected' : ''}>${escapeHtml(strategyDisplayName(s.name))}</option>`).join('');
-  $('#lab-watch-strategy').innerHTML = strategies.map((s, i) =>
-    `<option value="${escapeHtml(s.name)}" ${i === 0 ? 'selected' : ''}>${escapeHtml(strategyDisplayName(s.name))}</option>`).join('');
+  const tierBOptions = studies.map((s) =>
+    `<option value="${escapeHtml(s.study_id)}">${escapeHtml(s.name)}</option>`).join('');
+  const tierBGroup = tierBOptions
+    ? `<optgroup label="Research studies — read-only (Tier B)">${tierBOptions}</optgroup>` : '';
+  $('#strategy').innerHTML = tierAOptions + tierBGroup;
+  $('#today-strategy').innerHTML = tierAOptions; // action-driving dropdown: live Tier A only
+  $('#lab-watch-strategy').innerHTML = tierAOptions + tierBGroup;
   resetParams();
   renderParams();
   renderLabStrategyContract();
@@ -913,6 +955,10 @@ function renderResearchAccordions(signals = {}, symbol = null) {
       : signal
         ? `${escapeHtml(signal.note || 'No model note returned.')} Close <span class="semantic-price">$${Number(signal.close).toFixed(2)}</span>`
         : `No ${symbol ? escapeHtml(symbol) : 'symbol'} evaluation loaded.`;
+    // Contracted, not yet built (workspace-redesign.md, Symbol Research,
+    // 0.76.3): an open position's current unrealized P&L belongs on this
+    // line, computed from entry_price vs. the latest close -- not just
+    // the entry price restated.
     const lifecycle = signal && !signal.error
       ? [
           signal.entry_date ? `Last entry ${escapeHtml(signal.entry_date)} @ $${Number(signal.entry_price).toFixed(2)}` : '',
@@ -960,6 +1006,12 @@ function currentMeta() {
 
 function renderLabStrategyContract() {
   const selected = $('#lab-watch-strategy').value;
+  const tierBStudy = findTierB(selected);
+  $('#lab-save-watchlist').disabled = !!tierBStudy;
+  if (tierBStudy) {
+    $('#lab-strategy-contract').innerHTML = recordCardHtml(tierBStudy);
+    return;
+  }
   const meta = strategiesMeta.find((strategy) => strategy.name === selected);
   if (!meta) {
     $('#lab-strategy-contract').textContent = 'Strategy contract unavailable.';
@@ -997,13 +1049,31 @@ function renderLabContractSample() {
 }
 
 function resetParams() {
-  currentParams = Object.fromEntries(
-    Object.entries(currentMeta().params).map(([key, p]) => [key, p.default])
-  );
+  const meta = currentMeta();
+  currentParams = meta ? Object.fromEntries(
+    Object.entries(meta.params).map(([key, p]) => [key, p.default])
+  ) : {};
+}
+
+function paramControlsVisible(visible) {
+  // .param-save-row sets display:flex by class, which outranks the [hidden]
+  // UA default -- set display inline so it actually wins.
+  document.querySelectorAll('.param-save-row, #param-set, #delete-param-set').forEach((el) => {
+    el.style.display = visible ? '' : 'none';
+  });
 }
 
 function renderParams() {
   const meta = currentMeta();
+  const tierBStudy = findTierB($('#strategy').value);
+  if (!meta) {
+    paramControlsVisible(false);
+    $('#params').innerHTML = tierBStudy
+      ? `<div class="sample-note">Tier B (ADR 0009): ${escapeHtml(tierBStudy.name)} is a read-only research record — no editable parameters, no live backtest. See below.</div>`
+      : '<div class="sample-note">No parameters.</div>';
+    return;
+  }
+  paramControlsVisible(true);
   $('#params').innerHTML =
     `<div class="sample-note">${escapeHtml(meta.version)} · ${escapeHtml(meta.family)} · ` +
     `${escapeHtml((meta.required_datasets || []).join(' · '))} · ${escapeHtml(meta.evidence?.label || 'Pending')}</div>` +
@@ -1133,6 +1203,19 @@ async function run() {
   const symbol = $('#symbol-input').value || selectedSymbol;
   const strategy = $('#strategy').value;
   const label = currentRange();
+  const tierBStudy = findTierB(strategy);
+  if (tierBStudy) {
+    candleSeries.setMarkers([]);
+    equitySeries.setData([]);
+    $('#metrics-title').textContent = 'Research record — Tier B (read-only)';
+    $('#metrics').innerHTML = recordCardHtml(tierBStudy);
+    $('#metric-assumptions').textContent = '';
+    $('#trades').querySelector('tbody').innerHTML =
+      '<tr><td colspan="4">Not applicable — no per-symbol trades exist for a Tier B study.</td></tr>';
+    $('#status').textContent = `${tierBStudy.name} · Tier B read-only record · no backtest exists for this study.`;
+    await loadResearchAccordions(symbol);
+    return;
+  }
   $('#status').textContent = `running ${strategy} on ${symbol} (${label})…`;
   loading(true, 'running backtest…');
   candleSeries.setMarkers([]);  // clear the previous strategy's markers
@@ -1189,7 +1272,7 @@ document.querySelectorAll('.nav-item').forEach((item) => {
 });
 
 /* ---------- view routing (URL hash reflects the active view) ---------- */
-const VIEWS = ['today', 'explorer', 'lab', 'macro', 'data'];
+const VIEWS = ['today', 'explorer', 'lab', 'macro', 'data', 'records'];
 let currentView = null;
 let explorerLoaded = false;
 
@@ -1203,6 +1286,7 @@ function applyView(name) {
   if (name === 'today') loadTodayStored();
   if (name === 'macro') loadMacro();
   if (name === 'data') loadData();
+  if (name === 'records') loadResearchRecord();
   if (name === 'lab') {
     const ready = labPickerBuilt ? Promise.resolve() : buildSymbolPicker();
     ready.then(() => labNote());
@@ -1378,6 +1462,13 @@ $('#lab-save-watchlist').addEventListener('click', () => {
 });
 $('#lab-watch-strategy').addEventListener('change', () => {
   renderLabStrategyContract();
+  const tierBStudy = findTierB($('#lab-watch-strategy').value);
+  if (tierBStudy) {
+    $('#lab-symbols').innerHTML = '';
+    $('#lab-sample-note').textContent =
+      `${tierBStudy.name} is a Tier B read-only record — no per-symbol watchlist applies to it.`;
+    return;
+  }
   labPickerBuilt = false;
   buildSymbolPicker().catch((err) => {
     $('#lab-sample-note').textContent = `watchlist unavailable: ${err.message}`;
@@ -1641,23 +1732,36 @@ function modelCandidateRows(run) {
 }
 
 function modelDiscoveryTabs() {
-  return [
-    { id: 'intersection', label: 'Intersections' },
-    { id: 'momentum', label: 'Momentum' },
-    { id: 'new-breakouts', label: 'New Breakouts' },
-    ...strategiesMeta.map((strategy) => ({
-      id: `strategy:${strategy.name}`,
-      label: strategyDisplayName(strategy.name),
-    })),
-  ];
+  return {
+    fixed: [
+      { id: 'intersection', label: 'Intersections' },
+      { id: 'momentum', label: 'Momentum' },
+      { id: 'new-breakouts', label: 'New Breakouts' },
+    ],
+    all: [
+      ...strategiesMeta.map((strategy) => ({
+        id: `strategy:${strategy.name}`,
+        label: strategyDisplayName(strategy.name),
+      })),
+      ...researchRecordMeta.map((study) => ({
+        id: `study:${study.study_id}`,
+        label: study.name,
+      })),
+    ],
+  };
 }
 
-function renderModelDiscoveryTabs() {
-  const tabs = modelDiscoveryTabs();
-  if (!tabs.some((tab) => tab.id === activeDiscoveryTab)) {
-    activeDiscoveryTab = 'intersection';
-  }
-  const container = $('#model-discovery-tabs');
+function discoveryRecordRow(study) {
+  const cls = researchRecordDecisionClass(study.decision);
+  $('#model-discovery-rows').innerHTML =
+    `<tr><td colspan="7" class="empty-state"><b>${escapeHtml(study.name)}</b> ` +
+    `<span class="state-pill ${cls}">${escapeHtml(study.decision)}</span> · ` +
+    `${escapeHtml(study.type)} · ${escapeHtml(study.chapter)}<br>` +
+    `${escapeHtml(study.summary)}<br>` +
+    `<a href="${escapeHtml(study.github_url)}" target="_blank" rel="noopener">Full record on GitHub ↗</a></td></tr>`;
+}
+
+function renderModelDiscoveryTabGroup(container, tabs) {
   container.innerHTML = '';
   tabs.forEach((tab) => {
     const button = document.createElement('button');
@@ -1676,6 +1780,19 @@ function renderModelDiscoveryTabs() {
     });
     container.appendChild(button);
   });
+}
+
+function renderModelDiscoveryTabs() {
+  const { fixed, all } = modelDiscoveryTabs();
+  if (![...fixed, ...all].some((tab) => tab.id === activeDiscoveryTab)) {
+    activeDiscoveryTab = 'intersection';
+  }
+  renderModelDiscoveryTabGroup($('#model-discovery-tabs-fixed'), fixed);
+  renderModelDiscoveryTabGroup($('#model-discovery-tabs-all'), all);
+  const activeInAll = all.find((tab) => tab.id === activeDiscoveryTab);
+  $('#model-discovery-more-summary').textContent = activeInAll
+    ? `Currently viewing: ${activeInAll.label}. ${all.length} models & studies total — open to pick another.`
+    : `${all.length} validated models plus Tier B research studies (ADR 0009) — open to pick a particular one.`;
 }
 
 function discoveryTable(rows, emptyMessage) {
@@ -1715,6 +1832,13 @@ function aggregateModelRows(predicate) {
 }
 
 function renderModelDiscovery() {
+  if (activeDiscoveryTab.startsWith('study:')) {
+    const study = findTierB(activeDiscoveryTab.replace('study:', ''));
+    $('#model-discovery-note').textContent =
+      `${study.name} · Tier B (ADR 0009) — a characterization-only study, not a per-symbol model. No full-universe candidate scan applies to it; its full record is below.`;
+    discoveryRecordRow(study);
+    return;
+  }
   if (activeDiscoveryTab === 'momentum') {
     $('#model-discovery-note').textContent =
       'Facility reserved for a future cross-sectional momentum model. The old app’s 3/6/12-month and composite rankings were not imported; universe, horizons, volatility filter, costs, benchmark, and rejection gates must be preregistered first.';
@@ -2143,6 +2267,38 @@ function renderEvents(events) {
     '<div class="sample-note">A scheduled date is not a canonical release timestamp. A current forecast is not historical forecast evidence. No macro surprise, regime, or equity-direction claim is computed.</div>';
 }
 
+/* ---------- Strategy Management (Tier B research record, read-only) ---------- */
+function researchRecordDecisionClass(decision) {
+  if (['not_material_or_not_consistent', 'not_eligible', 'not_distinguishable_from_chance'].includes(decision)) {
+    return 'state-negative';
+  }
+  if (decision === 'not_evaluable') return 'state-warning';
+  if (['engine_feasible', 'methodology_validation', 'methodology_measurement'].includes(decision)) {
+    return 'state-info';
+  }
+  return 'state-neutral';
+}
+
+async function loadResearchRecord() {
+  $('#records-count').textContent = 'loading…';
+  try {
+    const { studies } = await api('/api/research-record');
+    $('#records-count').textContent = `${studies.length} studies`;
+    $('#records-rows').innerHTML = studies.map((study) => {
+      const cls = researchRecordDecisionClass(study.decision);
+      return `<tr><td class="symbol">${escapeHtml(study.name)}</td>` +
+        `<td><span class="chip trend">${escapeHtml(study.type)}</span></td>` +
+        `<td class="semantic-date">${escapeHtml(study.chapter)}</td>` +
+        `<td><span class="state-pill ${cls}">${escapeHtml(study.decision)}</span></td>` +
+        `<td>${escapeHtml(study.summary)}</td>` +
+        `<td><a href="${escapeHtml(study.github_url)}" target="_blank" rel="noopener">docs/research-results ↗</a></td></tr>`;
+    }).join('') || '<tr><td colspan="6" class="empty-state">No studies onboarded yet.</td></tr>';
+  } catch (err) {
+    $('#records-count').textContent = 'unavailable';
+    $('#records-rows').innerHTML = `<tr><td colspan="6" class="empty-state">error: ${escapeHtml(err.message)}</td></tr>`;
+  }
+}
+
 $('#today-strategy').addEventListener('change', () => {
   loadTodayStored();
 });
@@ -2226,11 +2382,21 @@ buildRanges();
 
 $('#run').addEventListener('click', run);
 $('#strategy').addEventListener('change', () => {
+  const tierBStudy = findTierB($('#strategy').value);
   resetParams();
   renderParams();
   renderResearchAccordions();
   loadParamSets();
-  $('#status').textContent = 'Strategy changed · press Run Backtest to calculate.';
+  if (tierBStudy) {
+    $('#guide-title').textContent = `${tierBStudy.name} — Tier B (read-only)`;
+    $('#guide-now').textContent = '';
+    $('#guide-rules').innerHTML = `<div class="rule">${escapeHtml(tierBStudy.summary)}</div>`;
+    $('#guide-chart').innerHTML =
+      `<a href="${escapeHtml(tierBStudy.github_url)}" target="_blank" rel="noopener">Full record on GitHub ↗</a>`;
+    $('#status').textContent = `${tierBStudy.name} selected · Tier B read-only record · press Run Backtest to view it.`;
+  } else {
+    $('#status').textContent = 'Strategy changed · press Run Backtest to calculate.';
+  }
 });
 
 initChart();

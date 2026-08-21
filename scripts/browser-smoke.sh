@@ -129,6 +129,16 @@ snapshot
 assert_js "document.querySelector('#data-job-note').textContent.includes('1 failed')" "Partial-failure count was not rendered"
 echo "smoke: Data running, interrupted, and partial-failure states"
 
+# Research Record (Strategy Management) response is fixture-injected -- read-only, no live data needed.
+run_js "(() => { window.api = async (path, options) => path === '/api/research-record' ? ({studies:[{study_id:'fixture-study',name:'Fixture Study',type:'Time-Series',chapter:'1 §0',decision:'not_material_or_not_consistent',summary:'Fixture summary for smoke coverage.',result_doc:'docs/research-results/fixture.md',github_url:'https://github.com/fireHedgehog/trade-helper-v1/blob/main/docs/research-results/fixture.md'}]}) : window.__smokeApi(path, options); location.hash = '#records'; return 'research record fixture installed'; })()" "Could not install the deterministic Research Record fixture"
+sleep 1
+snapshot
+assert_js "document.querySelector('#records-count').textContent.includes('1 studies')" "Strategy Management did not render its study count"
+assert_js "document.querySelector('#records-rows').textContent.includes('Fixture Study')" "Strategy Management did not render the fixture study"
+assert_js "document.querySelector('#records-rows a').href.includes('github.com')" "Strategy Management source link is not a GitHub URL"
+assert_js "document.documentElement.scrollWidth <= window.innerWidth" "Strategy Management causes page-level narrow overflow"
+echo "smoke: Strategy Management read-only record"
+
 # Inject one transport failure and prove it becomes an explicit failure, not a loader.
 run_js "(() => { window.api = async () => { throw new Error('smoke transport failure'); }; window.loadData(); return 'failure injected'; })()" "Could not inject the transport failure"
 sleep 1

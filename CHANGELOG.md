@@ -2,6 +2,72 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.76.6
+
+Closed a real vocabulary gap in docs/README.md, found by testing the question directly rather than assuming: user's own recurring term "trade desk" appeared nowhere in `docs/`. Docs-only.
+
+- User-directed: asked directly whether a future agent, told to "do research" or "make a result available on the trade desk," would actually understand -- rather than answer from confidence, grepped `docs/` for "trade desk": zero hits.
+- `docs/README.md`: new Document authority row bridges the user's own term to `strategy-library.md` + `identity.md`, and names the real tension plainly -- the live app looks like a trade desk (dark theme, chart markers, entry/exit state) but `identity.md` is explicit it is not an execution system or alpha finder.
+- `docs/strategy-library.md`: opening paragraph now states directly that "available on the trade desk" means this playbook, for Today/Symbol Research/Strategy Lab/Strategy Management collectively.
+- "Do research" was checked too and already routes correctly (predates this session) via the checkpoint's "Active research" field and the Resume sequence's link to `identity.md`. The one thing confirmed as *not* a documentation gap: which of several open research threads to pursue on "do research" alone is genuine ambiguity in a terse instruction, not something any doc can resolve -- an agent should ask, not guess.
+- 399 passed (unchanged, no code touched), 1 known unrelated failure.
+
+## 0.76.5
+
+Today's "New-entry candidates by model" tab row (26 buttons after `0.76.4`) collapsed into an accordion, reusing the page's own existing pattern instead of inventing a new one. Frontend-only.
+
+- User-directed: the flat 26-button row was "too long" -- asked for something like a Bootstrap accordion, collapsed by default to a simpler view, expandable to see and pick a particular one.
+- The 3 aggregate tabs (Intersections, Momentum, New Breakouts) stay always visible -- those are the useful default view. The 23 individual model/study tabs (7 Tier A + 16 Tier B) moved into a `<details class="workflow-collapsible">` -- the exact class this same page already uses for "Manual workflow" and "Daily pipeline," reused rather than styled fresh.
+- Collapsed state isn't blank: its summary line reads "Currently viewing: X. 23 models & studies total" whenever the active tab is one of the 23, so which one is selected stays visible without opening it -- and reverts to a plain count when it isn't.
+- `modelDiscoveryTabs()` now returns `{fixed, all}` instead of one flat array; a shared `renderModelDiscoveryTabGroup()` renders both containers so there's one button-building code path, not two.
+- Live-verified: collapsed by default (3 + 1 summary row), opens to 23 buttons, picking one updates the summary text and persists it through a manual re-collapse, zero console/page errors.
+- No backend change -- 399 passed, same 1 known unrelated failure.
+
+## 0.76.4
+
+Unified the dropdowns: Tier B studies now appear in the same lists as Tier A strategies everywhere, not fragmented onto a separate Strategy Management page. Frontend-only.
+
+- User-directed, and a course-correction: after `0.76.2`/`0.76.3` put Tier B studies on their own new page, the user pointed at Today's "New-entry candidates by model" tabs, Symbol Research's `#strategy` dropdown, and Strategy Lab's `#lab-watch-strategy` dropdown and asked why the same items weren't just available there too, in the lists that already existed -- correctly identifying that a second page nobody's told to visit isn't "making it all available."
+- `frontend/index.html`: `loadStrategies()` now fetches `/api/research-record` alongside `/api/strategies` and merges both into Symbol Research's and Strategy Lab's dropdowns (as an `<optgroup>`) and into Today's discovery tabs (26 tabs total: 3 fixed + 7 Tier A + 16 Tier B). `#today-strategy` (the action-driving dropdown for "Update watched status"/"Run full-universe candidates"/"Run portfolio comparison") stays Tier A only -- those are genuinely live actions a Tier B study has no function for.
+- New `recordCardHtml()`/`discoveryRecordRow()` helpers render a study's name/type/chapter/decision/summary/GitHub link inline, reused across all three surfaces. Selecting a Tier B entry: Symbol Research shows the record in the metrics rail instead of running a backtest (chart/trades/equity cleared, params panel replaced with a note, `Run Backtest` still clickable but computes nothing); Strategy Lab shows it in the Definition card with `Save as strategy watchlist` disabled and the symbol picker cleared instead of calling the strategy-watchlist endpoint (which 400s on a non-Tier-A name); Today's matching tab shows the record instead of a candidate table, exactly like the existing Momentum placeholder tab already does for "no live model yet."
+- Fixed one real bug caught by screenshot during verification, not just described: hiding the parameter save-row via the `hidden` attribute silently failed because `.param-save-row`'s own `display:flex` class rule outranks the `[hidden]` UA default -- switched to setting `style.display` directly, verified both directions (hides for Tier B, restores for Tier A) via headless browser.
+- `docs/strategy-library.md`: rewrote the "where a result appears" section, which `0.76.3` had gotten wrong (it said Tier B belongs on Strategy Management only) -- corrected in place rather than left stale, since a wrong standing doc is worse than none.
+- Live-verified with headless Playwright across all three surfaces plus regression checks (switching Symbol Research and Strategy Lab back from a Tier B selection to a Tier A one still works exactly as before): zero console/page errors. No backend change this round -- 399 passed, same 1 known unrelated failure.
+
+## 0.76.3
+
+Professional `type` taxonomy (Time-Series / Cross-Sectional / Macro) added to every strategy and study; Fed put macro studies un-deferred onto Strategy Management; the onboarding/interface guides extended so this class of question doesn't need re-explaining.
+
+- User-directed: (1) wanted a "pro" `Type` column on Strategy Management, not just chapter numbers. (2) Corrected a misread from `0.76.2` -- "postpone macro" meant postpone it from Today/Symbol Research/Strategy Lab only, never from Strategy Management; those three pages need a real per-day signal to mark on a chart, which the Fed put studies structurally don't have (4-6 discrete QE-launch episodes across ~18 years, not a daily series) -- that's a display-format mismatch, not a reason to withhold the finding. (3) Asked for a durable, phrased-once development guide covering this and related recurring questions (chart P&L, watchlist/candidate-scan separation), instead of re-explaining them each session.
+- `backend/app/research_catalog.py`: new `STUDY_TYPES` constant (exactly three values, no fourth bucket); `type` added to all 7 Tier A `STRATEGIES` entries (all `Time-Series` today) and all 17 `CHARACTERIZATION_STUDIES` entries, deferred or not. `chapter4-eligibility-calibration-v1`/`chapter4-orthogonality-v1` typed by what they evaluate (both currently Time-Series candidates), not their own methodology. `factor-zoo-v1` typed `Cross-Sectional` (its rank-IC/quintile-spread methodology is cross-sectional even though several input formulas reference single-asset history).
+- The 3 Fed put studies (`fed-put-yield-stress-precursor-v1/v2/v3`) got real `name`/`summary` (drawn from each doc's own decision line, not invented) and were removed from `DEFERRED_FROM_RECORD` -- only `factor-zoo-v1` remains deferred, and only because it's not yet well-explained to the user, not because it's macro or complex.
+- `frontend/index.html`: Strategy Management gained a `Type` column (reusing the existing `.chip.trend` badge style, no new CSS); Symbol Research's per-strategy lifecycle line got a signpost comment pointing at the new unrealized-P&L contract below.
+- `docs/strategy-library.md`: new "Type taxonomy" and "Where a result actually appears" sections resolve the Tier-B-live-pages-vs-Strategy-Management question permanently, so it's read, not re-asked.
+- `docs/workspace-redesign.md`: new contracted-not-yet-implemented requirement -- Symbol Research must show an open position's actual unrealized P&L (computed from entry vs. latest close), not just restate the entry price. Confirmed, not re-designed: the recoverable-watchlist restore flow (line 79) and the accordion's existing "benchmark comparison" requirement (line 92) already cover the watchlist-independence and buy-and-hold-comparison asks -- both already implemented and live-verified at `0.76.2`, not new gaps.
+- Tests extended in place (no new `def test_*`, existing assertions widened): every `STRATEGIES`/`CHARACTERIZATION_STUDIES` entry's `type` is asserted to be one of `STUDY_TYPES`; the API test now asserts Fed put v1 is present with `type == "Macro"`. 399 passed (unchanged count -- widened assertions, not new tests), 1 known failure unrelated to this change (data-fingerprint drift, see Environment and data portability).
+
+## 0.76.2
+
+Strategy Management page: the Tier B "Research Record" surface ADR 0009 named as required is now built. 13 of 17 closed studies onboarded live; 4 deliberately deferred.
+
+- User-directed: immediately exercised `strategy-library.md`'s own playbook -- "onboard all the remaining results," excluding factor-zoo-v1 (not yet understood/prioritized) and the 3 Fed put macro-precursor studies (macro work parked for later). Also asked for a GitHub-linked "Strategy Management" table positioned after Data Management, so results stay reachable even from a shared/deployed instance.
+- `backend/app/research_catalog.py`: added `name`/`summary` to the 13 onboarded `CHARACTERIZATION_STUDIES` entries (drawn from each study's own "Decision:" line, not invented); new `DEFERRED_FROM_RECORD` set (factor-zoo-v1 + 3 Fed put studies) with its reason recorded inline; new `RESEARCH_REPO_BASE` constant and `research_record_entries()` accessor (filters deferred studies, attaches a ready-to-use `github_url` per entry).
+- `backend/app/main.py`: new `GET /api/research-record` endpoint -- the exact route ADR 0009's Consequences named and left unbuilt.
+- `frontend/index.html`: new "Strategy Management" nav item (after Data Management) and `#records` view -- a read-only table (name, chapter, decision, summary, GitHub source link) with its own disclaimer banner distinct from Today's ("no live signal, no chart, no hold/exit state" rather than "not an order"). Decision-to-pill-color mapping distinguishes a real negative (`not_material_or_not_consistent`, `not_eligible`, `not_distinguishable_from_chance` -> red) from an inconclusive one (`not_evaluable` -> amber) from a methodology/feasibility check (`engine_feasible`, `methodology_validation`, `methodology_measurement` -> blue) -- these are not all "rejections" and were not flattened into looking like ones.
+- `scripts/browser-smoke.sh`, `frontend/README.md`: extended with the same fixture-driven coverage pattern already used for every other view.
+- Live-verified with a headless Playwright session (installed ad hoc for this session, not a tracked dependency): all 13 studies render with correct decisions and working GitHub links, nav order matches the request, zero console/page errors.
+- 4 new tests (`test_research_catalog.py`, `test_api.py`): every non-deferred study has `name`+`summary` and no deferred study does; `research_record_entries()` excludes exactly `DEFERRED_FROM_RECORD`; `github_url` is well-formed; the live endpoint returns the expected filtered set.
+- 399 passed (4 new), 1 known failure unrelated to this change (data-fingerprint drift against a locally refreshed `data/market.db` -- see Environment and data portability).
+
+## 0.76.1
+
+`docs/strategy-library.md` (new): operational playbook, not a new decision — turns ADR 0009 into a mechanical checklist so onboarding a result no longer needs a fresh design discussion each time. Docs-only.
+
+- User-directed: after a live walkthrough of Today/Symbol Research/Strategy Lab confirmed the Tier A red-flagging (visible `rejected`/`not_material_or_not_consistent` labels, real chart markers, linked research docs) already works end-to-end, asked for a standing guide so a future "onboard result X" request doesn't repeat the same back-and-forth -- pre-authorizes showing negative/rejected results (that is the product working, not a fault) and gives exact steps per tier.
+- Step 1 classifies Tier A vs. Tier B using ADR 0009's own test. Step 2a lists the three registries a Tier A strategy needs (`backend/app/strategies.py`'s executable `STRATEGIES` + `STRATEGY_PARAMS`; `research_catalog.py`'s metadata `STRATEGIES`, `HYPOTHESES`, `DECISIONS`) and confirms `research_contract` is derived automatically -- no frontend file is ever touched to onboard a strategy. Step 2b is the existing one-entry `CHARACTERIZATION_STUDIES` step for Tier B.
+- Deliberately does not duplicate the strategy/study roster into markdown -- names the code registries as the single source of truth, the same staleness risk ADR 0009 itself was written to fix.
+- 395 passed, 1 known failure (data-fingerprint drift against locally refreshed `data/market.db`, unrelated to this change -- see docs/README.md's environment/data-portability note).
+
 ## 0.76.0
 
 ADR 0009: strategy onboarding contract (Tier A executable / Tier B characterization-only). Fixed a real staleness bug found while investigating.

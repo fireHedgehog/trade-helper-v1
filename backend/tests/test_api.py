@@ -90,6 +90,26 @@ async def test_strategy_catalog_exposes_typed_params_and_evidence(client) -> Non
     assert "support/resistance" in sr["evidence"]["summary"]
 
 
+async def test_research_record_excludes_deferred_studies(client) -> None:
+    response = await client.get("/api/research-record")
+
+    assert response.status_code == 200
+    studies = response.json()["studies"]
+    ids = {study["study_id"] for study in studies}
+    assert "factor-zoo-v1" not in ids
+    assert "fed-put-yield-stress-precursor-v1" in ids
+    cta_v2 = next(study for study in studies if study["study_id"] == "cta-v2-pooled-trend-overlay")
+    assert cta_v2["name"] == "CTA v2 — Pooled Vol-Scaled Trend Overlay"
+    assert cta_v2["type"] == "Time-Series"
+    assert cta_v2["decision"] == "not_material_or_not_consistent"
+    assert cta_v2["github_url"] == (
+        "https://github.com/fireHedgehog/trade-helper-v1/blob/main/"
+        "docs/research-results/cta-v2-pooled-trend-overlay.md"
+    )
+    fed_put = next(study for study in studies if study["study_id"] == "fed-put-yield-stress-precursor-v1")
+    assert fed_put["type"] == "Macro"
+
+
 async def test_macro_contract_forbids_signal_inference(client, monkeypatch) -> None:
     bars = pd.DataFrame(
         [

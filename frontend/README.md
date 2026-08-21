@@ -6,11 +6,12 @@ Static HTML, CSS, and vanilla JavaScript served by FastAPI; no build step or sep
 
 | View | Responsibility |
 |---|---|
-| Today | Freshness/actions, watched lifecycle, full-universe candidates, intersections, warnings |
-| Symbol Research | Typeahead symbol selection, chart, model accordions, signal/risk/evidence context |
-| Strategy Lab | Versioned definitions, watchlists, evidence boundaries, and explicitly exploratory session comparisons |
+| Today | Freshness/actions, watched lifecycle, full-universe candidates, intersections, warnings. Discovery tabs include both Tier A models and Tier B studies (ADR 0009); a Tier B tab shows its record, not a candidate table |
+| Symbol Research | Typeahead symbol selection, chart, model accordions, signal/risk/evidence context. The strategy dropdown includes Tier B studies; selecting one shows its record inline instead of running a backtest |
+| Strategy Lab | Versioned definitions, watchlists, evidence boundaries, and explicitly exploratory session comparisons. The Definition dropdown includes Tier B studies (watchlist controls disabled for them); the scoreboard itself stays Tier A only, since it computes live per-symbol statistics |
 | Macro | ADR 0006 display-only context with explicit provenance and unavailable point-in-time capabilities |
 | Data Management | Coverage, expected-session freshness, selected refresh, progress, failures |
+| Strategy Management | Every onboarded Tier B study in one browsable table (ADR 0009 / docs/strategy-library.md): name, type, chapter, real decision, and a GitHub link — the same data the other views' dropdowns now also draw from |
 
 Navigation must be read-only. Backtest, refresh, universe scan, and strategy evaluation each require a distinct action. Empty, not-run, stale, running, failed, and completed-with-no-candidates are different states.
 

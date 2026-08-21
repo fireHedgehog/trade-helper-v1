@@ -93,6 +93,8 @@ The header presents symbol, current price/session, freshness, watched status, an
 
 An explicit backtest run evaluates the latest state for every available model and populates every accordion, including an explicit `No entry signal` or `Not evaluable` result. Only the selected model may draw chart overlays and trade markers. Its accordion uses the visible edited parameters; other accordions use their labelled defaults. This preserves chart interpretability without hiding cross-model state.
 
+**Contracted, not yet implemented** (user-directed, `0.76.3`): an open position's chart marker (`OPEN @ price`) and its accordion lifecycle line must be joined by the actual current unrealized P&L — a dollar and percent figure computed from that entry price against the latest stored close, not just the entry price restated. Today's per-symbol watchlist table has the entry/exit/close columns to compute this from; Symbol Research's accordion and rail are the two places it should render. This is display of an already-known number, not new research or a new signal — safe to build whenever Symbol Research work is next picked up.
+
 Use the application’s own versioned models only. Sector and macro context may be descriptive but cannot masquerade as causal evidence. Accordions with no validated implementation remain honest placeholders.
 
 The interface labels `S/R Bounce` as `Classical TA · S/R Bounce` while retaining its stable backend identifier. A future `TA Breakout v1` may add confirmed local resistance/support zones, but chart context is not an entry signal: no next-open marker or stop is displayed until the rule contract in the research backlog is preregistered and implemented without look-ahead.
