@@ -1,10 +1,14 @@
 # Product identity
 
-Status: v3 — canonical, distilled identity statement. Read immediately after the authoritative [resume checkpoint](README.md). Full contracts: [product.md](product.md), [hypothesis-engineering.md](hypothesis-engineering.md), [model-acceptance-standard.md](model-acceptance-standard.md), [exploration-protocol.md](exploration-protocol.md), [research-protocol.md](research-protocol.md), [ADRs](adr/). Edits require a version bump; the statement must stay precise and non-redundant.
+Status: v4 — canonical, distilled identity statement. Read immediately after the authoritative [resume checkpoint](README.md). Full contracts: [product.md](product.md), [hypothesis-engineering.md](hypothesis-engineering.md), [model-acceptance-standard.md](model-acceptance-standard.md), [exploration-protocol.md](exploration-protocol.md), [research-protocol.md](research-protocol.md), [ADRs](adr/). Edits require a version bump; the statement must stay precise and non-redundant.
+
+## Calibration (read this before the rest — it changes how to read everything below)
+
+Rigor here is a dial, not a maximum. This is one person's own unlevered capital, paper-traded, not a fund with LPs — the "no strangers to protect" reasoning [ADR 0007](adr/0007-risk-budgeted-ensemble-acceptance.md) gives for why Chapter 4 exists at all. Chapters 1-3's full Holm/bootstrap ceremony below is a real, standing capability, not deleted — but it is a *side track*, picked up when a claim specifically needs that level of proof, not the default lens for every session or every candidate. **Chapter 4 (risk-budgeted, actionable, paper-tradeable) is the primary operating mode.** A new session should default to "does this make something tradeable" over "does this survive Holm correction" unless the user asks for the latter specifically. Verification is one tool this project has, not its whole identity.
 
 ## What we run (one line)
 
-A systematic, preregistered, falsifiable research process that adjudicates trading-strategy hypotheses and outputs evidence decisions — `reject`, `revise`, `continue research` — against passive ownership after costs. It is a research decision aid; it is not an alpha finder, not a trading recommendation, and not an execution system.
+A systematic research process that adjudicates trading-strategy hypotheses and outputs evidence decisions — `reject`, `revise`, `continue research`, or (Chapter 4) risk-budgeted paper-trade observation — against passive ownership after costs. A research and execution-preparation aid; not an alpha finder, not a trading recommendation, not a live-capital execution system.
 
 ## The four layers
 
@@ -72,6 +76,6 @@ not the deployment.
 - Macro: non-tradable context until ADR 0006 point-in-time data and a preregistered hypothesis exist.
 - New hypotheses (any origin, including ML): operationalize thesis → bounded search → 9A scoring and benchmark audit → preregistration → 9B locked experiment.
 
-## What institutions do (why this shape)
+## Why two shapes, not one
 
-The project adopts defensible research-governance principles—separation of search and confirmation, recorded trials, point-in-time data, explicit costs, and independent review—without claiming that every institution uses one identical process. This file keeps those local rules recoverable across session restarts.
+Institutional-grade rigor (Chapters 1-3) exists to protect a third party — investors, regulators — who cannot personally inspect the trial data, and it is what lets a leveraged fund risk other people's capital on a claim. There is no third party here, no leverage, no LP capital — just this project's own money, in paper trading. That is the entire reason Chapter 4's lighter bar (disclosed uncertainty, sized small, diversified, live-monitored) is legitimate instead of sloppy: the safety comes from position sizing and monitoring, not from statistical certainty. Neither shape is "the real one" — they answer different questions for different stakes.

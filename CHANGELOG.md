@@ -2,6 +2,15 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.78.1
+
+Rebalanced the two mandatory first-reads so Chapter 4 (actionable) isn't subordinate to Chapters 1-3 (verification) by default. Docs-only.
+
+- User-directed: a direct, well-reasoned challenge that this project's docs bias every fresh session toward "verification machine" behavior, because Chapters 1-3's falsification framing gets far more textual weight than Chapter 4's actionable track -- and this had visibly recurred this session (the user had to push back multiple times before the agent pivoted to actually building ATR Vol Premium). Named plainly: this project is one person's own unlevered, paper-only capital, not a fund with LPs -- "keep verifying is nonsense" at that stakes level, per ADR 0007's own "no strangers to protect" reasoning.
+- `docs/identity.md` (v3 -> v4): new opening "Calibration" section states Chapter 4 is the primary operating mode, not a subordinate second ladder; "What institutions do" rewritten as "Why two shapes, not one" to state the actual reasoning (protects strangers who can't inspect the trial; no strangers here) instead of a vague appeal to institutional practice.
+- `docs/README.md`: Checkpoint table compacted (7 fields -> 6; the sprawling per-version "Completed"/"Active research" prose folded into a few sentences, detail pointed at CHANGELOG.md and research-program.md instead of re-narrated inline) -- the same compaction this project already did once before (CHANGELOG `0.75.1`) and had to do again here, now named as a standing constraint rather than a one-time cleanup.
+- No code touched -- 412 passed, same 1 known unrelated failure.
+
 ## 0.78.0
 
 Second live Chapter 4 candidate (`amihud_illiquidity`), and the factor zoo's first real Tier A execution ("ATR Vol Premium") -- a genuinely tradable (paper) model, not another verification report.
