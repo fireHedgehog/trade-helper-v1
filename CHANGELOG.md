@@ -2,6 +2,17 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.81.0
+
+Cleared Chapter 2's real blocker for free: point-in-time S&P 500 membership, no vendor purchase needed. New reusable data layer, no new research claim yet.
+
+- User-directed strategic pivot: after seeing the app's UI/UX land, explicitly redirected research priority toward Cross-Sectional (Chapter 2) over more single-symbol time-series work — the reasoning given was that *selecting* a symbol (a real 10x mover, named example: SNDK/MU-style) can matter more than *timing* one (SPY-style entry/exit), and Chapter 2 is a genuine, documented gap: 2 sections closed vs. Chapter 1's 10, both nulls/feasibility-only. Explicitly authorized paying for data if no free/open path existed ("if open literature, open hypothesis can do, we just do, if not, we can buy data").
+- Turned out not to need a purchase: `docs/brainstorm/2026-08-19-pending-candidate-checklist.md`'s Tier 4 blocker ("point-in-time equity membership/delisting data," previously assumed vendor-only, e.g. Norgate/Sharadar/CRSP) has a free, MIT-licensed, hand-maintained alternative ([fja05680/sp500](https://github.com/fja05680/sp500), sourced from Andreas Clenow's "Trading Evolved" base + ongoing Wikipedia cross-referencing). Confirmed via web research before building anything.
+- `backend/app/universe_pit.py` (new): ingests real point-in-time S&P 500 membership intervals (`ticker, start_date, end_date`). `backend/app/store.py`: new `universe_membership` table, `upsert_universe_membership()` (atomic per-index replace, same precedent as `upsert_bars`), `members_asof(date, index_name)` for true historical reconstruction. Live-verified against the real source: `1,259` intervals, `1,206` distinct symbols, `503` currently active; `members_asof` correctly reconstructs 492 members on 2001-01-01 vs. 505 on 2019-01-01, and correctly handles a disjoint two-interval case (a symbol delisted then relisted years later under the same ticker).
+- Disclosed limitations carried forward, not hidden (this project's standing norm): hand-maintained, updated bimonthly, not automated; maintainer's own README flags 1996-2000 as lower-confidence; S&P 500 only, not Nasdaq-100 or the XL sector ETFs.
+- Unlocks 6 of the [cross-sectional idea library](docs/brainstorm/2026-08-20-cross-sectional-experiment-ideas.md)'s 11 queued ideas (CS-01/02/03/04/05/09) at once — the shared blocker research-program.md had flagged. Ingestion existing authorizes nothing: each idea still needs its own hypothesis-engineering note, Stage 9A score, and preregistration before a real run; `docs/research-program.md`, `data-layers.md`, and the pending-candidate-checklist updated to point at this as the next concrete step (CS-01 momentum re-baseline at real S&P 500 breadth, replacing the prior `N=12` ETF-only null).
+- 5 new tests (parsing, normalization, as-of reconstruction including the disjoint-interval case, re-ingestion idempotency, missing-column validation). 422 passed, 1 known unrelated failure.
+
 ## 0.80.1
 
 Sitewide footer: a persistent pointer to the chaptered research program, on every page. Frontend-only.

@@ -122,6 +122,14 @@ CREATE TABLE IF NOT EXISTS macro_vintages (
     value             REAL    NOT NULL,
     PRIMARY KEY (series_id, reference_period, revision_index)
 );
+
+CREATE TABLE IF NOT EXISTS universe_membership (
+    symbol      TEXT NOT NULL,
+    index_name  TEXT NOT NULL,  -- e.g. 'SP500'
+    start_date  TEXT NOT NULL,  -- YYYY-MM-DD, first date this symbol was a member
+    end_date    TEXT,           -- YYYY-MM-DD, last date; NULL = still a member
+    PRIMARY KEY (symbol, index_name, start_date)
+);
 """
 
 
@@ -364,6 +372,52 @@ def macro_vintage_rows(series_id: str) -> list[dict]:
             params=(series_id,),
         )
     return df.to_dict("records")
+
+
+def upsert_universe_membership(df: pd.DataFrame, index_name: str) -> None:
+    """Replace one index's entire membership-interval table, atomically.
+
+    Expects columns: symbol, start_date (YYYY-MM-DD), end_date (YYYY-MM-DD
+    or null/NaN for a symbol still in the index). Whole-table replace per
+    index_name -- same atomic-per-unit precedent as `upsert_bars`: a partial
+    re-ingestion must never sit alongside a stale full one.
+    """
+    required = ["symbol", "start_date", "end_date"]
+    missing = set(required) - set(df.columns)
+    if missing:
+        raise ValueError(f"membership rows missing columns: {', '.join(sorted(missing))}")
+    df = df[required].copy()
+    if df.empty:
+        raise ValueError("no membership rows to store")
+    df["start_date"] = df["start_date"].astype(str)
+    with connect() as conn:
+        conn.execute("DELETE FROM universe_membership WHERE index_name = ?", (index_name,))
+        conn.executemany(
+            """INSERT INTO universe_membership (symbol, index_name, start_date, end_date)
+               VALUES (:symbol, :index_name, :start_date, :end_date)""",
+            [
+                {
+                    "symbol": row["symbol"],
+                    "index_name": index_name,
+                    "start_date": row["start_date"],
+                    "end_date": row["end_date"] if pd.notna(row["end_date"]) else None,
+                }
+                for row in df.to_dict("records")
+            ],
+        )
+
+
+def members_asof(date: str, index_name: str = "SP500") -> list[str]:
+    """Point-in-time membership: symbols whose stored interval covers `date`."""
+    with connect() as conn:
+        rows = conn.execute(
+            """SELECT DISTINCT symbol FROM universe_membership
+               WHERE index_name = ? AND start_date <= ?
+                 AND (end_date IS NULL OR end_date >= ?)
+               ORDER BY symbol""",
+            (index_name, date, date),
+        ).fetchall()
+    return [row[0] for row in rows]
 
 
 def load_bars(symbol: str) -> pd.DataFrame:

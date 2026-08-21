@@ -66,9 +66,14 @@ framing of what comes next.
 
 **Open, not yet sections:** the [cross-sectional idea
 library](brainstorm/2026-08-20-cross-sectional-experiment-ideas.md)'s
-eleven ideas, six of which (CS-01/02/03/04/05/09) collapse onto one
-blocker — point-in-time equity membership data (Tier 4) — clearing that
-one item unlocks six sections at once, not one.
+eleven ideas, six of which (CS-01/02/03/04/05/09) collapsed onto one
+blocker — point-in-time equity membership data (Tier 4) — now cleared, for
+free, via [`universe_pit.py`](../backend/app/universe_pit.py) (`0.81.0`).
+Data existing authorizes nothing: each of the six still needs its own
+hypothesis-engineering note, Stage 9A score, and preregistration. CS-01
+(raw cross-sectional momentum) is the natural first re-baseline — the
+prior `N=12` ETF run closed clean (`ρ=0.045`, `p=0.266`), and a null at 12
+names doesn't predict the answer at real S&P 500 breadth.
 
 ## Chapter 3 — Falsifying macro and event-driven claims
 

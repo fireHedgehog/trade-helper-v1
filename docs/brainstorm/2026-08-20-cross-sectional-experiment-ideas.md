@@ -55,14 +55,19 @@ against these eleven ideas, more granularity is not actually the gap — what's
 useful instead is seeing that **most of this library collapses onto one
 existing blocker**, not eleven separate ones:
 
-- **CS-01, 02, 03, 04, 05, 09** all need genuine cross-sectional breadth to
-  mean anything (the ETF-12 lesson above). None need a *new* data type —
-  volume is already stored (`fetch.py`/`store.py`), realized vol and market
-  beta are already computable — they need the existing Tier 4 item
-  ("point-in-time equity membership/delisting data") cleared. That single
-  line item, not eleven separate research questions, is the real
-  bottleneck. Clearing it has unusually high leverage: it unlocks six ideas
-  at once, not one factor test.
+- **Cleared, `0.81.0`.** CS-01, 02, 03, 04, 05, 09 all needed genuine
+  cross-sectional breadth to mean anything (the ETF-12 lesson above), which
+  meant clearing the Tier 4 "point-in-time equity membership/delisting data"
+  item. That turned out not to need the assumed vendor purchase — a free,
+  MIT-licensed, hand-maintained history exists
+  ([fja05680/sp500](https://github.com/fja05680/sp500)), now ingested via
+  [`universe_pit.py`](../../backend/app/universe_pit.py) and live-verified.
+  Volume, realized vol, and market beta were already computable from stored
+  bars; membership was the one missing piece, for the S&P 500 subset. Six
+  ideas unlocked at once, for the cost of one ingestion module, not one
+  vendor invoice. None of the six is yet a scored candidate — this cleared
+  the data blocker, not the hypothesis-engineering/Stage-9A/preregistration
+  steps every one of them still needs individually.
 - **CS-08 and CS-07** (leadership diffusion, correlation crowding via named
   peer groups) surface a data gap not yet named on the Tier 3/4 list:
   sector/industry classification labels. Not currently fetched anywhere in
