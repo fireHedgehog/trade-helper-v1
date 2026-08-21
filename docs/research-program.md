@@ -63,17 +63,17 @@ framing of what comes next.
 |---|---|
 | 1 | [ETF-12 cross-sectional rotation v1](research-results/etf12-cross-sectional-rotation-v1.md) — `not_material_or_not_consistent`, cleanest null of the session, `N=12` |
 | 2 | [Cross-sectional equity momentum feasibility v1](research-results/cross-sectional-equity-momentum-feasibility-v1.md) — `engine_feasible` only, `N=495`; explicitly not evidence for or against the claim (survivorship bias, pre-lock parameter peek both disclosed and disqualifying) |
+| 3 | [Cross-sectional momentum v1 (CS-01)](research-results/cross-sectional-momentum-v1.md) — `not_material_or_not_consistent`, `N=501`, first confirmatory attempt with real point-in-time S&P 500 membership (clears materiality `0.146≥0.10` but fails significance decisively, `p=0.999` — the null is dominated by common-factor co-movement, a known limitation of raw non-market-neutral rank correlation); residual survivorship bias remains (`705`/`1206` ever-members have no stored price history) |
 
-**Open, not yet sections:** the [cross-sectional idea
-library](brainstorm/2026-08-20-cross-sectional-experiment-ideas.md)'s
-eleven ideas, six of which (CS-01/02/03/04/05/09) collapsed onto one
-blocker — point-in-time equity membership data (Tier 4) — now cleared, for
-free, via [`universe_pit.py`](../backend/app/universe_pit.py) (`0.81.0`).
-Data existing authorizes nothing: each of the six still needs its own
-hypothesis-engineering note, Stage 9A score, and preregistration. CS-01
-(raw cross-sectional momentum) is the natural first re-baseline — the
-prior `N=12` ETF run closed clean (`ρ=0.045`, `p=0.266`), and a null at 12
-names doesn't predict the answer at real S&P 500 breadth.
+**Open, not yet sections:** CS-02/03/04/05/09 (momentum×fragility, quiet-vs-loud winner,
+residual momentum, breadth-before-price, drawdown recovery speed) — the
+same point-in-time universe (`universe_pit.py`, `0.81.0`) now unblocks each
+individually; none scored or preregistered yet. A market-neutral or
+beta-adjusted re-design of CS-01 itself is also open — named in its own
+result as a new, independently justified estimand, not a retry. See the
+[cross-sectional idea
+library](brainstorm/2026-08-20-cross-sectional-experiment-ideas.md) for the
+full list.
 
 ## Chapter 3 — Falsifying macro and event-driven claims
 

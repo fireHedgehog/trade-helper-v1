@@ -1,0 +1,13 @@
+{
+  "actual_costs_or_execution_accessed": false,
+  "aligned_calendar_end": "2026-08-20",
+  "aligned_calendar_start": "2001-01-02",
+  "aligned_session_count": 6446,
+  "data_sha256": "04957c3152f7d6698653e89b9e97a893e9d2a73e62586b71b607652c670e01bb",
+  "experiment_id": "cross-sectional-momentum-v1",
+  "missing_from_bars_count": 705,
+  "no_trade": true,
+  "residual_survivorship_bias_disclosed": true,
+  "spec_sha256": "46cdf4b44aed563a15cac53b9c9b2fdc22c4be4f2ca6bec5b94243fd044d5ce5",
+  "universe_size": 501
+}

@@ -171,4 +171,7 @@ reach paper-traded observation*, not what happens after it gets there.
 - The ensemble-construction engine, the confidence-multiplier sizing
   function, and the minimum-breadth floor are all named here as required
   future decisions, not yet implemented. This ADR authorizes their design,
-  not their deployment.
+  not their deployment. [ADR 0010](0010-long-short-ensemble-construction.md)
+  (proposed, `2026-08-21`) is that design: alpha model, risk model, and
+  optimizer, plus the ADR 0004 account-model amendment a long-short book
+  requires.

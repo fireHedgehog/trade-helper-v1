@@ -46,6 +46,14 @@ panel's correlation once under different (module-default) parameters
 before any specification was locked. Both independently void confirmatory
 status regardless of what number came out.
 
+**Update, `0.81.0`**: CS-01's Tier 4 blocker no longer needed the assumed
+vendor purchase — a free point-in-time membership source exists
+([`universe_pit.py`](../../backend/app/universe_pit.py)). CS-01 itself has
+since been executed as a real confirmatory attempt and closed
+`not_material_or_not_consistent` — see
+[cross-sectional-momentum-v1.md](cross-sectional-momentum-v1.md). CS-02/03/04/05/09
+remain open.
+
 ## What this does and does not unblock
 
 Does: proves the mechanical piece of the [cross-sectional idea

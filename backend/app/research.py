@@ -1362,6 +1362,143 @@ def etf12_rotation_bootstrap(
     }
 
 
+def rotation_pooled_correlation_masked(
+    closes_matrix: np.ndarray,
+    membership_mask: np.ndarray,
+    *,
+    warm_up: int = ROTATION_WARM_UP_SESSIONS,
+    spacing: int = ROTATION_REBALANCE_SPACING,
+    formation: int = ROTATION_FORMATION_WINDOW,
+    holding: int = ROTATION_HOLDING_HORIZON,
+) -> tuple[float, int, dict]:
+    """Same as `rotation_pooled_correlation`, except each rebalance date's
+    cross-sectional rank is computed only over assets where
+    `membership_mask[t]` is True -- a name not yet added to (or already
+    removed from) the point-in-time index on session index `t` contributes
+    nothing to that date's ranking, per
+    docs/research-hypotheses/cross-sectional-momentum-v1.md's "What must
+    change in the engine" section. `membership_mask`: (T, num_assets) bool,
+    same shape as `closes_matrix`. Membership is a fixed, known-in-advance
+    calendar fact, not a random variable -- it is never resampled, only the
+    return panel is (see `cross_sectional_momentum_bootstrap`). A rebalance
+    date with fewer than 2 eligible members is skipped (no rank is
+    computable), not treated as a zero-correlation observation."""
+    n = closes_matrix.shape[0]
+    dates = rotation_rebalance_dates(
+        n, warm_up=warm_up, spacing=spacing, formation=formation, holding=holding
+    )
+    if len(dates) == 0:
+        return 0.0, 0, {}
+
+    formation_ranks_by_date: dict[int, np.ndarray] = {}
+    pooled_formation = []
+    pooled_forward = []
+    for t in dates:
+        eligible = membership_mask[t]
+        if eligible.sum() < 2:
+            continue
+        f_returns = closes_matrix[t, eligible] / closes_matrix[t - formation, eligible] - 1
+        g_returns = closes_matrix[t + holding, eligible] / closes_matrix[t, eligible] - 1
+        f_rank = _average_rank(f_returns)
+        formation_ranks_by_date[int(t)] = f_rank
+        pooled_formation.append(f_rank)
+        pooled_forward.append(_average_rank(g_returns))
+
+    if not pooled_formation:
+        return 0.0, 0, {}
+    pooled_formation = np.concatenate(pooled_formation)
+    pooled_forward = np.concatenate(pooled_forward)
+    date_count = len(formation_ranks_by_date)
+    if np.std(pooled_formation) == 0 or np.std(pooled_forward) == 0:
+        return 0.0, date_count, formation_ranks_by_date
+    correlation = float(np.corrcoef(pooled_formation, pooled_forward)[0, 1])
+    return correlation, date_count, formation_ranks_by_date
+
+
+def cross_sectional_momentum_bootstrap(
+    closes_by_symbol: dict[str, np.ndarray],
+    membership_by_symbol: dict[str, np.ndarray],
+    *,
+    block_bars: int = ROTATION_BLOCK_BARS,
+    resamples: int = ROTATION_RESAMPLES,
+    seed: int = ROTATION_SEED,
+    warm_up: int = ROTATION_WARM_UP_SESSIONS,
+    spacing: int = ROTATION_REBALANCE_SPACING,
+    formation: int = ROTATION_FORMATION_WINDOW,
+    holding: int = ROTATION_HOLDING_HORIZON,
+) -> dict:
+    """Point-in-time-masked counterpart to `etf12_rotation_bootstrap`, for
+    docs/research-protocols/cross-sectional-momentum-v1.md. Each resample
+    block-permutes the same date sequence across every asset's return series
+    (identical discipline to `etf12_rotation_bootstrap`, preserving real
+    contemporaneous cross-asset correlation); `membership_mask` is held fixed
+    across every resample, real and synthetic alike -- eligibility is a known
+    calendar fact about the real world, not something a return-shuffling null
+    should also randomize. `membership_by_symbol`: same keys as
+    `closes_by_symbol`, one bool array per symbol, True where that symbol was
+    a real point-in-time index member on that session index."""
+    symbols = sorted(closes_by_symbol)
+    if set(membership_by_symbol) != set(symbols):
+        raise ValueError("membership_by_symbol must have exactly the same symbols as closes_by_symbol")
+    lengths = {len(closes_by_symbol[s]) for s in symbols}
+    if len(lengths) != 1:
+        raise ValueError("all assets must share the same aligned length")
+    n = lengths.pop()
+    if any(len(membership_by_symbol[s]) != n for s in symbols):
+        raise ValueError("membership_by_symbol arrays must align 1:1 with closes_by_symbol")
+    if n <= warm_up + formation + holding:
+        raise ValueError("series too short for warm-up plus evaluation")
+
+    closes_matrix = np.column_stack([closes_by_symbol[s] for s in symbols])
+    membership_mask = np.column_stack([membership_by_symbol[s] for s in symbols])
+    observed_corr, date_count, formation_ranks_by_date = rotation_pooled_correlation_masked(
+        closes_matrix, membership_mask,
+        warm_up=warm_up, spacing=spacing, formation=formation, holding=holding,
+    )
+    if date_count == 0:
+        raise ValueError("no usable rebalance dates for this sample length")
+
+    log_returns_by_symbol = {
+        s: log_returns_from_closes(closes_by_symbol[s])[1:] for s in symbols
+    }
+    m = n - 1
+    if block_bars <= 0 or block_bars > m:
+        raise ValueError("block_bars must be between 1 and the sample length")
+    if resamples <= 0:
+        raise ValueError("resamples must be positive")
+
+    blocks_needed = (m + block_bars - 1) // block_bars
+    offsets = np.arange(block_bars)
+    rng = np.random.default_rng(seed)
+    at_least = 0
+    for _ in range(resamples):
+        starts = rng.integers(0, m, size=blocks_needed)
+        indexes = (starts[:, None] + offsets) % m  # same indexes for every asset
+        flat_indexes = indexes.ravel()[:m]
+        resampled_columns = []
+        for symbol in symbols:
+            resampled_values = log_returns_by_symbol[symbol][flat_indexes]
+            resampled_padded = np.concatenate([[0.0], resampled_values])
+            resampled_columns.append(np.exp(np.cumsum(resampled_padded)))
+        resampled_matrix = np.column_stack(resampled_columns)
+        resampled_corr, _, _ = rotation_pooled_correlation_masked(
+            resampled_matrix, membership_mask,
+            warm_up=warm_up, spacing=spacing, formation=formation, holding=holding,
+        )
+        if resampled_corr >= observed_corr:
+            at_least += 1
+
+    return {
+        "observed_correlation": observed_corr,
+        "rebalance_date_count": date_count,
+        "p_value": (at_least + 1) / (resamples + 1),
+        "symbols": symbols,
+        "formation_ranks_by_date": {
+            str(date): rank.tolist() for date, rank in formation_ranks_by_date.items()
+        },
+    }
+
+
 # --- Calendar Turn-of-Month v1: daily-return differential vs. block-resampled
 # null --- Implements docs/research-protocols/calendar-turn-of-month-v1.md.
 # Unlike every prior candidate this session, the event definition (turn-of-

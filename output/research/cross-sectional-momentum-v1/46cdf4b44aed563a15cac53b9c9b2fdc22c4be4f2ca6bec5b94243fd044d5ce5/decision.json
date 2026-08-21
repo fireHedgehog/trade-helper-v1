@@ -1,0 +1,10 @@
+{
+  "data_sha256": "04957c3152f7d6698653e89b9e97a893e9d2a73e62586b71b607652c670e01bb",
+  "decision": "not_material_or_not_consistent",
+  "materiality_met": false,
+  "observed_correlation": 0.1462304780343046,
+  "p_value": 0.9985007496251874,
+  "rebalance_date_count": 300,
+  "residual_survivorship_bias_disclosed": true,
+  "spec_sha256": "46cdf4b44aed563a15cac53b9c9b2fdc22c4be4f2ca6bec5b94243fd044d5ce5"
+}
