@@ -1,0 +1,18 @@
+{
+  "observed_correlation": -0.018862090290661725,
+  "p_value": 0.894552723638181,
+  "rebalance_date_count": 294,
+  "sectors": [
+    "Communication Services",
+    "Consumer Discretionary",
+    "Consumer Staples",
+    "Energy",
+    "Financials",
+    "Health Care",
+    "Industrials",
+    "Information Technology",
+    "Materials",
+    "Real Estate",
+    "Utilities"
+  ]
+}

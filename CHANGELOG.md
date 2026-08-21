@@ -2,6 +2,18 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.84.0
+
+Chapter 2 §4 closed: sector rotation v1 -- tests the user's own named observation ("long chips, short software") at the aggregate GICS-sector level, unlike CS-01's structurally-unable-to-test-it individual-stock design. Clean null.
+
+- User-directed: after CS-01's null, pushed back with a specific, named real-world observation that CS-01 could not have tested (no sector grouping existed anywhere in this codebase before `0.83.0`). Confirmed the free GICS sector data layer and asked to build a real test of the actual claim.
+- Reuses `backend/app/research.py:etf12_rotation_bootstrap` completely unmodified -- no new statistical engine needed, only a new sector-aggregation step (`backend/app/run_sector_rotation_v1.py`): equal-weighted daily return across real point-in-time-eligible members per GICS sector, compounded into a synthetic sector-index level, feeding the same engine ETF-12 rotation and CS-01 both used. Formation/holding (252/21 sessions, ~12-month lookback matching the user's own stated horizon) independently chosen, not copied from CS-01's 126/21.
+- Result: observed correlation slightly **negative** (`-0.019`), fails both materiality and significance decisively (`p=0.895`) -- a clean null, not CS-01's borderline case. Real Estate sector shows a disclosed coverage gap (368 sparse pre-2016 dates -- it was only carved out of Financials as its own GICS sector in 2016), noted but non-gating. Today's-GICS-classification-not-point-in-time limitation disclosed per protocol.
+- Reproducibility verified byte-identical on the first rerun -- no fingerprint bug this time, applying the same-day lesson from CS-01's fingerprint fix.
+- `docs/ensemble-construction-engine-v1.md` (separately, `0.83.2`): direct feedback that ADR 0010's alpha-model/risk-model/optimizer section named a shape in prose without specifying it -- replaced with exact formulas, function signatures, a worked 6-asset numeric example, and a test/acceptance checklist, the same relationship `strategy-library.md` has to ADR 0009.
+- Real vendor cost research documented (`0.83.1`, docs-only): options data (IV/Greeks/open interest) cheapest at EODHD, $99.99/mo, <3yr depth; Level 2 explicitly excluded by design (this project never reaches live/HFT execution).
+- 432 passed, 1 known unrelated failure.
+
 ## 0.83.2
 
 Ensemble-construction engine: a real, disciplined design, not just named prose. Docs-only.

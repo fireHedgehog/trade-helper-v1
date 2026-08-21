@@ -1,0 +1,32 @@
+# Sector-level cross-sectional momentum — operationalization record
+
+Status: operationalization record per [hypothesis-engineering.md](../hypothesis-engineering.md). A new candidate, related to but distinct from [CS-01](cross-sectional-momentum-v1.md) and the [cross-sectional idea library](../brainstorm/2026-08-20-cross-sectional-experiment-ideas.md)'s CS-07/CS-08 — this tests relative strength at the **GICS-sector aggregate** level (11 groups), not the individual-stock level (`501` names). User-motivated: a specific, named real-world observation ("long chips, short software" over roughly the past year) that CS-01's flat, ungrouped individual-stock pooling structurally could not have tested — CS-01 never formed a "chips" or "software" group at all. **Executed and closed**, same day: [result](../research-results/sector-rotation-v1.md), `not_material_or_not_consistent`.
+
+## Why this is a new candidate, not a retry of CS-01
+
+Same underlying statistic and engine (pooled Spearman rank correlation vs. a joint-panel block-resampled null, `backend/app/research.py:etf12_rotation_bootstrap`, unmodified), but a different **estimand**: CS-01 asked whether one stock's own rank predicts its own forward rank, pooled across `501` individual names. This asks whether one *sector's* aggregate rank predicts its own forward rank, pooled across `11` GICS sectors. Aggregating many stocks into one sector return series cancels idiosyncratic single-name noise that CS-01's design could not — the same reasoning that made ETF-12 rotation (`N=12`, coarse baskets) a fundamentally less noisy test than CS-01 (`N=501`, individual names). Formation/holding parameters are also independently chosen (§ below), not copied from CS-01, per this project's own no-parameter-peek discipline.
+
+## Operationalization record
+
+| Field | Answer |
+|---|---|
+| Claim | Among the 11 GICS sectors, a sector's prior 12-month aggregate return rank predicts its subsequent 1-month aggregate return rank (positive cross-sectional correlation) — sector-level relative strength/rotation. |
+| Scope | S&P 500 members only (GICS labels and point-in-time membership both only cover this subset), 2001-01-01 onward (same point-in-time-source confidence cutoff as CS-01), monthly rebalance. |
+| Mechanism | Sector-level momentum/rotation is a much more established, more mechanistically plausible claim than individual-stock momentum: sustained sector leadership tracks real, slow-moving fundamental/thematic cycles (e.g. a capex cycle favoring semiconductors, a rate cycle favoring financials) that diffuse across many names simultaneously and persist for months to years — a structurally different, slower mechanism than single-stock behavioral underreaction. |
+| Market-belief proxy | A sector's own equal-weighted aggregate return over the trailing 252 sessions — a public, already-known quantity. |
+| Reality proxy | Same sector's equal-weighted aggregate return over the subsequent 21 sessions. |
+| Information set | At each rebalance date `t`, sector membership is `members_asof(t)` (real point-in-time S&P 500 membership, same as CS-01) intersected with **today's** GICS classification (not point-in-time — see Data feasibility) and real stored price history at `t`. |
+| Estimand | Pooled Spearman rank correlation between sector formation rank and sector forward rank across all (sector, rebalance date) pairs — `11` sectors per date instead of CS-01's up-to-`501` names, via the same `etf12_rotation_bootstrap` engine, unmodified (a synthetic per-sector index price series is built first; see the protocol). |
+| Alternatives | (a) Market-beta/regime confound — sectors with higher beta mechanically lead in a rising market and lag in a falling one, independent of any real "rotation" mechanism; (b) mega-cap concentration — a sector's aggregate return can be dominated by one or two megacap names (e.g. Information Technology's return is heavily influenced by a handful of names) rather than genuine sector-wide breadth; (c) today's-GICS-classification bias (see Data feasibility). |
+| Falsifier | Observed pooled correlation at or below what the joint-panel block-permuted null produces at the preregistered one-sided threshold — mirroring CS-01's own falsifier design. |
+| Data feasibility | Point-in-time S&P 500 membership: available (`universe_pit.py`). GICS sector labels: available but **not point-in-time** — `universe_sectors.py` (`0.83.0`) captures only today's classification snapshot. A stock that was reclassified between sectors at some point in its history (real, disclosed, GICS reclassifications happen) is silently attributed to its *current* sector for its *entire* price history in this design — a real, disclosed limitation, not fixable without a paid point-in-time GICS-history vendor (not researched; out of scope for this run). |
+| Expression candidates | Long-short top-minus-bottom-tercile sector rotation overlay (the natural expression of this claim, if it clears its own gate); `no trade` if it does not. Not attempted in this protocol — same claim/trade separation as CS-01. |
+| Path and risk | Sector concentration (a "sector" bet is inherently less diversified than an individual-stock long-short book); today's-classification bias (see above) means any positive result is contaminated exactly the same way a look-ahead bias would be, just via sector label rather than price — disclosed, not hidden, if it matters. |
+
+## What must be built (new engineering, named up front)
+
+Unlike CS-01, this does **not** need a new statistical engine — `etf12_rotation_bootstrap` runs unmodified once given 11 synthetic sector-index price series. What *is* new: a sector-aggregation step that, for each session, computes each GICS sector's equal-weighted average return across every stock that is simultaneously (a) a real point-in-time S&P 500 member on that date and (b) has real stored price data on that date and its immediate prior session, then compounds those daily returns into a synthetic per-sector index level series. This reuses the same membership/eligibility logic already built for CS-01 (`app.store.members_asof`), applied at a coarser aggregation level.
+
+## Promotion gate
+
+Per [hypothesis-engineering.md](../hypothesis-engineering.md): claim, information set, estimand, falsifier, and feasible data path are all explicit above (including the one real, disclosed limitation — today's-only GICS classification — that a reader must weigh against any positive result). Next step is Stage 9A scoring, then preregistration.

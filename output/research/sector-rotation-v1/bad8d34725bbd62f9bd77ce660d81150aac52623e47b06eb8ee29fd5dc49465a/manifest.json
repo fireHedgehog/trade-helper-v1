@@ -1,0 +1,82 @@
+{
+  "actual_costs_or_execution_accessed": false,
+  "aligned_calendar_end": "2026-08-20",
+  "aligned_calendar_start": "2001-01-02",
+  "aligned_session_count": 6446,
+  "coverage": {
+    "Communication Services": {
+      "member_count": 23,
+      "min_eligible_on_any_date": 5,
+      "sparse_date_count": 0
+    },
+    "Consumer Discretionary": {
+      "member_count": 47,
+      "min_eligible_on_any_date": 16,
+      "sparse_date_count": 0
+    },
+    "Consumer Staples": {
+      "member_count": 34,
+      "min_eligible_on_any_date": 17,
+      "sparse_date_count": 0
+    },
+    "Energy": {
+      "member_count": 21,
+      "min_eligible_on_any_date": 10,
+      "sparse_date_count": 0
+    },
+    "Financials": {
+      "member_count": 76,
+      "min_eligible_on_any_date": 31,
+      "sparse_date_count": 0
+    },
+    "Health Care": {
+      "member_count": 59,
+      "min_eligible_on_any_date": 21,
+      "sparse_date_count": 0
+    },
+    "Industrials": {
+      "member_count": 81,
+      "min_eligible_on_any_date": 33,
+      "sparse_date_count": 0
+    },
+    "Information Technology": {
+      "member_count": 73,
+      "min_eligible_on_any_date": 22,
+      "sparse_date_count": 0
+    },
+    "Materials": {
+      "member_count": 25,
+      "min_eligible_on_any_date": 11,
+      "sparse_date_count": 0
+    },
+    "Real Estate": {
+      "member_count": 29,
+      "min_eligible_on_any_date": 1,
+      "sparse_date_count": 368
+    },
+    "Utilities": {
+      "member_count": 31,
+      "min_eligible_on_any_date": 22,
+      "sparse_date_count": 0
+    }
+  },
+  "data_sha256": "c435ab8cb511b87d3b25af4952bedf75d3135dd5e1f7dddff7f4a2c13291ebc6",
+  "experiment_id": "sector-rotation-v1",
+  "no_trade": true,
+  "sector_count": 11,
+  "sectors": [
+    "Communication Services",
+    "Consumer Discretionary",
+    "Consumer Staples",
+    "Energy",
+    "Financials",
+    "Health Care",
+    "Industrials",
+    "Information Technology",
+    "Materials",
+    "Real Estate",
+    "Utilities"
+  ],
+  "spec_sha256": "bad8d34725bbd62f9bd77ce660d81150aac52623e47b06eb8ee29fd5dc49465a",
+  "today_classification_not_point_in_time_disclosed": true
+}

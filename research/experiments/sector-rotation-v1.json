@@ -1,0 +1,114 @@
+{
+  "experiment_id": "sector-rotation-v1",
+  "status": "preregistered_no_results",
+  "protocol": "docs/research-protocols/sector-rotation-v1.md",
+  "selection_record": "docs/research-candidates/2026-08-21-cycle-8.md",
+  "operationalization_record": "docs/research-hypotheses/sector-rotation-v1.md",
+  "fingerprint_date": "2026-08-21",
+  "canonicalization": "UTF-8 JSON; recursively sorted keys; separators comma and colon; ensure_ascii=false; trailing newline excluded",
+  "permitted_decisions": [
+    "material_and_consistent",
+    "not_material_or_not_consistent",
+    "invalid"
+  ],
+  "forbidden_outputs": [
+    "reject",
+    "revise",
+    "continue_research",
+    "alpha",
+    "entry_signal",
+    "exit_signal",
+    "stop",
+    "position_size",
+    "sleeve",
+    "sharpe"
+  ],
+  "universe_construction": {
+    "source": "same 501-symbol universe as cross-sectional-momentum-v1.json: real point-in-time SP500 members (universe_pit.py) intersected with stored bars",
+    "grouping": "GICS Sector via backend/app/universe_sectors.py (equity_sectors table), today's classification snapshot, not point-in-time",
+    "index_name": "SP500",
+    "date_alignment": "SPY's own stored trading-date calendar from 2001-01-01 onward, identical to cross-sectional-momentum-v1.json",
+    "alignment_start_date": "2001-01-01"
+  },
+  "scope_decision": "Reuses backend/app/research.py:etf12_rotation_bootstrap completely unmodified -- a new sector-aggregation step (equal-weighted daily return across eligible members per GICS sector, compounded into a synthetic per-sector index level) replaces the 12-ETF panel with an 11-GICS-sector panel; no new statistical engine.",
+  "aggregation": {
+    "method": "equal-weighted average of eligible members' simple daily returns per GICS sector per session",
+    "eligibility": "real point-in-time SP500 membership (members_asof) AND real non-NaN close on session t and t-1",
+    "weighting_rationale": "equal-weighted, not cap-weighted, specifically to avoid one or two megacap names dominating the sector aggregate (named alternative (b) in the operationalization record)",
+    "sparse_date_handling": "a sector-date with fewer than 2 eligible members contributes a 0% return for that session only (disclosed, not silently dropped); not expected to bind in practice for GICS sectors within the SP500",
+    "index_construction": "level_t = level_{t-1} * (1 + return_t), starting level 100 per sector"
+  },
+  "formation": {
+    "window_sessions": 252,
+    "definition": "F_s(t) = level_s(t)/level_s(t-252) - 1, per sector, computed through session t only",
+    "rationale": "~12-month horizon matching the natural cadence of a sector/thematic rotation claim (capex, rate, demand cycles play out over quarters to years) -- independently chosen, not copied from cross-sectional-momentum-v1's 126-session individual-stock horizon"
+  },
+  "holding": {
+    "horizon_sessions": 21,
+    "definition": "G_s(t) = level_s(t+21)/level_s(t) - 1, per sector",
+    "rationale": "same monthly-rebalance convention as every other protocol this session, for rebalance-cadence comparability"
+  },
+  "rebalance_grid": {
+    "warm_up_sessions": 252,
+    "spacing_sessions": 21,
+    "definition": "rebalance dates at session indices 252, 273, 294, ... through the last index with a full forward window available, on the SPY-anchored calendar"
+  },
+  "rank": {
+    "tie_breaking": "average rank (ties split the contested rank positions evenly)",
+    "cross_sectional_n": 11
+  },
+  "estimand": {
+    "statistic": "pooled Spearman rank correlation between sector formation rank and sector forward rank, across all (sector, rebalance date) pairs",
+    "favourable_direction": "positive",
+    "evidential_status": "confirmatory, subject to the today's-GICS-classification-not-point-in-time caveat in protocol section 2"
+  },
+  "bootstrap": {
+    "base_function": "backend/app/research.py:etf12_rotation_bootstrap, completely unmodified",
+    "block_bars": 21,
+    "resamples": 2000,
+    "seed": 17291,
+    "p_value_convention": "one-sided; fraction of resamples with resampled pooled correlation >= observed, plus add-one correction",
+    "joint_resampling": "the same resampled date-block sequence is applied to all 11 sector-index series simultaneously in each resample, preserving real contemporaneous cross-sector correlation"
+  },
+  "gates": {
+    "materiality": {
+      "minimum_correlation": 0.1,
+      "alpha": 0.05
+    },
+    "material_and_consistent_requires": [
+      "observed_correlation >= 0.10",
+      "p_value <= 0.05",
+      "reported together with the section-2 today's-classification caveat, never as an unqualified confirmation"
+    ],
+    "reproducibility": "byte-identical correlation/p-value artifact on an independent rerun against the same fingerprinted data"
+  },
+  "multiplicity": {
+    "families": 1,
+    "family_labels": [
+      "pooled_rank_correlation_sector_aggregate"
+    ],
+    "variant_count": 1,
+    "dependence_group": "sector-rotation-v1",
+    "parameter_grid": "none in this run; one locked formation window, holding horizon, and aggregation methodology"
+  },
+  "scope_exclusions": {
+    "no_trade": true,
+    "no_costs": "out of scope -- this tests the estimand only, per hypothesis-engineering.md's separation of claim and trade",
+    "today_classification_not_point_in_time": "see protocol section 2 -- a stock reclassified between GICS sectors mid-history is attributed to its current sector for its whole price history"
+  },
+  "data": {
+    "database": "data/market.db",
+    "contract": "docs/adr/0002-market-data-contract.md",
+    "membership_contract": "universe_membership table via backend/app/universe_pit.py",
+    "sector_contract": "equity_sectors table via backend/app/universe_sectors.py",
+    "columns": [
+      "symbol",
+      "date",
+      "close"
+    ],
+    "fingerprint_method": "SHA-256 incremental ORDER BY symbol,date over (symbol, date, close, gics_sector) actually used, plus the eligibility mask",
+    "development_sha256": null,
+    "development_rows": null,
+    "fingerprint_pending_reason": "specification locked before execution; fingerprint recorded fresh at execution time"
+  }
+}
