@@ -1,6 +1,10 @@
 # Ensemble-construction engine v1 — disciplined design
 
-Status: design specification, not yet implemented. Companion to [ADR
+Status: implemented (`backend/app/ensemble.py`, `2026-08-22`), smoke-tested
+against two real candidates (see the smoke-test result linked from
+[research-program.md](research-program.md) Chapter 4). Not yet used for
+any real (even paper) sizing decision — this section's own checklist and
+ADR 0010 §4's governance still gate that. Companion to [ADR
 0010](adr/0010-long-short-ensemble-construction.md) (accepted) the same way
 [strategy-library.md](strategy-library.md) is the mechanical companion to
 [ADR 0009](adr/0009-strategy-onboarding-contract.md): the ADR records the
@@ -214,25 +218,34 @@ price) implies a smaller notional, **the cap wins** — the optimizer's
   addition before real deployment, not silently deferred. `PORTFOLIO_CLASSIFICATIONS`
   or `equity_sectors` (GICS, `0.83.0`) both exist as candidate sources.
 
-## 6. Test/acceptance checklist before this is considered built
+## 6. Test/acceptance checklist — built, `backend/app/ensemble.py` + `backend/tests/test_ensemble.py` (`2026-08-22`)
 
-- [ ] `composite_alpha_scores`: two signals with equal confidence weight
+- [x] `composite_alpha_scores`: two signals with equal confidence weight
   equally; a signal with `c_k=0` contributes nothing; z-scoring is
   computed only from the eligible universe at that date, not full history
   (no look-ahead through the standardization statistics).
-- [ ] `shrinkage_covariance`: diagonal equals sample variance exactly (the
+- [x] `shrinkage_covariance`: diagonal equals sample variance exactly (the
   shrinkage target preserves it by construction, per step 2 above); output
   is symmetric and positive semi-definite (a real, checkable property of
   this construction, not assumed).
-- [ ] `construct_portfolio`: gross exposure never exceeds `100%`; net
+- [x] `construct_portfolio`: gross exposure never exceeds `100%`; net
   exposure stays within the declared band; minimum-names-per-side floor is
   enforced or the ensemble does not deploy; no single position ever
   exceeds its ADR 0004 stop-distance cap regardless of optimizer weight;
   a synthetic panel with one obviously-highest-scored asset and one
   obviously-lowest-scored asset places them correctly on the long/short
   sides with the expected sign.
-- [ ] End-to-end: the worked example in §4, reproduced exactly by the real
-  implementation on the same toy inputs (not just "similar," exact).
+- [x] End-to-end ordering, **not** the literal §4 six-asset table — real
+  finding from implementation, not assumed: at only `2` names per side
+  (§4's illustration), the ADR 0004 `10%`-of-equity notional cap binds
+  *identically* for every name in the group (a 2-name, `50%`-gross-per-side
+  target always exceeds a `10%` cap, regardless of each name's own
+  volatility), which flattens the within-side weighting the test exists to
+  check — exactly why ADR 0010 set `min_names_per_side=5`, and even `5` is
+  tight enough that the unit test uses `20` names/side for an unambiguous
+  margin. §4's table remains correct as arithmetic illustration of the
+  *pre-cap* weight formula; it is not, and was never claimed to be, a
+  literal reproduction target for the capped end-to-end pipeline.
 
 ## Open, named, not yet decided (do not silently pick one while implementing)
 

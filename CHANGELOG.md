@@ -2,6 +2,16 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.87.0
+
+Ensemble-construction engine implemented and smoke-tested on real data -- ADR 0010's design is now real code, not just a spec.
+
+- User-directed: "2 factor is not enough i know, but at least > 1 so can do a smoke test of new facility work or not." Implemented `backend/app/ensemble.py` exactly per `docs/ensemble-construction-engine-v1.md`: `composite_alpha_scores` (alpha model -- cross-sectional z-score + confidence-multiplier weighting), `shrinkage_covariance` (risk model -- fixed-intensity Ledoit-Wolf-style shrinkage), `construct_portfolio` (rank-and-weight optimizer with the ADR 0004 stop-distance position cap as an absolute ceiling on the optimizer's proposed weight).
+- 12 new unit tests (`backend/tests/test_ensemble.py`) against the design doc's own acceptance checklist. One real finding during test-writing, now documented in the design doc itself: the doc's illustrative 6-asset worked example cannot validate post-cap ordering, because a 2-name group's 50%-gross-per-side target always exceeds the 10%-of-equity notional cap identically for every name in it -- exactly why ADR 0010 set `min_names_per_side=5`; the unit test uses 20 names/side for an unambiguous margin instead.
+- `backend/app/run_ensemble_smoke_test.py`: combined the two real signals this project has (`atr_normalized`, `amihud_illiquidity`) end to end on real point-in-time data for the most recent session. All ADR 0010 sec.1 constraints held exactly: `100.00%` gross exposure, `~0%` net, symmetric `98`/`98` long-short groups. Caught and fixed a real bug during the first run (`long_count=0`, gross exposure `NaN`): a recently-added S&P 500 member (e.g. `PSKY`, added `2025-08-08`) had a valid factor score but an incomplete 252-day return history, silently poisoning the covariance diagonal via `np.cov`'s NaN propagation and zeroing the entire long side -- fixed by requiring complete return history as its own eligibility condition, separate from a valid factor score.
+- Byproduct finding, disclosed: `atr_normalized`'s *cross-sectional* form (the same shape factor-zoo-v1 Sec.5 screened at Sharpe `0.84`) does not survive point-in-time correction -- Sharpe `-0.012`, confidence multiplier `0.0`, the same pattern CS-01 found for individual-stock momentum. The own-history "ATR Vol Premium" Tier A strategy is a different claim, unaffected by this finding.
+- 444 passed, 1 known unrelated failure.
+
 ## 0.86.2
 
 Reverted `0.86.1`'s README fix -- it fixed the disclaimer confusion but introduced a worse problem, caught immediately by the user: the root README now had one paragraph speaking to a public reader, then the next addressed to an agent, then back again. Docs-only.
