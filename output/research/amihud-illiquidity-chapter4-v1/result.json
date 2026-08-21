@@ -1,0 +1,23 @@
+{
+  "annual_volatility": 0.11518882203054755,
+  "cagr": 0.02667149340194852,
+  "calmar": 0.06394725894356848,
+  "chapter4_confidence_multiplier": 0.3307803086147965,
+  "daily_ev_confidence_interval": {
+    "coverage_pct": 68.0,
+    "lower_bound": 4.323742782487141e-05,
+    "observed_mean": 0.00013071342730749635,
+    "resamples": 5000,
+    "upper_bound": 0.0002215856733620872
+  },
+  "ic_ir": 0.035345996040739965,
+  "ic_mean": 0.004656667558172421,
+  "max_drawdown": -0.4170857960539842,
+  "n_days": 6424,
+  "n_symbols_median": 297.0,
+  "round_trip_cost_bps": 32.0,
+  "sharpe": 0.2859633695425204,
+  "total_return": 0.9561971164056853,
+  "universe_size": 501,
+  "win_rate": 0.49392901618929014
+}

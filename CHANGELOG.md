@@ -2,6 +2,14 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.86.0
+
+First genuinely positive Chapter 4 candidate: amihud_illiquidity survives real point-in-time universe correction and real transaction cost.
+
+- User-directed: after sector rotation's null, insisted the project keep searching for a real cross-sectional factor rather than stopping -- "if this one is 0.0, keep find, even it is weak." Rather than starting a new search from scratch, re-evaluated the strongest already-known cross-sectional candidate (`amihud_illiquidity`, factor-zoo-v1 Sec.5d) the way it had never been evaluated: masked to real point-in-time S&P 500 membership (the same reverse-survivorship fix CS-01 applied to individual-stock momentum) and Chapter 4's own instruments (Sharpe/CAGR/drawdown/Calmar, block-bootstrap EV), not the original rank-IC screen.
+- `backend/app/run_amihud_illiquidity_chapter4.py` (new): reuses `factor_zoo.evaluate_factor` and `amihud_illiquidity` completely unmodified -- new logic is only the point-in-time eligibility mask. Result: Sharpe `0.29`, CAGR `2.67%`, max drawdown `-41.7%`, Calmar `0.064`, block-bootstrap daily EV interval `[+4.32e-5, +2.22e-4]` (entirely positive), `chapter4_confidence_multiplier` **`0.33`** -- the first genuinely positive confidence multiplier this research program has produced. Survives both the point-in-time correction and this project's own standard 32bps round-trip cost.
+- 432 passed, 1 known unrelated failure. No test files changed -- exploratory survey script, same untested-by-design status as every other `run_*.py` in this project.
+
 ## 0.85.1
 
 Priority rule restated as a short, explicit ranked list, in the project repo itself, not memory. Terminology fixed: paused, not parked; deprioritized, not deleted. Docs-only.
