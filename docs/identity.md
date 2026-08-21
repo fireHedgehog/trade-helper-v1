@@ -1,12 +1,17 @@
 # Product identity
 
-Status: v5 — canonical, distilled identity statement. Read immediately after the authoritative [resume checkpoint](README.md). Full contracts: [product.md](product.md), [hypothesis-engineering.md](hypothesis-engineering.md), [model-acceptance-standard.md](model-acceptance-standard.md), [exploration-protocol.md](exploration-protocol.md), [research-protocol.md](research-protocol.md), [ADRs](adr/). Edits require a version bump; the statement must stay precise and non-redundant.
+Status: v6 — canonical, distilled identity statement. Read immediately after the authoritative [resume checkpoint](README.md). Full contracts: [product.md](product.md), [hypothesis-engineering.md](hypothesis-engineering.md), [model-acceptance-standard.md](model-acceptance-standard.md), [exploration-protocol.md](exploration-protocol.md), [research-protocol.md](research-protocol.md), [ADRs](adr/). Edits require a version bump; the statement must stay precise and non-redundant.
 
 ## Calibration (read this before the rest — it changes how to read everything below)
 
-Rigor here is a dial, not a maximum. This is one person's own unlevered capital, paper-traded, not a fund with LPs — the "no strangers to protect" reasoning [ADR 0007](adr/0007-risk-budgeted-ensemble-acceptance.md) gives for why Chapter 4 exists at all. Chapters 1-3's full Holm/bootstrap ceremony below is a real, standing capability, not deleted — but it is a *side track*, picked up when a claim specifically needs that level of proof, not the default lens for every session or every candidate. **Chapter 4 (risk-budgeted, actionable, paper-tradeable) is the primary operating mode.** Verification is one tool this project has, not its whole identity.
+Rigor here is a dial, not a maximum. This is one person's own unlevered capital, paper-traded, not a fund with LPs — the "no strangers to protect" reasoning [ADR 0007](adr/0007-risk-budgeted-ensemble-acceptance.md) gives for why Chapter 4 exists at all.
 
-**Hard rule, stated plainly after it was violated twice in one session (`2026-08-21`): a new candidate is evaluated via Chapter 4's instruments — a real backtest, Sharpe/CAGR/drawdown, `block_bootstrap_confidence_interval`'s EV estimate — by default, full stop.** Chapters 1-3's falsification protocol (locked spec, preregistration, Holm correction, a null-hypothesis p-value) is a tool this project still owns, but it runs **only when the user explicitly asks for a falsification test on that specific candidate** — never auto-selected for a new idea just because it fits the estimand shape a prior Chapter 1-3 section used. Producing a long, well-run p-value study that outputs another `not_material_or_not_consistent` is not neutral or free — it costs real time and does not by itself produce a runnable, sizeable, tradeable thing, which is this project's actual goal. If a candidate doesn't clearly need a p-value, it does not get one unasked.
+**Standing priority order for a new candidate (`2026-08-21`, tightened after being violated three times in one session):**
+
+1. **Chapter 4** (real backtest — Sharpe, CAGR, drawdown, Calmar, `block_bootstrap_confidence_interval`'s EV estimate) — the default. Every new candidate starts here.
+2. **Chapters 1-3** (locked spec, preregistration, Holm correction, a null-hypothesis p-value) — not deleted, not abandoned, **paused**: run *only* when the user explicitly asks for a falsification test on that specific candidate. Never auto-selected for a new idea just because it fits an estimand shape a prior Chapter 1-3 section used.
+
+A long, well-run p-value study that outputs another `not_material_or_not_consistent` is not neutral or free — it costs real time and does not by itself produce a runnable, sizeable, tradeable thing, which is this project's actual goal. If a candidate doesn't clearly need a p-value, it does not get one unasked.
 
 ## What we run (one line)
 

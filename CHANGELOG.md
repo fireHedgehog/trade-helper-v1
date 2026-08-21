@@ -2,6 +2,14 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.85.1
+
+Priority rule restated as a short, explicit ranked list, in the project repo itself, not memory. Terminology fixed: paused, not parked; deprioritized, not deleted. Docs-only.
+
+- User-directed: the hard rule from `0.85.0` was correctly in the repo already (`identity.md`, `README.md`), not only in Claude's cross-session memory file -- but it read as a paragraph, not a ranked list, and used "parked"/"side track" instead of the exact words the user wanted: Chapters 1-3 are **paused**, not deleted, **deprioritized** until the user asks for them, with Chapter 4 explicitly ranked first.
+- `docs/identity.md`: Calibration section rewritten as a two-item numbered priority list (Chapter 4 first/default, Chapters 1-3 paused/on-request second) instead of prose. `docs/README.md`'s Non-negotiable state bullet matches the same wording. `docs/research-program.md`'s Chapter 1 status line: "Parked" -> "Paused" for consistency.
+- No code changed. 432 passed, 1 known unrelated failure.
+
 ## 0.85.0
 
 Hard rule against auto-falling-back to falsification, written into identity.md/README.md after it recurred a third time. Two real Chapter 4 evaluations built to replace it: sector rotation's real backtest, and ATR Vol Premium's first-ever performance survey.

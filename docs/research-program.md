@@ -11,7 +11,7 @@ Status: organizing index. Chapter numbers are labels, not fixed IDs — renumber
 
 ## Chapter 1 — Single-asset, own-history technical and calendar patterns
 
-$E[R_i(t+h) \mid X_i(t)]$: does a condition computed from an asset's own trailing history predict that same asset's own forward return or risk shape? Parked, not closed, after ten sections found nine failure modes and one partial pass — see the [closure record](stage-closures/2026-08-20-single-asset-time-series-line.md) for the full inventory and the eight lessons a reopening must address.
+$E[R_i(t+h) \mid X_i(t)]$: does a condition computed from an asset's own trailing history predict that same asset's own forward return or risk shape? Paused, not closed, after ten sections found nine failure modes and one partial pass — see the [closure record](stage-closures/2026-08-20-single-asset-time-series-line.md) for the full inventory and the eight lessons a reopening must address.
 
 | § | Result |
 |---|---|

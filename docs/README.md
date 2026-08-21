@@ -8,10 +8,10 @@ Detail lives in [CHANGELOG.md](../CHANGELOG.md) (per-version) and [research-prog
 
 | Field | Value |
 |---|---|
-| Version | `0.85.0` |
+| Version | `0.85.1` |
 | Parent release | `0.37.0` (first Stage 8 acceptance candidate) |
 | Current state | [Chaptered research program](research-program.md) — see CHANGELOG for detail per version. **Chapter 4 is the default evaluation for any new candidate now** (hard rule, [identity.md](identity.md)): real backtest, Sharpe/CAGR/drawdown/Calmar, `block_bootstrap_confidence_interval` — falsification (Chapters 1-3) only on explicit request. Live candidates: `atr_normalized` (Tier A "ATR Vol Premium", real survey done — [result](research-results/atr-vol-premium-survey-v1.md)), `amihud_illiquidity`, sector rotation ([Chapter 2 null](research-results/sector-rotation-v1.md) + [Chapter 4 backtest](research-results/sector-rotation-chapter4-v1.md), converging negatives). [ADR 0010](adr/0010-long-short-ensemble-construction.md) + [ensemble-construction-engine-v1.md](ensemble-construction-engine-v1.md): accepted design for Chapter 4's long-short engine, not yet implemented. Chapters 1/3 paused. Chapter 5 ([ADR 0008](adr/0008-bounded-paper-trading.md)) accepted, not built. |
-| Verification | `432 passed` at `0.85.0` |
+| Verification | `432 passed` at `0.85.1` |
 | Next product work | (1) Implement [ensemble-construction-engine-v1.md](ensemble-construction-engine-v1.md) (`backend/app/ensemble.py`). (2) `atr_normalized`/`amihud_illiquidity`/sector rotation: clause 1 (mechanism) + clause 2 (EV + uncertainty band) before a formal Chapter 4 proposal — §7/§8's surveys are the raw material. (3) Chapter 2 non-sector ideas (CS-02/03/04/05/09) if picked back up. (4) `factor-zoo-v1` still deferred from Strategy Management. (5) Earnings-dates or SEC EDGAR fundamentals data layer — neither started, [data-layers.md](data-layers.md). (6) ADR 0008 implementation — blocked on an Alpaca account. |
 | Parked operations | Stage 10 cron; Stage 11 deployment |
 | Pending triage | 2026-08-19 audit — 2 critical, 1 high, 5 medium, 4 low untriaged; see [audits/README.md](audits/README.md) |
@@ -20,7 +20,7 @@ Local-optimum guard: Stage 8 is closed, don't add infrastructure/UX polish absen
 
 ## Non-negotiable state
 
-- **Default to Chapter 4 (real backtest, Sharpe/CAGR/drawdown, EV confidence interval), not falsification, for any new candidate.** Chapters 1-3's p-value protocol runs only when the user explicitly asks for a falsification test on that specific candidate — see [identity.md](identity.md)'s Calibration section, tightened `2026-08-21` after this was violated twice in one session.
+- **Chapter 4 first, always, for any new candidate** (real backtest, Sharpe/CAGR/drawdown, EV confidence interval). **Chapters 1-3 are paused, not deleted** — they run only when the user explicitly asks for a falsification test on that specific candidate. Full statement: [identity.md](identity.md)'s Calibration section, tightened `2026-08-21` after this was violated three times in one session.
 - Product purpose: decide `reject`, `revise`, or `continue research`; never imply validated profit.
 - Default project benchmark: Passive ETF-12 v1; every new protocol audits suitability; SPY and cash remain references.
 - CTA v1: rejected under its locked protocol; this does not reject trend following generally.
