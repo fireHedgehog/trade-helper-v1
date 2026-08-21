@@ -2,6 +2,16 @@
 
 Concise version ledger. Research decisions and exact contracts belong in `docs/`; Git preserves file-level implementation history.
 
+## 0.79.0
+
+Strategy Management becomes the full library: every Tier A strategy and every onboarded Tier B study, one table, GitHub-traceable. New `origin` grouping within Tier A (classic preset vs. Chapter 4 screened) so the two provenances don't blur together.
+
+- User-directed, two-part: (1) the original 7 strategies are "preset" patterns (the kind a broker app ships by default), qualitatively different in provenance from a strategy sourced from this project's own Chapter 4 screening (`ATR Vol Premium`) even though both are the same Tier A architecturally -- asked for a way to group/label that distinction without inventing a new tier. (2) Strategy Management should show *everything*, not Tier B alone, with a Tier column, so an outside reader can trace any strategy or study to its real verdict and GitHub source in one place.
+- `backend/app/research_catalog.py`: new `origin` field (`STRATEGY_ORIGINS`: `preset` | `chapter4_screen`) on all 8 Tier A entries -- a display/grouping label, not a new architectural tier, ADR 0009's Tier A/B test is unchanged. New `library_entries()` normalizes every Tier A strategy and every onboarded Tier B study into one shape (tier, origin, type, category, decision, summary, github_url); a Tier A entry with no closed result yet gets `github_url: null`, never a fabricated link.
+- `backend/app/main.py`: new `GET /api/strategy-library` endpoint. `/api/research-record` (Tier B only, feeds the unified Today/Symbol Research/Strategy Lab dropdowns) is unchanged.
+- `frontend/index.html`: Strategy Management now renders all 27 entries (8 Tier A + 19 Tier B) with Tier and Origin/Chapter columns; closed-result rows link to GitHub, not-yet-evaluated rows read "no closed result yet" instead of a broken link. Fixed two stale facts caught while rewriting the page's own copy: the deferred-studies note still named the 3 Fed put studies as deferred (they were un-deferred at `0.76.4`), and the page's banner didn't yet reflect that Tier A strategies run live elsewhere.
+- 3 new tests (library completeness, per-entry traceability, live-endpoint tier mix). 415 passed, 1 known unrelated failure.
+
 ## 0.78.1
 
 Rebalanced the two mandatory first-reads so Chapter 4 (actionable) isn't subordinate to Chapters 1-3 (verification) by default. Docs-only.

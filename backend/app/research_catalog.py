@@ -58,6 +58,7 @@ DATASETS = {
 STRATEGIES = {
     "CTA Trend": {
         "strategy_id": "cta-trend",
+        "origin": "preset",
         "type": "Time-Series",
         "version": "v1-rejected",
         "family": "time-series trend / breakout",
@@ -71,6 +72,7 @@ STRATEGIES = {
     },
     "SMA Cross": {
         "strategy_id": "sma-cross",
+        "origin": "preset",
         "type": "Time-Series",
         "version": "prototype-v1",
         "family": "time-series trend / moving average",
@@ -88,6 +90,7 @@ STRATEGIES = {
     },
     "Donchian Trend": {
         "strategy_id": "donchian-trend",
+        "origin": "preset",
         "type": "Time-Series",
         "version": "prototype-v1",
         "family": "time-series trend / breakout",
@@ -101,6 +104,7 @@ STRATEGIES = {
     },
     "S/R Bounce": {
         "strategy_id": "support-resistance-bounce",
+        "origin": "preset",
         "type": "Time-Series",
         "version": "prototype-v1",
         "family": "classical technical analysis / support-resistance",
@@ -114,6 +118,7 @@ STRATEGIES = {
     },
     "Fib Retrace": {
         "strategy_id": "fib-retrace",
+        "origin": "preset",
         "type": "Time-Series",
         "version": "prototype-v1",
         "family": "classical technical analysis / retracement",
@@ -127,6 +132,7 @@ STRATEGIES = {
     },
     "Wave Pull": {
         "strategy_id": "wave-pull",
+        "origin": "preset",
         "type": "Time-Series",
         "version": "prototype-v1",
         "family": "price action / impulse-pullback",
@@ -145,6 +151,7 @@ STRATEGIES = {
     },
     "RSI Reversion": {
         "strategy_id": "rsi-reversion",
+        "origin": "preset",
         "type": "Time-Series",
         "version": "prototype-v1",
         "family": "time-series mean reversion",
@@ -162,6 +169,7 @@ STRATEGIES = {
     },
     "ATR Vol Premium": {
         "strategy_id": "atr-vol-premium",
+        "origin": "chapter4_screen",
         "type": "Time-Series",
         "version": "prototype-v1",
         "family": "time-series volatility premium",
@@ -214,6 +222,20 @@ DECISIONS: dict[str, tuple[str, str | None]] = {
 # machinery: both existing ones evaluate time-series Chapter 1 candidates,
 # so both are "Time-Series".
 STUDY_TYPES = {"Time-Series", "Cross-Sectional", "Macro"}
+
+# Tier A provenance -- a display/grouping label, not a new tier (ADR 0009's
+# Tier A/B split stays the only architectural distinction; this only
+# separates "came with the tool, mostly closed" from "sourced from this
+# project's own Chapter 4 screening" within Tier A). "preset": the
+# original 7, classic/textbook patterns (SMA cross, RSI, etc.) -- the kind
+# a retail broker app ships by default, most already closed
+# not-material-or-rejected here. "chapter4_screen": derived from a real
+# factor-zoo finding that cleared independence/cost/regime checks first.
+STRATEGY_ORIGINS = {"preset", "chapter4_screen"}
+ORIGIN_LABELS = {
+    "preset": "Classic preset",
+    "chapter4_screen": "Chapter 4 screened candidate",
+}
 
 # Tier B (ADR 0009): studies whose own locked protocol authorizes no cost,
 # execution, or live position. Never eligible for STRATEGIES/live signals --
@@ -594,3 +616,43 @@ def research_record_entries() -> list[dict]:
         for key, value in CHARACTERIZATION_STUDIES.items()
         if key not in DEFERRED_FROM_RECORD
     ]
+
+
+def library_entries() -> list[dict]:
+    """Strategy Management's full-library view: every Tier A strategy and
+    every onboarded Tier B study (still excludes DEFERRED_FROM_RECORD),
+    normalized to one shape -- a traceability surface, not a new
+    architectural tier. ADR 0009's Tier A/B split is unchanged; "tier"
+    here is a display column, sourced from which registry the entry
+    actually lives in, never chosen independently."""
+    entries = []
+    for name, metadata in STRATEGIES.items():
+        contract = metadata["research_contract"]
+        artifact = contract.get("artifact")
+        origin = metadata.get("origin")
+        entries.append({
+            "id": metadata["strategy_id"],
+            "name": name,
+            "tier": "A",
+            "origin": origin,
+            "origin_label": ORIGIN_LABELS.get(origin),
+            "type": metadata["type"],
+            "category": metadata["family"],
+            "decision": contract["decision"],
+            "summary": metadata["evidence"]["summary"],
+            "github_url": f"{RESEARCH_REPO_BASE}/{artifact}" if artifact else None,
+        })
+    for study in research_record_entries():
+        entries.append({
+            "id": study["study_id"],
+            "name": study["name"],
+            "tier": "B",
+            "origin": None,
+            "origin_label": None,
+            "type": study["type"],
+            "category": study["chapter"],
+            "decision": study["decision"],
+            "summary": study["summary"],
+            "github_url": study["github_url"],
+        })
+    return entries

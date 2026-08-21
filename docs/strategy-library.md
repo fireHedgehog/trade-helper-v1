@@ -33,6 +33,19 @@ Tier (A/B) says where a result can run. Type says what *kind* of claim it is —
 
 A methodology/meta-study (calibration, orthogonality) has no signal of its own — classify it by what it evaluates, not its own machinery. `chapter4-eligibility-calibration-v1` and `chapter4-orthogonality-v1` both currently evaluate Chapter 1 (Time-Series) candidates, so both are typed `Time-Series`; that will change the day a Cross-Sectional or Macro candidate reaches Chapter 4 scoring. Every `STRATEGIES` (Tier A) and `CHARACTERIZATION_STUDIES` (Tier B) entry carries a `type`, deferred or not — it is registry metadata, not a display-readiness gate.
 
+## Origin — a display grouping within Tier A, not a fourth tier
+
+Tier A now has two provenances, both still Tier A under ADR 0009's same test (a real per-symbol entry/exit rule) — `origin` in `research_catalog.py`'s `STRATEGIES` metadata, one of exactly two values (`STRATEGY_ORIGINS`):
+
+- **`preset`** — the original 7 (CTA Trend, SMA Cross, Donchian Trend, S/R Bounce, Fib Retrace, Wave Pull, RSI Reversion): classic/textbook patterns, the kind a retail broker app ships by default. Most are already closed `not_material_or_not_consistent` or `rejected` — familiar, not validated.
+- **`chapter4_screen`** — sourced from a real factor-zoo finding that cleared independence/cost/regime checks first (e.g. `ATR Vol Premium`, from `atr_normalized`). A higher bar of provenance than a preset, still not a validated claim (`evidence.status` says so honestly either way).
+
+This is a label, not an architectural split — don't build a third tier around it. It exists so a dropdown or table can group "familiar baseline" from "actually screened here" without pretending either is proven.
+
+## The full library — Strategy Management shows every tier, not Tier B alone
+
+`research_catalog.library_entries()` (`GET /api/strategy-library`) normalizes **every** Tier A strategy and every onboarded Tier B study into one shape (`tier`, `origin`, `type`, `category` — chapter for Tier B, family for Tier A — `decision`, `summary`, `github_url`) for Strategy Management's table. This is a second, broader accessor than `research_record_entries()` (Tier B only, still what feeds the unified dropdowns on Today/Symbol Research/Strategy Lab) — Strategy Management is the one surface meant to answer "show me literally everything, one row each, traceable" for an outside reader. A Tier A entry with no closed result yet (`artifact` is `None`) gets `github_url: null`, rendered as "no closed result yet" — never a fabricated or broken link.
+
 ## Where a result actually appears — one list everywhere, not a separate page
 
 Settled as of `0.76.4`, correcting an earlier version of this section that was wrong: Tier B does **not** live on a separate page from Tier A. Every dropdown/tab list that offers a strategy — Today's "New-entry candidates by model" tabs, Symbol Research's `#strategy` dropdown, Strategy Lab's `#lab-watch-strategy` dropdown — offers Tier A *and* Tier B together, same list, same alphabetical company. There is exactly one thing that differs by tier, not visibility: **what happens when you pick one.**
@@ -49,7 +62,7 @@ The one thing that never changes, restated because it's the actual hard constrai
 Three registries, no per-page work after that — Today, Symbol Research (chart + accordion), and Strategy Lab (definition card + scoreboard) all read the same shared data:
 
 1. `backend/app/strategies.py` — add the real `backtesting.py` Strategy subclass, its `STRATEGY_PARAMS` entry, and register it in that file's `STRATEGIES` dict.
-2. `backend/app/research_catalog.py` — add matching entries to that file's own `STRATEGIES` dict (`strategy_id`, `type`, `version`, `family`, `information_profile`, `required_datasets`, `evidence.status/label/summary`), to `HYPOTHESES`, and to `DECISIONS` (the real `decision` string — `rejected` is a complete, valid answer — plus the `docs/research-results/*.md` artifact path once one exists, `None` before that).
+2. `backend/app/research_catalog.py` — add matching entries to that file's own `STRATEGIES` dict (`strategy_id`, `origin` — `preset` or `chapter4_screen`, see below — `type`, `version`, `family`, `information_profile`, `required_datasets`, `evidence.status/label/summary`), to `HYPOTHESES`, and to `DECISIONS` (the real `decision` string — `rejected` is a complete, valid answer — plus the `docs/research-results/*.md` artifact path once one exists, `None` before that).
 3. Nothing else. `research_contract` (`hypothesis`, `execution`, `scoreboard_benchmark`, `validation_design`, `decision`, `artifact`) is derived automatically from those three dicts at import time — never set it by hand, and never touch a frontend file to make a new strategy appear.
 
 Also see [workspace-redesign.md](workspace-redesign.md) for what Symbol Research must then show for it (chart markers, accordion, current P&L) — that is an interface contract, not an onboarding step, so it lives there, not here.

@@ -10,9 +10,11 @@ from app.research_catalog import (
     DEFERRED_FROM_RECORD,
     RESEARCH_REPO_BASE,
     STRATEGIES,
+    STRATEGY_ORIGINS,
     STUDY_TYPES,
     characterization_studies,
     dataset_for_provider,
+    library_entries,
     research_record_entries,
 )
 from app.strategies import STRATEGIES as EXECUTABLE_STRATEGIES
@@ -30,6 +32,7 @@ def test_every_executable_strategy_has_versioned_metadata() -> None:
     assert set(STRATEGIES) == set(EXECUTABLE_STRATEGIES)
     for name, metadata in STRATEGIES.items():
         assert metadata["strategy_id"]
+        assert metadata["origin"] in STRATEGY_ORIGINS, name
         assert metadata["type"] in STUDY_TYPES, name
         assert metadata["version"]
         assert metadata["family"]
@@ -129,6 +132,33 @@ def test_research_record_entries_are_display_ready() -> None:
         assert entry["decision"], entry["study_id"]
         assert entry["github_url"] == f"{RESEARCH_REPO_BASE}/{entry['result_doc']}"
         assert entry["github_url"].startswith("https://github.com/")
+
+
+def test_library_entries_include_every_tier_a_and_onboarded_tier_b() -> None:
+    entries = library_entries()
+    ids = {entry["id"] for entry in entries}
+    tier_a_ids = {metadata["strategy_id"] for metadata in STRATEGIES.values()}
+    onboarded_tier_b_ids = set(CHARACTERIZATION_STUDIES) - DEFERRED_FROM_RECORD
+    assert tier_a_ids <= ids
+    assert onboarded_tier_b_ids <= ids
+    assert len(entries) == len(STRATEGIES) + len(onboarded_tier_b_ids)
+
+
+def test_library_entries_are_fully_traceable_or_disclosed_as_not_yet() -> None:
+    for entry in library_entries():
+        assert entry["tier"] in {"A", "B"}, entry["id"]
+        assert entry["type"] in STUDY_TYPES, entry["id"]
+        assert entry["category"], entry["id"]
+        assert entry["decision"], entry["id"]
+        assert entry["summary"], entry["id"]
+        if entry["tier"] == "B":
+            assert entry["github_url"], entry["id"]
+        if entry["tier"] == "A":
+            assert entry["origin"] in STRATEGY_ORIGINS, entry["id"]
+            # A Tier A strategy with no closed result yet has no artifact to
+            # link -- github_url is None, not a broken/fabricated link.
+            if entry["github_url"] is not None:
+                assert entry["github_url"].startswith("https://github.com/"), entry["id"]
 
 
 def test_current_provider_mapping_is_explicit() -> None:

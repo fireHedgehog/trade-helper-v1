@@ -592,18 +592,18 @@
   </div>
 
   <div id="view-records" class="view" hidden>
-    <div class="safety-banner">Read-only research record. No study below has a live signal, a chart, or a "hold/exit today" state — Tier B (ADR 0009): each row is a closed study's own already-computed verdict, rendered as-is and linked to its full immutable write-up. A visible negative result is this working correctly, not a fault.</div>
+    <div class="safety-banner">The full library, every tier, one index: Tier A strategies run live elsewhere (Today/Symbol Research/Strategy Lab) — this table shows their real, already-decided verdict alongside Tier B's read-only characterization studies, which never carry a live signal, a chart, or a "hold/exit today" state. A visible negative result anywhere below is transparency working correctly, not a fault.</div>
     <div class="macro-body">
       <section class="panel">
         <div class="section-heading">
-          <div><h2>Strategy Management</h2><p>Every closed Tier B research study onboarded so far — name, chapter, real verdict, and a link to the full record on GitHub.</p></div>
+          <div><h2>Strategy Management</h2><p>Every strategy and study this project has, one row each — name, tier, type, real verdict, and a traceable link to the full record on GitHub.</p></div>
           <span class="state-pill state-info" id="records-count">loading…</span>
         </div>
         <div class="table-wrap"><table class="today-table">
-          <thead><tr><th>Name</th><th>Type</th><th>Chapter</th><th>Decision</th><th>Summary</th><th>Source</th></tr></thead>
+          <thead><tr><th>Name</th><th>Tier</th><th>Type</th><th>Origin / Chapter</th><th>Decision</th><th>Summary</th><th>Source</th></tr></thead>
           <tbody id="records-rows"></tbody>
         </table></div>
-        <div class="sample-note">Deferred, on purpose, not by oversight: the 27-factor zoo screen and the three Fed put macro-precursor studies are not yet onboarded here — factor zoo pending a clearer explanation, macro work parked for a later pass. Neither is a rejection of either line.</div>
+        <div class="sample-note">Deferred, on purpose, not by oversight: the 27-factor zoo screen isn't onboarded here yet, pending a clearer explanation of what it measures — not a rejection of that line.</div>
       </section>
     </div>
   </div>
@@ -2267,35 +2267,54 @@ function renderEvents(events) {
     '<div class="sample-note">A scheduled date is not a canonical release timestamp. A current forecast is not historical forecast evidence. No macro surprise, regime, or equity-direction claim is computed.</div>';
 }
 
-/* ---------- Strategy Management (Tier B research record, read-only) ---------- */
+/* ---------- Strategy Management (full library: every tier, one index) ---------- */
 function researchRecordDecisionClass(decision) {
-  if (['not_material_or_not_consistent', 'not_eligible', 'not_distinguishable_from_chance'].includes(decision)) {
+  if ([
+    'rejected', 'not_material_or_not_consistent', 'not_eligible',
+    'not_distinguishable_from_chance', 'not_material_after_cost',
+  ].includes(decision)) {
     return 'state-negative';
   }
-  if (decision === 'not_evaluable') return 'state-warning';
-  if (['engine_feasible', 'methodology_validation', 'methodology_measurement'].includes(decision)) {
+  if (decision === 'not_evaluable' || decision === 'not evaluable') return 'state-warning';
+  if ([
+    'engine_feasible', 'methodology_validation', 'methodology_measurement',
+    'regime_concentration_clear',
+  ].includes(decision)) {
     return 'state-info';
   }
   return 'state-neutral';
 }
 
+function tierChipClass(tier) {
+  return tier === 'A' ? 'entry' : 'trend';
+}
+
 async function loadResearchRecord() {
   $('#records-count').textContent = 'loading…';
   try {
-    const { studies } = await api('/api/research-record');
-    $('#records-count').textContent = `${studies.length} studies`;
-    $('#records-rows').innerHTML = studies.map((study) => {
-      const cls = researchRecordDecisionClass(study.decision);
-      return `<tr><td class="symbol">${escapeHtml(study.name)}</td>` +
-        `<td><span class="chip trend">${escapeHtml(study.type)}</span></td>` +
-        `<td class="semantic-date">${escapeHtml(study.chapter)}</td>` +
-        `<td><span class="state-pill ${cls}">${escapeHtml(study.decision)}</span></td>` +
-        `<td>${escapeHtml(study.summary)}</td>` +
-        `<td><a href="${escapeHtml(study.github_url)}" target="_blank" rel="noopener">docs/research-results ↗</a></td></tr>`;
-    }).join('') || '<tr><td colspan="6" class="empty-state">No studies onboarded yet.</td></tr>';
+    const { entries } = await api('/api/strategy-library');
+    const tierACount = entries.filter((e) => e.tier === 'A').length;
+    const tierBCount = entries.length - tierACount;
+    $('#records-count').textContent = `${entries.length} total · ${tierACount} Tier A · ${tierBCount} Tier B`;
+    $('#records-rows').innerHTML = entries.map((entry) => {
+      const cls = researchRecordDecisionClass(entry.decision);
+      const source = entry.github_url
+        ? `<a href="${escapeHtml(entry.github_url)}" target="_blank" rel="noopener">docs/research-results ↗</a>`
+        : '<span class="sample-note">no closed result yet</span>';
+      const originOrChapter = entry.tier === 'A'
+        ? `${escapeHtml(entry.origin_label || entry.category)}`
+        : `${escapeHtml(entry.category)}`;
+      return `<tr><td class="symbol">${escapeHtml(entry.name)}</td>` +
+        `<td><span class="chip ${tierChipClass(entry.tier)}">Tier ${escapeHtml(entry.tier)}</span></td>` +
+        `<td><span class="chip trend">${escapeHtml(entry.type)}</span></td>` +
+        `<td class="semantic-date">${originOrChapter}</td>` +
+        `<td><span class="state-pill ${cls}">${escapeHtml(entry.decision)}</span></td>` +
+        `<td>${escapeHtml(entry.summary)}</td>` +
+        `<td>${source}</td></tr>`;
+    }).join('') || '<tr><td colspan="7" class="empty-state">No strategies or studies onboarded yet.</td></tr>';
   } catch (err) {
     $('#records-count').textContent = 'unavailable';
-    $('#records-rows').innerHTML = `<tr><td colspan="6" class="empty-state">error: ${escapeHtml(err.message)}</td></tr>`;
+    $('#records-rows').innerHTML = `<tr><td colspan="7" class="empty-state">error: ${escapeHtml(err.message)}</td></tr>`;
   }
 }
 

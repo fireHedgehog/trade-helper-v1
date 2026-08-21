@@ -123,6 +123,22 @@ async def test_research_record_excludes_deferred_studies(client) -> None:
     assert "amihud_illiquidity" in anomalies["summary"]
 
 
+async def test_strategy_library_includes_both_tiers(client) -> None:
+    response = await client.get("/api/strategy-library")
+
+    assert response.status_code == 200
+    entries = response.json()["entries"]
+    tiers = {entry["tier"] for entry in entries}
+    assert tiers == {"A", "B"}
+    atr = next(entry for entry in entries if entry["id"] == "atr-vol-premium")
+    assert atr["tier"] == "A"
+    assert atr["origin"] == "chapter4_screen"
+    assert atr["github_url"] is None  # not evaluable yet -- no closed result to link
+    cta = next(entry for entry in entries if entry["id"] == "cta-trend")
+    assert cta["origin"] == "preset"
+    assert cta["github_url"].startswith("https://github.com/")
+
+
 async def test_macro_contract_forbids_signal_inference(client, monkeypatch) -> None:
     bars = pd.DataFrame(
         [

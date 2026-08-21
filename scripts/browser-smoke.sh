@@ -129,12 +129,13 @@ snapshot
 assert_js "document.querySelector('#data-job-note').textContent.includes('1 failed')" "Partial-failure count was not rendered"
 echo "smoke: Data running, interrupted, and partial-failure states"
 
-# Research Record (Strategy Management) response is fixture-injected -- read-only, no live data needed.
-run_js "(() => { window.api = async (path, options) => path === '/api/research-record' ? ({studies:[{study_id:'fixture-study',name:'Fixture Study',type:'Time-Series',chapter:'1 §0',decision:'not_material_or_not_consistent',summary:'Fixture summary for smoke coverage.',result_doc:'docs/research-results/fixture.md',github_url:'https://github.com/fireHedgehog/trade-helper-v1/blob/main/docs/research-results/fixture.md'}]}) : window.__smokeApi(path, options); location.hash = '#records'; return 'research record fixture installed'; })()" "Could not install the deterministic Research Record fixture"
+# Strategy Library (Strategy Management) response is fixture-injected -- read-only, no live data needed.
+run_js "(() => { window.api = async (path, options) => path === '/api/strategy-library' ? ({entries:[{id:'fixture-a',name:'Fixture Tier A Strategy',tier:'A',origin:'preset',origin_label:'Classic preset',type:'Time-Series',category:'time-series trend',decision:'rejected',summary:'Fixture Tier A summary.',github_url:'https://github.com/fireHedgehog/trade-helper-v1/blob/main/docs/research-results/fixture-a.md'},{id:'fixture-b',name:'Fixture Tier B Study',tier:'B',origin:null,origin_label:null,type:'Time-Series',category:'1 §0',decision:'not_material_or_not_consistent',summary:'Fixture Tier B summary.',github_url:'https://github.com/fireHedgehog/trade-helper-v1/blob/main/docs/research-results/fixture-b.md'}]}) : window.__smokeApi(path, options); location.hash = '#records'; return 'strategy library fixture installed'; })()" "Could not install the deterministic Strategy Library fixture"
 sleep 1
 snapshot
-assert_js "document.querySelector('#records-count').textContent.includes('1 studies')" "Strategy Management did not render its study count"
-assert_js "document.querySelector('#records-rows').textContent.includes('Fixture Study')" "Strategy Management did not render the fixture study"
+assert_js "document.querySelector('#records-count').textContent.includes('2 total')" "Strategy Management did not render its entry count"
+assert_js "document.querySelector('#records-rows').textContent.includes('Fixture Tier A Strategy')" "Strategy Management did not render the fixture Tier A entry"
+assert_js "document.querySelector('#records-rows').textContent.includes('Fixture Tier B Study')" "Strategy Management did not render the fixture Tier B entry"
 assert_js "document.querySelector('#records-rows a').href.includes('github.com')" "Strategy Management source link is not a GitHub URL"
 assert_js "document.documentElement.scrollWidth <= window.innerWidth" "Strategy Management causes page-level narrow overflow"
 echo "smoke: Strategy Management read-only record"

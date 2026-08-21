@@ -11,7 +11,7 @@ Static HTML, CSS, and vanilla JavaScript served by FastAPI; no build step or sep
 | Strategy Lab | Versioned definitions, watchlists, evidence boundaries, and explicitly exploratory session comparisons. The Definition dropdown includes Tier B studies (watchlist controls disabled for them); the scoreboard itself stays Tier A only, since it computes live per-symbol statistics |
 | Macro | ADR 0006 display-only context with explicit provenance and unavailable point-in-time capabilities |
 | Data Management | Coverage, expected-session freshness, selected refresh, progress, failures |
-| Strategy Management | Every onboarded Tier B study in one browsable table (ADR 0009 / docs/strategy-library.md): name, type, chapter, real decision, and a GitHub link — the same data the other views' dropdowns now also draw from |
+| Strategy Management | The full library, every tier, one table (ADR 0009 / docs/strategy-library.md): all Tier A strategies (grouped by origin — classic preset vs. Chapter 4 screened) and every onboarded Tier B study, each with type, decision, summary, and a GitHub link where a closed result exists |
 
 Navigation must be read-only. Backtest, refresh, universe scan, and strategy evaluation each require a distinct action. Empty, not-run, stale, running, failed, and completed-with-no-candidates are different states.
 
